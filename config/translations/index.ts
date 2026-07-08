@@ -1,0 +1,51 @@
+export type Locale = "en" | "ar";
+
+import enCommon from "@/config/translations/en/common.json";
+import enAuth from "@/config/translations/en/auth.json";
+import enMarketplace from "@/config/translations/en/marketplace.json";
+import enHome from "@/config/translations/en/home.json";
+import enAuctions from "@/config/translations/en/auctions.json";
+import enDashboard from "@/config/translations/en/dashboard.json";
+import enListings from "@/config/translations/en/listings.json";
+import enPrivateDeal from "@/config/translations/en/private-deal.json";
+import enAbout from "@/config/translations/en/about.json";
+
+import arCommon from "@/config/translations/ar/common.json";
+import arAuth from "@/config/translations/ar/auth.json";
+import arMarketplace from "@/config/translations/ar/marketplace.json";
+import arHome from "@/config/translations/ar/home.json";
+import arAuctions from "@/config/translations/ar/auctions.json";
+import arDashboard from "@/config/translations/ar/dashboard.json";
+import arListings from "@/config/translations/ar/listings.json";
+import arPrivateDeal from "@/config/translations/ar/private-deal.json";
+import arAbout from "@/config/translations/ar/about.json";
+
+const translationsMap: Record<Locale, any> = {
+  en: {
+    common: enCommon,
+    auth: enAuth,
+    marketplace: enMarketplace,
+    home: enHome,
+    auctions: enAuctions,
+    dashboard: enDashboard,
+    listings: enListings,
+    "private-deal": enPrivateDeal,
+    about: enAbout,
+  },
+  ar: {
+    common: arCommon,
+    auth: arAuth,
+    marketplace: arMarketplace,
+    home: arHome,
+    auctions: arAuctions,
+    dashboard: arDashboard,
+    listings: arListings,
+    "private-deal": arPrivateDeal,
+    about: arAbout,
+  },
+};
+
+// A synchronous function for loading subtitles
+export function loadAllTranslations(locale: Locale) {
+  return translationsMap[locale] || translationsMap.en;
+}
