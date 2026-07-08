@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 const locales = ["en", "ar"];
 const defaultLocale = "en";
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Ignore static files and API routes
@@ -29,7 +29,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Allow locale switching - don't interfere with manual locale changes
   return NextResponse.next();
 }
 
