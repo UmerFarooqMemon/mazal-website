@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 export default function HeroLeft() {
   const { t, locale } = useLocale();
@@ -43,7 +44,10 @@ export default function HeroLeft() {
       {/* Main Title */}
       <h1 className="text-5xl md:text-7xl font-serif text-[#041443] leading-[1.1] mb-6">
         {t("home.hero_title_1")} <br />
-        <span className="text-[#0A3B9E]">{t("home.hero_title_2")}</span>
+        {/* ✅ Gradient Text: "with trust built in." */}
+        <span className="bg-linear-to-r from-[#041443] via-[#0A3B9E] to-[#0A3B9E] bg-clip-text text-transparent">
+          {t("home.hero_title_2")}
+        </span>
       </h1>
 
       {/* Subtext */}
@@ -55,25 +59,32 @@ export default function HeroLeft() {
       <div
         className={`flex flex-wrap gap-4 mb-12 ${isRTL ? "flex-row-reverse" : ""}`}
       >
-        <Link
-          href={`/${locale}/marketplace`}
-          className="bg-[#0A3B9E] text-white px-8 py-3.5 rounded-full font-semibold text-sm hover:bg-blue-800 transition flex items-center gap-2"
-        >
-          {t("home.hero_browse")}
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+        <Link href={`/${locale}/marketplace`}>
+          <Button
+            variant="primary"
+            size="lg"
+            className="flex items-center gap-2"
           >
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
+            {t("home.hero_browse")}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </Button>
         </Link>
-        <button className="bg-white border border-gray-200 text-gray-800 px-8 py-3.5 rounded-full font-semibold text-sm hover:bg-gray-50 transition shadow-sm">
+        <Button
+          variant="outline"
+          size="lg"
+          className="bg-white border-gray-200 text-gray-800 hover:bg-gray-50 shadow-sm"
+        >
           {t("home.hero_offer")}
-        </button>
+        </Button>
       </div>
 
       {/* Statistics - WITH CORRECT ARABIC FORMATTING */}

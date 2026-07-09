@@ -1,5 +1,6 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 interface ListingSidebarProps {
   emirate: string;
@@ -49,18 +50,31 @@ export default function ListingSidebar({ emirate, type }: ListingSidebarProps) {
 
       {/* Main Action Buttons */}
       <div className="flex flex-col gap-3 mb-6">
-        <button className="w-full bg-[#0A3B9E] text-white py-3.5 rounded-full font-semibold text-sm hover:bg-blue-800 transition shadow-md">
+        {/* ✅ Buy through escrow Button */}
+        <Button variant="primary" size="lg" fullWidth className="shadow-md">
           {t("listings.buy_escrow")}
-        </button>
-        <button className="w-full border border-gray-300 text-gray-700 py-3.5 rounded-full font-medium text-sm hover:bg-gray-50 transition">
+        </Button>
+
+        {/* ✅ Make a blind offer Button */}
+        <Button
+          variant="outline"
+          size="lg"
+          fullWidth
+          className="border-gray-300 text-gray-700"
+        >
           {t("listings.blind_offer")}
-        </button>
+        </Button>
       </div>
 
       {/* Secondary Buttons */}
-      <div className="grid grid-cols-2 gap-3 mb-8">
-        <button
-          className={`flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-2.5 rounded-full text-sm font-medium hover:bg-gray-50 transition ${isRTL ? "flex-row-reverse" : ""}`}
+      <div
+        className={`grid grid-cols-2 gap-3 mb-8 ${isRTL ? "direction-rtl" : ""}`}
+      >
+        {/* ✅ Watchlist Button */}
+        <Button
+          variant="outline"
+          size="md"
+          className={`flex items-center justify-center gap-2 border-gray-200 text-gray-600 ${isRTL ? "flex-row-reverse" : ""}`}
         >
           <svg
             width="16"
@@ -73,9 +87,13 @@ export default function ListingSidebar({ emirate, type }: ListingSidebarProps) {
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
           {t("listings.watchlist")}
-        </button>
-        <button
-          className={`flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-2.5 rounded-full text-sm font-medium hover:bg-gray-50 transition ${isRTL ? "flex-row-reverse" : ""}`}
+        </Button>
+
+        {/* ✅ Share Button */}
+        <Button
+          variant="outline"
+          size="md"
+          className={`flex items-center justify-center gap-2 border-gray-200 text-gray-600 ${isRTL ? "flex-row-reverse" : ""}`}
         >
           <svg
             width="16"
@@ -90,7 +108,7 @@ export default function ListingSidebar({ emirate, type }: ListingSidebarProps) {
             <line x1="12" y1="2" x2="12" y2="15" />
           </svg>
           {t("listings.share")}
-        </button>
+        </Button>
       </div>
 
       {/* Details Table */}

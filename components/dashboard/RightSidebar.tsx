@@ -1,5 +1,6 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 const clients = [
   {
@@ -55,9 +56,13 @@ export default function RightSidebar() {
             </svg>
             {t("dashboard.crm")}
           </div>
-          <button className="text-xs text-[#0A3B9E] hover:underline">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[#0A3B9E] hover:bg-[#0A3B9E]/5 hover:text-[#0A3B9E] p-0 h-auto underline-offset-2"
+          >
             {t("dashboard.export")}
-          </button>
+          </Button>
         </div>
         <div className="flex flex-col gap-4">
           {clients.map((client, idx) => (

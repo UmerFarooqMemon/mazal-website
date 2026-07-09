@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 export default function HeroRight() {
   const { t, locale } = useLocale();
@@ -79,11 +80,16 @@ export default function HeroRight() {
                 )}
               </div>
             </div>
-            <Link
-              href={`/${locale}/listings/1`}
-              className="bg-[#0A3B9E] text-white text-xs px-5 py-2.5 rounded-full font-semibold hover:bg-blue-800 transition flex items-center gap-1"
-            >
-              {t("home.hero_view")} <span className="text-[10px]">→</span>
+
+            <Link href={`/${locale}/listings/1`}>
+              <Button
+                variant="primary"
+                size="sm"
+                className="flex items-center gap-1 px-5 py-2.5"
+              >
+                {t("home.hero_view")}
+                <span className="text-[10px]">→</span>
+              </Button>
             </Link>
           </div>
           <div className="grid grid-cols-3 gap-3">

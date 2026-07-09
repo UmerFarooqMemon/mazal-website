@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { Button } from "@/components/ui";
 
 const Icons = {
   Search: () => (
@@ -148,15 +149,13 @@ export default function Header() {
           {/* Logo - Responsive with Arabic support */}
           <div className="flex items-center gap-2 shrink-0">
             <Link href={`/${locale}`} className="flex items-center gap-2 group">
-              {/* Logo Icon */}
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0A3B9E] text-white font-bold text-lg transition-all group-hover:bg-blue-700 group-hover:shadow-lg">
-                {isRTL ? "M" : "M"}
+                M
               </div>
 
-              {/* Logo Text - Hidden on small screens */}
               <div className="hidden sm:flex flex-col">
                 <span className="text-xl font-serif font-bold tracking-tight text-[#041443] leading-tight">
-                  {isRTL ? "مازال" : "Mazal"}
+                  Mazal
                 </span>
               </div>
             </Link>
@@ -170,7 +169,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={linkClass(link.href.split("/").pop() || "")}
+                className={linkClass(link.href)}
               >
                 {link.label}
               </Link>
@@ -190,20 +189,26 @@ export default function Header() {
 
             <LanguageSwitcher />
 
-            <Link
-              href={`/${locale}/kyc`}
-              className="flex items-center gap-2 rounded-full border border-[#0A3B9E]/20 bg-[#0A3B9E]/5 px-4 py-2 text-[#0A3B9E] text-sm font-medium hover:bg-[#0A3B9E]/10 transition-colors whitespace-nowrap"
-            >
-              <Icons.Shield />
-              <span>{t("common.kyc")}</span>
+            <Link href={`/${locale}/kyc`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#0A3B9E]/20 bg-[#0A3B9E]/5 text-[#0A3B9E] hover:bg-[#0A3B9E]/10 whitespace-nowrap"
+              >
+                <Icons.Shield />
+                <span>{t("common.kyc")}</span>
+              </Button>
             </Link>
 
-            <Link
-              href={`/${locale}/login`}
-              className="flex items-center gap-2 rounded-full bg-[#0A3B9E] px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800 transition-colors shadow-sm whitespace-nowrap"
-            >
-              <Icons.User />
-              <span>{t("common.sign_in")}</span>
+            <Link href={`/${locale}/login`}>
+              <Button
+                variant="primary"
+                size="sm"
+                className="whitespace-nowrap shadow-sm"
+              >
+                <Icons.User />
+                <span>{t("common.sign_in")}</span>
+              </Button>
             </Link>
           </div>
 
@@ -237,7 +242,7 @@ export default function Header() {
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(link.href.split("/").pop() || "")
+                    isActive(link.href)
                       ? "bg-[#0A3B9E]/5 text-[#0A3B9E]"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
@@ -251,6 +256,7 @@ export default function Header() {
             <div
               className={`flex flex-col gap-3 pt-3 border-t ${isRTL ? "text-right" : "text-left"}`}
             >
+              {/* ✅ Mobile KYC Link */}
               <Link
                 href={`/${locale}/kyc`}
                 onClick={() => setMobileMenuOpen(false)}
@@ -260,25 +266,39 @@ export default function Header() {
                 <span>{t("common.kyc")}</span>
               </Link>
 
+              {/* ✅ Mobile Sign In Button */}
               <Link
                 href={`/${locale}/login`}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 rounded-full bg-[#0A3B9E] px-5 py-3 text-sm font-medium text-white hover:bg-blue-800 transition-colors shadow-sm"
               >
-                <Icons.User />
-                <span>{t("common.sign_in")}</span>
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="w-full justify-center"
+                >
+                  <Icons.User />
+                  <span>{t("common.sign_in")}</span>
+                </Button>
               </Link>
 
               {/* Mobile Search & Notifications */}
               <div className={`flex gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <button className="flex flex-1 items-center justify-center gap-2 py-3 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="flex-1 justify-center border-gray-200 text-gray-600"
+                >
                   <Icons.Search />
-                  <span>{t("common.search") || "Search"}</span>
-                </button>
-                <button className="flex flex-1 items-center justify-center gap-2 py-3 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
+                  <span>{t("common.search")}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="flex-1 justify-center border-gray-200 text-gray-600"
+                >
                   <Icons.Bell />
-                  <span>{t("common.notifications") || "Notifications"}</span>
-                </button>
+                  <span>{t("common.notifications")}</span>
+                </Button>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useLocale } from "../../context/LocaleContext";
+import { Button } from "@/components/ui";
 
 export default function EscrowSection() {
   const { t, locale } = useLocale();
@@ -40,7 +41,7 @@ export default function EscrowSection() {
                 : "lg:order-1 text-left items-start"
             }`}
           >
-            {/* Badge (badge) */}
+            {/* Badge */}
             <div
               className={`inline-flex items-center gap-2 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider mb-6 ${
                 isRTL ? "flex-row-reverse" : ""
@@ -75,29 +76,31 @@ export default function EscrowSection() {
               {t("home.escrow_subtitle")}
             </p>
 
-            {/* The Golden Button */}
+            {/* ✅ The Golden Button - Using Button component */}
             <div>
-              <Link
-                href={`/${locale}/about`}
-                className={`inline-flex items-center gap-3 bg-[#D4AF37] text-[#041443] px-8 py-4 rounded-full font-semibold text-sm hover:bg-[#c5a031] transition shadow-lg shadow-[#D4AF37]/20 ${
-                  isRTL ? "flex-row-reverse" : ""
-                }`}
-              >
-                {t("home.escrow_button")}
-                {/* Arrow direction according to language */}
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={`${isRTL ? "rotate-180" : ""}`}
+              <Link href={`/${locale}/about`}>
+                <Button
+                  variant="gold"
+                  size="lg"
+                  className={`inline-flex items-center gap-3 px-8 py-4 shadow-lg shadow-[#D4AF37]/20 ${
+                    isRTL ? "flex-row-reverse" : ""
+                  }`}
                 >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                  {t("home.escrow_button")}
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`${isRTL ? "rotate-180" : ""}`}
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </Button>
               </Link>
             </div>
           </div>
@@ -112,12 +115,9 @@ export default function EscrowSection() {
                 key={index}
                 className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-row items-start gap-6 hover:bg-white/10 transition-colors group"
               >
-                {/* Step number (always on the left) */}
                 <div className="text-3xl font-serif font-bold text-[#D4AF37] min-w-15 shrink-0">
                   {step.number}
                 </div>
-
-                {/* Step text (always starts from the north) */}
                 <div className="flex flex-col gap-1 text-left">
                   <h4 className="text-white font-semibold text-base">
                     {t(step.titleKey)}

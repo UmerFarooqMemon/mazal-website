@@ -1,5 +1,6 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 export default function SearchBar() {
   const { t, locale } = useLocale();
@@ -13,7 +14,7 @@ export default function SearchBar() {
       <div
         className={`grow flex items-center gap-3 px-3 ${isRTL ? "flex-row-reverse" : ""}`}
       >
-        {/* Search Icon - Always visible on the correct side */}
+        {/* Search Icon */}
         <svg
           className="w-5 h-5 text-gray-400 shrink-0"
           viewBox="0 0 24 24"
@@ -33,9 +34,11 @@ export default function SearchBar() {
         />
       </div>
 
-      {/* Search Button */}
-      <button
-        className={`bg-[#0A3B9E] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition flex items-center gap-2 justify-center whitespace-nowrap shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
+      {/* ✅ Search Button - Now using the Button component */}
+      <Button
+        variant="primary"
+        size="md"
+        className={`px-6 py-2.5 rounded-lg flex items-center gap-2 justify-center whitespace-nowrap shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
       >
         {/* Button Icon */}
         <svg
@@ -51,7 +54,7 @@ export default function SearchBar() {
 
         {/* Button Text */}
         <span>{t("marketplace.search_button")}</span>
-      </button>
+      </Button>
     </div>
   );
 }

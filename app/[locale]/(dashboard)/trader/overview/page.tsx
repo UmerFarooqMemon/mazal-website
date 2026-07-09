@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 export default function TraderDashboardPage() {
   const { t, locale } = useLocale();
@@ -148,7 +149,11 @@ export default function TraderDashboardPage() {
           <div
             className={`flex gap-3 w-full sm:w-auto ${isRTL ? "flex-row-reverse" : ""}`}
           >
-            <button className="bg-white border border-gray-300 text-gray-700 px-5 py-2 rounded-full text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2 w-full sm:w-auto justify-center">
+            <Button
+              variant="outline"
+              size="md"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 w-full sm:w-auto justify-center"
+            >
               <svg
                 width="16"
                 height="16"
@@ -162,23 +167,28 @@ export default function TraderDashboardPage() {
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
               {t("dashboard.export_pl")}
-            </button>
-            <Link
-              href={`/${locale}/listings/create`}
-              className="bg-[#0A3B9E] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-800 transition flex items-center gap-2 w-full sm:w-auto justify-center"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
+            </Button>
+
+            <Link href={`/${locale}/listings/create`}>
+              <Button
+                variant="primary"
+                size="md"
+                fullWidth
+                className="w-full sm:w-auto justify-center"
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              {t("dashboard.new_listing")}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                {t("dashboard.new_listing")}
+              </Button>
             </Link>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 export default function MarketplaceFilters() {
   const { t, locale } = useLocale();
@@ -87,9 +88,11 @@ export default function MarketplaceFilters() {
       {filterSections.map((section) => (
         <div key={section.key} className="w-full border-b border-gray-100 pb-4">
           {/* Toggle Button - Clickable Header */}
-          <button
+          <Button
             onClick={() => toggleSection(section.key)}
-            className={`w-full flex items-center justify-between py-2 group ${isRTL ? "flex-row-reverse" : ""}`}
+            variant="ghost"
+            size="sm"
+            className={`w-full flex items-center justify-between py-2 px-0 h-auto group ${isRTL ? "flex-row-reverse" : ""}`}
           >
             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider group-hover:text-[#0A3B9E] transition-colors">
               {section.title}
@@ -110,7 +113,7 @@ export default function MarketplaceFilters() {
                 d="M19 9l-7 7-7-7"
               />
             </svg>
-          </button>
+          </Button>
 
           {/* Filter Options - Show/Hide with animation */}
           <div
@@ -124,16 +127,17 @@ export default function MarketplaceFilters() {
               className={`flex flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               {section.options.map((option) => (
-                <button
+                <Button
                   key={option.value}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-                    option.active
-                      ? "bg-[#0A3B9E] text-white border-[#0A3B9E]"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-[#0A3B9E] hover:text-[#0A3B9E]"
+                  variant={option.active ? "primary" : "outline"}
+                  size="sm"
+                  className={`px-3 py-1.5 ${
+                    !option.active &&
+                    "bg-white border-gray-200 text-gray-600 hover:border-[#0A3B9E] hover:text-[#0A3B9E]"
                   }`}
                 >
                   {option.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

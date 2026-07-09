@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 // Mock data for upcoming auctions
 const upcomingAuctions = [
@@ -100,11 +101,15 @@ export default function UpcomingAuctionRow() {
                 AED {formatPrice(auction.price)}
               </div>
             </div>
-            <Link
-              href={`/${locale}/auctions/${auction.id}/register`}
-              className="bg-[#0A3B9E] text-white px-5 py-1.5 rounded-full text-sm font-semibold hover:bg-blue-800 transition whitespace-nowrap"
-            >
-              {t("auctions.pre_register")}
+
+            <Link href={`/${locale}/auctions/${auction.id}/register`}>
+              <Button
+                variant="primary"
+                size="sm"
+                className="px-5 py-1.5 whitespace-nowrap"
+              >
+                {t("auctions.pre_register")}
+              </Button>
             </Link>
           </div>
         </div>

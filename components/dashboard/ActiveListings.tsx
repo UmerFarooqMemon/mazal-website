@@ -1,5 +1,6 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
+import { Button } from "@/components/ui";
 
 const listings = [
   {
@@ -76,7 +77,11 @@ export default function ActiveListings() {
             {t("dashboard.edit_reflected")}
           </p>
         </div>
-        <button className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-full text-xs font-medium hover:bg-gray-50 transition flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+        >
           <svg
             width="14"
             height="14"
@@ -90,7 +95,7 @@ export default function ActiveListings() {
             <line x1="12" y1="2" x2="12" y2="15" />
           </svg>
           {t("dashboard.share_all")}
-        </button>
+        </Button>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -148,10 +153,13 @@ export default function ActiveListings() {
                 {item.margin} ↗
               </div>
             </div>
-
-            <button className="bg-gray-50 border border-gray-200 text-gray-600 px-4 py-1.5 rounded-full text-xs font-medium hover:bg-gray-100 transition whitespace-nowrap">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+            >
               {t("dashboard.manage")}
-            </button>
+            </Button>
           </div>
         ))}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useLocale } from "../../context/LocaleContext";
+import { Button } from "@/components/ui";
 
 export default function CTASection() {
   const { t, locale } = useLocale();
@@ -15,17 +16,26 @@ export default function CTASection() {
           {t("home.cta_subtitle")}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href={`/${locale}/listings/create`}
-            className="bg-[#0A3B9E] text-white px-8 py-3.5 rounded-full font-semibold text-sm hover:bg-blue-800 transition shadow-md hover:shadow-lg"
-          >
-            {t("home.cta_list")}
+          {/* List or sell */}
+          <Link href={`/${locale}/listings/create`}>
+            <Button
+              variant="primary"
+              size="lg"
+              className="shadow-md hover:shadow-lg"
+            >
+              {t("home.cta_list")}
+            </Button>
           </Link>
-          <Link
-            href={`/${locale}/trader/overview`}
-            className="bg-white border border-gray-200 text-gray-800 px-8 py-3.5 rounded-full font-semibold text-sm hover:bg-gray-50 transition shadow-sm"
-          >
-            {t("home.cta_dashboard")}
+
+          {/* Trader dashboard */}
+          <Link href={`/${locale}/trader/overview`}>
+            <Button
+              variant="outline"
+              size="lg"
+              className="bg-white border-gray-200 text-gray-800 hover:bg-gray-50 shadow-sm"
+            >
+              {t("home.cta_dashboard")}
+            </Button>
           </Link>
         </div>
       </div>
