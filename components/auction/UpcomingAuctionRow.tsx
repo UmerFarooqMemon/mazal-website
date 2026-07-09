@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale } from "@/context/LocaleContext";
 import { Button } from "@/components/ui";
 
@@ -36,6 +37,14 @@ function formatPrice(price: number): string {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+function PlateImage() {
+  return (
+    <div className="relative w-27.5 sm:w-35 aspect-2.5/1 shrink-0 bg-white overflow-hidden">
+      <Image src="/home-new.png" alt="Plate" fill className="object-contain" />
+    </div>
+  );
+}
+
 export default function UpcomingAuctionRow() {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
@@ -45,72 +54,121 @@ export default function UpcomingAuctionRow() {
       {upcomingAuctions.map((auction) => (
         <div
           key={auction.id}
-          className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full ${isRTL ? "sm:flex-row-reverse" : ""}`}
+          className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow w-full ${isRTL ? "rtl" : "ltr"}`}
         >
-          {/* Small Plate Box */}
-          <div className="bg-[#F3F4F8] border border-gray-200 rounded-lg py-3 px-6 min-w-35 flex items-center justify-center gap-2 shrink-0">
-            <div className="text-center">
-              <div className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">
-                {auction.emirate}
-              </div>
-              <div className="flex items-center gap-1.5 text-xl font-serif font-bold text-[#0A3B9E] leading-none">
-                {auction.code.split("|").map((part, i) => (
-                  <span key={i} className="flex items-center gap-1.5">
-                    {part.trim()}
-                    {i === 0 && (
-                      <span className="text-gray-300 font-light text-sm">
-                        |
-                      </span>
-                    )}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Auction Details */}
-          <div className={`grow ${isRTL ? "text-right" : "text-left"}`}>
-            <div className="font-medium text-[#041443]">{auction.title}</div>
+          {/* Mobile Layout - Vertical Stack */}
+          <div className="flex flex-col sm:hidden gap-3">
+            {/* Top Row: Plate Image + Details */}
             <div
-              className={`text-xs text-gray-400 flex items-center gap-1.5 mt-0.5 ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+              {/* Plate Image */}
+              <PlateImage />
+
+              {/* Details */}
+              <div
+                className={`flex-1 min-w-0 ${isRTL ? "text-right" : "text-left"}`}
               >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-              {auction.time}
+                <div className="font-medium text-[#041443] text-sm truncate">
+                  {auction.title}
+                </div>
+                <div
+                  className={`text-xs text-gray-400 flex items-center gap-1 mt-0.5 ${isRTL ? "flex-row-reverse" : ""}`}
+                >
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span className="truncate">{auction.time}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Row: Price + Button */}
+            <div
+              className={`flex items-center justify-between gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            >
+              <div className={isRTL ? "text-left" : "text-right"}>
+                <div className="text-[10px] text-gray-400 font-medium">
+                  {t("auctions.opening_bid")}
+                </div>
+                <div className="text-base font-bold text-[#041443]">
+                  AED {formatPrice(auction.price)}
+                </div>
+              </div>
+              <Link href={`/${locale}/auctions/${auction.id}/register`}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="px-4 py-2 text-xs whitespace-nowrap rounded-full"
+                >
+                  {t("auctions.pre_register")}
+                </Button>
+              </Link>
             </div>
           </div>
 
-          {/* Price and Register Button */}
+          {/* Desktop Layout - Horizontal Row */}
           <div
-            className={`flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`hidden sm:flex items-center gap-4 lg:gap-6 ${isRTL ? "flex-row-reverse" : ""}`}
           >
-            <div className={isRTL ? "text-left" : "text-right"}>
-              <div className="text-[10px] text-gray-400 font-medium">
-                {t("auctions.opening_bid")}
+            {/* Plate Image */}
+            <PlateImage />
+
+            {/* Auction Details */}
+            <div
+              className={`grow min-w-0 ${isRTL ? "text-right" : "text-left"}`}
+            >
+              <div className="font-medium text-[#041443] truncate">
+                {auction.title}
               </div>
-              <div className="text-lg font-bold text-[#041443]">
-                AED {formatPrice(auction.price)}
+              <div
+                className={`text-xs text-gray-400 flex items-center gap-1.5 mt-0.5 ${isRTL ? "flex-row-reverse" : ""}`}
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span className="truncate">{auction.time}</span>
               </div>
             </div>
 
-            <Link href={`/${locale}/auctions/${auction.id}/register`}>
-              <Button
-                variant="primary"
-                size="sm"
-                className="px-5 py-1.5 whitespace-nowrap"
-              >
-                {t("auctions.pre_register")}
-              </Button>
-            </Link>
+            {/* Price and Register Button */}
+            <div
+              className={`flex items-center gap-4 shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
+            >
+              <div className={isRTL ? "text-left" : "text-right"}>
+                <div className="text-[10px] text-gray-400 font-medium">
+                  {t("auctions.opening_bid")}
+                </div>
+                <div className="text-lg font-bold text-[#041443] whitespace-nowrap">
+                  AED {formatPrice(auction.price)}
+                </div>
+              </div>
+              <Link href={`/${locale}/auctions/${auction.id}/register`}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="px-5 py-1.5 whitespace-nowrap rounded-full"
+                >
+                  {t("auctions.pre_register")}
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       ))}

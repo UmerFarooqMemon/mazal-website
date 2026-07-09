@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale } from "../../context/LocaleContext";
 
 interface PlateCardProps {
@@ -45,11 +46,6 @@ export default function PlateCard({
   ).format(views);
 
   return (
-    /* 
-      Taller Rectangle Shape & Stronger Blue Shadow:
-      - min-h-[280px]: Makes the card a tall rectangle.
-      - hover:shadow-[..._rgba(10,59,158,0.25)]: Stronger, clearly visible blue shadow.
-    */
     <div className="bg-white rounded-xl border border-gray-200 p-6 transition-all duration-300 hover:shadow-[0_20px_50px_-12px_rgba(10,59,158,0.25)] hover:-translate-y-1.5 cursor-pointer min-h-70 flex flex-col">
       {/* Card Header: Type and Views */}
       <div
@@ -83,31 +79,14 @@ export default function PlateCard({
           <span>{formattedViews}</span>
         </div>
       </div>
-
-      {/* Panel Box (The Plate) */}
       <Link href={`/${locale}/listings/${id}`}>
-        <div className="bg-[#F3F4F8] border border-gray-200 rounded-lg py-6 px-4 mb-4 flex items-center justify-center gap-4 hover:bg-gray-100 transition-colors cursor-pointer min-h-25">
-          <div className="text-center">
-            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
-              {emirate}
-            </div>
-            <div className="flex items-center gap-2 text-4xl md:text-5xl font-serif font-bold text-[#0A3B9E] leading-none">
-              {code.includes("|") ? (
-                code.split("|").map((part, i) => (
-                  <span key={i} className="flex items-center gap-2">
-                    {part.trim()}
-                    {i === 0 && (
-                      <span className="text-gray-300 font-light text-3xl">
-                        |
-                      </span>
-                    )}
-                  </span>
-                ))
-              ) : (
-                <span>{code}</span>
-              )}
-            </div>
-          </div>
+        <div className="relative w-full aspect-2.5/1 mb-4 bg-white overflow-hidden">
+          <Image
+            src="/home-new.png"
+            alt={`${emirate} ${code} Plate`}
+            fill
+            className="object-contain"
+          />
         </div>
       </Link>
 
@@ -117,8 +96,10 @@ export default function PlateCard({
         <div className="text-2xl text-center font-bold text-[#041443]">
           {formattedPrice}
         </div>
-        {/* <div
-          className={`flex items-center gap-2 text-xs text-gray-400 ${isRTL ? "flex-row-reverse" : ""}`}
+
+        {/* Seller and Rating */}
+        <div
+          className={`flex items-center justify-center gap-2 text-xs text-gray-400 ${isRTL ? "flex-row-reverse" : ""}`}
         >
           <span className="font-medium text-gray-500">{seller}</span>
           <span className="w-1 h-1 rounded-full bg-gray-300"></span>
@@ -131,7 +112,7 @@ export default function PlateCard({
             </svg>
             {rating}
           </span>
-        </div> */}
+        </div>
       </div>
     </div>
   );

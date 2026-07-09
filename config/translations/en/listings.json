@@ -30,5 +30,27 @@
   "emirate_rak": "Ras Al Khaimah",
   "type_direct": "Direct",
   "type_auction": "Auction",
-  "type_spot": "Spot"
+  "type_spot": "Spot",
+
+  "three_ways_to_sell": "THREE WAYS TO SELL",
+  "liquidity_title": "Liquidity, when you want it.",
+  "liquidity_subtitle": "Take a Mazal cash offer, run a certified valuation, or list to the open market. You pick the speed.",
+  "spot_estimator_title": "SPOT OFFER ESTIMATOR",
+  "estimated_offer": "Estimated Mazal offer",
+  "get_my_offer": "Get my offer",
+  "spot_cash_title": "Spot cash offer",
+  "spot_cash_desc": "Submit plate details, get an instant valuation and Mazal cash offer. Accepted plates move into our inventory.",
+  "get_cash_offer": "Get a cash offer",
+  "val_cert_title": "Valuation certificate",
+  "val_cert_desc": "An official Mazal-branded valuation certificate, downloadable PDF, independent of any sale.",
+  "request_cert": "Request certificate",
+  "marketplace_title": "List on marketplace",
+  "marketplace_desc": "List publicly or with code hidden behind the AED 1,500 reveal fee. Full Mazal escrow on every deal.",
+  "create_listing": "Create listing",
+  "feature_manual": "Manual entry or camera scan",
+  "feature_app": "Offer issued in app",
+  "feature_paid": "Paid in 24-48 hours",
+  "spot_cash_subtitle": "AED 24-48h payment",
+  "val_cert_subtitle": "AED 750",
+  "marketplace_subtitle": "1% escrow + 4% platform"
 }

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale } from "@/context/LocaleContext";
 import { Button } from "@/components/ui";
 
@@ -14,20 +15,15 @@ export default function HeroRight() {
     minimumFractionDigits: 0,
   });
 
-  // Split the formatted string to separate the currency sign from the number
   const formattedLargePriceParts = priceFormatter.format(12500000).split(" ");
   const largeCurrencySymbol = formattedLargePriceParts[0];
   const largeNumberPart = formattedLargePriceParts.slice(1).join(" ");
 
-  // Formatter for the small auction price
   const formattedAuctionPriceParts = priceFormatter.format(6200000).split(" ");
   const auctionCurrencySymbol = formattedAuctionPriceParts[0];
   const auctionNumberPart = formattedAuctionPriceParts.slice(1).join(" ");
 
-  // Formatter for views (Arabic numbers are disabled, all in English)
   const formattedViews = new Intl.NumberFormat("en-US").format(8421);
-
-  // Formatter for bidders (Arabic numbers are disabled, all in English)
   const formattedBidders = new Intl.NumberFormat("en-US").format(23);
 
   return (
@@ -42,28 +38,24 @@ export default function HeroRight() {
           >
             {t("home.hero_featured_label")}
           </div>
-          <div className="bg-[#F3F4F8] border border-gray-200 rounded-xl p-8 flex items-center justify-center gap-6 mb-6">
-            <div className="text-center">
-              <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-                {t("home.emirate_dubai")}
-              </div>
-              <div className="text-6xl font-serif font-bold text-[#0A3B9E] mt-1">
-                M
-              </div>
-            </div>
-            <div className="w-px h-16 bg-gray-300"></div>
-            <div className="text-6xl font-serif font-bold text-[#0A3B9E]">
-              7
-            </div>
+
+          <div className="relative w-full aspect-2.5/1 mb-6 rounded-xl bg-white overflow-hidden">
+            <Image
+              src="/home-new.png"
+              alt="Dubai M 7 Plate"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
+
           <div
             className={`flex justify-between items-end mb-6 ${isRTL ? "flex-row-reverse" : ""}`}
           >
-            <div className={`${isRTL ? "text-right" : "text-left"}`}>
+            <div className={isRTL ? "text-right" : "text-left"}>
               <div className="text-xs text-gray-400 font-medium">
                 {t("home.hero_asking")}
               </div>
-              {/* Large Price with AED only */}
               <div
                 className={`flex text-2xl font-bold text-[#041443] items-center gap-2 ${isRTL ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}
               >
@@ -85,17 +77,18 @@ export default function HeroRight() {
               <Button
                 variant="primary"
                 size="sm"
-                className="flex items-center gap-1 px-5 py-2.5"
+                className="flex items-center gap-1 px-5 py-2.5 rounded-full"
               >
                 {t("home.hero_view")}
-                <span className="text-[10px]">→</span>
+                <span className="text-[10px]">{isRTL ? "←" : "→"}</span>
               </Button>
             </Link>
           </div>
+
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-[#F3F4F8] rounded-lg p-3 text-center">
               <div className="text-xs font-medium text-gray-800">
-                {t("home.hero_pattern")}
+                {t("home.hero_single_digit")}
               </div>
               <div className="text-[10px] text-gray-500">
                 {t("home.hero_pattern")}
@@ -126,7 +119,6 @@ export default function HeroRight() {
             <div
               className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
             >
-              {/* Professional Animated Red Live Dot */}
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
@@ -142,12 +134,11 @@ export default function HeroRight() {
           <div
             className={`flex justify-between items-end ${isRTL ? "flex-row-reverse" : ""}`}
           >
-            <div className={`${isRTL ? "text-right" : "text-left"}`}>
+            <div className={isRTL ? "text-right" : "text-left"}>
               <div className="text-sm font-medium text-[#041443]">
                 {t("home.hero_dubai_t")}
               </div>
             </div>
-            {/* Auction Price with AED only */}
             <div
               className={`flex text-base font-bold text-[#0A3B9E] items-center gap-2 ${isRTL ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}
             >

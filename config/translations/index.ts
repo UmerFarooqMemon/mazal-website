@@ -9,6 +9,8 @@ import enDashboard from "@/config/translations/en/dashboard.json";
 import enListings from "@/config/translations/en/listings.json";
 import enPrivateDeal from "@/config/translations/en/private-deal.json";
 import enAbout from "@/config/translations/en/about.json";
+import enCertificates from "@/config/translations/en/certificates.json";
+import enValuation from "@/config/translations/en/valuation.json";
 
 import arCommon from "@/config/translations/ar/common.json";
 import arAuth from "@/config/translations/ar/auth.json";
@@ -19,6 +21,8 @@ import arDashboard from "@/config/translations/ar/dashboard.json";
 import arListings from "@/config/translations/ar/listings.json";
 import arPrivateDeal from "@/config/translations/ar/private-deal.json";
 import arAbout from "@/config/translations/ar/about.json";
+import arCertificates from "@/config/translations/ar/certificates.json";
+import arValuation from "@/config/translations/ar/valuation.json";
 
 const translationsMap: Record<Locale, any> = {
   en: {
@@ -31,6 +35,8 @@ const translationsMap: Record<Locale, any> = {
     listings: enListings,
     "private-deal": enPrivateDeal,
     about: enAbout,
+    certificates: enCertificates,
+    valuation: enValuation,
   },
   ar: {
     common: arCommon,
@@ -42,6 +48,8 @@ const translationsMap: Record<Locale, any> = {
     listings: arListings,
     "private-deal": arPrivateDeal,
     about: arAbout,
+    certificates: arCertificates,
+    valuation: arValuation,
   },
 };
 

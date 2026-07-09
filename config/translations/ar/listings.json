@@ -30,5 +30,27 @@
   "emirate_rak": "رأس الخيمة",
   "type_direct": "مباشر",
   "type_auction": "مزاد",
-  "type_spot": "نقدي"
+  "type_spot": "نقدي",
+
+  "three_ways_to_sell": "ثلاث طرق للبيع",
+  "liquidity_title": "سيولة عندما تريدها",
+  "liquidity_subtitle": "احصل على عرض نقدي من مازال أو قم بتقييم معتمد أو قم بإدراج لوحتك في السوق المفتوح",
+  "spot_estimator_title": "مقدر العرض النقدي",
+  "estimated_offer": "العرض النقدي المقدر من مازال",
+  "get_my_offer": "احصل على عرضي",
+  "spot_cash_title": "عرض نقدي فوري",
+  "spot_cash_desc": "أدخل تفاصيل اللوحة واحصل على تقييم فوري وعرض نقدي من مازال. اللوحات المقبولة تنتقل إلى مخزوننا",
+  "get_cash_offer": "احصل على عرض نقدي",
+  "val_cert_title": "شهادة تقييم",
+  "val_cert_desc": "شهادة تقييم رسمية من مازال قابلة للتحميل مباشرة ومستقلة عن أي عملية بيع",
+  "request_cert": "طلب شهادة",
+  "marketplace_title": "قائمة في السوق",
+  "marketplace_desc": "قائمة علنية أو مع كود مخفي خلف رسوم الكشف البالغة 1,500 درهم وضمان مازال كامل على كل صفقة",
+  "create_listing": "إنشاء قائمة",
+  "feature_manual": "إدخال يدوي أو مسح بالكاميرا",
+  "feature_app": "العرض يصدر في التطبيق",
+  "feature_paid": "الدفع في غضون 24-48 ساعة",
+  "spot_cash_subtitle": "دفع خلال 24-48 ساعة",
+  "val_cert_subtitle": "750 درهم",
+  "marketplace_subtitle": "1% ضمان + 4% منصة"
 }

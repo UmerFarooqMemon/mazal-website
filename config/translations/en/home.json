@@ -13,7 +13,7 @@
   "feature_2_title": "Live auctions",
   "feature_2_desc": "Auto-extend timers, proxy bids, KYC-gated rooms. No sniping, no theatre.",
   "feature_3_title": "Spot cash",
-  "feature_3_desc": "Get a Mazal cash offer in minutes. Paid in 24–48 hours.",
+  "feature_3_desc": "Get a Mazal cash offer in minutes. Paid in 24-48 hours.",
   "feature_4_title": "Blind negotiation",
   "feature_4_desc": "Identities stay hidden until terms are agreed. No bypassing the platform.",
   "trending_badge": "Trending Now",
@@ -61,5 +61,6 @@
   "hero_seller": "Seller",
   "hero_auction_label": "LIVE AUCTION • 23 BIDDERS",
   "hero_closes": "closes",
-  "hero_dubai_t": "Dubai T · 8"
+  "hero_dubai_t": "Dubai T · 8",
+  "hero_single_digit": "Single digit"
 }

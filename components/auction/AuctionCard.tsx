@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale } from "@/context/LocaleContext";
 
 // Helper function to format numbers consistently
@@ -26,19 +27,15 @@ export default function AuctionCard() {
         </span>
       </div>
 
-      {/* Panel Box */}
+      {/* ✅ Panel Box with Image instead of Text */}
       <Link href={`/${locale}/auctions/1`}>
-        <div className="bg-[#F3F4F8] border border-gray-200 rounded-xl py-8 px-4 mb-6 flex items-center justify-center gap-4 hover:bg-gray-100 transition-colors cursor-pointer">
-          <div className="text-center">
-            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
-              DUBAI
-            </div>
-            <div className="flex items-center gap-2 text-5xl font-serif font-bold text-[#0A3B9E] leading-none">
-              <span>T</span>
-              <span className="text-gray-300 font-light text-3xl">|</span>
-              <span>8</span>
-            </div>
-          </div>
+        <div className="relative w-full aspect-2.5/1 rounded-xl mb-6 bg-white overflow-hidden hover:bg-gray-100 transition-colors cursor-pointer">
+          <Image
+            src="/home-new.png"
+            alt="Live Auction Plate"
+            fill
+            className="object-contain"
+          />
         </div>
       </Link>
 

@@ -19,6 +19,9 @@
   "range_1m_5m": "1M - 5M",
   "range_5m_plus": "5M+",
   "type": "Type",
+  "direct": "Direct",
+  "auction": "Auction",
+  "spot": "Spot",
   "search_placeholder": "Code or digits e.g. M 7",
   "search_button": "Search"
 }

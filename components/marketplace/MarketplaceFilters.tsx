@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui";
 
 export default function MarketplaceFilters() {
   const { t, locale } = useLocale();
@@ -87,12 +86,10 @@ export default function MarketplaceFilters() {
     >
       {filterSections.map((section) => (
         <div key={section.key} className="w-full border-b border-gray-100 pb-4">
-          {/* Toggle Button - Clickable Header */}
-          <Button
+          {/* ✅ Toggle Button - Native HTML button, no Button component */}
+          <button
             onClick={() => toggleSection(section.key)}
-            variant="ghost"
-            size="sm"
-            className={`w-full flex items-center justify-between py-2 px-0 h-auto group ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`w-full flex items-center justify-between py-2 group transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
           >
             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider group-hover:text-[#0A3B9E] transition-colors">
               {section.title}
@@ -113,7 +110,7 @@ export default function MarketplaceFilters() {
                 d="M19 9l-7 7-7-7"
               />
             </svg>
-          </Button>
+          </button>
 
           {/* Filter Options - Show/Hide with animation */}
           <div
@@ -127,17 +124,16 @@ export default function MarketplaceFilters() {
               className={`flex flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               {section.options.map((option) => (
-                <Button
+                <span
                   key={option.value}
-                  variant={option.active ? "primary" : "outline"}
-                  size="sm"
-                  className={`px-3 py-1.5 ${
-                    !option.active &&
-                    "bg-white border-gray-200 text-gray-600 hover:border-[#0A3B9E] hover:text-[#0A3B9E]"
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition cursor-pointer ${
+                    option.active
+                      ? "bg-[#0A3B9E] text-white border-[#0A3B9E]"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-[#0A3B9E] hover:text-[#0A3B9E]"
                   }`}
                 >
                   {option.label}
-                </Button>
+                </span>
               ))}
             </div>
           </div>
