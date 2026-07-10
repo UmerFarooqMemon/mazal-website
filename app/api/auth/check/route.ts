@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Try to access a protected endpoint to verify token validity
+    // Verify token by calling a protected endpoint on the backend
     const response = await fetch(`${API_BASE_URL}/v1/number-plates`, {
       headers: {
         Accept: "application/json",
@@ -24,15 +24,17 @@ export async function GET(request: NextRequest) {
     if (response.ok) {
       return NextResponse.json({ valid: true });
     } else {
+      // If the backend returns 401, the token is invalid
       return NextResponse.json(
         { valid: false, error: "Invalid token" },
         { status: 401 },
       );
     }
   } catch (error) {
+    // Network or other server errors – don't invalidate the session
     return NextResponse.json(
-      { valid: false, error: "Verification failed" },
-      { status: 500 },
+      { valid: false, error: "Verification temporarily unavailable" },
+      { status: 502 },
     );
   }
 }

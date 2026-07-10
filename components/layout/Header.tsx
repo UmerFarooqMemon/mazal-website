@@ -17,10 +17,10 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // استخدم loading للتحقق من انتهاء فحص التوكن
+  // Auth state is immediately available from localStorage (no flicker)
   const { user, isAuthenticated, loading, logout } = useAuth();
 
-  // منع تمرير الصفحة عند فتح القائمة
+  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -108,8 +108,8 @@ export default function Header() {
                 <LanguageSwitcher />
               </div>
 
-              {/* حالة التحميل: لا تظهر أي شيء أو أضف skeleton خفيف */}
-              {loading ? null : isAuthenticated ? (
+              {/* Show profile if authenticated, else sign-in button */}
+              {isAuthenticated ? (
                 <div
                   className={`flex items-center gap-3 ml-2 ${isRTL ? "flex-row-reverse mr-2" : ""}`}
                 >
@@ -118,8 +118,8 @@ export default function Header() {
                     href={`/${locale}/trader/overview`}
                     className={`flex items-center gap-3 group ${isRTL ? "flex-row-reverse" : ""}`}
                   >
-                    <div className="relative flex-shrink-0">
-                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#0A3B9E] to-[#1e40af] flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-gray-100 group-hover:ring-[#0A3B9E]/30 transition-all">
+                    <div className="relative shrink-0">
+                      <div className="h-9 w-9 rounded-full bg-linear-to-br from-[#0A3B9E] to-[#1e40af] flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-gray-100 group-hover:ring-[#0A3B9E]/30 transition-all">
                         {user?.name
                           ?.split(" ")
                           .map((n) => n[0])
@@ -173,18 +173,16 @@ export default function Header() {
               className={`flex items-center gap-2 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <LanguageSwitcher />
-              {loading
-                ? null
-                : isAuthenticated && (
-                    <Link
-                      href={`/${locale}/trader/overview`}
-                      className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="h-7 w-7 rounded-full bg-[#0A3B9E] text-white flex items-center justify-center text-xs font-medium">
-                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                      </div>
-                    </Link>
-                  )}
+              {isAuthenticated && (
+                <Link
+                  href={`/${locale}/trader/overview`}
+                  className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="h-7 w-7 rounded-full bg-[#0A3B9E] text-white flex items-center justify-center text-xs font-medium">
+                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                </Link>
+              )}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors"
@@ -222,7 +220,7 @@ export default function Header() {
 
             <div className="px-6 pb-6">
               {/* User Info if authenticated */}
-              {!loading && isAuthenticated && (
+              {isAuthenticated && (
                 <div className="mb-4 p-4 bg-gray-50 rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-[#0A3B9E] text-white flex items-center justify-center text-sm font-medium">
@@ -291,16 +289,14 @@ export default function Header() {
 
               {/* Auth Actions */}
               <div className="mt-6 space-y-3">
-                {!loading && isAuthenticated ? (
-                  <>
-                    <button
-                      onClick={handleLogout}
-                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span>{t("common.sign_out")}</span>
-                    </button>
-                  </>
+                {isAuthenticated ? (
+                  <button
+                    onClick={handleLogout}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>{t("common.sign_out")}</span>
+                  </button>
                 ) : (
                   <Link href={`/${locale}/login`} onClick={closeMenu}>
                     <Button

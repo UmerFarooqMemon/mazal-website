@@ -22,65 +22,45 @@ interface User {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true); // start as loading
+  // Read initial state directly from localStorage to avoid flicker
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("access_token");
+    }
+    return null;
+  });
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("user");
+      return savedUser ? JSON.parse(savedUser) : null;
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(false); // used only during API calls now
   const [error, setError] = useState<string | null>(null);
 
-  // Verify token on mount
+  // Background token validation – does not affect initial render
   useEffect(() => {
-    const verifyToken = async () => {
-      const savedToken = localStorage.getItem("access_token");
-      const savedUser = localStorage.getItem("user");
+    if (!token) return;
 
-      if (!savedToken) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Check if token is still valid
-        const response = await fetch("/api/auth/check", {
-          headers: { Authorization: `Bearer ${savedToken}` },
-        });
-
-        if (response.ok) {
-          setToken(savedToken);
-          if (savedUser) {
-            try {
-              setUser(JSON.parse(savedUser));
-            } catch (e) {
-              /* ignore */
-            }
-          }
-        } else {
-          // Token invalid – clean up
+    fetch("/api/auth/check", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok && res.status === 401) {
+          // Token is invalid – clean up
           localStorage.removeItem("access_token");
           localStorage.removeItem("user");
           setToken(null);
           setUser(null);
         }
-      } catch (error) {
-        // Network error – keep token but mark as unverified?
-        // For safety, keep the token but don't show user until verified.
-        // Actually, if network fails, keep existing state.
-        if (savedUser) {
-          try {
-            setUser(JSON.parse(savedUser));
-          } catch (e) {
-            /* ignore */
-          }
-          setToken(savedToken);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+      })
+      .catch(() => {
+        // Network error – keep session alive
+      });
+  }, []); // run only once on mount
 
-    verifyToken();
-  }, []);
-
-  // Save token to localStorage when it changes
+  // Keep localStorage in sync with state
   useEffect(() => {
     if (token) {
       localStorage.setItem("access_token", token);
@@ -89,7 +69,6 @@ export function useAuth() {
     }
   }, [token]);
 
-  // Save user to localStorage
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
@@ -204,7 +183,7 @@ export function useAuth() {
     token,
     loading,
     error,
-    isAuthenticated: !!token && !!user, // must have both token and user
+    isAuthenticated: !!token && !!user,
     login,
     register,
     logout,
