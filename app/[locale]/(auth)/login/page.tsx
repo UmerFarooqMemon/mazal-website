@@ -1,21 +1,43 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import AuthHero from "@/components/auth/AuthHero";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { Icons } from "@/components/ui/Icons";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const { t, locale } = useLocale();
-  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
   const isRTL = locale === "ar";
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    login: "",
+    password: "",
+    remember_me: false,
+  });
+
+  const { login, loading, error } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await login({
+        login: formData.login,
+        password: formData.password,
+      });
+      router.push(`/${locale}`);
+    } catch (err) {
+      // Error handled by useAuth hook
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl">
-        {/* Auth Hero Side */}
         <div
           className={`w-full lg:w-1/2 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
         >
@@ -27,7 +49,6 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Form Side */}
         <div
           className={`w-full lg:w-1/2 flex items-center justify-center bg-white p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
         >
@@ -42,7 +63,6 @@ export default function LoginPage() {
                 <Icons.Shield size={14} />
                 <span>{t("common.secure_access")}</span>
               </div>
-
               <div
                 className={`flex rounded-full border border-gray-200 p-0.5 text-xs font-medium ${isRTL ? "flex-row-reverse" : ""}`}
               >
@@ -58,7 +78,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Title */}
             <h2
               className={`text-3xl font-serif font-bold text-[#041443] mb-2 ${isRTL ? "text-right" : "text-left"}`}
             >
@@ -70,19 +89,27 @@ export default function LoginPage() {
               {t("common.sign_in_subtitle")}
             </p>
 
-            {/* Form */}
-            <form className="space-y-5">
-              {/* Email Input */}
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <Input
-                name="email"
+                name="login"
                 label={t("common.email_or_mobile")}
                 icon={<Icons.Email />}
                 type="text"
                 placeholder={t("common.email_placeholder")}
+                value={formData.login}
+                onChange={(e) =>
+                  setFormData({ ...formData, login: e.target.value })
+                }
                 autoComplete="email"
               />
 
-              {/* Password Input */}
               <Input
                 name="password"
                 label={t("common.password")}
@@ -90,6 +117,10 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder={t("common.password_placeholder")}
                 className="tracking-widest"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 autoComplete="current-password"
                 rightIcon={
                   <button
@@ -107,7 +138,6 @@ export default function LoginPage() {
                 }
               />
 
-              {/* Remember & Forgot */}
               <div
                 className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
               >
@@ -118,6 +148,13 @@ export default function LoginPage() {
                     name="remember_me"
                     type="checkbox"
                     className="w-4 h-4 rounded border-gray-300 text-[#0A3B9E] focus:ring-[#0A3B9E]"
+                    checked={formData.remember_me}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        remember_me: e.target.checked,
+                      })
+                    }
                   />
                   <span className="text-xs text-gray-500">
                     {t("common.keep_me_signed_in")}
@@ -131,15 +168,17 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              {/* Submit Button */}
               <Button
                 type="submit"
                 variant="primary"
                 size="lg"
                 fullWidth
                 rightIcon={<Icons.ArrowRight />}
+                disabled={loading}
               >
-                {t("common.sign_in")}
+                {loading
+                  ? t("common.loading") || "Signing in..."
+                  : t("common.sign_in")}
               </Button>
             </form>
 
@@ -155,7 +194,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Social Login */}
             <div className="space-y-3">
               <Button
                 variant="outline"
@@ -170,7 +208,6 @@ export default function LoginPage() {
               >
                 {t("common.continue_with_uae_pass")}
               </Button>
-
               <Button
                 variant="outline"
                 fullWidth
@@ -204,7 +241,6 @@ export default function LoginPage() {
               </Button>
             </div>
 
-            {/* Footer Links */}
             <div className="mt-6 text-center text-sm text-gray-500 flex flex-col gap-1">
               <div>
                 {t("common.new_to_mazal")}{" "}

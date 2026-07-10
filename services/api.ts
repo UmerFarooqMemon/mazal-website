@@ -1,110 +1,19 @@
-const getBaseUrl = () => {
-  if (typeof window !== "undefined") {
-    const isLocalhost =
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
-    return isLocalhost
-      ? process.env.NEXT_PUBLIC_API_URL || "http://mazal-backend.test"
-      : process.env.NEXT_PUBLIC_API_URL || "https://admin.mazal.cloud/api";
-  }
-  return process.env.NEXT_PUBLIC_API_URL || "http://mazal-backend.test";
-};
+// API Base URL
+const API_BASE_URL = "https://admin.mazal.cloud/api";
 
-const API_BASE_URL = getBaseUrl();
-
-// Mock Data - so the website works until you start the server
-const MOCK_OPTIONS = {
-  data: {
-    emirates: [
-      { key: "dubai", label: "Dubai" },
-      { key: "abu_dhabi", label: "Abu Dhabi" },
-      { key: "sharjah", label: "Sharjah" },
-      { key: "ajman", label: "Ajman" },
-      { key: "rak", label: "RAK" },
-    ],
-    plate_types: [
-      { key: "private_car", label: "Private Car" },
-      { key: "classic_car", label: "Classic Car" },
-      { key: "motorcycle", label: "Motorcycle" },
-    ],
-    plate_designs: [{ key: "new", label: "New" }],
-    preview_background: { url: "" },
-  },
-};
-
-const MOCK_SUBMIT_RESPONSE = {
-  data: {
-    number_plate: {
-      id: "mock-id-" + Date.now(),
-      title: "Mock Plate Submission",
-      status: "pending",
-      created_at: new Date().toISOString(),
-    },
-  },
-};
-
-export async function apiRequest<T>(
-  endpoint: string,
-  options?: RequestInit & { token?: string },
-): Promise<T> {
-  // If you're in Development and don't want to run the server, restore the fake data.
-  if (process.env.NODE_ENV === "development") {
-    console.warn("[DEV] Using Mock Data for API:", endpoint);
-
-    if (endpoint === "/api/v1/number-plates/options") {
-      return MOCK_OPTIONS as T;
-    }
-    if (endpoint === "/api/v1/number-plates") {
-      return MOCK_SUBMIT_RESPONSE as T;
-    }
-  }
-
-  // Setting up the order headers
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    ...(options?.headers as Record<string, string>),
-  };
-
-  if (options?.token) {
-    headers["Authorization"] = `Bearer ${options.token}`;
-  }
-
-  try {
-    // Attempting to connect to the server (if the server is running, this will work)
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      let errorMessage = "Something went wrong";
-      try {
-        const error = await response.json();
-        if (error.message) errorMessage = error.message;
-      } catch {
-        errorMessage = response.statusText || `Error ${response.status}`;
-      }
-      throw new Error(errorMessage);
-    }
-
-    return response.json();
-  } catch (error) {
-    // If an error occurs in the Fetch, we throw a clear error
-    console.error("API Request Error:", error);
-    throw new Error(
-      "Network error: Unable to connect to the server. Make sure the backend is running.",
-    );
-  }
-}
-
-// Types of data that will be returned from the API
+// Types
 export interface PlateOptionsResponse {
   data: {
     emirates: { key: string; label: string }[];
     plate_types: { key: string; label: string }[];
+    plate_codes: { key: string; label: string }[];
     plate_designs: { key: string; label: string }[];
-    preview_background: { url: string };
+    background_image?: {
+      url: string;
+      width: number;
+      height: number;
+      overlay_positions?: any;
+    };
   };
 }
 
@@ -113,8 +22,110 @@ export interface NumberPlateSubmitResponse {
     number_plate: {
       id: string;
       title: string;
+      emirate: string;
+      plate_type: string;
+      plate_code: string;
+      plate_digits: string;
+      plate_design: string;
+      price: number;
+      description: string;
       status: string;
       created_at: string;
     };
   };
+}
+
+export interface NumberPlate {
+  id: string;
+  title: string;
+  contact_number: string;
+  emirate: string;
+  plate_type: string;
+  plate_code: string;
+  plate_digits: string;
+  plate_design: string;
+  price: number;
+  description: string;
+  status: string;
+  valuation_certificate_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NumberPlatesListResponse {
+  data: NumberPlate[];
+}
+
+export interface NumberPlateDetailResponse {
+  data: NumberPlate;
+}
+
+export interface PreviewTemplateResponse {
+  data: {
+    id: string;
+    emirate: string;
+    plate_type: string;
+    plate_design: string;
+    background_image: {
+      url: string;
+      width: number;
+      height: number;
+    };
+    overlay_positions: {
+      code?: { x: number; y: number; width: number; height: number };
+      digits?: { x: number; y: number; width: number; height: number };
+    };
+  };
+}
+
+export interface PreviewsListResponse {
+  data: PreviewTemplateResponse["data"][];
+}
+
+/**
+ * Generic API request function.
+ * Automatically adds JSON headers and Bearer token if provided.
+ * Throws an error with the server's message if the response is not ok.
+ */
+export async function apiRequest<T>(
+  endpoint: string,
+  options: {
+    method?: string;
+    body?: string;
+    token?: string;
+    headers?: Record<string, string>;
+  } = {},
+): Promise<T> {
+  const { method = "GET", body, token, headers = {} } = options;
+
+  const requestHeaders: Record<string, string> = {
+    Accept: "application/json",
+    ...headers,
+  };
+
+  if (body) {
+    requestHeaders["Content-Type"] = "application/json";
+  }
+
+  if (token) {
+    requestHeaders["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method,
+    headers: requestHeaders,
+    body,
+  });
+
+  // Parse the response JSON (even if error)
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    // Throw the server's error message if available, otherwise generic
+    throw new Error(
+      data.message || data.error || `API Error: ${response.status}`,
+    );
+  }
+
+  return data;
 }

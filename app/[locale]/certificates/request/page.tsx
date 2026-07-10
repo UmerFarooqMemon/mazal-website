@@ -2,31 +2,28 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
-import {
-  apiRequest,
-  PlateOptionsResponse,
-  NumberPlateSubmitResponse,
-} from "@/services/api";
 import CertificateForm from "@/components/certificates/CertificateForm";
 import CertificatePreview from "@/components/certificates/CertificatePreview";
 import CertificateFAQ from "@/components/certificates/CertificateFAQ";
 import { BadgeCheck, ShieldCheck, Sparkles, Stamp } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function CertificateRequestPage() {
   const router = useRouter();
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
-  const [isLoading, setIsLoading] = useState(false);
-  const [options, setOptions] = useState<PlateOptionsResponse["data"] | null>(
-    null,
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false); // prevent double submission
+  const [options, setOptions] = useState<any>(null);
 
+  // Use the auth hook to get the token and authentication state
+  const { token, isAuthenticated } = useAuth();
+
+  // Fetch plate options (emirates, types, etc.) on mount
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const data = await apiRequest<PlateOptionsResponse>(
-          "/api/v1/number-plates/options",
-        );
+        const response = await fetch("/api/number-plates/options");
+        const data = await response.json();
         setOptions(data.data);
       } catch (error) {
         console.error("Error fetching plate options:", error);
@@ -36,26 +33,55 @@ export default function CertificateRequestPage() {
   }, []);
 
   const handleSubmitValuation = async (formData: any) => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("access_token");
-      const response = await apiRequest<NumberPlateSubmitResponse>(
-        "/api/v1/number-plates",
-        {
-          method: "POST",
-          body: JSON.stringify(formData),
-          token: token || undefined,
-        },
-      );
+    // Prevent double submission
+    if (isSubmitting) return;
 
-      if (response.data?.number_plate?.id) {
-        router.push(`/${locale}/valuation/${response.data.number_plate.id}`);
+    // Check if user is authenticated
+    if (!isAuthenticated || !token) {
+      alert(t("common.login_required") || "Please log in first");
+      router.push(`/${locale}/login`);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/number-plates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: `Dubai ${formData.plate_code} ${formData.plate_digits}`,
+          contact_number: "0501234567",
+          emirate: "dubai",
+          plate_type: "private_car",
+          plate_code: formData.plate_code,
+          plate_digits: formData.plate_digits,
+          plate_design: "new",
+          price: 0,
+          description: "Certificate valuation request.",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Submission failed");
       }
-    } catch (error) {
+
+      if (result.data?.number_plate?.id) {
+        router.push(`/${locale}/valuation/${result.data.number_plate.id}`);
+      } else {
+        throw new Error("Invalid response from server");
+      }
+    } catch (error: any) {
       console.error("Submission failed:", error);
-      alert(t("common.error_submission") || "An error occurred");
+      alert(
+        error.message || t("common.error_submission") || "An error occurred",
+      );
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -112,7 +138,7 @@ export default function CertificateRequestPage() {
               emirates={options?.emirates || []}
               types={options?.plate_types || []}
               onSubmit={handleSubmitValuation}
-              isLoading={isLoading}
+              isLoading={isSubmitting}
             />
           </div>
         </div>

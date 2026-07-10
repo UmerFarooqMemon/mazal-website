@@ -62,5 +62,14 @@
   "licensed_escrow": "مشغل ضمان إماراتي مرخص",
   "search": "بحث",
   "notifications": "الإشعارات",
-  "quick_actions": "إجراءات سريعة"
+  "quick_actions": "إجراءات سريعة",
+  "agree_terms_error": "يرجى الموافقة على الشروط والأحكام",
+  "name_required": "الاسم الكامل مطلوب",
+  "email_or_mobile_required": "البريد الإلكتروني أو رقم الجوال مطلوب",
+  "password_min_length": "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
+  "sign_out": "تسجيل الخروج",
+  "settings": "الإعدادات",
+  "loading": "جارٍ التحميل...",
+  "error_submission": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+  "login_required": "يجب تسجيل الدخول أولاً"
 }

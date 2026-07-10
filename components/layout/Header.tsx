@@ -2,108 +2,25 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Button } from "@/components/ui";
-
-const Icons = {
-  Search: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  ),
-  Bell: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-  ),
-  Shield: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  ),
-  User: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  ),
-  Menu: () => (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    >
-      <line x1="4" y1="8" x2="20" y2="8" />
-      <line x1="4" y1="16" x2="20" y2="16" />
-    </svg>
-  ),
-  Close: () => (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    >
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  ),
-};
+import { useAuth } from "@/hooks/useAuth";
+import { Search, Bell, User, Menu, X, LogOut } from "lucide-react";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { locale, t } = useLocale();
   const isRTL = locale === "ar";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // استخدم loading للتحقق من انتهاء فحص التوكن
+  const { user, isAuthenticated, loading, logout } = useAuth();
+
+  // منع تمرير الصفحة عند فتح القائمة
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -123,6 +40,12 @@ export default function Header() {
     }, 200);
   };
 
+  const handleLogout = async () => {
+    await logout();
+    closeMenu();
+    router.push(`/${locale}`);
+  };
+
   const isActive = (path: string) => pathname.includes(path);
 
   const navLinks = [
@@ -139,6 +62,7 @@ export default function Header() {
           <div
             className={`flex h-16 items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
           >
+            {/* Logo */}
             <Link
               href={`/${locale}`}
               className="flex items-center gap-2 shrink-0"
@@ -151,6 +75,7 @@ export default function Header() {
               </span>
             </Link>
 
+            {/* Desktop Navigation */}
             <nav
               className={`hidden lg:flex items-center gap-8 text-sm ${isRTL ? "flex-row-reverse" : ""}`}
             >
@@ -169,38 +94,102 @@ export default function Header() {
               ))}
             </nav>
 
+            {/* Desktop Actions */}
             <div
               className={`hidden lg:flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <button className="h-9 w-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#041443] hover:bg-gray-50 transition-colors">
-                <Icons.Search />
+                <Search className="w-5 h-5" strokeWidth={2} />
               </button>
               <button className="h-9 w-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#041443] hover:bg-gray-50 transition-colors">
-                <Icons.Bell />
+                <Bell className="w-5 h-5" strokeWidth={2} />
               </button>
               <div className="mx-1">
                 <LanguageSwitcher />
               </div>
-              <Link href={`/${locale}/login`}>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="h-9 px-4 text-xs rounded-full"
+
+              {/* حالة التحميل: لا تظهر أي شيء أو أضف skeleton خفيف */}
+              {loading ? null : isAuthenticated ? (
+                <div
+                  className={`flex items-center gap-3 ml-2 ${isRTL ? "flex-row-reverse mr-2" : ""}`}
                 >
-                  {t("common.sign_in")}
-                </Button>
-              </Link>
+                  {/* User Profile */}
+                  <Link
+                    href={`/${locale}/trader/overview`}
+                    className={`flex items-center gap-3 group ${isRTL ? "flex-row-reverse" : ""}`}
+                  >
+                    <div className="relative flex-shrink-0">
+                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#0A3B9E] to-[#1e40af] flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-gray-100 group-hover:ring-[#0A3B9E]/30 transition-all">
+                        {user?.name
+                          ?.split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2) || "U"}
+                      </div>
+                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                    </div>
+
+                    <div className="hidden lg:block">
+                      <p className="text-sm font-medium text-[#041443] leading-none group-hover:text-[#0A3B9E] transition-colors">
+                        {user?.name || "User"}
+                      </p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        {user?.role === "trader"
+                          ? t("common.trader")
+                          : t("common.individual")}
+                      </p>
+                    </div>
+                  </Link>
+
+                  {/* Separator */}
+                  <span className="h-5 w-px bg-gray-200"></span>
+
+                  {/* Logout */}
+                  <button
+                    onClick={handleLogout}
+                    className="h-9 w-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                    title={t("common.sign_out")}
+                  >
+                    <LogOut className="w-4.5 h-4.5" strokeWidth={1.5} />
+                  </button>
+                </div>
+              ) : (
+                <Link href={`/${locale}/login`}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="h-9 px-4 text-xs rounded-full"
+                  >
+                    <User className="w-4 h-4" strokeWidth={2} />
+                    <span className="ml-1.5">{t("common.sign_in")}</span>
+                  </Button>
+                </Link>
+              )}
             </div>
 
+            {/* Mobile Actions */}
             <div
               className={`flex items-center gap-2 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <LanguageSwitcher />
+              {loading
+                ? null
+                : isAuthenticated && (
+                    <Link
+                      href={`/${locale}/trader/overview`}
+                      className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="h-7 w-7 rounded-full bg-[#0A3B9E] text-white flex items-center justify-center text-xs font-medium">
+                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    </Link>
+                  )}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <Icons.Menu />
+                <Menu className="w-5.5 h-5.5" strokeWidth={1.5} />
               </button>
             </div>
           </div>
@@ -210,25 +199,16 @@ export default function Header() {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-60 lg:hidden">
-          {/* Backdrop */}
           <div
             className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${isAnimating ? "opacity-0" : "opacity-100"}`}
             onClick={closeMenu}
           />
 
-          {/* Panel - RTL Slide Direction Fixed */}
           <div
             className={`absolute top-0 h-full w-72 bg-white shadow-2xl overflow-y-auto transition-transform duration-300 ease-out
               ${isRTL ? "right-0 rounded-l-2xl" : "left-0 rounded-r-2xl"}
-              ${
-                isAnimating
-                  ? isRTL
-                    ? "translate-x-full"
-                    : "-translate-x-full"
-                  : "translate-x-0"
-              }`}
+              ${isAnimating ? (isRTL ? "translate-x-full" : "-translate-x-full") : "translate-x-0"}`}
           >
-            {/* Close Button */}
             <div
               className={`flex ${isRTL ? "justify-start" : "justify-end"} p-4`}
             >
@@ -236,11 +216,30 @@ export default function Header() {
                 onClick={closeMenu}
                 className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <Icons.Close />
+                <X className="w-5.5 h-5.5" strokeWidth={1.5} />
               </button>
             </div>
 
             <div className="px-6 pb-6">
+              {/* User Info if authenticated */}
+              {!loading && isAuthenticated && (
+                <div className="mb-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-[#0A3B9E] text-white flex items-center justify-center text-sm font-medium">
+                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm text-[#041443]">
+                        {user?.name}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {user?.login}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Navigation */}
               <nav className="space-y-1">
                 {navLinks.map((link) => (
@@ -256,22 +255,20 @@ export default function Header() {
                   >
                     <span>{link.label}</span>
                     {isActive(link.href) && (
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full bg-[#0A3B9E] ${isRTL ? "mr-0" : "ml-0"}`}
-                      />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0A3B9E]" />
                     )}
                   </Link>
                 ))}
               </nav>
 
-              {/* Divider - centered line */}
+              {/* Divider */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center">
                   <span className="bg-white px-3 text-[10px] text-gray-400 uppercase tracking-wider">
-                    {t("common.quick_actions") || "Quick Actions"}
+                    {t("common.quick_actions")}
                   </span>
                 </div>
               </div>
@@ -281,37 +278,42 @@ export default function Header() {
                 <button
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
                 >
-                  <Icons.Search />
+                  <Search className="w-5 h-5" strokeWidth={2} />
                   <span>{t("common.search")}</span>
                 </button>
                 <button
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
                 >
-                  <Icons.Bell />
+                  <Bell className="w-5 h-5" strokeWidth={2} />
                   <span>{t("common.notifications")}</span>
                 </button>
-                {/* <Link
-                  href={`/${locale}/kyc`}
-                  onClick={closeMenu}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-[#0A3B9E] hover:bg-[#0A3B9E]/5 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-                >
-                  <Icons.Shield />
-                  <span>{t("common.kyc")}</span>
-                </Link> */}
               </div>
 
-              {/* CTA */}
-              <div className="mt-6">
-                <Link href={`/${locale}/login`} onClick={closeMenu}>
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    className="rounded-xl"
-                  >
-                    {t("common.sign_in")}
-                  </Button>
-                </Link>
+              {/* Auth Actions */}
+              <div className="mt-6 space-y-3">
+                {!loading && isAuthenticated ? (
+                  <>
+                    <button
+                      onClick={handleLogout}
+                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>{t("common.sign_out")}</span>
+                    </button>
+                  </>
+                ) : (
+                  <Link href={`/${locale}/login`} onClick={closeMenu}>
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      className="rounded-xl"
+                    >
+                      <User className="w-5 h-5" strokeWidth={2} />
+                      <span className="ml-1.5">{t("common.sign_in")}</span>
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>

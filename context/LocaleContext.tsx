@@ -1,12 +1,5 @@
 "use client";
-import {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useCallback,
-} from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { Locale, loadAllTranslations } from "../config/translations";
 
 interface LocaleContextType {
@@ -24,38 +17,16 @@ export function LocaleProvider({
   children: ReactNode;
   initialLocale: Locale;
 }) {
-  const [locale, setLocaleState] = useState<Locale>(
+  const [locale, setLocale] = useState<Locale>(
     initialLocale === "ar" ? "ar" : "en",
-  );
-  const router = useRouter();
-  const pathname = usePathname();
-
-  // Update both state and URL
-  const setLocale = useCallback(
-    (newLocale: Locale) => {
-      setLocaleState(newLocale);
-
-      // Update URL to match new locale
-      const currentLocale = pathname.split("/")[1];
-      if (currentLocale !== newLocale) {
-        const newPathname = pathname.replace(
-          `/${currentLocale}`,
-          `/${newLocale}`,
-        );
-        router.replace(newPathname);
-      }
-    },
-    [pathname, router],
   );
 
   const translations = loadAllTranslations(locale);
 
   const t = (path: string): string => {
     if (!translations || Object.keys(translations).length === 0) return path;
-
     const keys = path.split(".");
     let value: any = translations;
-
     for (const key of keys) {
       if (value && typeof value === "object" && key in value) {
         value = value[key];

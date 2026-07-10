@@ -1,19 +1,77 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import AuthHero from "@/components/auth/AuthHero";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { Icons } from "@/components/ui/Icons";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
   const { t, locale } = useLocale();
+  const router = useRouter();
+  const isRTL = locale === "ar";
   const [accountType, setAccountType] = useState<"Individual" | "Trader">(
     "Individual",
   );
   const [showPassword, setShowPassword] = useState(false);
-  const isRTL = locale === "ar";
+  const [formData, setFormData] = useState({
+    full_name: "",
+    mobile: "",
+    email: "",
+    emirates_id: "",
+    password: "",
+    agree_terms: false,
+  });
+
+  const { register, loading, error } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validation
+    if (!formData.agree_terms) {
+      alert(t("common.agree_terms_error") || "Please agree to the terms");
+      return;
+    }
+
+    if (!formData.full_name) {
+      alert(t("common.name_required") || "Name is required");
+      return;
+    }
+
+    if (!formData.email && !formData.mobile) {
+      alert(
+        t("common.email_or_mobile_required") || "Email or mobile is required",
+      );
+      return;
+    }
+
+    if (!formData.password || formData.password.length < 8) {
+      alert(
+        t("common.password_min_length") ||
+          "Password must be at least 8 characters",
+      );
+      return;
+    }
+
+    try {
+      await register({
+        name: formData.full_name,
+        login: formData.email || formData.mobile, // Use email if available, otherwise phone
+        password: formData.password,
+        password_confirmation: formData.password,
+      });
+
+      // Redirect to home after successful registration
+      router.push(`/${locale}`);
+    } catch (err: any) {
+      // Error handled by useAuth hook
+      console.error("Registration failed:", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -137,8 +195,15 @@ export default function RegisterPage() {
               </button>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+
             {/* Form */}
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   name="full_name"
@@ -146,6 +211,10 @@ export default function RegisterPage() {
                   icon={<Icons.User />}
                   type="text"
                   placeholder={t("common.full_name_placeholder")}
+                  value={formData.full_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, full_name: e.target.value })
+                  }
                   autoComplete="name"
                 />
                 <Input
@@ -154,6 +223,10 @@ export default function RegisterPage() {
                   icon={<Icons.Phone />}
                   type="tel"
                   placeholder={t("common.mobile_placeholder")}
+                  value={formData.mobile}
+                  onChange={(e) =>
+                    setFormData({ ...formData, mobile: e.target.value })
+                  }
                   autoComplete="tel"
                 />
               </div>
@@ -164,6 +237,10 @@ export default function RegisterPage() {
                 icon={<Icons.Email />}
                 type="email"
                 placeholder={t("common.email_placeholder")}
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 autoComplete="email"
               />
 
@@ -173,6 +250,10 @@ export default function RegisterPage() {
                 icon={<Icons.Lock />}
                 type="text"
                 placeholder={t("common.id_placeholder")}
+                value={formData.emirates_id}
+                onChange={(e) =>
+                  setFormData({ ...formData, emirates_id: e.target.value })
+                }
                 hint={t("common.id_skip_note")}
               />
 
@@ -182,6 +263,10 @@ export default function RegisterPage() {
                 icon={<Icons.Lock />}
                 type={showPassword ? "text" : "password"}
                 placeholder={t("common.password_placeholder")}
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 autoComplete="new-password"
                 rightIcon={
                   <button
@@ -207,6 +292,10 @@ export default function RegisterPage() {
                   name="agree_terms"
                   type="checkbox"
                   className="w-4 h-4 mt-0.5 rounded border-gray-300 text-[#0A3B9E] focus:ring-[#0A3B9E]"
+                  checked={formData.agree_terms}
+                  onChange={(e) =>
+                    setFormData({ ...formData, agree_terms: e.target.checked })
+                  }
                 />
                 <label
                   className={`flex flex-wrap items-center gap-1 text-[10px] text-gray-500 leading-relaxed cursor-pointer ${isRTL ? "text-right" : "text-left"}`}
@@ -235,8 +324,11 @@ export default function RegisterPage() {
                 size="lg"
                 fullWidth
                 rightIcon={<Icons.ArrowRight />}
+                disabled={loading}
               >
-                {t("common.create_account_btn")}
+                {loading
+                  ? t("common.loading") || "Creating account..."
+                  : t("common.create_account_btn")}
               </Button>
             </form>
 
