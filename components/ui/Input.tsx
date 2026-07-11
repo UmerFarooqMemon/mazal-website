@@ -22,19 +22,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className="w-full">
-        {/* Label */}
+        {/* Label (Small, Gray, and bold) */}
         {label && (
           <label
             htmlFor={inputId}
-            className={`block text-xs font-semibold text-gray-500 mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium text-gray-500 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
           >
             {label}
           </label>
         )}
 
-        {/* Input Container */}
+        {/* Input Container - Styled like the image */}
         <div className="relative w-full">
-          {/* Left Icon (English) / Right Icon (Arabic) */}
+          {/* Left / Right Icon Handling */}
           {icon && (
             <div
               className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none`}
@@ -47,23 +47,22 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
-            className={`w-full rounded-xl border bg-white text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200
+            className={`w-full rounded-xl border border-gray-200 bg-[#FAFAFA] py-3.5 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 
               ${
                 error
                   ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
                   : "border-gray-200 focus:border-[#0A3B9E] focus:ring-[#0A3B9E]/20"
               }
               focus:outline-none focus:ring-2
-              disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50
+              disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100
               ${icon && isRTL ? "pr-10" : icon ? "pl-10" : ""}
               ${rightIcon && isRTL ? "pl-10" : rightIcon ? "pr-10" : ""}
               ${isRTL ? "text-right pr-4" : "text-left pl-4"}
-              py-2.5
               ${className}`}
             {...props}
           />
 
-          {/* Right Icon (English) / Left Icon (Arabic) */}
+          {/* Right / Left Icon Handling */}
           {rightIcon && (
             <div
               className={`absolute ${isRTL ? "left-3" : "right-3"} top-1/2 -translate-y-1/2 text-gray-400`}
@@ -76,7 +75,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {/* Hint Text */}
         {hint && !error && (
           <p
-            className={`text-[10px] text-gray-400 mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-[10px] text-gray-400 mt-1.5 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
           >
             {hint}
           </p>

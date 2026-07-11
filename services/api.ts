@@ -1,19 +1,26 @@
 // API Base URL
 const API_BASE_URL = "https://admin.mazal.cloud/api";
 
-// Types
+// ----- Response Types -----
+
 export interface PlateOptionsResponse {
   data: {
-    emirates: { key: string; label: string }[];
-    plate_types: { key: string; label: string }[];
+    emirates: {
+      key: string;
+      label: string;
+      selection_mode?: "variants" | "types";
+      variants?: {
+        key: string;
+        label: string;
+        plate_type: string;
+        plate_design: string;
+        has_code: boolean;
+        preview?: { url: string; width: number; height: number };
+      }[];
+      types?: { key: string; label: string }[];
+      plate_designs?: { key: string; label: string }[];
+    }[];
     plate_codes: { key: string; label: string }[];
-    plate_designs: { key: string; label: string }[];
-    background_image?: {
-      url: string;
-      width: number;
-      height: number;
-      overlay_positions?: any;
-    };
   };
 }
 
@@ -48,6 +55,7 @@ export interface NumberPlate {
   description: string;
   status: string;
   valuation_certificate_url?: string;
+  certificate_number?: string;
   created_at: string;
   updated_at: string;
 }
@@ -82,11 +90,27 @@ export interface PreviewsListResponse {
   data: PreviewTemplateResponse["data"][];
 }
 
-/**
- * Generic API request function.
- * Automatically adds JSON headers and Bearer token if provided.
- * Throws an error with the server's message if the response is not ok.
- */
+// Certificate Verification (public)
+export interface CertificateVerifyResponse {
+  data: {
+    valid: boolean;
+    certificate_number: string;
+    plate: {
+      emirate: string;
+      plate_type: string;
+      plate_code: string;
+      plate_digits: string;
+      plate_design: string;
+    };
+    assessed_value: number;
+    issued_at: string;
+    expires_at: string;
+    status: string;
+  };
+}
+
+// ----- Generic API Request Helper -----
+
 export async function apiRequest<T>(
   endpoint: string,
   options: {
@@ -103,7 +127,8 @@ export async function apiRequest<T>(
     ...headers,
   };
 
-  if (body) {
+  // Only set Content-Type for JSON bodies, not FormData
+  if (body && typeof body === "string") {
     requestHeaders["Content-Type"] = "application/json";
   }
 
@@ -117,11 +142,22 @@ export async function apiRequest<T>(
     body,
   });
 
-  // Parse the response JSON (even if error)
-  const data = await response.json().catch(() => ({}));
+  // Get the response text first
+  const text = await response.text();
+
+  // Try to parse as JSON
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    // If not JSON, throw with the text content
+    console.error("Response is not JSON:", text);
+    throw new Error(
+      text || `Server returned ${response.status} ${response.statusText}`,
+    );
+  }
 
   if (!response.ok) {
-    // Throw the server's error message if available, otherwise generic
     throw new Error(
       data.message || data.error || `API Error: ${response.status}`,
     );

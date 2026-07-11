@@ -183,7 +183,7 @@ export default function LoginPage() {
             </form>
 
             {/* Divider */}
-            <div className="relative my-6">
+            {/* <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
               </div>
@@ -239,7 +239,7 @@ export default function LoginPage() {
               >
                 {t("common.continue_with_google")}
               </Button>
-            </div>
+            </div> */}
 
             <div className="mt-6 text-center text-sm text-gray-500 flex flex-col gap-1">
               <div>

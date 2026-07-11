@@ -1,7 +1,9 @@
 import { Cairo, Inter } from "next/font/google";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { LocaleProvider } from "@/context/LocaleContext";
+import {
+  ConditionalHeader,
+  ConditionalFooter,
+} from "@/components/layout/ConditionalLayout";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,16 +26,15 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-
   const validLocale = locale === "ar" ? "ar" : "en";
 
   return (
     <div className={validLocale === "ar" ? cairo.className : inter.className}>
       <LocaleProvider initialLocale={validLocale}>
         <div className="min-h-screen flex flex-col bg-white text-gray-900">
-          <Header />
+          <ConditionalHeader />
           <main className="grow">{children}</main>
-          <Footer />
+          <ConditionalFooter />
         </div>
       </LocaleProvider>
     </div>

@@ -28,5 +28,6 @@
   "vip": "VIP",
   "trader_tag": "تاجر",
   "collector": "جامع",
-  "deals": "صفقات"
+  "deals": "صفقات",
+  "dashboard_label": "لوحة التحكم"
 }

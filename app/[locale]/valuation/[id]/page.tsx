@@ -36,12 +36,12 @@ export default function ValuationPage() {
           {t("valuation.success_message") ||
             "Your plate valuation request has been submitted successfully."}
         </p>
-        <p className="text-sm text-gray-400 mb-8">
+        {/* <p className="text-sm text-gray-400 mb-8">
           {t("valuation.reference_id") || "Reference ID"}:{" "}
           <span className="font-mono text-[#0A3B9E]">
             MZL-{id?.slice(0, 8).toUpperCase()}
           </span>
-        </p>
+        </p> */}
 
         {/* Actions */}
         <div className="space-y-3">

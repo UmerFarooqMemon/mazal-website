@@ -29,7 +29,7 @@ export default function Footer() {
             </Link>
 
             <p className="text-gray-300 text-sm leading-relaxed max-w-sm">
-              {t("common.escrow_custody")} - {t("common.private_deal")} - {" "}
+              {t("common.escrow_custody")} - {t("common.private_deal")} -{" "}
               {t("common.auctions")}
             </p>
           </div>
@@ -115,16 +115,6 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-        </div>
-      </div>
-
-      {/* Bottom bar (Copyright) */}
-      <div className="border-t border-white/10 bg-[#041443]/50">
-        <div
-          className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-400 ${isRTL ? "flex-row-reverse" : ""}`}
-        >
-          <span>{t("common.copyright")}</span>
-          <span>{t("common.licensed_escrow")}</span>
         </div>
       </div>
     </footer>

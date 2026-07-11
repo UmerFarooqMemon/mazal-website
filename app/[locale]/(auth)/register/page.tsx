@@ -6,16 +6,120 @@ import { useLocale } from "@/context/LocaleContext";
 import AuthHero from "@/components/auth/AuthHero";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Icons } from "@/components/ui/Icons";
 import { useAuth } from "@/hooks/useAuth";
+import { ShieldCheck } from "lucide-react";
+
+const Icons = {
+  User: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  Phone: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+      <line x1="12" y1="18" x2="12.01" y2="18" />
+    </svg>
+  ),
+  Email: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  ),
+  Lock: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  ),
+  Eye: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+  EyeOff: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  ),
+  ArrowRight: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+  ),
+};
 
 export default function RegisterPage() {
   const { t, locale } = useLocale();
   const router = useRouter();
   const isRTL = locale === "ar";
-  const [accountType, setAccountType] = useState<"Individual" | "Trader">(
-    "Individual",
-  );
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -31,7 +135,6 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.agree_terms) {
       alert(t("common.agree_terms_error") || "Please agree to the terms");
       return;
@@ -60,25 +163,23 @@ export default function RegisterPage() {
     try {
       await register({
         name: formData.full_name,
-        login: formData.email || formData.mobile, // Use email if available, otherwise phone
+        login: formData.email || formData.mobile,
         password: formData.password,
         password_confirmation: formData.password,
       });
 
-      // Redirect to home after successful registration
       router.push(`/${locale}`);
     } catch (err: any) {
-      // Error handled by useAuth hook
       console.error("Registration failed:", err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative">
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl">
-        {/* Auth Hero Side */}
+        {/* Auth Hero Side - Hidden on Mobile */}
         <div
-          className={`w-full lg:w-1/2 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
+          className={`w-full lg:w-1/2 hidden lg:flex ${isRTL ? "lg:order-2" : "lg:order-1"}`}
         >
           <AuthHero
             titleKey="auth.register_hero_title"
@@ -100,7 +201,7 @@ export default function RegisterPage() {
               <div
                 className={`flex items-center gap-2 text-[#0A3B9E] text-xs font-semibold ${isRTL ? "flex-row-reverse" : ""}`}
               >
-                <Icons.Shield size={14} />
+                <ShieldCheck size={16} />
                 <span>{t("common.create_account_header")}</span>
               </div>
               <div
@@ -116,7 +217,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Title */}
             <h2
               className={`text-3xl font-serif font-bold text-[#041443] mb-2 ${isRTL ? "text-right" : "text-left"}`}
             >
@@ -128,73 +228,6 @@ export default function RegisterPage() {
               {t("common.create_account_subtitle")}
             </p>
 
-            {/* Account Type Selection */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <button
-                type="button"
-                onClick={() => setAccountType("Individual")}
-                className={`relative p-4 rounded-xl border transition-all ${
-                  accountType === "Individual"
-                    ? "border-[#0A3B9E] bg-[#0A3B9E]/5 ring-1 ring-[#0A3B9E]"
-                    : "border-gray-200 hover:border-gray-300 bg-white"
-                } ${isRTL ? "text-right" : "text-left"}`}
-              >
-                <div
-                  className={`flex items-center justify-between mb-1 ${isRTL ? "flex-row-reverse" : ""}`}
-                >
-                  <span className="font-semibold text-sm text-[#041443]">
-                    {t("common.individual")}
-                  </span>
-                  <div
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      accountType === "Individual"
-                        ? "border-[#041443] bg-white"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {accountType === "Individual" && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#041443]"></div>
-                    )}
-                  </div>
-                </div>
-                <p className="text-[10px] text-gray-500 leading-tight">
-                  {t("common.individual_desc")}
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAccountType("Trader")}
-                className={`relative p-4 rounded-xl border transition-all ${
-                  accountType === "Trader"
-                    ? "border-[#0A3B9E] bg-[#0A3B9E]/5 ring-1 ring-[#0A3B9E]"
-                    : "border-gray-200 hover:border-gray-300 bg-white"
-                } ${isRTL ? "text-right" : "text-left"}`}
-              >
-                <div
-                  className={`flex items-center justify-between mb-1 ${isRTL ? "flex-row-reverse" : ""}`}
-                >
-                  <span className="font-semibold text-sm text-[#041443]">
-                    {t("common.trader")}
-                  </span>
-                  <div
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      accountType === "Trader"
-                        ? "border-[#041443] bg-white"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {accountType === "Trader" && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#041443]"></div>
-                    )}
-                  </div>
-                </div>
-                <p className="text-[10px] text-gray-500 leading-tight">
-                  {t("common.trader_desc")}
-                </p>
-              </button>
-            </div>
-
             {/* Error Message */}
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -203,7 +236,7 @@ export default function RegisterPage() {
             )}
 
             {/* Form */}
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   name="full_name"
@@ -275,16 +308,12 @@ export default function RegisterPage() {
                     className="focus:outline-none"
                     tabIndex={-1}
                   >
-                    {showPassword ? (
-                      <Icons.Eye size={16} />
-                    ) : (
-                      <Icons.EyeOff size={16} />
-                    )}
+                    {showPassword ? <Icons.Eye /> : <Icons.EyeOff />}
                   </button>
                 }
               />
 
-              {/* Terms Agreement */}
+              {/* Terms Agreement - Exact Positioning from Image */}
               <div
                 className={`flex items-start gap-2 pt-1 ${isRTL ? "flex-row-reverse" : ""}`}
               >
@@ -298,7 +327,7 @@ export default function RegisterPage() {
                   }
                 />
                 <label
-                  className={`flex flex-wrap items-center gap-1 text-[10px] text-gray-500 leading-relaxed cursor-pointer ${isRTL ? "text-right" : "text-left"}`}
+                  className={`flex flex-wrap items-center gap-1 text-[11px] text-gray-500 leading-relaxed cursor-pointer ${isRTL ? "text-right" : "text-left"}`}
                 >
                   <span>{t("common.agree_terms_part1")}</span>
                   <Link
@@ -332,35 +361,10 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-xs text-gray-400 uppercase tracking-wider">
-                <span className="bg-white px-4">
-                  {t("common.or_register_with")}
-                </span>
-              </div>
-            </div>
-
-            {/* UAE Pass */}
-            <Button
-              variant="outline"
-              fullWidth
-              leftIcon={
-                <img
-                  src="/auth/uae-password.png"
-                  alt="UAE Pass"
-                  className="w-5 h-5 object-contain"
-                />
-              }
-            >
-              {t("common.continue_with_uae_pass")}
-            </Button>
-
             {/* Footer Link */}
-            <div className="mt-6 text-center text-sm text-gray-500">
+            <div
+              className={`mt-6 text-sm text-gray-500 ${isRTL ? "lg:text-right" : "lg:text-left"} text-center`}
+            >
               {t("common.already_registered")}{" "}
               <Link
                 href={`/${locale}/login`}

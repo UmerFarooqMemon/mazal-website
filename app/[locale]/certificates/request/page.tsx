@@ -12,64 +12,66 @@ export default function CertificateRequestPage() {
   const router = useRouter();
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
-  const [isSubmitting, setIsSubmitting] = useState(false); // prevent double submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [options, setOptions] = useState<any>(null);
-
-  // Use the auth hook to get the token and authentication state
   const { token, isAuthenticated } = useAuth();
 
-  // Fetch plate options (emirates, types, etc.) on mount
   useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        const response = await fetch("/api/number-plates/options");
-        const data = await response.json();
-        setOptions(data.data);
-      } catch (error) {
-        console.error("Error fetching plate options:", error);
-      }
-    };
-    fetchOptions();
+    fetch("/api/number-plates/options")
+      .then((r) => r.json())
+      .then((data) => setOptions(data.data))
+      .catch(console.error);
   }, []);
 
   const handleSubmitValuation = async (formData: any) => {
-    // Prevent double submission
     if (isSubmitting) return;
-
-    // Check if user is authenticated
     if (!isAuthenticated || !token) {
       alert(t("common.login_required") || "Please log in first");
       router.push(`/${locale}/login`);
       return;
     }
 
+    if (!formData.mulkiya_image || !(formData.mulkiya_image instanceof File)) {
+      alert(
+        t("certificates.mulkiya_required") ||
+          "Please upload your Mulkiya image.",
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append(
+        "title",
+        `Dubai ${formData.plate_code || ""} ${formData.plate_digits}`,
+      );
+      formDataToSend.append("contact_number", "0501234567");
+      formDataToSend.append("emirate", "dubai");
+      formDataToSend.append(
+        "plate_variant",
+        formData.plate_variant || "private_new_colorful",
+      );
+      if (formData.plate_code) {
+        formDataToSend.append("plate_code", formData.plate_code);
+      }
+      formDataToSend.append("plate_digits", formData.plate_digits);
+      formDataToSend.append("price", formData.price || "0");
+      formDataToSend.append("description", formData.description || "");
+      formDataToSend.append(
+        "mulkiya",
+        formData.mulkiya_image,
+        formData.mulkiya_image.name,
+      );
+
       const response = await fetch("/api/number-plates", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: `Dubai ${formData.plate_code} ${formData.plate_digits}`,
-          contact_number: "0501234567",
-          emirate: "dubai",
-          plate_type: "private_car",
-          plate_code: formData.plate_code,
-          plate_digits: formData.plate_digits,
-          plate_design: "new",
-          price: 0,
-          description: "Certificate valuation request.",
-        }),
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataToSend,
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Submission failed");
-      }
-
+      if (!response.ok) throw new Error(result.error || "Submission failed");
       if (result.data?.number_plate?.id) {
         router.push(`/${locale}/valuation/${result.data.number_plate.id}`);
       } else {
@@ -88,11 +90,12 @@ export default function CertificateRequestPage() {
   return (
     <div className="min-h-screen bg-white pb-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Section 1: Form + Features */}
+        {/* Desktop: Title + Form side by side */}
+        {/* Mobile: Only Form (title hidden) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start mb-16">
-          {/* Features - Right for Arabic */}
+          {/* Features Section - Hidden on Mobile, Shown on Desktop */}
           <div
-            className={`flex flex-col justify-center ${isRTL ? "lg:order-2 items-end text-right" : "lg:order-1 items-start text-left"}`}
+            className={`hidden lg:flex flex-col justify-center ${isRTL ? "lg:order-2 items-end text-right" : "lg:order-1 items-start text-left"}`}
           >
             <span className="text-[#0A3B9E] text-xs font-bold uppercase tracking-wider mb-3">
               {t("certificates.independent_valuation")}
@@ -103,7 +106,6 @@ export default function CertificateRequestPage() {
             <p className="text-gray-600 text-base leading-relaxed mb-8 max-w-md">
               {t("certificates.hero_desc")}
             </p>
-
             <ul className="space-y-3 text-sm text-gray-600">
               <li
                 className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
@@ -132,8 +134,21 @@ export default function CertificateRequestPage() {
             </ul>
           </div>
 
-          {/* Form - Left for Arabic */}
-          <div className={isRTL ? "lg:order-1" : "lg:order-2"}>
+          {/* Form - Full width on mobile, half on desktop */}
+          <div
+            className={`${isRTL ? "lg:order-1" : "lg:order-2"} lg:col-span-1`}
+          >
+            {/* Mobile Title - Only shown on mobile */}
+            <div className="lg:hidden mb-6">
+              <h1 className="text-3xl font-serif font-bold text-[#041443]">
+                {t("certificates.certificate_request") || "Certificate Request"}
+              </h1>
+              <p className="text-gray-500 text-sm mt-2">
+                {t("certificates.order_valuation") ||
+                  "Order a valuation for your plate"}
+              </p>
+            </div>
+
             <CertificateForm
               emirates={options?.emirates || []}
               types={options?.plate_types || []}
@@ -143,11 +158,11 @@ export default function CertificateRequestPage() {
           </div>
         </div>
 
-        {/* Section 2: Preview */}
-        <CertificatePreview />
-
-        {/* Section 3: FAQ */}
-        <CertificateFAQ />
+        {/* Preview & FAQ - Hidden on mobile, shown on desktop */}
+        <div className="hidden lg:block">
+          <CertificatePreview />
+          <CertificateFAQ />
+        </div>
       </div>
     </div>
   );

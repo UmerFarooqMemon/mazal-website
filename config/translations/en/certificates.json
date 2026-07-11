@@ -32,5 +32,17 @@
   "faq_verified_title": "How is it verified?",
   "faq_verified_desc": "Every certificate has a unique number and QR that resolves to a public verification page on mazal.ae.",
   "faq_valid_title": "How long is it valid?",
-  "faq_valid_desc": "90 days from issue. Refresh at 50% of the original fee within the validity window."
+  "faq_valid_desc": "90 days from issue. Refresh at 50% of the original fee within the validity window.",
+  "plate_variant": "Plate Variant",
+  "digits_only": "Digits only",
+  "requests_title": "Certificate Requests",
+  "all": "All",
+  "pending": "Pending",
+  "issued": "Issued",
+  "view_status": "View Status",
+  "back": "Back",
+  "your_estimate": "Your estimate",
+  "justification": "Justification",
+  "justification_placeholder": "Tell us why you believe your number plate is worth this price. Mention factors such as rarity, memorable digits, uniqueness, previous offers, or market demand.",
+  "mulkiya_required": "Please upload your Mulkiya (vehicle registration card) image."
 }

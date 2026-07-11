@@ -7,7 +7,16 @@ import { useLocale } from "@/context/LocaleContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, Bell, User, Menu, X, LogOut } from "lucide-react";
+import {
+  Search,
+  Bell,
+  User,
+  Menu,
+  X,
+  LogOut,
+  Home,
+  LayoutDashboard,
+} from "lucide-react";
 
 export default function Header() {
   const pathname = usePathname();
@@ -16,9 +25,15 @@ export default function Header() {
   const isRTL = locale === "ar";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Auth state is immediately available from localStorage (no flicker)
   const { user, isAuthenticated, loading, logout } = useAuth();
+
+  // Set mounted to true after first render (client-side only)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -48,12 +63,11 @@ export default function Header() {
 
   const isActive = (path: string) => pathname.includes(path);
 
-  const navLinks = [
-    { href: `/${locale}/marketplace`, label: t("common.marketplace") },
-    { href: `/${locale}/auctions`, label: t("common.auctions") },
-    { href: `/${locale}/listings/create`, label: t("common.sell_plate") },
-    { href: `/${locale}/private-deal`, label: t("common.private_deal") },
-  ];
+  // COMMENTED OUT - Hidden but not deleted for future use
+  // { href: `/${locale}/marketplace`, label: t("common.marketplace") },
+  // { href: `/${locale}/auctions`, label: t("common.auctions") },
+  // { href: `/${locale}/listings/create`, label: t("common.sell_plate") },
+  // { href: `/${locale}/private-deal`, label: t("common.private_deal") },
 
   return (
     <>
@@ -62,7 +76,7 @@ export default function Header() {
           <div
             className={`flex h-16 items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
           >
-            {/* Logo */}
+            {/* Logo - M color changed to #041443, Mazal always visible */}
             <Link
               href={`/${locale}`}
               className="flex items-center gap-2 shrink-0"
@@ -70,7 +84,7 @@ export default function Header() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0A3B9E] text-white font-bold text-base">
                 M
               </div>
-              <span className="text-lg font-semibold text-[#041443] hidden sm:block">
+              <span className="text-lg font-semibold text-[#0A3B9E]">
                 Mazal
               </span>
             </Link>
@@ -79,92 +93,106 @@ export default function Header() {
             <nav
               className={`hidden lg:flex items-center gap-8 text-sm ${isRTL ? "flex-row-reverse" : ""}`}
             >
-              {navLinks.map((link) => (
+              {/* Home Link - Always visible */}
+              <Link
+                href={`/${locale}`}
+                className={`flex items-center gap-1.5 ${
+                  pathname === `/${locale}` || pathname === `/${locale}/`
+                    ? "text-[#0A3B9E] font-medium"
+                    : "text-gray-500 hover:text-[#041443] transition-colors"
+                }`}
+              >
+                <Home className="w-4 h-4" strokeWidth={2} />
+                <span>{t("common.home")}</span>
+              </Link>
+
+              {/* Dashboard - Only visible when authenticated AND mounted (client-side) */}
+              {mounted && isAuthenticated && (
                 <Link
-                  key={link.href}
-                  href={link.href}
-                  className={
-                    isActive(link.href)
+                  href={`/${locale}/dashboard-certificates`}
+                  className={`flex items-center gap-1.5 ${
+                    isActive("/trader")
                       ? "text-[#0A3B9E] font-medium"
                       : "text-gray-500 hover:text-[#041443] transition-colors"
-                  }
+                  }`}
                 >
-                  {link.label}
+                  <LayoutDashboard className="w-4 h-4" strokeWidth={2} />
+                  <span>{t("common.dashboard")}</span>
                 </Link>
-              ))}
+              )}
             </nav>
 
             {/* Desktop Actions */}
             <div
               className={`hidden lg:flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
             >
-              <button className="h-9 w-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#041443] hover:bg-gray-50 transition-colors">
-                <Search className="w-5 h-5" strokeWidth={2} />
-              </button>
-              <button className="h-9 w-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#041443] hover:bg-gray-50 transition-colors">
-                <Bell className="w-5 h-5" strokeWidth={2} />
-              </button>
+              {/* COMMENTED OUT - Search & Notifications hidden */}
               <div className="mx-1">
                 <LanguageSwitcher />
               </div>
 
-              {/* Show profile if authenticated, else sign-in button */}
-              {isAuthenticated ? (
-                <div
-                  className={`flex items-center gap-3 ml-2 ${isRTL ? "flex-row-reverse mr-2" : ""}`}
-                >
-                  {/* User Profile */}
-                  <Link
-                    href={`/${locale}/trader/overview`}
-                    className={`flex items-center gap-3 group ${isRTL ? "flex-row-reverse" : ""}`}
+              {/* Auth Actions - Only show after mounted */}
+              {mounted ? (
+                isAuthenticated ? (
+                  <div
+                    className={`flex items-center gap-3 ml-2 ${isRTL ? "flex-row-reverse mr-2" : ""}`}
                   >
-                    <div className="relative shrink-0">
-                      <div className="h-9 w-9 rounded-full bg-linear-to-br from-[#0A3B9E] to-[#1e40af] flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-gray-100 group-hover:ring-[#0A3B9E]/30 transition-all">
-                        {user?.name
-                          ?.split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2) || "U"}
+                    {/* User Profile */}
+                    <Link
+                      href={`/${locale}/trader/overview`}
+                      className={`flex items-center gap-3 group ${isRTL ? "flex-row-reverse" : ""}`}
+                    >
+                      <div className="relative shrink-0">
+                        <div className="h-9 w-9 rounded-full bg-linear-to-br from-[#0A3B9E] to-[#1e40af] flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-gray-100 group-hover:ring-[#0A3B9E]/30 transition-all">
+                          {user?.name
+                            ?.split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2) || "U"}
+                        </div>
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                       </div>
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
-                    </div>
 
-                    <div className="hidden lg:block">
-                      <p className="text-sm font-medium text-[#041443] leading-none group-hover:text-[#0A3B9E] transition-colors">
-                        {user?.name || "User"}
-                      </p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">
-                        {user?.role === "trader"
-                          ? t("common.trader")
-                          : t("common.individual")}
-                      </p>
-                    </div>
+                      <div className="hidden lg:block">
+                        <p className="text-sm font-medium text-[#041443] leading-none group-hover:text-[#0A3B9E] transition-colors">
+                          {user?.name || "User"}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          {user?.role === "trader"
+                            ? t("common.trader")
+                            : t("common.individual")}
+                        </p>
+                      </div>
+                    </Link>
+
+                    {/* Separator */}
+                    <span className="h-5 w-px bg-gray-200"></span>
+
+                    {/* Logout */}
+                    <button
+                      onClick={handleLogout}
+                      className="h-9 w-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                      title={t("common.sign_out")}
+                    >
+                      <LogOut className="w-4.5 h-4.5" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                ) : (
+                  <Link href={`/${locale}/login`}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="h-9 px-4 text-xs rounded-full"
+                    >
+                      <User className="w-4 h-4" strokeWidth={2} />
+                      <span className="ml-1.5">{t("common.sign_in")}</span>
+                    </Button>
                   </Link>
-
-                  {/* Separator */}
-                  <span className="h-5 w-px bg-gray-200"></span>
-
-                  {/* Logout */}
-                  <button
-                    onClick={handleLogout}
-                    className="h-9 w-9 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
-                    title={t("common.sign_out")}
-                  >
-                    <LogOut className="w-4.5 h-4.5" strokeWidth={1.5} />
-                  </button>
-                </div>
+                )
               ) : (
-                <Link href={`/${locale}/login`}>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="h-9 px-4 text-xs rounded-full"
-                  >
-                    <User className="w-4 h-4" strokeWidth={2} />
-                    <span className="ml-1.5">{t("common.sign_in")}</span>
-                  </Button>
-                </Link>
+                /* Placeholder while mounting - prevents hydration mismatch */
+                <div className="h-9 w-20" />
               )}
             </div>
 
@@ -173,7 +201,7 @@ export default function Header() {
               className={`flex items-center gap-2 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <LanguageSwitcher />
-              {isAuthenticated && (
+              {mounted && isAuthenticated && (
                 <Link
                   href={`/${locale}/trader/overview`}
                   className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors"
@@ -194,8 +222,8 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
+      {/* Mobile Menu Overlay - Only show when mounted */}
+      {mounted && mobileMenuOpen && (
         <div className="fixed inset-0 z-60 lg:hidden">
           <div
             className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${isAnimating ? "opacity-0" : "opacity-100"}`}
@@ -240,23 +268,46 @@ export default function Header() {
 
               {/* Navigation */}
               <nav className="space-y-1">
-                {navLinks.map((link) => (
+                {/* Home Link */}
+                <Link
+                  href={`/${locale}`}
+                  onClick={closeMenu}
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
+                    pathname === `/${locale}` || pathname === `/${locale}/`
+                      ? "bg-[#0A3B9E]/10 text-[#0A3B9E] font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  } ${isRTL ? "flex-row-reverse" : ""}`}
+                >
+                  <span className="flex items-center gap-3">
+                    <Home className="w-5 h-5" strokeWidth={2} />
+                    {t("common.home")}
+                  </span>
+                  {(pathname === `/${locale}` ||
+                    pathname === `/${locale}/`) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0A3B9E]" />
+                  )}
+                </Link>
+
+                {/* Dashboard - Only when authenticated */}
+                {isAuthenticated && (
                   <Link
-                    key={link.href}
-                    href={link.href}
+                    href={`/${locale}/trader/overview`}
                     onClick={closeMenu}
                     className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
-                      isActive(link.href)
+                      isActive("/trader")
                         ? "bg-[#0A3B9E]/10 text-[#0A3B9E] font-medium"
                         : "text-gray-600 hover:bg-gray-50"
                     } ${isRTL ? "flex-row-reverse" : ""}`}
                   >
-                    <span>{link.label}</span>
-                    {isActive(link.href) && (
+                    <span className="flex items-center gap-3">
+                      <LayoutDashboard className="w-5 h-5" strokeWidth={2} />
+                      {t("common.dashboard")}
+                    </span>
+                    {isActive("/trader") && (
                       <span className="w-1.5 h-1.5 rounded-full bg-[#0A3B9E]" />
                     )}
                   </Link>
-                ))}
+                )}
               </nav>
 
               {/* Divider */}
@@ -269,22 +320,6 @@ export default function Header() {
                     {t("common.quick_actions")}
                   </span>
                 </div>
-              </div>
-
-              {/* Actions */}
-              <div className="space-y-3">
-                <button
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-                >
-                  <Search className="w-5 h-5" strokeWidth={2} />
-                  <span>{t("common.search")}</span>
-                </button>
-                <button
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-                >
-                  <Bell className="w-5 h-5" strokeWidth={2} />
-                  <span>{t("common.notifications")}</span>
-                </button>
               </div>
 
               {/* Auth Actions */}

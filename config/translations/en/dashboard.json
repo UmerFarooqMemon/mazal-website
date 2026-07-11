@@ -28,5 +28,6 @@
   "vip": "VIP",
   "trader_tag": "TRADER",
   "collector": "COLLECTOR",
-  "deals": "deals"
+  "deals": "deals",
+  "dashboard_label": "DASHBOARD"
 }

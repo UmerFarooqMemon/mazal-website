@@ -2,6 +2,7 @@
 
 import { HTMLAttributes, forwardRef } from "react";
 import { useLocale } from "@/context/LocaleContext";
+import { ShieldCheck } from "lucide-react";
 
 interface AuthHeroProps extends HTMLAttributes<HTMLDivElement> {
   titleKey?: string;
@@ -12,8 +13,8 @@ interface AuthHeroProps extends HTMLAttributes<HTMLDivElement> {
 const AuthHero = forwardRef<HTMLDivElement, AuthHeroProps>(
   (
     {
-      titleKey = "auth.hero_title",
-      subtitleKey = "auth.hero_subtitle",
+      titleKey = "auth.register_hero_title",
+      subtitleKey = "auth.register_hero_subtitle",
       showTrustBadge = true,
       className = "",
       ...props
@@ -40,20 +41,9 @@ const AuthHero = forwardRef<HTMLDivElement, AuthHeroProps>(
           {/* Top: Badge & Title */}
           <div className="flex flex-col items-start shrink-0">
             {showTrustBadge && (
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-white text-[10px] font-medium mb-6 backdrop-blur-sm tracking-wider">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                {t("auth.trust_badge")}
+              <div className="inline-flex items-center gap-2 rounded-full bg-transparent border border-[#D4AF37]/30 px-4 py-1.5 text-[#D4AF37] text-[10px] font-medium mb-6 backdrop-blur-sm tracking-wider">
+                <ShieldCheck size={14} className="text-[#D4AF37]" />
+                <span className="uppercase">{t("auth.trust_badge")}</span>
               </div>
             )}
 
@@ -65,7 +55,7 @@ const AuthHero = forwardRef<HTMLDivElement, AuthHeroProps>(
             </p>
           </div>
 
-          {/* Center: Plate Image */}
+          {/* Center: Plate Image - Glassmorphism Effect */}
           <div className="flex-1 flex items-center justify-center min-h-0 py-6 lg:py-8">
             <div className="relative w-full max-w-xs lg:max-w-md mx-auto">
               <div className="relative w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
@@ -81,7 +71,7 @@ const AuthHero = forwardRef<HTMLDivElement, AuthHeroProps>(
           {/* Bottom: Features List */}
           <div className="flex flex-col items-start gap-2 lg:gap-3 text-white/90 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-5 h-5 shrink-0 rounded-full border border-white/30 flex items-center justify-center text-[10px] text-white">
+              <div className="w-5 h-5 shrink-0 rounded-full border border-[#D4AF37]/50 flex items-center justify-center text-[10px] text-[#D4AF37]">
                 ✓
               </div>
               <span className="text-xs lg:text-sm text-start">
@@ -89,19 +79,11 @@ const AuthHero = forwardRef<HTMLDivElement, AuthHeroProps>(
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-5 h-5 shrink-0 rounded-full border border-white/30 flex items-center justify-center text-[10px] text-white">
+              <div className="w-5 h-5 shrink-0 rounded-full border border-[#D4AF37]/50 flex items-center justify-center text-[10px] text-[#D4AF37]">
                 ✓
               </div>
               <span className="text-xs lg:text-sm text-start">
                 {t("auth.feature_2")}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 shrink-0 rounded-full border border-white/30 flex items-center justify-center text-[10px] text-white">
-                ✓
-              </div>
-              <span className="text-xs lg:text-sm text-start">
-                {t("auth.feature_3")}
               </span>
             </div>
           </div>
