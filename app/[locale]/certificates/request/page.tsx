@@ -138,17 +138,6 @@ export default function CertificateRequestPage() {
           <div
             className={`${isRTL ? "lg:order-1" : "lg:order-2"} lg:col-span-1`}
           >
-            {/* Mobile Title - Only shown on mobile */}
-            <div className="lg:hidden mb-6">
-              <h1 className="text-3xl font-serif font-bold text-[#041443]">
-                {t("certificates.certificate_request") || "Certificate Request"}
-              </h1>
-              <p className="text-gray-500 text-sm mt-2">
-                {t("certificates.order_valuation") ||
-                  "Order a valuation for your plate"}
-              </p>
-            </div>
-
             <CertificateForm
               emirates={options?.emirates || []}
               types={options?.plate_types || []}

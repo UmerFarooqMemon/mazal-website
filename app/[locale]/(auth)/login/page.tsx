@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import AuthHero from "@/components/auth/AuthHero";
 import Input from "@/components/ui/Input";
@@ -19,25 +21,96 @@ export default function LoginPage() {
     password: "",
     remember_me: false,
   });
+  // Field-level validation errors
+  const [fieldErrors, setFieldErrors] = useState<{
+    login?: string;
+    password?: string;
+  }>({});
 
-  const { login, loading, error } = useAuth();
+  const { login, loading } = useAuth();
+
+  // Validate fields before submission
+  const validateFields = () => {
+    const errors: { login?: string; password?: string } = {};
+    if (!formData.login.trim()) {
+      errors.login = t("common.error_field_required");
+    }
+    if (!formData.password.trim()) {
+      errors.password = t("common.error_field_required");
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Clear field error when user types
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (fieldErrors[field as keyof typeof fieldErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate fields first
+    if (!validateFields()) {
+      toast.error(t("common.error_fill_fields"), {
+        style: {
+          background: "#FFF4E2",
+          color: "#93651B",
+          border: "1px solid #F5D78E",
+        },
+        icon: "",
+      });
+      return;
+    }
+
+    // Loading toast
+    const loadingToast = toast.loading(
+      t("common.signing_in") || "Signing in...",
+      {
+        style: {
+          background: "#EEF2F8",
+          color: "#0A3B9E",
+        },
+      },
+    );
+
     try {
       await login({
         login: formData.login,
         password: formData.password,
       });
-      router.push(`/${locale}`);
+      toast.dismiss(loadingToast);
+      toast.success(t("common.login_success"), {
+        style: {
+          background: "#E8FFE2",
+          color: "#015C14",
+          border: "1px solid #86D98F",
+        },
+        icon: "",
+        duration: 2000,
+      });
+      setTimeout(() => router.push(`/${locale}/dashboard-certificates`), 800);
     } catch (err) {
-      // Error handled by useAuth hook
+      toast.dismiss(loadingToast);
+      toast.error(t("common.invalid_credentials"), {
+        style: {
+          background: "#FFE8E8",
+          color: "#8B0000",
+          border: "1px solid #FFB3B3",
+        },
+        icon: "",
+        duration: 4000,
+      });
     }
   };
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl">
+        {/* Auth Hero Side - Hidden on Mobile, Shown on Desktop */}
         <div
           className={`w-full lg:w-1/2 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
         >
@@ -49,10 +122,22 @@ export default function LoginPage() {
           />
         </div>
 
+        {/* Form Side */}
         <div
           className={`w-full lg:w-1/2 flex items-center justify-center bg-white p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
         >
           <div className="w-full max-w-md">
+            {/* Logo - Only visible on Mobile */}
+            <div className="flex justify-center mb-6 lg:hidden">
+              <Image
+                src="/auth/auth-logo.png"
+                alt="Mazal Logo"
+                width={130}
+                height={45}
+                className="h-auto"
+              />
+            </div>
+
             {/* Card Header */}
             <div
               className={`flex items-center justify-between mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
@@ -78,6 +163,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Title */}
             <h2
               className={`text-3xl font-serif font-bold text-[#041443] mb-2 ${isRTL ? "text-right" : "text-left"}`}
             >
@@ -89,14 +175,8 @@ export default function LoginPage() {
               {t("common.sign_in_subtitle")}
             </p>
 
-            {/* Error Message */}
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                {error}
-              </div>
-            )}
-
             <form className="space-y-5" onSubmit={handleSubmit}>
+              {/* Email Input */}
               <Input
                 name="login"
                 label={t("common.email_or_mobile")}
@@ -104,12 +184,12 @@ export default function LoginPage() {
                 type="text"
                 placeholder={t("common.email_placeholder")}
                 value={formData.login}
-                onChange={(e) =>
-                  setFormData({ ...formData, login: e.target.value })
-                }
+                onChange={(e) => handleFieldChange("login", e.target.value)}
                 autoComplete="email"
+                error={fieldErrors.login}
               />
 
+              {/* Password Input */}
               <Input
                 name="password"
                 label={t("common.password")}
@@ -118,10 +198,9 @@ export default function LoginPage() {
                 placeholder={t("common.password_placeholder")}
                 className="tracking-widest"
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                onChange={(e) => handleFieldChange("password", e.target.value)}
                 autoComplete="current-password"
+                error={fieldErrors.password}
                 rightIcon={
                   <button
                     type="button"
@@ -138,6 +217,7 @@ export default function LoginPage() {
                 }
               />
 
+              {/* Remember & Forgot */}
               <div
                 className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
               >
@@ -168,6 +248,7 @@ export default function LoginPage() {
                 </Link>
               </div>
 
+              {/* Submit Button */}
               <Button
                 type="submit"
                 variant="primary"
@@ -176,9 +257,7 @@ export default function LoginPage() {
                 rightIcon={<Icons.ArrowRight />}
                 disabled={loading}
               >
-                {loading
-                  ? t("common.loading") || "Signing in..."
-                  : t("common.sign_in")}
+                {loading ? t("common.loading") : t("common.sign_in")}
               </Button>
             </form>
 
@@ -251,7 +330,7 @@ export default function LoginPage() {
                   {t("common.create_account")}
                 </Link>
               </div>
-              <div>
+              {/* <div>
                 {t("common.need_help")}{" "}
                 <Link
                   href={`/${locale}/contact`}
@@ -259,7 +338,7 @@ export default function LoginPage() {
                 >
                   {t("common.contact_support")}
                 </Link>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

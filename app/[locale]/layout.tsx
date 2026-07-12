@@ -4,6 +4,7 @@ import {
   ConditionalHeader,
   ConditionalFooter,
 } from "@/components/layout/ConditionalLayout";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,6 +32,18 @@ export default async function LocaleLayout({
   return (
     <div className={validLocale === "ar" ? cairo.className : inter.className}>
       <LocaleProvider initialLocale={validLocale}>
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              borderRadius: "12px",
+              padding: "16px",
+              fontSize: "14px",
+            },
+          }}
+        />
         <div className="min-h-screen flex flex-col bg-white text-gray-900">
           <ConditionalHeader />
           <main className="grow">{children}</main>

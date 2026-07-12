@@ -23,10 +23,20 @@ export default function proxy(request: NextRequest) {
   );
 
   if (!pathnameHasLocale) {
-    // Redirect to default locale (en)
+    // Redirect to default locale
     const url = request.nextUrl.clone();
     url.pathname = `/${defaultLocale}${pathname}`;
     return NextResponse.redirect(url);
+  }
+
+  // ✅ Temporary: Redirect root locale path to register page
+  // Example: /en → /en/register, /ar → /ar/register
+  for (const locale of locales) {
+    if (pathname === `/${locale}` || pathname === `/${locale}/`) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}/register`;
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();

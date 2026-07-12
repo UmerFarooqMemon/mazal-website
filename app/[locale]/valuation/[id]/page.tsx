@@ -13,7 +13,7 @@ export default function ValuationPage() {
     <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
       <div className="max-w-lg mx-auto text-center px-4">
         {/* Success Icon */}
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        {/* <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg
             width="32"
             height="32"
@@ -27,6 +27,13 @@ export default function ValuationPage() {
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
+        </div> */}
+
+        {/* Celebration Emoji */}
+        <div className="flex justify-center mb-8">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+            <span className="text-5xl sm:text-6xl">🎉</span>
+          </div>
         </div>
 
         <h1 className="text-3xl font-serif font-bold text-[#041443] mb-4">
@@ -44,7 +51,7 @@ export default function ValuationPage() {
         </p> */}
 
         {/* Actions */}
-        <div className="space-y-3">
+        {/* <div className="space-y-3">
           <Link
             href={`/${locale}/listings/create`}
             className="block w-full bg-[#0A3B9E] text-white py-3 rounded-full font-semibold text-sm hover:bg-blue-800 transition"
@@ -57,7 +64,7 @@ export default function ValuationPage() {
           >
             {t("valuation.browse_marketplace") || "Browse Marketplace"}
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

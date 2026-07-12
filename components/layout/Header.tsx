@@ -78,7 +78,8 @@ export default function Header() {
           >
             {/* Logo - M color changed to #041443, Mazal always visible */}
             <Link
-              href={`/${locale}`}
+              // href={`/${locale}`}
+              href=""
               className="flex items-center gap-2 shrink-0"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0A3B9E] text-white font-bold text-base">
@@ -95,7 +96,8 @@ export default function Header() {
             >
               {/* Home Link - Always visible */}
               <Link
-                href={`/${locale}`}
+                // href={`/${locale}`}
+                href=""
                 className={`flex items-center gap-1.5 ${
                   pathname === `/${locale}` || pathname === `/${locale}/`
                     ? "text-[#0A3B9E] font-medium"
@@ -139,7 +141,8 @@ export default function Header() {
                   >
                     {/* User Profile */}
                     <Link
-                      href={`/${locale}/trader/overview`}
+                      // href={`/${locale}/trader/overview`}
+                      href=""
                       className={`flex items-center gap-3 group ${isRTL ? "flex-row-reverse" : ""}`}
                     >
                       <div className="relative shrink-0">
@@ -203,7 +206,8 @@ export default function Header() {
               <LanguageSwitcher />
               {mounted && isAuthenticated && (
                 <Link
-                  href={`/${locale}/trader/overview`}
+                  // href={`/${locale}/trader/overview`}
+                  href=""
                   className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="h-7 w-7 rounded-full bg-[#0A3B9E] text-white flex items-center justify-center text-xs font-medium">
@@ -270,7 +274,8 @@ export default function Header() {
               <nav className="space-y-1">
                 {/* Home Link */}
                 <Link
-                  href={`/${locale}`}
+                  // href={`/${locale}`}
+                  href=""
                   onClick={closeMenu}
                   className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
                     pathname === `/${locale}` || pathname === `/${locale}/`
@@ -291,7 +296,8 @@ export default function Header() {
                 {/* Dashboard - Only when authenticated */}
                 {isAuthenticated && (
                   <Link
-                    href={`/${locale}/trader/overview`}
+                    // href={`/${locale}/trader/overview`}
+                    href=""
                     onClick={closeMenu}
                     className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
                       isActive("/trader")

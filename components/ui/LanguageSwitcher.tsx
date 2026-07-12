@@ -11,12 +11,10 @@ export default function LanguageSwitcher() {
     const newLocale = locale === "en" ? "ar" : "en";
     setLocale(newLocale);
 
-    // Change the route directly
     const segments = pathname.split("/");
     if (segments.length > 1 && (segments[1] === "en" || segments[1] === "ar")) {
       segments[1] = newLocale;
     } else {
-      // If the path does not contain a language (rare)
       segments.splice(1, 0, newLocale);
     }
     const newPathname = segments.join("/");
@@ -26,26 +24,31 @@ export default function LanguageSwitcher() {
   return (
     <button
       onClick={toggleLanguage}
-      className="relative flex items-center w-24 h-9 rounded-full bg-gray-100 border border-gray-200 transition-all duration-200 hover:border-[#0A3B9E]/40 hover:bg-gray-50 overflow-hidden"
+      className="relative flex items-center h-8 px-0.5 rounded-full bg-gray-100 border border-gray-200 transition-all duration-200 hover:border-[#0A3B9E]/30 hover:bg-gray-50"
       aria-label="Switch language"
     >
-      <div
-        className={`absolute top-1 w-7 h-7 rounded-full bg-white shadow-sm transition-all duration-200 ease-out
-          ${locale === "en" ? "left-1" : "left-14.5"}`}
-      />
-      <span className="absolute inset-0 flex items-center justify-between px-3">
-        <span
-          className={`text-[11px] font-bold transition-colors duration-200
-          ${locale === "en" ? "text-[#0A3B9E]" : "text-gray-400"}`}
-        >
-          EN
-        </span>
-        <span
-          className={`text-[11px] font-bold transition-colors duration-200
-          ${locale === "ar" ? "text-[#0A3B9E]" : "text-gray-400"}`}
-        >
-          AR
-        </span>
+      {/* EN Option */}
+      <span
+        className={`flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold transition-all duration-200
+          ${
+            locale === "en"
+              ? "bg-white text-[#0A3B9E] shadow-sm"
+              : "text-gray-400 hover:text-gray-600"
+          }`}
+      >
+        EN
+      </span>
+
+      {/* AR Option */}
+      <span
+        className={`flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold transition-all duration-200
+          ${
+            locale === "ar"
+              ? "bg-white text-[#0A3B9E] shadow-sm"
+              : "text-gray-400 hover:text-gray-600"
+          }`}
+      >
+        ع
       </span>
     </button>
   );

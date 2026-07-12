@@ -103,5 +103,20 @@
   "continue_to_sign_in": "Continue to Sign In",
   "back_to_home": "Back to Home",
   "home": "Home",
-  "back": "Back"
+  "back": "Back",
+  "signing_in": "Signing in...",
+  "login_success": "Login successful! Redirecting...",
+  "invalid_credentials": "Invalid email or password. Please try again.",
+  "error_fill_fields": "Please fill in all required fields.",
+  "error_field_required": "This field is required",
+  "creating_account": "Creating account...",
+  "register_success": "Account created successfully! Redirecting...",
+  "register_failed": "Registration failed. Please try again.",
+  "code_sent": "Verification code sent! Check your email.",
+  "send_code_failed": "Failed to send code. Please try again.",
+  "code_verified": "Code verified! Redirecting...",
+  "code_resent": "New code sent! Check your messages.",
+  "password_reset_success": "Password reset successful! Redirecting...",
+  "reset_failed": "Failed to reset password. Please try again.",
+  "session_expired": "Session expired. Please request a new code."
 }
