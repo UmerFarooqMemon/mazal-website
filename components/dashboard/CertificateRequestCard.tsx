@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { useLocale } from "@/context/LocaleContext";
+import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
 import { Download, Eye } from "lucide-react";
 
 type RequestStatus = "Pending" | "Issued";
@@ -73,44 +73,21 @@ export default function CertificateRequestCard({
 
         {/* Plate + Action */}
         <div className="flex items-center justify-between gap-3">
-          {/* Plate */}
-          {previewUrl ? (
-            <div className="relative w-25 h-8 shrink-0 rounded-md overflow-hidden border border-gray-200 bg-white">
-              <Image
-                src={previewUrl}
-                alt={t("certificates.plate_preview") || "Plate"}
-                fill
-                className="object-contain p-0.5"
-                sizes="100px"
-                unoptimized
-              />
-            </div>
-          ) : (
-            <div className="bg-[#F3F4F8] border border-gray-200 rounded-lg py-1.5 px-2.5 shrink-0">
-              <div className="text-center">
-                <div className="text-[6px] text-gray-400 font-bold uppercase tracking-widest leading-tight">
-                  {emirate}
-                </div>
-                <div className="flex items-center gap-0.5 text-[11px] font-serif font-bold text-[#0A3B9E] leading-none">
-                  <span>{plate_code}</span>
-                  <span className="text-gray-300 font-light text-[10px]">
-                    |
-                  </span>
-                  <span>{plate_digits}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <PlateWithOverlay
+            plate_code={plate_code}
+            plate_digits={plate_digits}
+            emirate={emirate}
+            isMobile
+          />
 
-          {/* Action */}
           {showDownload ? (
-            <button className="flex items-center justify-center h-9 w-9 rounded-full text-[#0A3B9E] bg-[#0A3B9E]/5 hover:bg-[#0A3B9E]/10 transition-colors shrink-0">
+            <button className="flex items-center justify-center h-9 w-9 rounded-full text-[#0A3B9E] bg-[#0A3B9E]/5 shrink-0">
               <Download className="w-4 h-4" />
             </button>
           ) : (
             <Link
               href={`/${locale}/valuation/${id}`}
-              className="text-[11px] text-[#0A3B9E] font-medium hover:underline whitespace-nowrap flex items-center gap-1 shrink-0"
+              className="text-[11px] text-[#0A3B9E] font-medium whitespace-nowrap flex items-center gap-1 shrink-0"
             >
               <Eye className="w-3.5 h-3.5" />
               {t("certificates.view_status")}
@@ -146,34 +123,12 @@ export default function CertificateRequestCard({
         <div
           className={`flex items-center gap-3 shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
         >
-          {/* Plate */}
-          {previewUrl ? (
-            <div className="relative w-27.5 h-9 shrink-0 rounded-md overflow-hidden border border-gray-200 bg-white">
-              <Image
-                src={previewUrl}
-                alt={t("certificates.plate_preview") || "Plate"}
-                fill
-                className="object-contain p-0.5"
-                sizes="110px"
-                unoptimized
-              />
-            </div>
-          ) : (
-            <div className="bg-[#F3F4F8] border border-gray-200 rounded-lg py-2 px-3 shrink-0">
-              <div className="text-center">
-                <div className="text-[7px] text-gray-400 font-bold uppercase tracking-widest leading-tight">
-                  {emirate}
-                </div>
-                <div className="flex items-center gap-1 text-xs font-serif font-bold text-[#0A3B9E] leading-none">
-                  <span>{plate_code}</span>
-                  <span className="text-gray-300 font-light">|</span>
-                  <span>{plate_digits}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <PlateWithOverlay
+            plate_code={plate_code}
+            plate_digits={plate_digits}
+            emirate={emirate}
+          />
 
-          {/* Action */}
           {showDownload ? (
             <button className="flex items-center justify-center h-8 w-8 rounded-full text-[#0A3B9E] hover:bg-[#0A3B9E]/5 transition-colors shrink-0">
               <Download className="w-4 h-4" />

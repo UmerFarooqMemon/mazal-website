@@ -296,8 +296,8 @@ export default function Header() {
                 {/* Dashboard - Only when authenticated */}
                 {isAuthenticated && (
                   <Link
-                    // href={`/${locale}/trader/overview`}
-                    href=""
+                    href={`/${locale}/dashboard-certificates`}
+                    // href=""
                     onClick={closeMenu}
                     className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
                       isActive("/trader")

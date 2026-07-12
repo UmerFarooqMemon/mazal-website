@@ -5,6 +5,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { Button } from "@/components/ui";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
+import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
 import { Upload, X, ArrowRight, AlertCircle } from "lucide-react";
 
 // Types
@@ -411,18 +412,14 @@ export default function CertificateForm({
               {t("certificates.live_preview") || "LIVE PREVIEW"}
             </span>
           </div>
-          <div className="relative w-full px-4 py-4">
-            <div className="relative w-full" style={{ minHeight: "120px" }}>
-              <Image
-                src="/certificates-preview.png"
-                alt="Certificate Preview"
-                width={600}
-                height={200}
-                className="w-full h-auto object-contain"
-                sizes="(max-width: 768px) 100vw, 600px"
-                priority
-              />
-            </div>
+          <div className="flex items-center justify-center px-4 py-6">
+            <PlateWithOverlay
+              plate_code={form.plate_code}
+              plate_digits={form.plate_digits}
+              emirate={t("listings.emirate_dubai")}
+              width={280}
+              height={84}
+            />
           </div>
         </div>
 
