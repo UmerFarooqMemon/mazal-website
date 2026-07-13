@@ -1,16 +1,21 @@
 "use client";
 import { useParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
 
 export default function ValuationPage() {
   const params = useParams();
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const { getColor } = useTheme();
   const id = params.id as string;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: getColor("background") }}
+    >
       <div className="max-w-lg mx-auto text-center px-4">
         {/* Success Icon */}
         {/* <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -36,10 +41,13 @@ export default function ValuationPage() {
           </div>
         </div>
 
-        <h1 className="text-3xl font-serif font-bold text-[#041443] mb-4">
+        <h1
+          className="text-3xl font-serif font-bold mb-4"
+          style={{ color: getColor("primaryText") }}
+        >
           {t("valuation.title") || "Valuation Submitted"}
         </h1>
-        <p className="text-gray-500 mb-2">
+        <p className="mb-2" style={{ color: getColor("secondaryText") }}>
           {t("valuation.success_message") ||
             "Your plate valuation request has been submitted successfully."}
         </p>

@@ -5,15 +5,17 @@ import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { resetPassword } from "@/services/auth";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { ShieldCheck, X, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, X } from "lucide-react";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const { getColor, branding } = useTheme();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -57,14 +59,7 @@ export default function ResetPasswordPage() {
     e.preventDefault();
 
     if (!validateFields()) {
-      toast.error(t("common.error_fill_fields"), {
-        style: {
-          background: "#FFF4E2",
-          color: "#93651B",
-          border: "1px solid #F5D78E",
-        },
-        icon: "",
-      });
+      toast.error(t("common.error_fill_fields"));
       return;
     }
 
@@ -73,14 +68,7 @@ export default function ResetPasswordPage() {
       const login = sessionStorage.getItem("reset_login") || "";
       const token = sessionStorage.getItem("reset_token") || "";
       if (!login || !token) {
-        toast.error(t("common.session_expired"), {
-          style: {
-            background: "#FFE8E8",
-            color: "#8B0000",
-            border: "1px solid #FFB3B3",
-          },
-          icon: "",
-        });
+        toast.error(t("common.session_expired"));
         router.push(`/${locale}/forgot-password`);
         return;
       }
@@ -92,57 +80,56 @@ export default function ResetPasswordPage() {
       });
       sessionStorage.removeItem("reset_login");
       sessionStorage.removeItem("reset_token");
-      toast.success(t("common.password_reset_success"), {
-        style: {
-          background: "#E8FFE2",
-          color: "#015C14",
-          border: "1px solid #86D98F",
-        },
-        icon: "",
-        duration: 2000,
-      });
+      toast.success(t("common.password_reset_success"));
       setTimeout(() => router.push(`/${locale}/password-updated`), 800);
     } catch (err: any) {
-      toast.error(err.message || t("common.reset_failed"), {
-        style: {
-          background: "#FFE8E8",
-          color: "#8B0000",
-          border: "1px solid #FFB3B3",
-        },
-        icon: "",
-      });
+      toast.error(err.message || t("common.reset_failed"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-4 sm:p-6">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+      style={{ backgroundColor: getColor("background") }}
+    >
       <div className="w-full max-w-md mx-auto">
-        <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 relative">
+        <div
+          className="rounded-3xl shadow-xl p-6 sm:p-8 border relative"
+          style={{
+            backgroundColor: getColor("surface"),
+            borderColor: getColor("border"),
+          }}
+        >
           {/* Close / Back Button */}
           <Link
             href={`/${locale}/login`}
-            className={`absolute top-4 ${isRTL ? "left-4" : "right-4"} h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600`}
+            className={`absolute top-4 ${isRTL ? "left-4" : "right-4"} h-9 w-9 flex items-center justify-center rounded-lg transition-colors`}
+            style={{ color: getColor("mutedText") }}
             aria-label={t("common.back") || "Back"}
           >
             <X className="w-5 h-5" strokeWidth={1.5} />
           </Link>
 
-          {/* Logo */}
-          <div className="flex justify-center mb-8 pt-4">
-            <Image
-              src="/auth/auth-logo.png"
-              alt="Mazal Logo"
-              width={140}
-              height={50}
-              className="h-auto"
-            />
-          </div>
+          {/* Logo - Only from API */}
+          {branding.logoUrl && (
+            <div className="flex justify-center mb-8 pt-4">
+              <Image
+                src={branding.logoUrl}
+                alt="Mazal Logo"
+                width={140}
+                height={50}
+                className="h-auto"
+                unoptimized
+              />
+            </div>
+          )}
 
           {/* Badge */}
           <div
-            className={`flex items-center gap-2 text-[#0A3B9E] text-xs font-semibold mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-2 text-xs font-semibold mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{ color: getColor("primary") }}
           >
             <ShieldCheck size={16} />
             <span>{t("common.licensed_escrow")}</span>
@@ -150,12 +137,14 @@ export default function ResetPasswordPage() {
 
           {/* Title */}
           <h1
-            className={`text-2xl sm:text-3xl font-serif font-bold text-[#041443] mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-2xl sm:text-3xl font-serif font-bold mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("primaryText") }}
           >
             {t("common.create_new_password")}
           </h1>
           <p
-            className={`text-gray-500 text-sm mb-8 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-sm mb-8 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
           >
             {t("common.reset_password_desc")}
           </p>
@@ -185,7 +174,8 @@ export default function ResetPasswordPage() {
 
             {/* Password Requirements */}
             <div
-              className={`text-xs text-gray-400 space-y-1 ${isRTL ? "text-right" : "text-left"}`}
+              className={`text-xs space-y-1 ${isRTL ? "text-right" : "text-left"}`}
+              style={{ color: getColor("mutedText") }}
             >
               {[
                 "pw_at_least_8",
@@ -216,11 +206,15 @@ export default function ResetPasswordPage() {
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center text-sm text-gray-500">
+          <div
+            className="mt-6 text-center text-sm"
+            style={{ color: getColor("secondaryText") }}
+          >
             {t("common.remember_password")}{" "}
             <Link
               href={`/${locale}/login`}
-              className="text-[#0A3B9E] font-medium hover:underline"
+              className="font-medium hover:underline"
+              style={{ color: getColor("primary") }}
             >
               {t("common.sign_in")}
             </Link>

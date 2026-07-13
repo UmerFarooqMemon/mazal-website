@@ -2,6 +2,7 @@
 
 import { forwardRef, ButtonHTMLAttributes } from "react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "gold" | "danger";
@@ -30,34 +31,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const { locale } = useLocale();
     const isRTL = locale === "ar";
+    const { getColor, getGradient } = useTheme();
 
     // Base button styles
     const baseStyles =
-      "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 rounded-full disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A3B9E] active:scale-[0.98]";
+      "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 rounded-full disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
 
-    // Variants with the new Gradient for 'primary'
-    const variants: Record<string, string> = {
-      // Exact gradient match: Dark Navy #041443 to Royal Blue #0A3B9E
-      primary:
-        "bg-gradient-to-r from-[#041443] via-[#0A3B9E] to-[#0A3B9E] text-white hover:shadow-md active:shadow-lg",
-      secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200",
-      outline:
-        "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 hover:border-gray-400",
-      ghost:
-        "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-[#0A3B9E]",
-      gold: "bg-[#D4AF37] text-[#041443] hover:bg-[#c5a031] shadow-md hover:shadow-lg",
-      danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
-    };
-
-    // Size variants
-    const sizes: Record<string, string> = {
-      sm: "px-4 py-1.5 text-xs",
-      md: "px-6 py-2.5 text-sm",
-      lg: "px-8 py-3.5 text-base",
-      icon: "h-10 w-10 p-0",
-    };
-
-    // Loading spinner SVG
+    // Spinner component
     const Spinner = () => (
       <svg
         className="animate-spin h-4 w-4"
@@ -89,10 +69,35 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
+        style={{
+          // Apply theme colors based on variant
+          ...(variant === "primary" && {
+            background: getGradient("primaryButton"),
+            color: "#FFFFFF",
+          }),
+          ...(variant === "secondary" && {
+            background: getGradient("secondaryButton"),
+            color: "#FFFFFF",
+          }),
+          ...(variant === "outline" && {
+            borderColor: getColor("border"),
+            color: getColor("primaryText"),
+          }),
+          ...(variant === "gold" && {
+            backgroundColor: getColor("accent"),
+            color: getColor("primary"),
+          }),
+          ...(variant === "danger" && {
+            backgroundColor: getColor("error"),
+            color: "#FFFFFF",
+          }),
+        }}
         className={`
           ${baseStyles}
-          ${variants[variant]}
-          ${sizes[size]}
+          ${size === "sm" ? "px-4 py-1.5 text-xs" : ""}
+          ${size === "md" ? "px-6 py-2.5 text-sm" : ""}
+          ${size === "lg" ? "px-8 py-3.5 text-base" : ""}
+          ${size === "icon" ? "h-10 w-10 p-0" : ""}
           ${fullWidth ? "w-full" : ""}
           ${isRTL ? "flex-row-reverse" : ""}
           ${className}

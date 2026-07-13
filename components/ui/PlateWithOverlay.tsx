@@ -1,5 +1,7 @@
 "use client";
 
+import { useTheme } from "@/context/ThemeContext";
+
 interface PlateWithOverlayProps {
   plate_code: string;
   plate_digits: string;
@@ -8,6 +10,7 @@ interface PlateWithOverlayProps {
   width?: number;
   height?: number;
   className?: string;
+  imageUrl?: string;
 }
 
 export default function PlateWithOverlay({
@@ -18,7 +21,9 @@ export default function PlateWithOverlay({
   width,
   height,
   className = "",
+  imageUrl,
 }: PlateWithOverlayProps) {
+  const { getColor } = useTheme();
   const w = width || (isMobile ? 110 : 130);
   const h = height || (isMobile ? 38 : 44);
 
@@ -27,10 +32,8 @@ export default function PlateWithOverlay({
       className={`relative shrink-0 ${className}`}
       style={{ width: `${w}px`, height: `${h}px` }}
     >
-      {/* Background Plate Image */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/certificates-preview.png"
+        src={imageUrl || "/here-plate.png"}
         alt=""
         style={{
           position: "absolute",
@@ -51,7 +54,7 @@ export default function PlateWithOverlay({
           transform: "translateY(-50%)",
           fontSize: isMobile ? "14px" : "18px",
           fontWeight: 700,
-          color: "#1a1a1a",
+          color: getColor("primaryText"),
           lineHeight: 1,
           zIndex: 10,
         }}
@@ -68,7 +71,7 @@ export default function PlateWithOverlay({
           transform: "translateY(-50%)",
           fontSize: isMobile ? "14px" : "18px",
           fontWeight: 700,
-          color: "#1a1a1a",
+          color: getColor("primaryText"),
           lineHeight: 1,
           zIndex: 10,
         }}

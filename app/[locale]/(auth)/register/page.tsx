@@ -5,123 +5,27 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import AuthHero from "@/components/auth/AuthHero";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
-import { ShieldCheck } from "lucide-react";
-
-const Icons = {
-  User: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  ),
-  Phone: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-      <line x1="12" y1="18" x2="12.01" y2="18" />
-    </svg>
-  ),
-  Email: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-    </svg>
-  ),
-  Lock: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  ),
-  Eye: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ),
-  EyeOff: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  ),
-  ArrowRight: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14M12 5l7 7-7 7" />
-    </svg>
-  ),
-};
+import {
+  ShieldCheck,
+  User,
+  Phone,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+} from "lucide-react";
 
 export default function RegisterPage() {
   const { t, locale } = useLocale();
   const router = useRouter();
   const isRTL = locale === "ar";
+  const { getColor, branding } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -176,23 +80,11 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (!validateFields()) {
-      toast.error(t("common.error_fill_fields"), {
-        style: {
-          background: "#FFF4E2",
-          color: "#93651B",
-          border: "1px solid #F5D78E",
-        },
-        icon: "",
-      });
+      toast.error(t("common.error_fill_fields"));
       return;
     }
 
-    const loadingToast = toast.loading(
-      t("common.creating_account") || "Creating account...",
-      {
-        style: { background: "#EEF2F8", color: "#0A3B9E" },
-      },
-    );
+    const loadingToast = toast.loading(t("common.creating_account"));
 
     try {
       await register({
@@ -202,32 +94,19 @@ export default function RegisterPage() {
         password_confirmation: formData.password,
       });
       toast.dismiss(loadingToast);
-      toast.success(t("common.register_success"), {
-        style: {
-          background: "#E8FFE2",
-          color: "#015C14",
-          border: "1px solid #86D98F",
-        },
-        icon: "",
-        duration: 2000,
-      });
+      toast.success(t("common.register_success"));
       setTimeout(() => router.push(`/${locale}/dashboard-certificates`), 800);
     } catch (err: any) {
       toast.dismiss(loadingToast);
-      toast.error(t("common.register_failed"), {
-        style: {
-          background: "#FFE8E8",
-          color: "#8B0000",
-          border: "1px solid #FFB3B3",
-        },
-        icon: "",
-        duration: 4000,
-      });
+      toast.error(t("common.register_failed"));
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8"
+      style={{ backgroundColor: getColor("background") }}
+    >
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl">
         {/* Auth Hero Side - Hidden on Mobile */}
         <div
@@ -243,37 +122,44 @@ export default function RegisterPage() {
 
         {/* Form Side */}
         <div
-          className={`w-full lg:w-1/2 flex items-center justify-center bg-white p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
+          className={`w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
+          style={{ backgroundColor: getColor("surface") }}
         >
           <div className="w-full max-w-md">
-            {/* Logo - Only visible on Mobile */}
-            <div className="flex justify-center mb-6 lg:hidden">
-              <Image
-                src="/auth/auth-logo.png"
-                alt="Mazal Logo"
-                width={130}
-                height={45}
-                className="h-auto"
-              />
-            </div>
+            {/* Logo - Only from API */}
+            {branding.logoUrl && (
+              <div className="flex justify-center mb-8 pt-4">
+                <Image
+                  src={branding.logoUrl}
+                  alt="Mazal Logo"
+                  width={140}
+                  height={50}
+                  className="h-auto"
+                  unoptimized
+                />
+              </div>
+            )}
 
             {/* Card Header */}
             <div
               className={`flex items-center justify-between mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <div
-                className={`flex items-center gap-2 text-[#0A3B9E] text-xs font-semibold ${isRTL ? "flex-row-reverse" : ""}`}
+                className={`flex items-center gap-2 text-xs font-semibold ${isRTL ? "flex-row-reverse" : ""}`}
+                style={{ color: getColor("primary") }}
               >
                 <ShieldCheck size={16} />
                 <span>{t("common.create_account_header")}</span>
               </div>
               <div
-                className={`text-xs text-gray-500 ${isRTL ? "text-left" : "text-right"}`}
+                className={`text-xs ${isRTL ? "text-left" : "text-right"}`}
+                style={{ color: getColor("secondaryText") }}
               >
                 {t("common.already_have_account")}{" "}
                 <Link
                   href={`/${locale}/login`}
-                  className="text-[#0A3B9E] font-medium hover:underline"
+                  className="font-medium hover:underline"
+                  style={{ color: getColor("primary") }}
                 >
                   {t("common.sign_in")}
                 </Link>
@@ -281,12 +167,14 @@ export default function RegisterPage() {
             </div>
 
             <h2
-              className={`text-3xl font-serif font-bold text-[#041443] mb-2 ${isRTL ? "text-right" : "text-left"}`}
+              className={`text-3xl font-serif font-bold mb-2 ${isRTL ? "text-right" : "text-left"}`}
+              style={{ color: getColor("primaryText") }}
             >
               {t("common.create_account_title")}
             </h2>
             <p
-              className={`text-gray-500 text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+              className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+              style={{ color: getColor("secondaryText") }}
             >
               {t("common.create_account_subtitle")}
             </p>
@@ -297,7 +185,7 @@ export default function RegisterPage() {
                 <Input
                   name="full_name"
                   label={t("common.full_name")}
-                  icon={<Icons.User />}
+                  icon={<User size={20} strokeWidth={1.5} />}
                   type="text"
                   placeholder={t("common.full_name_placeholder")}
                   value={formData.full_name}
@@ -310,7 +198,7 @@ export default function RegisterPage() {
                 <Input
                   name="mobile"
                   label={t("common.mobile_number")}
-                  icon={<Icons.Phone />}
+                  icon={<Phone size={20} strokeWidth={1.5} />}
                   type="tel"
                   placeholder={t("common.mobile_placeholder")}
                   value={formData.mobile}
@@ -323,7 +211,7 @@ export default function RegisterPage() {
               <Input
                 name="email"
                 label={t("common.email_address")}
-                icon={<Icons.Email />}
+                icon={<Mail size={20} strokeWidth={1.5} />}
                 type="email"
                 placeholder={t("common.email_placeholder")}
                 value={formData.email}
@@ -335,7 +223,7 @@ export default function RegisterPage() {
               <Input
                 name="emirates_id"
                 label={t("common.emirates_id")}
-                icon={<Icons.Lock />}
+                icon={<Lock size={20} strokeWidth={1.5} />}
                 type="text"
                 placeholder={t("common.id_placeholder")}
                 value={formData.emirates_id}
@@ -348,7 +236,7 @@ export default function RegisterPage() {
               <Input
                 name="password"
                 label={t("common.password")}
-                icon={<Icons.Lock />}
+                icon={<Lock size={20} strokeWidth={1.5} />}
                 type={showPassword ? "text" : "password"}
                 placeholder={t("common.password_placeholder")}
                 value={formData.password}
@@ -362,7 +250,11 @@ export default function RegisterPage() {
                     className="focus:outline-none"
                     tabIndex={-1}
                   >
-                    {showPassword ? <Icons.Eye /> : <Icons.EyeOff />}
+                    {showPassword ? (
+                      <Eye size={20} strokeWidth={1.5} />
+                    ) : (
+                      <EyeOff size={20} strokeWidth={1.5} />
+                    )}
                   </button>
                 }
               />
@@ -374,28 +266,30 @@ export default function RegisterPage() {
                 <input
                   name="agree_terms"
                   type="checkbox"
-                  className="w-4 h-4 mt-0.5 rounded border-gray-300 text-[#0A3B9E] focus:ring-[#0A3B9E] shrink-0"
+                  className="w-4 h-4 mt-0.5 rounded shrink-0"
+                  style={{ accentColor: getColor("primary") }}
                   checked={formData.agree_terms}
                   onChange={(e) =>
                     setFormData({ ...formData, agree_terms: e.target.checked })
                   }
                 />
                 <label
-                  className={`text-[11px] text-gray-500 leading-relaxed cursor-pointer ${isRTL ? "text-right" : "text-left"}`}
+                  className={`text-[11px] leading-relaxed cursor-pointer ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("secondaryText") }}
                 >
                   <span>{t("common.agree_terms_part1")}</span>
                   <Link
-                    // href={`/${locale}/terms`}
                     href=""
-                    className="text-[#0A3B9E] hover:underline whitespace-nowrap"
+                    className="hover:underline whitespace-nowrap"
+                    style={{ color: getColor("primary") }}
                   >
                     {t("common.terms_service")}
                   </Link>
                   <span>{t("common.agree_terms_part2")}</span>
                   <Link
-                    // href={`/${locale}/privacy`}
                     href=""
-                    className="text-[#0A3B9E] hover:underline whitespace-nowrap"
+                    className="hover:underline whitespace-nowrap"
+                    style={{ color: getColor("primary") }}
                   >
                     {t("common.privacy_policy")}
                   </Link>
@@ -405,7 +299,8 @@ export default function RegisterPage() {
               {/* Terms error */}
               {fieldErrors.agree_terms && (
                 <p
-                  className={`text-[11px] text-red-500 -mt-3 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`text-[11px] -mt-3 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("error") }}
                 >
                   {fieldErrors.agree_terms}
                 </p>
@@ -416,7 +311,7 @@ export default function RegisterPage() {
                 variant="primary"
                 size="lg"
                 fullWidth
-                rightIcon={<Icons.ArrowRight />}
+                rightIcon={<ArrowRight size={20} strokeWidth={1.5} />}
                 disabled={loading}
               >
                 {loading ? t("common.loading") : t("common.create_account_btn")}
@@ -424,11 +319,15 @@ export default function RegisterPage() {
             </form>
 
             {/* Footer Link */}
-            <div className={`mt-6 text-center text-sm text-gray-500`}>
+            <div
+              className="mt-6 text-center text-sm"
+              style={{ color: getColor("secondaryText") }}
+            >
               {t("common.already_registered")}{" "}
               <Link
                 href={`/${locale}/login`}
-                className="text-[#0A3B9E] font-medium hover:underline"
+                className="font-medium hover:underline"
+                style={{ color: getColor("primary") }}
               >
                 {t("common.sign_in_instead")}
               </Link>

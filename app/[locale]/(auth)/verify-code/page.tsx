@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import Button from "@/components/ui/Button";
 import { ShieldCheck, X } from "lucide-react";
 
@@ -12,6 +13,7 @@ export default function VerifyCodePage() {
   const router = useRouter();
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const { getColor, branding } = useTheme();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -56,14 +58,7 @@ export default function VerifyCodePage() {
 
     if (code.length < 6) {
       setError(t("common.enter_full_code"));
-      toast.error(t("common.enter_full_code"), {
-        style: {
-          background: "#FFF4E2",
-          color: "#93651B",
-          border: "1px solid #F5D78E",
-        },
-        icon: "",
-      });
+      toast.error(t("common.enter_full_code"));
       return;
     }
 
@@ -71,16 +66,7 @@ export default function VerifyCodePage() {
     setError("");
     sessionStorage.setItem("reset_token", code);
 
-    toast.success(t("common.code_verified"), {
-      style: {
-        background: "#E8FFE2",
-        color: "#015C14",
-        border: "1px solid #86D98F",
-      },
-      icon: "",
-      duration: 1500,
-    });
-
+    toast.success(t("common.code_verified"));
     setTimeout(() => router.push(`/${locale}/reset-password`), 600);
   };
 
@@ -93,60 +79,80 @@ export default function VerifyCodePage() {
     const firstInput = document.getElementById("otp-0");
     if (firstInput) (firstInput as HTMLInputElement).focus();
 
-    toast.success(t("common.code_resent"), {
-      style: {
-        background: "#EEF2F8",
-        color: "#0A3B9E",
-        border: "1px solid #B3C7E6",
-      },
-      icon: "",
-    });
+    toast.success(t("common.code_resent"));
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ backgroundColor: getColor("background") }}
+    >
       <div className="w-full max-w-sm mx-auto">
-        <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 relative">
+        <div
+          className="rounded-3xl shadow-xl p-6 sm:p-8 border relative"
+          style={{
+            backgroundColor: getColor("surface"),
+            borderColor: getColor("border"),
+          }}
+        >
           {/* Close / Back Button */}
           <Link
             href={`/${locale}/login`}
-            className={`absolute top-4 ${isRTL ? "left-4" : "right-4"} h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600`}
+            className={`absolute top-4 ${isRTL ? "left-4" : "right-4"} h-9 w-9 flex items-center justify-center rounded-lg transition-colors`}
+            style={{ color: getColor("mutedText") }}
             aria-label={t("common.back") || "Back"}
           >
             <X className="w-5 h-5" strokeWidth={1.5} />
           </Link>
 
           {/* Logo */}
-          <div className="flex justify-center mb-6 pt-4">
-            <Image
-              src="/auth/auth-logo.png"
-              alt="Mazal Logo"
-              width={120}
-              height={40}
-              className="h-auto"
-            />
-          </div>
+          {/* Logo - Only from API */}
+          {branding.logoUrl && (
+            <div className="flex justify-center mb-8 pt-4">
+              <Image
+                src={branding.logoUrl}
+                alt="Mazal Logo"
+                width={140}
+                height={50}
+                className="h-auto"
+                unoptimized
+              />
+            </div>
+          )}
 
           {/* Badge */}
           <div
-            className={`flex items-center justify-center gap-2 text-[#0A3B9E] text-[10px] font-semibold mb-5 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-center gap-2 text-[10px] font-semibold mb-5 ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{ color: getColor("primary") }}
           >
             <ShieldCheck size={16} />
             <span>{t("common.licensed_escrow")}</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-serif font-bold text-[#041443] mb-2 text-center">
+          <h1
+            className="text-2xl font-serif font-bold mb-2 text-center"
+            style={{ color: getColor("primaryText") }}
+          >
             {t("common.verify_email")}
           </h1>
-          <p className="text-gray-500 text-xs mb-6 text-center leading-relaxed px-2">
+          <p
+            className="text-xs mb-6 text-center leading-relaxed px-2"
+            style={{ color: getColor("secondaryText") }}
+          >
             {t("common.verify_code_desc")}
           </p>
 
           {/* Error */}
           {error && (
             <div
-              className={`mb-4 p-2.5 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs flex items-center gap-2 ${isRTL ? "flex-row-reverse text-right" : "flex-row text-left"}`}
+              className={`mb-4 p-2.5 rounded-xl text-xs flex items-center gap-2 ${isRTL ? "flex-row-reverse text-right" : "flex-row text-left"}`}
+              style={{
+                backgroundColor: `${getColor("error")}15`,
+                borderColor: getColor("error"),
+                color: getColor("error"),
+                borderWidth: "1px",
+              }}
             >
               <span className="text-base shrink-0">⚠️</span>
               <span>{error}</span>
@@ -166,11 +172,14 @@ export default function VerifyCodePage() {
                   value={digit}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className={`w-10 h-11 sm:w-11 sm:h-12 text-center text-lg font-semibold border rounded-lg bg-white focus:ring-2 outline-none transition-all ${
-                    error && otp.join("").length < 6
-                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
-                      : "border-gray-200 focus:border-[#0A3B9E] focus:ring-[#0A3B9E]/20"
-                  }`}
+                  className={`w-10 h-11 sm:w-11 sm:h-12 text-center text-lg font-semibold border rounded-lg bg-white focus:ring-2 outline-none transition-all`}
+                  style={{
+                    borderColor:
+                      error && otp.join("").length < 6
+                        ? getColor("error")
+                        : getColor("border"),
+                    color: getColor("primaryText"),
+                  }}
                   autoFocus={index === 0}
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -192,18 +201,22 @@ export default function VerifyCodePage() {
 
           {/* Timer & Resend */}
           <div className="mt-5 text-center text-xs">
-            <div className="text-gray-500 mt-2 mb-2">
+            <div className="mb-2" style={{ color: getColor("secondaryText") }}>
               {t("common.code_expires")}{" "}
-              <span className="font-semibold text-[#041443]">
+              <span
+                className="font-semibold"
+                style={{ color: getColor("primaryText") }}
+              >
                 {formatTime(timer)}
               </span>
             </div>
-            <div className="text-gray-500">
+            <div style={{ color: getColor("secondaryText") }}>
               {t("common.didnt_receive")}{" "}
               <button
                 type="button"
                 onClick={handleResend}
-                className="text-[#0A3B9E] font-medium hover:underline disabled:opacity-50"
+                className="font-medium hover:underline disabled:opacity-50"
+                style={{ color: getColor("primary") }}
                 disabled={timer > 0}
               >
                 {timer > 0

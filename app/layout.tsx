@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   title: "Mazal - UAE Plate Marketplace",
   description:
     "The UAE's trust-first marketplace for distinctive vehicle plates.",
+  icons: {
+    icon: "/api/favicon",
+    shortcut: "/api/favicon",
+    apple: "/api/favicon",
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +32,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning className={`${inter.variable} ${cairo.variable}`}>
+    <html
+      suppressHydrationWarning
+      className={`${inter.variable} ${cairo.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import CertificateForm from "@/components/certificates/CertificateForm";
 import CertificatePreview from "@/components/certificates/CertificatePreview";
 import CertificateFAQ from "@/components/certificates/CertificateFAQ";
@@ -12,6 +14,7 @@ export default function CertificateRequestPage() {
   const router = useRouter();
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const { getColor } = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [options, setOptions] = useState<any>(null);
   const { token, isAuthenticated } = useAuth();
@@ -26,16 +29,13 @@ export default function CertificateRequestPage() {
   const handleSubmitValuation = async (formData: any) => {
     if (isSubmitting) return;
     if (!isAuthenticated || !token) {
-      alert(t("common.login_required") || "Please log in first");
+      toast.error(t("common.login_required"));
       router.push(`/${locale}/login`);
       return;
     }
 
     if (!formData.mulkiya_image || !(formData.mulkiya_image instanceof File)) {
-      alert(
-        t("certificates.mulkiya_required") ||
-          "Please upload your Mulkiya image.",
-      );
+      toast.error(t("certificates.mulkiya_required"));
       return;
     }
 
@@ -52,9 +52,8 @@ export default function CertificateRequestPage() {
         "plate_variant",
         formData.plate_variant || "private_new_colorful",
       );
-      if (formData.plate_code) {
+      if (formData.plate_code)
         formDataToSend.append("plate_code", formData.plate_code);
-      }
       formDataToSend.append("plate_digits", formData.plate_digits);
       formDataToSend.append("price", formData.price || "0");
       formDataToSend.append("description", formData.description || "");
@@ -78,57 +77,79 @@ export default function CertificateRequestPage() {
         throw new Error("Invalid response from server");
       }
     } catch (error: any) {
-      console.error("Submission failed:", error);
-      alert(
-        error.message || t("common.error_submission") || "An error occurred",
-      );
+      toast.error(error.message || t("common.error_submission"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div
+      className="min-h-screen pb-20"
+      style={{ backgroundColor: getColor("surface") }}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Desktop: Title + Form side by side */}
-        {/* Mobile: Only Form (title hidden) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start mb-16">
           {/* Features Section - Hidden on Mobile, Shown on Desktop */}
           <div
             className={`hidden lg:flex flex-col justify-center ${isRTL ? "lg:order-2 items-end text-right" : "lg:order-1 items-start text-left"}`}
           >
-            <span className="text-[#0A3B9E] text-xs font-bold uppercase tracking-wider mb-3">
+            <span
+              className="text-xs font-bold uppercase tracking-wider mb-3"
+              style={{ color: getColor("primary") }}
+            >
               {t("certificates.independent_valuation")}
             </span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-[#041443] leading-tight mb-6">
+            <h1
+              className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight mb-6"
+              style={{ color: getColor("primaryText") }}
+            >
               {t("certificates.hero_title")}
             </h1>
-            <p className="text-gray-600 text-base leading-relaxed mb-8 max-w-md">
+            <p
+              className="text-base leading-relaxed mb-8 max-w-md"
+              style={{ color: getColor("secondaryText") }}
+            >
               {t("certificates.hero_desc")}
             </p>
-            <ul className="space-y-3 text-sm text-gray-600">
+            <ul
+              className="space-y-3 text-sm"
+              style={{ color: getColor("secondaryText") }}
+            >
               <li
                 className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
               >
-                <BadgeCheck className="w-5 h-5 text-[#0A3B9E] shrink-0" />
+                <BadgeCheck
+                  className="w-5 h-5 shrink-0"
+                  style={{ color: getColor("primary") }}
+                />
                 <span>{t("certificates.feature_1")}</span>
               </li>
               <li
                 className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
               >
-                <ShieldCheck className="w-5 h-5 text-[#0A3B9E] shrink-0" />
+                <ShieldCheck
+                  className="w-5 h-5 shrink-0"
+                  style={{ color: getColor("primary") }}
+                />
                 <span>{t("certificates.feature_2")}</span>
               </li>
               <li
                 className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
               >
-                <Sparkles className="w-5 h-5 text-[#0A3B9E] shrink-0" />
+                <Sparkles
+                  className="w-5 h-5 shrink-0"
+                  style={{ color: getColor("primary") }}
+                />
                 <span>{t("certificates.feature_3")}</span>
               </li>
               <li
                 className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
               >
-                <Stamp className="w-5 h-5 text-[#0A3B9E] shrink-0" />
+                <Stamp
+                  className="w-5 h-5 shrink-0"
+                  style={{ color: getColor("primary") }}
+                />
                 <span>{t("certificates.feature_4")}</span>
               </li>
             </ul>

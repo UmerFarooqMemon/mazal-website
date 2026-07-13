@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { ChevronDown } from "lucide-react";
 
 interface SelectProps {
@@ -25,6 +26,7 @@ export default function Select({
 }: SelectProps) {
   const { locale } = useLocale();
   const isRTL = locale === "ar";
+  const { getColor } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -47,7 +49,8 @@ export default function Select({
       {/* Label */}
       {label && (
         <label
-          className={`block text-[11px] font-medium text-gray-500 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("secondaryText") }}
         >
           {label}
         </label>
@@ -55,28 +58,43 @@ export default function Select({
 
       {/* Custom Select */}
       <div ref={ref} className="relative">
-        {/* Trigger Button - Looks like an input */}
+        {/* Trigger Button */}
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between cursor-pointer transition-all duration-200
-            ${isOpen ? "border-[#0A3B9E] ring-2 ring-[#0A3B9E]/20" : "border-gray-200 hover:border-[#0A3B9E]/30"}
             ${error ? "border-red-300" : ""}
             ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+          style={{
+            borderColor: isOpen
+              ? getColor("primary")
+              : error
+                ? undefined
+                : getColor("border"),
+            color: selectedOption
+              ? getColor("primaryText")
+              : getColor("mutedText"),
+            boxShadow: isOpen
+              ? `0 0 0 3px ${getColor("primary")}20`
+              : undefined,
+          }}
         >
-          <span className={selectedOption ? "text-gray-700" : "text-gray-400"}>
-            {displayText}
-          </span>
+          <span>{displayText}</span>
           <ChevronDown
-            className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
             strokeWidth={1.5}
+            style={{ color: getColor("mutedText") }}
           />
         </button>
 
         {/* Dropdown Menu */}
         {isOpen && (
           <div
-            className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden ${isRTL ? "right-0" : "left-0"}`}
+            className={`absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg overflow-hidden ${isRTL ? "right-0" : "left-0"}`}
+            style={{
+              borderColor: getColor("border"),
+              borderWidth: "1px",
+            }}
           >
             <div className="max-h-60 overflow-y-auto py-1">
               {options.map((option) => (
@@ -87,9 +105,29 @@ export default function Select({
                     onChange?.(option.key);
                     setIsOpen(false);
                   }}
-                  className={`w-full px-4 py-2.5 text-sm transition-colors duration-100 hover:bg-[#0A3B9E]/5
-                    ${option.key === value ? "bg-[#0A3B9E]/10 text-[#0A3B9E] font-medium" : "text-gray-700 hover:text-[#041443]"}
+                  className={`w-full px-4 py-2.5 text-sm transition-colors duration-100
+                    ${option.key === value ? "font-medium" : ""}
                     ${isRTL ? "text-right" : "text-left"}`}
+                  style={{
+                    backgroundColor:
+                      option.key === value
+                        ? `${getColor("primary")}15`
+                        : "transparent",
+                    color:
+                      option.key === value
+                        ? getColor("primary")
+                        : getColor("primaryText"),
+                  }}
+                  onMouseEnter={(e) => {
+                    if (option.key !== value) {
+                      e.currentTarget.style.backgroundColor = `${getColor("primary")}08`;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (option.key !== value) {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
                 >
                   {option.label}
                 </button>
@@ -102,7 +140,8 @@ export default function Select({
       {/* Hint */}
       {hint && !error && (
         <p
-          className={`text-[10px] text-gray-400 mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-[10px] mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("mutedText") }}
         >
           {hint}
         </p>
@@ -111,7 +150,8 @@ export default function Select({
       {/* Error */}
       {error && (
         <p
-          className={`text-[10px] text-red-500 mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-[10px] mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("error") }}
         >
           {error}
         </p>

@@ -1,5 +1,6 @@
 import { Cairo, Inter } from "next/font/google";
 import { LocaleProvider } from "@/context/LocaleContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import {
   ConditionalHeader,
   ConditionalFooter,
@@ -32,23 +33,25 @@ export default async function LocaleLayout({
   return (
     <div className={validLocale === "ar" ? cairo.className : inter.className}>
       <LocaleProvider initialLocale={validLocale}>
-        <Toaster
-          position="top-center"
-          reverseOrder={false}
-          toastOptions={{
-            duration: 4000,
-            style: {
-              borderRadius: "12px",
-              padding: "16px",
-              fontSize: "14px",
-            },
-          }}
-        />
-        <div className="min-h-screen flex flex-col bg-white text-gray-900">
-          <ConditionalHeader />
-          <main className="grow">{children}</main>
-          <ConditionalFooter />
-        </div>
+        <ThemeProvider>
+          <Toaster
+            position="top-center"
+            reverseOrder={false}
+            toastOptions={{
+              duration: 4000,
+              style: {
+                borderRadius: "12px",
+                padding: "16px",
+                fontSize: "14px",
+              },
+            }}
+          />
+          <div className="min-h-screen flex flex-col">
+            <ConditionalHeader />
+            <main className="grow">{children}</main>
+            <ConditionalFooter />
+          </div>
+        </ThemeProvider>
       </LocaleProvider>
     </div>
   );

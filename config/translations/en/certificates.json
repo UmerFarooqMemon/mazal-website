@@ -58,5 +58,16 @@
   "error_price_numeric": "Price must be a valid number",
   "error_desc_length": "Description must be under 500 characters",
   "error_file_type": "Please upload an image file",
-  "error_file_size": "File size must be under 5MB"
+  "error_file_size": "File size must be under 5MB",
+  "platform_name": "Mazal Platform",
+  "issued_info": "Issued 01 July 2026 · Valid 90 days · Purpose: Insurance",
+  "methodology_desc": "Assessment triangulates 90-day comparable sales, active listings, and closed auction data from Mazal's escrow ledger.",
+  "sale_1": "Dubai · similar pattern",
+  "sale_2": "Dubai · same digit count",
+  "sale_3": "Dubai · adjacent code",
+  "signatory_1": "Head of Valuations · Mazal",
+  "signatory_2": "Senior Analyst · Mazal",
+  "certified": "Mazal Certified",
+  "verify_text": "Verify authenticity at",
+  "using_certificate": "using certificate number"
 }

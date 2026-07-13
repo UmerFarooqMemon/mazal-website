@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
@@ -47,6 +48,7 @@ export default function CertificateForm({
 }: CertificateFormProps) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const { getColor } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -78,7 +80,6 @@ export default function CertificateForm({
   // Handle input change
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user types
     if (errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
@@ -88,7 +89,6 @@ export default function CertificateForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         setErrors((prev) => ({
           ...prev,
@@ -97,7 +97,6 @@ export default function CertificateForm({
         }));
         return;
       }
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setErrors((prev) => ({
           ...prev,
@@ -114,41 +113,30 @@ export default function CertificateForm({
   // Remove selected file
   const handleRemoveFile = () => {
     setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   // Validate all fields
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
-
-    if (showCodeField && !form.plate_code.trim()) {
+    if (showCodeField && !form.plate_code.trim())
       newErrors.plate_code =
         t("certificates.error_code_required") || "Plate code is required";
-    }
-
-    if (!form.plate_digits.trim()) {
+    if (!form.plate_digits.trim())
       newErrors.plate_digits =
         t("certificates.error_digits_required") || "Plate digits are required";
-    } else if (!/^\d+$/.test(form.plate_digits.trim())) {
+    else if (!/^\d+$/.test(form.plate_digits.trim()))
       newErrors.plate_digits =
         t("certificates.error_digits_numeric") || "Digits must be numbers only";
-    }
-
-    if (!selectedFile) {
+    if (!selectedFile)
       newErrors.mulkiya =
         t("certificates.mulkiya_required") || "Please upload your Mulkiya";
-    }
-
     return newErrors;
   };
 
   // Form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Mark all fields as touched
     setTouched({
       plate_code: true,
       plate_digits: true,
@@ -156,15 +144,11 @@ export default function CertificateForm({
       description: true,
       mulkiya: true,
     });
-
-    // Validate
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
-    // Submit data
     onSubmit({
       emirate: form.emirate,
       plate_variant: form.plate_variant,
@@ -177,13 +161,25 @@ export default function CertificateForm({
   };
 
   return (
-    <div className="bg-[#FAFAF8] rounded-2xl border border-gray-200 p-8">
+    <div
+      className="rounded-2xl border p-8"
+      style={{
+        backgroundColor: getColor("background"),
+        borderColor: getColor("border"),
+      }}
+    >
       {/* Header */}
       <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
-        <div className="text-[#0A3B9E] text-xs font-bold uppercase tracking-wider mb-2">
+        <div
+          className="text-xs font-bold uppercase tracking-wider mb-2"
+          style={{ color: getColor("primary") }}
+        >
           {t("certificates.order_valuation")}
         </div>
-        <h2 className="text-3xl font-serif font-bold text-[#041443]">
+        <h2
+          className="text-3xl font-serif font-bold"
+          style={{ color: getColor("primaryText") }}
+        >
           {t("certificates.certificate_request")}
         </h2>
       </div>
@@ -192,12 +188,18 @@ export default function CertificateForm({
         {/* Emirate – fixed Dubai */}
         <div>
           <label
-            className={`block text-[11px] font-medium text-gray-500 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
           >
             {t("listings.emirate")}
           </label>
           <div
-            className={`w-full rounded-xl border border-gray-200 bg-gray-50 py-3 px-4 text-sm text-gray-700 ${isRTL ? "text-right" : "text-left"}`}
+            className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+            style={{
+              backgroundColor: `${getColor("background")}80`,
+              borderColor: getColor("border"),
+              color: getColor("primaryText"),
+            }}
           >
             {t("listings.emirate_dubai")}
           </div>
@@ -228,12 +230,18 @@ export default function CertificateForm({
           ) : (
             <div>
               <label
-                className={`block text-[11px] font-medium text-gray-500 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                style={{ color: getColor("secondaryText") }}
               >
                 {t("listings.code")}
               </label>
               <div
-                className={`w-full rounded-xl border border-gray-200 bg-gray-50 py-3 px-4 text-sm text-gray-400 ${isRTL ? "text-right" : "text-left"}`}
+                className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+                style={{
+                  backgroundColor: `${getColor("background")}80`,
+                  borderColor: getColor("border"),
+                  color: getColor("mutedText"),
+                }}
               >
                 {t("certificates.digits_only") || "Digits only"}
               </div>
@@ -254,29 +262,31 @@ export default function CertificateForm({
         {/* Your Estimate */}
         <div>
           <label
-            className={`block text-[11px] font-medium text-gray-500 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
           >
             {t("certificates.your_estimate") || "Your estimate"}
           </label>
           <div className="relative">
-            {/* Input with proper padding like Justification */}
             <input
               type="text"
-              className={`w-full rounded-xl border bg-white py-3 px-4 text-sm placeholder:text-gray-300 focus:outline-none focus:ring-2 transition-all ${
-                touched.price && errors.price
-                  ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
-                  : "border-gray-200 focus:border-[#0A3B9E] focus:ring-[#0A3B9E]/20"
-              } ${isRTL ? "text-right pr-16" : "text-left pl-16"}`}
-              placeholder=""
+              className={`w-full rounded-xl border bg-white py-3 px-4 text-sm focus:outline-none focus:ring-2 transition-all ${isRTL ? "text-right" : "text-left"}`}
+              style={{
+                borderColor:
+                  touched.price && errors.price
+                    ? getColor("error")
+                    : getColor("border"),
+                color: getColor("primaryText"),
+              }}
               value={form.price}
               onChange={(e) => handleChange("price", e.target.value)}
               onBlur={() => handleBlur("price")}
             />
           </div>
-          {/* Error for Price */}
           {touched.price && errors.price && (
             <div
-              className={`flex items-center gap-1.5 mt-1.5 text-[11px] text-red-500 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              style={{ color: getColor("error") }}
             >
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{errors.price}</span>
@@ -287,36 +297,37 @@ export default function CertificateForm({
         {/* Justification */}
         <div>
           <label
-            className={`block text-[11px] font-medium text-gray-500 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
           >
             {t("certificates.justification") || "Justification"}
           </label>
           <textarea
-            className={`w-full rounded-xl border bg-white py-3 px-4 text-sm resize-none placeholder:text-gray-300 focus:outline-none focus:ring-2 transition-all ${
-              touched.description && errors.description
-                ? "border-red-300 focus:border-red-500 focus:ring-red-500/20"
-                : "border-gray-200 focus:border-[#0A3B9E] focus:ring-[#0A3B9E]/20"
-            } ${isRTL ? "text-right" : "text-left"}`}
+            className={`w-full rounded-xl border bg-white py-3 px-4 text-sm resize-none focus:outline-none focus:ring-2 transition-all ${isRTL ? "text-right" : "text-left"}`}
+            style={{
+              borderColor:
+                touched.description && errors.description
+                  ? getColor("error")
+                  : getColor("border"),
+              color: getColor("primaryText"),
+            }}
             rows={3}
-            placeholder={
-              t("certificates.justification_placeholder") || "Tell us why..."
-            }
             value={form.description}
             onChange={(e) => handleChange("description", e.target.value)}
             onBlur={() => handleBlur("description")}
           />
-          {/* Error for Description */}
           {touched.description && errors.description && (
             <div
-              className={`flex items-center gap-1.5 mt-1.5 text-[11px] text-red-500 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              style={{ color: getColor("error") }}
             >
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{errors.description}</span>
             </div>
           )}
-          {/* Character count */}
           <p
-            className={`text-[10px] text-gray-400 mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-[10px] mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("mutedText") }}
           >
             {form.description.length}/500
           </p>
@@ -325,7 +336,8 @@ export default function CertificateForm({
         {/* Upload Document */}
         <div>
           <label
-            className={`block text-[11px] font-medium text-gray-500 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
           >
             {t("certificates.upload_document")}
           </label>
@@ -339,18 +351,21 @@ export default function CertificateForm({
           />
           {selectedFile ? (
             <div
-              className={`flex items-center justify-between border border-green-200 rounded-xl px-4 py-3 text-sm bg-green-50 ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex items-center justify-between border rounded-xl px-4 py-3 text-sm ${isRTL ? "flex-row-reverse" : ""}`}
+              style={{
+                borderColor: getColor("success"),
+                backgroundColor: `${getColor("success")}15`,
+                color: getColor("success"),
+              }}
             >
               <div className="flex items-center gap-2">
-                <Upload className="w-4 h-4 text-green-600" />
-                <span className="text-green-700 text-sm truncate max-w-50">
-                  {selectedFile.name}
-                </span>
+                <Upload className="w-4 h-4" />
+                <span className="truncate max-w-50">{selectedFile.name}</span>
               </div>
               <button
                 type="button"
                 onClick={handleRemoveFile}
-                className="text-gray-400 hover:text-red-500 transition-colors"
+                style={{ color: getColor("mutedText") }}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -359,20 +374,23 @@ export default function CertificateForm({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className={`w-full border rounded-xl px-4 py-3 text-sm bg-white flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors ${
-                errors.mulkiya ? "border-red-300" : "border-gray-200"
-              } ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`w-full border rounded-xl px-4 py-3 text-sm flex items-center justify-between cursor-pointer transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+              style={{
+                borderColor: errors.mulkiya
+                  ? getColor("error")
+                  : getColor("border"),
+                backgroundColor: getColor("surface"),
+                color: getColor("mutedText"),
+              }}
             >
-              <span className="text-gray-400">
-                {t("certificates.upload_placeholder")}
-              </span>
-              <Upload className="w-4 h-4 text-gray-400" />
+              <span>{t("certificates.upload_placeholder")}</span>
+              <Upload className="w-4 h-4" />
             </button>
           )}
-          {/* Error for Mulkiya */}
           {errors.mulkiya && (
             <div
-              className={`flex items-center gap-1.5 mt-1.5 text-[11px] text-red-500 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              style={{ color: getColor("error") }}
             >
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{errors.mulkiya}</span>
@@ -382,20 +400,31 @@ export default function CertificateForm({
 
         {/* Rush Delivery */}
         <div
-          className={`flex items-center border border-gray-200 rounded-xl p-4 bg-white ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center border rounded-xl p-4 ${isRTL ? "flex-row-reverse" : ""}`}
+          style={{
+            borderColor: getColor("border"),
+            backgroundColor: getColor("surface"),
+          }}
         >
           <div
             className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
           >
             <input
               type="checkbox"
-              className="w-5 h-5 rounded border-gray-300 text-[#0A3B9E] focus:ring-[#0A3B9E] shrink-0"
+              className="w-5 h-5 rounded shrink-0"
+              style={{ accentColor: getColor("primary") }}
             />
             <div className={isRTL ? "text-right" : "text-left"}>
-              <div className="font-medium text-sm text-[#041443]">
+              <div
+                className="font-medium text-sm"
+                style={{ color: getColor("primaryText") }}
+              >
                 {t("certificates.rush_delivery")}
               </div>
-              <div className="text-xs text-gray-500">
+              <div
+                className="text-xs"
+                style={{ color: getColor("secondaryText") }}
+              >
                 {t("certificates.rush_desc")}
               </div>
             </div>
@@ -404,11 +433,17 @@ export default function CertificateForm({
 
         {/* LIVE PREVIEW Box */}
         <div
-          className="rounded-xl overflow-hidden border border-gray-200"
-          style={{ backgroundColor: "#F6F8FC" }}
+          className="rounded-xl overflow-hidden border"
+          style={{
+            borderColor: getColor("border"),
+            backgroundColor: getColor("primaryLight"),
+          }}
         >
           <div className={`px-5 pt-5 ${isRTL ? "text-right" : "text-left"}`}>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-600">
+            <span
+              className="text-[10px] font-bold uppercase tracking-wider"
+              style={{ color: getColor("secondaryText") }}
+            >
               {t("certificates.live_preview") || "LIVE PREVIEW"}
             </span>
           </div>
@@ -417,6 +452,7 @@ export default function CertificateForm({
               plate_code={form.plate_code}
               plate_digits={form.plate_digits}
               emirate={t("listings.emirate_dubai")}
+              imageUrl="/certificates-preview.png"
               width={280}
               height={84}
             />
@@ -442,7 +478,8 @@ export default function CertificateForm({
 
         {/* Delivery Notice */}
         <p
-          className={`text-xs text-gray-400 text-center mt-3 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-xs text-center mt-3 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("mutedText") }}
         >
           {t("certificates.delivery_notice")}
         </p>

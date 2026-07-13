@@ -4,39 +4,45 @@ import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import Button from "@/components/ui/Button";
 
 export default function PasswordUpdatedPage() {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const { getColor, branding } = useTheme();
 
   // Show success toast on page load
   useEffect(() => {
-    toast.success(t("common.password_updated_title"), {
-      style: {
-        background: "#E8FFE2",
-        color: "#015C14",
-        border: "1px solid #86D98F",
-      },
-      icon: "",
-      duration: 3000,
-    });
+    toast.success(t("common.password_updated_title"));
   }, [t]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-4 sm:p-6">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+      style={{ backgroundColor: getColor("background") }}
+    >
       <div className="w-full max-w-md mx-auto">
-        <div className="bg-white rounded-4xl shadow-xl border border-gray-100 p-8 sm:p-10 text-center">
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <Image
-              src="/auth/auth-logo.png"
-              alt="Mazal Logo"
-              width={130}
-              height={45}
-              className="object-contain h-auto"
-            />
-          </div>
+        <div
+          className="rounded-4xl shadow-xl border p-8 sm:p-10 text-center"
+          style={{
+            backgroundColor: getColor("surface"),
+            borderColor: getColor("border"),
+          }}
+        >
+          {/* Logo - Only from API */}
+          {branding.logoUrl && (
+            <div className="flex justify-center mb-8 pt-4">
+              <Image
+                src={branding.logoUrl}
+                alt="Mazal Logo"
+                width={140}
+                height={50}
+                className="h-auto"
+                unoptimized
+              />
+            </div>
+          )}
 
           {/* Celebration Emoji */}
           <div className="flex justify-center mb-8">
@@ -46,10 +52,16 @@ export default function PasswordUpdatedPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#041443] mb-3">
+          <h1
+            className="text-2xl sm:text-3xl font-serif font-bold mb-3"
+            style={{ color: getColor("primaryText") }}
+          >
             {t("common.password_updated_title")}
           </h1>
-          <p className="text-gray-500 text-sm sm:text-[15px] mb-8 leading-relaxed px-2">
+          <p
+            className="text-sm sm:text-[15px] mb-8 leading-relaxed px-2"
+            style={{ color: getColor("secondaryText") }}
+          >
             {t("common.password_updated_desc")}
           </p>
 
@@ -68,9 +80,9 @@ export default function PasswordUpdatedPage() {
           {/* Back to Home */}
           <div className="mt-4 text-center">
             <Link
-              // href={`/${locale}`}
               href=""
-              className="text-sm text-gray-400 hover:text-[#0A3B9E] transition-colors"
+              className="text-sm transition-colors"
+              style={{ color: getColor("mutedText") }}
             >
               {t("common.back_to_home")}
             </Link>

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import CertificateRequestCard from "@/components/dashboard/CertificateRequestCard";
 import { FileText, Plus, ArrowLeft, Sparkles } from "lucide-react";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui";
 export default function DashboardCertificatesPage() {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const { getColor, getGradient } = useTheme();
   const { token } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,11 +67,9 @@ export default function DashboardCertificatesPage() {
       ? requests
       : requests.filter((req: any) => {
           const s = req.status?.toLowerCase() || "";
-          if (activeTab === "Pending") {
+          if (activeTab === "Pending")
             return !["completed", "approved", "issued"].includes(s);
-          } else {
-            return ["completed", "approved", "issued"].includes(s);
-          }
+          else return ["completed", "approved", "issued"].includes(s);
         });
 
   const formatDate = (dateString: string) => {
@@ -92,40 +92,50 @@ export default function DashboardCertificatesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-20">
+    <div
+      className="min-h-screen pb-20"
+      style={{ backgroundColor: getColor("background") }}
+    >
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className={`mb-8 ${isRTL ? "text-right" : "text-left"}`}>
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+          <div
+            className="text-xs font-bold uppercase tracking-wider mb-1"
+            style={{ color: getColor("mutedText") }}
+          >
             {t("dashboard.dashboard_label") || "DASHBOARD"}
           </div>
-          <h1 className="text-4xl font-serif font-bold text-[#041443]">
+          <h1
+            className="text-4xl font-serif font-bold"
+            style={{ color: getColor("primaryText") }}
+          >
             {t("certificates.requests_title")}
           </h1>
         </div>
 
-        {/* Fancy New Request Button - RTL Fixed */}
+        {/* Fancy New Request Button */}
         <Link href={`/${locale}/certificates/request`} className="block mb-8">
           <div
-            className={`bg-linear-to-r from-[#0A3B9E] to-[#1e40af] rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg transition-shadow group ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg transition-shadow group ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{ background: getGradient("primaryButton") }}
           >
-            {/* Icon */}
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            {/* Text - takes available space */}
             <div className={`flex-1 ${isRTL ? "text-right" : "text-left"}`}>
               <p className="text-white font-semibold text-sm">
                 {t("certificates.order_valuation")}
               </p>
-              <p className="text-blue-200 text-xs mt-0.5">
+              <p className="text-white/70 text-xs mt-0.5">
                 {t("certificates.order_valuation_desc") ||
                   "Get your plate valued by our experts"}
               </p>
             </div>
-            {/* Plus circle */}
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
-              <Plus className="w-4 h-4 text-[#0A3B9E]" />
+              <Plus
+                className="w-4 h-4"
+                style={{ color: getColor("primaryButton") }}
+              />
             </div>
           </div>
         </Link>
@@ -142,19 +152,33 @@ export default function DashboardCertificatesPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
-              className={`px-5 py-2 rounded-full text-sm font-medium border transition-colors ${
-                activeTab === tab.key
-                  ? "bg-[#0A3B9E] text-white border-[#0A3B9E]"
-                  : "bg-white border-gray-200 text-gray-500 hover:text-[#0A3B9E] hover:border-[#0A3B9E]"
-              }`}
+              className="px-5 py-2 rounded-full text-sm font-medium border transition-colors"
+              style={{
+                backgroundColor:
+                  activeTab === tab.key
+                    ? getColor("primary")
+                    : getColor("surface"),
+                color:
+                  activeTab === tab.key ? "#FFFFFF" : getColor("secondaryText"),
+                borderColor:
+                  activeTab === tab.key
+                    ? getColor("primary")
+                    : getColor("border"),
+              }}
             >
               {t(`certificates.${tab.key.toLowerCase()}`)}
               <span
-                className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
-                  activeTab === tab.key
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-500"
-                }`}
+                className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
+                style={{
+                  backgroundColor:
+                    activeTab === tab.key
+                      ? "rgba(255,255,255,0.2)"
+                      : getColor("primaryLight"),
+                  color:
+                    activeTab === tab.key
+                      ? "#FFFFFF"
+                      : getColor("secondaryText"),
+                }}
               >
                 {tab.count}
               </span>
@@ -168,7 +192,8 @@ export default function DashboardCertificatesPage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="bg-white border border-gray-200 rounded-2xl p-5 animate-pulse"
+                className="bg-white border rounded-2xl p-5 animate-pulse"
+                style={{ borderColor: getColor("border") }}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-20 h-20 bg-gray-200 rounded-full" />
@@ -183,8 +208,11 @@ export default function DashboardCertificatesPage() {
         ) : filteredRequests.length === 0 ? (
           /* Smart Empty State */
           <div className="text-center py-16">
-            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-400 mb-2">
+            <FileText
+              className="w-12 h-12 mx-auto mb-4"
+              style={{ color: getColor("mutedText") }}
+            />
+            <p className="mb-2" style={{ color: getColor("mutedText") }}>
               {activeTab === "All"
                 ? t("certificates.no_requests")
                 : activeTab === "Pending"
@@ -194,9 +222,11 @@ export default function DashboardCertificatesPage() {
             {activeTab === "Issued" &&
               issuedCount === 0 &&
               pendingCount > 0 && (
-                <p className="text-xs text-gray-400 mb-6">
-                  {t("certificates.pending_hint") ||
-                    "You have pending requests. Certificates will appear here once issued."}
+                <p
+                  className="text-xs mb-6"
+                  style={{ color: getColor("mutedText") }}
+                >
+                  {t("certificates.pending_hint")}
                 </p>
               )}
             {activeTab === "All" && (
@@ -232,7 +262,12 @@ export default function DashboardCertificatesPage() {
         <div className="mt-12">
           <Link
             href={`/${locale}`}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 hover:text-[#041443] transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border text-sm font-medium transition-colors shadow-sm"
+            style={{
+              backgroundColor: getColor("surface"),
+              borderColor: getColor("border"),
+              color: getColor("secondaryText"),
+            }}
           >
             <ArrowLeft className="w-4 h-4" />
             {t("common.back")}
