@@ -35,6 +35,7 @@ interface PlateWithOverlayProps {
   imageUrl?: string;
   preview?: PlatePreview;
   isRTL?: boolean;
+  removeWhiteBg?: boolean;
 }
 
 export default function PlateWithOverlay({
@@ -47,6 +48,7 @@ export default function PlateWithOverlay({
   imageUrl,
   preview,
   isRTL = false,
+  removeWhiteBg = false,
 }: PlateWithOverlayProps) {
   const { getColor } = useTheme();
 
@@ -116,7 +118,7 @@ export default function PlateWithOverlay({
         borderRadius: "3px",
         overflow: "hidden",
         containerType: "inline-size",
-        mixBlendMode: "multiply",
+        ...(removeWhiteBg ? { mixBlendMode: "multiply" as const } : {}),
       }}
     >
       <style jsx>{`

@@ -16,19 +16,19 @@ interface CertificateRequestCardProps {
   title?: string;
   date: string;
   showDownload?: boolean;
-  previewUrl?: string;
+  preview?: any;
 }
 
 export default function CertificateRequestCard({
   id,
   emirate = "DUBAI",
-  plate_code = "M",
-  plate_digits = "777",
+  plate_code = "",
+  plate_digits = "",
   status,
   title,
   date,
   showDownload = false,
-  previewUrl,
+  preview,
 }: CertificateRequestCardProps) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
@@ -96,8 +96,7 @@ export default function CertificateRequestCard({
             plate_code={plate_code}
             plate_digits={plate_digits}
             emirate={emirate}
-            isMobile={false}
-            width={isRTL ? 140 : 140}
+            preview={preview}
           />
         </div>
 

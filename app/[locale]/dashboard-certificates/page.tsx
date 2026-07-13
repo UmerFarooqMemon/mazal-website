@@ -18,18 +18,35 @@ export default function DashboardCertificatesPage() {
   const [activeTab, setActiveTab] = useState<"All" | "Pending" | "Issued">(
     "All",
   );
+  const [previewMap, setPreviewMap] = useState<Record<string, any>>({});
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
+    const fetchAll = async () => {
+      // Fetch plate options (for preview configs) and user's plates in parallel
+      const [optionsRes, platesRes] = await Promise.allSettled([
+        fetch("/api/number-plates/options").then((r) => r.json()),
+        token
+          ? fetch("/api/number-plates", {
+              headers: { Authorization: `Bearer ${token}` },
+            }).then((r) => r.json())
+          : Promise.resolve(null),
+      ]);
+
+      // Build variant key → preview lookup from options
+      if (optionsRes.status === "fulfilled") {
+        const options = optionsRes.value?.data;
+        const map: Record<string, any> = {};
+        for (const em of options?.emirates || []) {
+          for (const v of em?.variants || []) {
+            if (v.key && v.preview) map[v.key] = v.preview;
+          }
+        }
+        setPreviewMap(map);
       }
-      try {
-        const response = await fetch("/api/number-plates", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const result = await response.json();
+
+      // Parse number plates list
+      if (platesRes.status === "fulfilled" && platesRes.value) {
+        const result = platesRes.value;
         let list: any[] = [];
         if (
           result.data?.number_plates &&
@@ -42,13 +59,11 @@ export default function DashboardCertificatesPage() {
           list = result;
         }
         setRequests(list);
-      } catch (error) {
-        console.error("Failed to fetch:", error);
-      } finally {
-        setLoading(false);
       }
+
+      setLoading(false);
     };
-    fetchRequests();
+    fetchAll();
   }, [token]);
 
   // Smart filtering
@@ -247,12 +262,13 @@ export default function DashboardCertificatesPage() {
                 key={req.id}
                 id={req.id}
                 emirate={req.emirate_label || req.emirate || "DUBAI"}
-                plate_code={req.plate_code || "M"}
-                plate_digits={req.plate_digits || "77"}
+                plate_code={req.plate_code || ""}
+                plate_digits={req.plate_digits || ""}
                 status={getStatus(req)}
                 title={t("certificates.request_submitted")}
                 date={formatDate(req.created_at)}
                 showDownload={getStatus(req) === "Issued"}
+                preview={req.preview}
               />
             ))}
           </div>

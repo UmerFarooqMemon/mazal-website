@@ -546,9 +546,9 @@ export default function CertificateForm({
               plate_code={form.plate_code}
               plate_digits={form.plate_digits}
               emirate={t("listings.emirate_dubai")}
-              imageUrl={selectedVariant?.preview?.background_image_url || "/certificates-preview.png"}
               preview={selectedVariant?.preview}
               isRTL={isRTL}
+              removeWhiteBg
             />
           </div>
         </div>
