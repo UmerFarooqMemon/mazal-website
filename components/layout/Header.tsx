@@ -294,7 +294,9 @@ export default function Header() {
                   className="mb-4 p-4 rounded-xl"
                   style={{ backgroundColor: getColor("primaryLight") }}
                 >
-                  <div className="flex items-center gap-3">
+                  <div
+                    className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                  >
                     <div
                       className="h-10 w-10 rounded-full text-white flex items-center justify-center text-sm font-medium"
                       style={{ background: getGradient("primaryButton") }}
@@ -328,7 +330,7 @@ export default function Header() {
                     pathname === `/${locale}` || pathname === `/${locale}/`
                       ? "font-medium"
                       : ""
-                  } ${isRTL ? "flex-row-reverse" : ""}`}
+                  } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
                   style={{
                     backgroundColor:
                       pathname === `/${locale}` || pathname === `/${locale}/`
@@ -340,7 +342,9 @@ export default function Header() {
                         : getColor("primaryText"),
                   }}
                 >
-                  <span className="flex items-center gap-3">
+                  <span
+                    className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                  >
                     <Home className="w-5 h-5" strokeWidth={2} />
                     {t("common.home")}
                   </span>
@@ -359,7 +363,7 @@ export default function Header() {
                     onClick={closeMenu}
                     className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
                       isActive("/dashboard-certificates") ? "font-medium" : ""
-                    } ${isRTL ? "flex-row-reverse" : ""}`}
+                    } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
                     style={{
                       backgroundColor: isActive("/dashboard-certificates")
                         ? `${getColor("primary")}10`
@@ -369,7 +373,9 @@ export default function Header() {
                         : getColor("primaryText"),
                     }}
                   >
-                    <span className="flex items-center gap-3">
+                    <span
+                      className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                    >
                       <LayoutDashboard className="w-5 h-5" strokeWidth={2} />
                       {t("common.dashboard")}
                     </span>
@@ -409,7 +415,7 @@ export default function Header() {
                 {isAuthenticated ? (
                   <button
                     onClick={handleLogout}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-colors ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
                     style={{ color: getColor("error") }}
                   >
                     <LogOut className="w-5 h-5" />
