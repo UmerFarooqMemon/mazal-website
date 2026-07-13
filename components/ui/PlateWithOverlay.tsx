@@ -2,15 +2,39 @@
 
 import { useTheme } from "@/context/ThemeContext";
 
+interface OverlayConfig {
+  left?: string;
+  right?: string;
+  top?: string;
+  transform?: string;
+  font_size?: string;
+  font_weight?: string;
+  color?: string;
+  font_family?: string;
+  hide_when_code?: string[];
+}
+
+interface PlatePreview {
+  background_image_url?: string;
+  width?: number;
+  height?: number;
+  aspect_ratio?: string;
+  overlays?: {
+    plate_code?: OverlayConfig;
+    plate_digits?: OverlayConfig;
+  };
+}
+
 interface PlateWithOverlayProps {
   plate_code: string;
   plate_digits: string;
   emirate?: string;
   isMobile?: boolean;
   width?: number;
-  height?: number;
   className?: string;
   imageUrl?: string;
+  preview?: PlatePreview;
+  isRTL?: boolean;
 }
 
 export default function PlateWithOverlay({
@@ -19,156 +43,104 @@ export default function PlateWithOverlay({
   emirate = "DUBAI",
   isMobile = false,
   width,
-  height,
   className = "",
   imageUrl,
+  preview,
+  isRTL = false,
 }: PlateWithOverlayProps) {
   const { getColor } = useTheme();
-  const w = width || (isMobile ? 110 : 130);
-  const h = height || (isMobile ? 38 : 44);
+
+  const backgroundUrl = preview?.background_image_url || "";
+
+  const parseAspectRatio = (ratio?: string): string => {
+    if (ratio) return ratio;
+    const w = preview?.width || 840;
+    const h = preview?.height || 592;
+    return `${w} / ${h}`;
+  };
+
+  const aspectRatio = parseAspectRatio(preview?.aspect_ratio);
+
+  const codeOverlay = preview?.overlays?.plate_code;
+  const digitsOverlay = preview?.overlays?.plate_digits;
+
+  const shouldHideCode =
+    codeOverlay?.hide_when_code?.includes(plate_code) || false;
+
+  // Build overlay styles directly from API config
+  const buildOverlayStyle = (overlay: OverlayConfig | undefined): React.CSSProperties => {
+    if (!overlay) return { display: "none" };
+
+    const style: React.CSSProperties = {
+      position: "absolute",
+      zIndex: 3,
+      direction: "ltr",
+      unicodeBidi: "plaintext",
+      display: "inline-block",
+      lineHeight: 1,
+      whiteSpace: "nowrap",
+      pointerEvents: "none",
+    };
+
+    if (overlay.left) style.left = overlay.left;
+    if (overlay.right) style.right = overlay.right;
+    if (overlay.top) style.top = overlay.top;
+    if (overlay.transform) style.transform = overlay.transform;
+    if (overlay.font_size) style.fontSize = overlay.font_size;
+    if (overlay.font_weight) style.fontWeight = overlay.font_weight;
+    if (overlay.color) style.color = overlay.color;
+    if (overlay.font_family) style.fontFamily = overlay.font_family;
+
+    // Match backend: code (left-positioned) centers, digits (right-positioned) align right
+    if (overlay.left && !overlay.right) style.textAlign = "center";
+    else if (overlay.right && !overlay.left) style.textAlign = "right";
+    else style.textAlign = "center";
+
+    return style;
+  };
+
+  const codeStyle = buildOverlayStyle(codeOverlay);
+  const digitsStyle = buildOverlayStyle(digitsOverlay);
 
   return (
     <div
       className={`relative shrink-0 ${className}`}
-      style={{ width: `${w}px`, height: `${h}px` }}
+      style={{
+        width: width ? `${width}px` : "100%",
+        aspectRatio,
+        backgroundImage: `url("${backgroundUrl}")`,
+        backgroundSize: "100% 100%",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundColor: "transparent",
+        borderRadius: "3px",
+        overflow: "hidden",
+        containerType: "inline-size",
+        mixBlendMode: "multiply",
+      }}
     >
-      {/* Add the metal-plate-text CSS as a style tag */}
       <style jsx>{`
-        .metal-plate-text {
+        .plate-text {
           display: inline-block;
           isolation: isolate;
           white-space: nowrap;
-          font-family: Arial, Helvetica, sans-serif !important;
-          font-weight: 700 !important;
-          letter-spacing: -0.02em;
-          color: #4a4a4a !important;
-          -webkit-text-fill-color: #4a4a4a;
-          text-shadow:
-            0 -1px 0 rgba(255, 255, 255, 0.5),
-            0 1px 0 rgba(0, 0, 0, 0.2) !important;
+          text-rendering: geometricPrecision;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          text-rendering: geometricPrecision;
-        }
-        @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-          .metal-plate-text {
-            background-image: linear-gradient(
-              180deg,
-              #383838 0%,
-              #454545 18%,
-              #4e4e4e 42%,
-              #585858 60%,
-              #6e6e6e 70%,
-              #8f8f8f 75%,
-              #a8a8a8 78%,
-              #757575 84%,
-              #4a4a4a 94%,
-              #383838 100%
-            );
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent !important;
-            -webkit-text-fill-color: transparent;
-            -webkit-text-stroke: 0.15px rgba(32, 32, 32, 0.45);
-            text-shadow: none !important;
-            filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.22))
-              drop-shadow(0 -0.75px 0 rgba(255, 255, 255, 0.42));
-          }
-        }
-
-        .metal-plate-text-rtl {
-          display: inline-block;
-          isolation: isolate;
-          white-space: nowrap;
-          font-family: Arial, Helvetica, sans-serif !important;
-          font-weight: 700 !important;
-          letter-spacing: -0.02em;
-          color: #4a4a4a !important;
-          -webkit-text-fill-color: #4a4a4a;
-          text-shadow:
-            0 -1px 0 rgba(255, 255, 255, 0.5),
-            0 1px 0 rgba(0, 0, 0, 0.2) !important;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          text-rendering: geometricPrecision;
-          direction: ltr !important;
-          unicode-bidi: isolate;
-        }
-        @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-          .metal-plate-text-rtl {
-            background-image: linear-gradient(
-              180deg,
-              #383838 0%,
-              #454545 18%,
-              #4e4e4e 42%,
-              #585858 60%,
-              #6e6e6e 70%,
-              #8f8f8f 75%,
-              #a8a8a8 78%,
-              #757575 84%,
-              #4a4a4a 94%,
-              #383838 100%
-            );
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent !important;
-            -webkit-text-fill-color: transparent;
-            -webkit-text-stroke: 0.15px rgba(32, 32, 32, 0.45);
-            text-shadow: none !important;
-            filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.22))
-              drop-shadow(0 -0.75px 0 rgba(255, 255, 255, 0.42));
-          }
         }
       `}</style>
 
-      <img
-        src={imageUrl || "/here-plate.png"}
-        alt=""
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          zIndex: 1,
-        }}
-      />
+      {!shouldHideCode && plate_code && codeOverlay && (
+        <span className="plate-text" style={codeStyle}>
+          {plate_code}
+        </span>
+      )}
 
-      {/* Plate Code - Left Side with metallic effect */}
-      <span
-        className="metal-plate-text"
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: isMobile ? "14%" : "16%",
-          transform: "translateY(-50%)",
-          fontSize: isMobile ? "14px" : "18px",
-          lineHeight: 1,
-          zIndex: 10,
-        }}
-      >
-        {plate_code}
-      </span>
-
-      {/* Plate Digits - Right Side with metallic effect */}
-      <span
-        className="metal-plate-text"
-        style={{
-          position: "absolute",
-          top: "50%",
-          right: isMobile ? "14%" : "16%",
-          transform: "translateY(-50%)",
-          fontSize: isMobile ? "14px" : "18px",
-          lineHeight: 1,
-          zIndex: 10,
-        }}
-      >
-        {plate_digits}
-      </span>
+      {plate_digits && digitsOverlay && (
+        <span className="plate-text" style={digitsStyle}>
+          {plate_digits}
+        </span>
+      )}
     </div>
   );
 }

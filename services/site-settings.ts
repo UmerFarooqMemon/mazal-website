@@ -1,15 +1,28 @@
 import { apiRequest } from "./api";
 
+export interface GradientValue {
+  start: string;
+  end: string | null;
+  angle: number;
+  css: string;
+}
+
 export interface SiteSettingsResponse {
   data: {
     site_title: string;
-    contact_email: string;
-    contact_phone: string;
-    social_links: {
-      facebook?: string;
-      twitter?: string;
-      instagram?: string;
-      linkedin?: string;
+    contact: {
+      email?: string | null;
+      phone?: string | null;
+      address?: string;
+    };
+    social: {
+      facebook?: string | null;
+      twitter?: string | null;
+      pinterest?: string | null;
+      youtube?: string | null;
+      linkedin?: string | null;
+      instagram?: string | null;
+      whatsapp?: string | null;
     };
     branding: {
       logo_url?: string;
@@ -18,24 +31,45 @@ export interface SiteSettingsResponse {
     };
     colors: {
       primary?: string;
-      primary_dark?: string;
-      primary_light?: string;
       secondary?: string;
+      primary_button?: string;
+      secondary_button?: string;
+      primary_text?: string;
+      secondary_text?: string;
       accent?: string;
-      text_dark?: string;
-      text_light?: string;
       background?: string;
+      surface?: string;
+      border?: string;
+      muted_text?: string;
+      success?: string;
+      warning?: string;
+      error?: string;
     };
-    gradients: Record<
-      string,
-      {
-        start: string;
-        end: string;
-        angle: number;
-        css: string;
-      } | null
-    >;
-    footer_text: string;
+    gradients: Record<string, GradientValue | null>;
+    fees?: {
+      escrow_custody_percentage?: string;
+      platform_fee_percentage?: string;
+      service_transfer_percentage?: string;
+    };
+    platform_settings?: Array<{
+      slug: string;
+      label: string;
+      value: string;
+      unit_type: string;
+    }>;
+    reveal_fee_amount?: string;
+    enabled_emirates?: Array<{ key: string; label: string }>;
+    emirates?: Array<{
+      key: string;
+      label: string;
+      emirate_code: string;
+      name: string;
+      is_enabled: boolean;
+    }>;
+    footer: {
+      sentence?: string;
+      copyright?: string;
+    };
   };
 }
 

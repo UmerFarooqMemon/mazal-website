@@ -33,7 +33,7 @@ export default function proxy(request: NextRequest) {
   for (const locale of locales) {
     if (pathname === `/${locale}` || pathname === `/${locale}/`) {
       const url = request.nextUrl.clone();
-      url.pathname = `/${locale}/register`;
+      url.pathname = `/${locale}/login`;
       return NextResponse.redirect(url);
     }
   }

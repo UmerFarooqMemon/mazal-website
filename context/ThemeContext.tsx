@@ -114,33 +114,23 @@ interface ThemeContextType {
   getGradient: (key: keyof ThemeColors) => string;
 }
 
-// Default colors matching the current website design
+// Transparent defaults — nothing renders until the API provides real colors
 const defaultColors: ThemeColors = {
-  primary: {
-    start: "#0A3B9E",
-    end: "#041443",
-    angle: 180,
-    css: "linear-gradient(180deg, #0A3B9E, #041443)",
-  },
-  secondary: { start: "#041443", end: null, angle: 180, css: null },
-  primaryButton: {
-    start: "#041443",
-    end: "#0A3B9E",
-    angle: 180,
-    css: "linear-gradient(180deg, #041443, #0A3B9E)",
-  },
-  secondaryButton: { start: "#EEF2F8", end: null, angle: 180, css: null },
-  primaryText: { start: "#041443", end: null, angle: 180, css: null },
-  secondaryText: { start: "#6C757D", end: null, angle: 180, css: null },
-  accent: { start: "#D4AF37", end: null, angle: 180, css: null },
-  background: { start: "#FAFAF8", end: null, angle: 180, css: null },
-  surface: { start: "#FFFFFF", end: null, angle: 180, css: null },
-  border: { start: "#DEE2E6", end: null, angle: 180, css: null },
-  mutedText: { start: "#ADB5BD", end: null, angle: 180, css: null },
-  success: { start: "#28A745", end: null, angle: 180, css: null },
-  warning: { start: "#FFC107", end: null, angle: 180, css: null },
-  error: { start: "#DC3545", end: null, angle: 180, css: null },
-  primaryLight: { start: "#EEF2F8", end: null, angle: 180, css: null },
+  primary: { start: "transparent", end: null, angle: 180, css: null },
+  secondary: { start: "transparent", end: null, angle: 180, css: null },
+  primaryButton: { start: "transparent", end: null, angle: 180, css: null },
+  secondaryButton: { start: "transparent", end: null, angle: 180, css: null },
+  primaryText: { start: "transparent", end: null, angle: 180, css: null },
+  secondaryText: { start: "transparent", end: null, angle: 180, css: null },
+  accent: { start: "transparent", end: null, angle: 180, css: null },
+  background: { start: "transparent", end: null, angle: 180, css: null },
+  surface: { start: "transparent", end: null, angle: 180, css: null },
+  border: { start: "transparent", end: null, angle: 180, css: null },
+  mutedText: { start: "transparent", end: null, angle: 180, css: null },
+  success: { start: "transparent", end: null, angle: 180, css: null },
+  warning: { start: "transparent", end: null, angle: 180, css: null },
+  error: { start: "transparent", end: null, angle: 180, css: null },
+  primaryLight: { start: "transparent", end: null, angle: 180, css: null },
 };
 
 // Default branding - will be overridden by API
@@ -154,8 +144,8 @@ const ThemeContext = createContext<ThemeContextType>({
   colors: defaultColors,
   branding: defaultBranding,
   loading: true,
-  getColor: () => "#0A3B9E",
-  getGradient: () => "",
+  getColor: () => "transparent",
+  getGradient: () => "transparent",
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -165,17 +155,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Get the primary (start) color from a gradient object
   const getColor = (key: keyof ThemeColors): string => {
-    return colors[key]?.start || defaultColors[key]?.start || "#0A3B9E";
+    return colors[key]?.start || "transparent";
   };
 
-  // Get the CSS gradient string or fallback to solid color
   const getGradient = (key: keyof ThemeColors): string => {
     const gradient = colors[key];
     if (gradient?.css) return gradient.css;
     if (gradient?.start && gradient?.end) {
       return `linear-gradient(${gradient.angle}deg, ${gradient.start}, ${gradient.end})`;
     }
-    return gradient?.start || "#0A3B9E";
+    return gradient?.start || "transparent";
   };
 
   // Fetch theme colors and branding from dashboard API on mount
@@ -204,59 +193,69 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Set theme colors from gradients
-        if (data?.data?.gradients) {
-          const gradients = data.data.gradients;
-          const newColors = {
-            primary: gradients.primary || defaultColors.primary,
-            secondary: gradients.secondary || defaultColors.secondary,
-            primaryButton:
-              gradients.primary_button || defaultColors.primaryButton,
-            secondaryButton:
-              gradients.secondary_button || defaultColors.secondaryButton,
-            primaryText: gradients.primary_text || defaultColors.primaryText,
-            secondaryText:
-              gradients.secondary_text || defaultColors.secondaryText,
-            accent: gradients.accent || defaultColors.accent,
-            background: gradients.background || defaultColors.background,
-            surface: gradients.surface || defaultColors.surface,
-            border: gradients.border || defaultColors.border,
-            mutedText: gradients.muted_text || defaultColors.mutedText,
-            success: gradients.success || defaultColors.success,
-            warning: gradients.warning || defaultColors.warning,
-            error: gradients.error || defaultColors.error,
-            primaryLight: gradients.primary_light || defaultColors.primaryLight,
-          };
-          setColors(newColors);
+        // Merge colors (flat hex) with gradients (gradient objects)
+        // Gradients take priority over flat colors
+        const apiColors = data?.data?.colors || {};
+        const apiGradients = data?.data?.gradients || {};
 
-          // Apply colors to CSS custom properties
-          const root = document.documentElement;
-          root.style.setProperty("--color-primary", getColor("primary"));
-          root.style.setProperty("--color-primary-dark", getColor("secondary"));
-          root.style.setProperty(
-            "--color-primary-light",
-            getColor("primaryLight"),
-          );
-          root.style.setProperty("--color-secondary", getColor("accent"));
-          root.style.setProperty("--color-accent", getColor("accent"));
-          root.style.setProperty("--color-text-dark", getColor("primaryText"));
-          root.style.setProperty("--color-text-light", "#FFFFFF");
-          root.style.setProperty("--color-background", getColor("background"));
-          root.style.setProperty(
-            "--color-btn-primary",
-            getColor("primaryButton"),
-          );
-          root.style.setProperty(
-            "--color-btn-primary-hover",
-            getColor("secondary"),
-          );
-          root.style.setProperty("--color-success", getColor("success"));
-          root.style.setProperty("--color-warning", getColor("warning"));
-          root.style.setProperty("--color-error", getColor("error"));
-          root.style.setProperty("--color-surface", getColor("surface"));
-          root.style.setProperty("--color-border", getColor("border"));
-          root.style.setProperty("--color-muted-text", getColor("mutedText"));
-        }
+        const toGradient = (
+          hex: string | undefined,
+        ): { start: string; end: string | null; angle: number; css: string | null } => ({
+          start: hex || "#0A3B9E",
+          end: null,
+          angle: 180,
+          css: null,
+        });
+
+        const merge = (
+          gradientKey: string,
+          colorKey: string,
+          fallback: typeof defaultColors.primary,
+        ) => apiGradients[gradientKey] || (apiColors[colorKey] ? toGradient(apiColors[colorKey]) : fallback);
+
+        const newColors = {
+          primary: merge("primary", "primary", defaultColors.primary),
+          secondary: merge("secondary", "secondary", defaultColors.secondary),
+          primaryButton: merge("primary_button", "primary_button", defaultColors.primaryButton),
+          secondaryButton: merge("secondary_button", "secondary_button", defaultColors.secondaryButton),
+          primaryText: merge("primary_text", "primary_text", defaultColors.primaryText),
+          secondaryText: merge("secondary_text", "secondary_text", defaultColors.secondaryText),
+          accent: merge("accent", "accent", defaultColors.accent),
+          background: merge("background", "background", defaultColors.background),
+          surface: merge("surface", "surface", defaultColors.surface),
+          border: merge("border", "border", defaultColors.border),
+          mutedText: merge("muted_text", "muted_text", defaultColors.mutedText),
+          success: merge("success", "success", defaultColors.success),
+          warning: merge("warning", "warning", defaultColors.warning),
+          error: merge("error", "error", defaultColors.error),
+          primaryLight: merge("primary_light", "primary_light", defaultColors.primaryLight),
+        };
+        setColors(newColors);
+
+        // Apply colors to CSS custom properties using newColors directly
+        // (getColor reads from stale state closure inside useEffect)
+        const cssVar = (key: keyof typeof newColors) =>
+          newColors[key]?.start || "transparent";
+
+        const root = document.documentElement;
+        root.style.setProperty("--color-primary", cssVar("primary"));
+        root.style.setProperty("--color-primary-dark", cssVar("secondary"));
+        root.style.setProperty("--color-primary-light", cssVar("primaryLight"));
+        root.style.setProperty("--color-secondary", cssVar("accent"));
+        root.style.setProperty("--color-accent", cssVar("accent"));
+        root.style.setProperty("--color-text-dark", cssVar("primaryText"));
+        root.style.setProperty("--color-text-light", "#FFFFFF");
+        root.style.setProperty("--color-background", cssVar("background"));
+        root.style.setProperty("--color-btn-primary", cssVar("primaryButton"));
+        root.style.setProperty("--color-btn-primary-hover", cssVar("secondary"));
+        root.style.setProperty("--color-btn-secondary", cssVar("secondaryButton"));
+        root.style.setProperty("--color-secondary-text", cssVar("secondaryText"));
+        root.style.setProperty("--color-success", cssVar("success"));
+        root.style.setProperty("--color-warning", cssVar("warning"));
+        root.style.setProperty("--color-error", cssVar("error"));
+        root.style.setProperty("--color-surface", cssVar("surface"));
+        root.style.setProperty("--color-border", cssVar("border"));
+        root.style.setProperty("--color-muted-text", cssVar("mutedText"));
       } catch (error) {
         console.error("Failed to fetch theme settings:", error);
         // Keep using default colors and branding on error

@@ -98,7 +98,6 @@ export default function CertificateRequestCard({
             emirate={emirate}
             isMobile={false}
             width={isRTL ? 140 : 140}
-            height={isRTL ? 46 : 46}
           />
         </div>
 

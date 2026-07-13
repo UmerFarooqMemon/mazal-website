@@ -16,6 +16,42 @@ interface Variant {
   plate_type: string;
   plate_design: string;
   has_code: boolean;
+  fields?: string[];
+  plate_codes?: string[] | null;
+  digits?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+  };
+  preview?: {
+    background_image_url?: string;
+    width?: number;
+    height?: number;
+    aspect_ratio?: string;
+    overlays?: {
+      plate_code?: {
+        left?: string;
+        right?: string;
+        top?: string;
+        transform?: string;
+        font_size?: string;
+        font_weight?: string;
+        color?: string;
+        font_family?: string;
+        hide_when_code?: string[];
+      };
+      plate_digits?: {
+        left?: string;
+        right?: string;
+        top?: string;
+        transform?: string;
+        font_size?: string;
+        font_weight?: string;
+        color?: string;
+        font_family?: string;
+      };
+    };
+  };
 }
 
 interface CertificateFormProps {
@@ -70,7 +106,12 @@ export default function CertificateForm({
   const dubai = emirates.find((e) => e.key === "dubai");
   const variants: Variant[] = dubai?.variants || [];
   const selectedVariant = variants.find((v) => v.key === form.plate_variant);
-  const showCodeField = selectedVariant?.has_code ?? true;
+
+  // Derive field visibility from variant
+  const variantFields = selectedVariant?.fields || ["plate_code", "plate_digits"];
+  const showCodeField = variantFields.includes("plate_code") && (selectedVariant?.has_code ?? true);
+  const variantDigits = selectedVariant?.digits;
+  const variantPlateCodes = selectedVariant?.plate_codes;
 
   // Mark field as touched on blur
   const handleBlur = (field: string) => {
@@ -116,18 +157,56 @@ export default function CertificateForm({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Validate all fields
+  // Validate all fields using variant-specific rules
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
-    if (showCodeField && !form.plate_code.trim())
-      newErrors.plate_code =
-        t("certificates.error_code_required") || "Plate code is required";
-    if (!form.plate_digits.trim())
+
+    // Plate code validation
+    if (showCodeField) {
+      const code = form.plate_code.trim();
+      if (!code) {
+        newErrors.plate_code =
+          t("certificates.error_code_required") || "Plate code is required";
+      } else if (variantPlateCodes && variantPlateCodes.length > 0) {
+        if (!variantPlateCodes.includes(code)) {
+          newErrors.plate_code =
+            t("certificates.error_code_invalid") || `Invalid code. Allowed: ${variantPlateCodes.join(", ")}`;
+        }
+      }
+    }
+
+    // Plate digits validation using variant digits config
+    const digits = form.plate_digits.trim();
+    if (!digits) {
       newErrors.plate_digits =
         t("certificates.error_digits_required") || "Plate digits are required";
-    else if (!/^\d+$/.test(form.plate_digits.trim()))
+    } else if (!/^\d+$/.test(digits)) {
       newErrors.plate_digits =
         t("certificates.error_digits_numeric") || "Digits must be numbers only";
+    } else if (variantDigits) {
+      if (variantDigits.min != null && digits.length < variantDigits.min) {
+        newErrors.plate_digits =
+          t("certificates.error_digits_min") || `Minimum ${variantDigits.min} digit(s) required`;
+      }
+      if (variantDigits.max != null && digits.length > variantDigits.max) {
+        newErrors.plate_digits =
+          t("certificates.error_digits_max") || `Maximum ${variantDigits.max} digit(s) allowed`;
+      }
+      if (variantDigits.pattern) {
+        try {
+          // Strip JS regex delimiters (e.g. "/^\\d{1,5}$/" → "^\\d{1,5}$")
+          const raw = variantDigits.pattern.replace(/^\/|\/$/g, "");
+          const regex = new RegExp(raw);
+          if (!regex.test(digits)) {
+            newErrors.plate_digits =
+              t("certificates.error_digits_pattern") || "Invalid digits format";
+          }
+        } catch {
+          // invalid regex from API — skip pattern check
+        }
+      }
+    }
+
     if (!selectedFile)
       newErrors.mulkiya =
         t("certificates.mulkiya_required") || "Please upload your Mulkiya";
@@ -210,7 +289,17 @@ export default function CertificateForm({
           label={t("certificates.plate_variant")}
           options={variants}
           value={form.plate_variant}
-          onChange={(value) => setForm({ ...form, plate_variant: value })}
+          onChange={(value) => {
+            const newVariant = variants.find((v) => v.key === value);
+            const newFields = newVariant?.fields || ["plate_code", "plate_digits"];
+            setForm((prev) => ({
+              ...prev,
+              plate_variant: value,
+              plate_code: newFields.includes("plate_code") ? prev.plate_code : "",
+              plate_digits: "",
+            }));
+            setErrors({});
+          }}
           placeholder={t("common.select") || "Select..."}
         />
 
@@ -221,9 +310,13 @@ export default function CertificateForm({
               name="plate_code"
               label={t("listings.code")}
               type="text"
-              placeholder="M"
+              placeholder={
+                variantPlateCodes && variantPlateCodes.length > 0
+                  ? variantPlateCodes.slice(0, 3).join(", ") + "..."
+                  : "M"
+              }
               value={form.plate_code}
-              onChange={(e) => handleChange("plate_code", e.target.value)}
+              onChange={(e) => handleChange("plate_code", e.target.value.toUpperCase())}
               onBlur={() => handleBlur("plate_code")}
               error={touched.plate_code ? errors.plate_code : undefined}
             />
@@ -251,7 +344,8 @@ export default function CertificateForm({
             name="plate_digits"
             label={t("listings.digits")}
             type="text"
-            placeholder="777"
+            placeholder={variantDigits?.min ? `${variantDigits.min}-${variantDigits.max || ""} digits` : "777"}
+            maxLength={variantDigits?.max}
             value={form.plate_digits}
             onChange={(e) => handleChange("plate_digits", e.target.value)}
             onBlur={() => handleBlur("plate_digits")}
@@ -447,14 +541,14 @@ export default function CertificateForm({
               {t("certificates.live_preview") || "LIVE PREVIEW"}
             </span>
           </div>
-          <div className="flex items-center justify-center px-4 py-6">
+          <div className="flex items-center justify-center px-4 py-4">
             <PlateWithOverlay
               plate_code={form.plate_code}
               plate_digits={form.plate_digits}
               emirate={t("listings.emirate_dubai")}
-              imageUrl="/certificates-preview.png"
-              width={280}
-              height={84}
+              imageUrl={selectedVariant?.preview?.background_image_url || "/certificates-preview.png"}
+              preview={selectedVariant?.preview}
+              isRTL={isRTL}
             />
           </div>
         </div>
