@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getPlateOptions } from "@/services/number-plates";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const data = await getPlateOptions();
+    const acceptLanguage = request.nextUrl.searchParams.get("locale") || "en";
+
+    const data = await getPlateOptions(acceptLanguage);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Failed to fetch plate options:", error);

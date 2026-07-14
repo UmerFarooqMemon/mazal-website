@@ -74,7 +74,7 @@ export default function LoginPage() {
     >
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl">
         <div
-          className={`w-full lg:w-1/2 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
+          className={`hidden lg: w-full lg:w-1/2 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
         >
           <AuthHero
             titleKey="auth.hero_title"

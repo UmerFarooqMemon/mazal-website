@@ -9,9 +9,13 @@ import {
   CertificateVerifyResponse,
 } from "./api";
 
-// Get options (now includes Dubai variants)
-export async function getPlateOptions(): Promise<PlateOptionsResponse> {
-  return apiRequest<PlateOptionsResponse>("/v1/number-plates/options");
+// Get options (now includes Dubai variants) with locale support
+export async function getPlateOptions(
+  locale?: string,
+): Promise<PlateOptionsResponse> {
+  return apiRequest<PlateOptionsResponse>("/v1/number-plates/options", {
+    headers: locale ? { "Accept-Language": locale } : {},
+  });
 }
 
 // Get preview template
@@ -44,11 +48,11 @@ export async function submitNumberPlate(
     title: string;
     contact_number: string;
     emirate: string;
-    plate_variant?: string; // preferred for Dubai
-    plate_type?: string; // legacy
+    plate_variant?: string;
+    plate_type?: string;
     plate_code?: string;
     plate_digits: string;
-    plate_design?: string; // legacy
+    plate_design?: string;
     price: number;
     description: string;
   },

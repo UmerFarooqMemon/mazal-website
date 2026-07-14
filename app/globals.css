@@ -4,6 +4,13 @@ body {
   font-family: var(--font-inter), sans-serif;
 }
 
-[lang="ar"] body {
-  font-family: var(--font-cairo), sans-serif;
+/* Force Inter on all elements */
+* {
+  font-family: var(--font-inter), sans-serif !important;
+}
+
+/* Font variables */
+:root {
+  --font-inter: "Inter", sans-serif;
+  --font-fraunces: "Fraunces", serif;
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -7,7 +7,14 @@ import { Button } from "@/components/ui";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
-import { Upload, X, ArrowRight, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  X,
+  ArrowRight,
+  AlertCircle,
+  Search,
+  ChevronDown,
+} from "lucide-react";
 
 // Types
 interface Variant {
@@ -102,16 +109,44 @@ export default function CertificateForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  // Code dropdown state
+  const [codeDropdownOpen, setCodeDropdownOpen] = useState(false);
+  const [codeSearch, setCodeSearch] = useState("");
+  const codeDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        codeDropdownRef.current &&
+        !codeDropdownRef.current.contains(e.target as Node)
+      ) {
+        setCodeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Get Dubai variants
   const dubai = emirates.find((e) => e.key === "dubai");
   const variants: Variant[] = dubai?.variants || [];
   const selectedVariant = variants.find((v) => v.key === form.plate_variant);
 
   // Derive field visibility from variant
-  const variantFields = selectedVariant?.fields || ["plate_code", "plate_digits"];
-  const showCodeField = variantFields.includes("plate_code") && (selectedVariant?.has_code ?? true);
+  const variantFields = selectedVariant?.fields || [
+    "plate_code",
+    "plate_digits",
+  ];
+  const showCodeField =
+    variantFields.includes("plate_code") && (selectedVariant?.has_code ?? true);
   const variantDigits = selectedVariant?.digits;
-  const variantPlateCodes = selectedVariant?.plate_codes;
+  const variantPlateCodes = selectedVariant?.plate_codes || [];
+
+  // Filter codes based on search
+  const filteredCodes = variantPlateCodes.filter((code) =>
+    code.toLowerCase().includes(codeSearch.toLowerCase()),
+  );
 
   // Mark field as touched on blur
   const handleBlur = (field: string) => {
@@ -126,6 +161,16 @@ export default function CertificateForm({
     }
   };
 
+  // Handle code selection from dropdown
+  const handleCodeSelect = (code: string) => {
+    setForm((prev) => ({ ...prev, plate_code: code }));
+    setCodeDropdownOpen(false);
+    setCodeSearch("");
+    if (errors.plate_code) {
+      setErrors((prev) => ({ ...prev, plate_code: undefined }));
+    }
+  };
+
   // Handle file selection with validation
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -133,16 +178,14 @@ export default function CertificateForm({
       if (!file.type.startsWith("image/")) {
         setErrors((prev) => ({
           ...prev,
-          mulkiya:
-            t("certificates.error_file_type") || "Please upload an image file",
+          mulkiya: t("certificates.error_file_type"),
         }));
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
         setErrors((prev) => ({
           ...prev,
-          mulkiya:
-            t("certificates.error_file_size") || "File size must be under 5MB",
+          mulkiya: t("certificates.error_file_size"),
         }));
         return;
       }
@@ -165,41 +208,33 @@ export default function CertificateForm({
     if (showCodeField) {
       const code = form.plate_code.trim();
       if (!code) {
-        newErrors.plate_code =
-          t("certificates.error_code_required") || "Plate code is required";
-      } else if (variantPlateCodes && variantPlateCodes.length > 0) {
+        newErrors.plate_code = t("certificates.error_code_required");
+      } else if (variantPlateCodes.length > 0) {
         if (!variantPlateCodes.includes(code)) {
-          newErrors.plate_code =
-            t("certificates.error_code_invalid") || `Invalid code. Allowed: ${variantPlateCodes.join(", ")}`;
+          newErrors.plate_code = t("certificates.error_code_invalid");
         }
       }
     }
 
-    // Plate digits validation using variant digits config
+    // Plate digits validation
     const digits = form.plate_digits.trim();
     if (!digits) {
-      newErrors.plate_digits =
-        t("certificates.error_digits_required") || "Plate digits are required";
+      newErrors.plate_digits = t("certificates.error_digits_required");
     } else if (!/^\d+$/.test(digits)) {
-      newErrors.plate_digits =
-        t("certificates.error_digits_numeric") || "Digits must be numbers only";
+      newErrors.plate_digits = t("certificates.error_digits_numeric");
     } else if (variantDigits) {
       if (variantDigits.min != null && digits.length < variantDigits.min) {
-        newErrors.plate_digits =
-          t("certificates.error_digits_min") || `Minimum ${variantDigits.min} digit(s) required`;
+        newErrors.plate_digits = t("certificates.error_digits_min");
       }
       if (variantDigits.max != null && digits.length > variantDigits.max) {
-        newErrors.plate_digits =
-          t("certificates.error_digits_max") || `Maximum ${variantDigits.max} digit(s) allowed`;
+        newErrors.plate_digits = t("certificates.error_digits_max");
       }
       if (variantDigits.pattern) {
         try {
-          // Strip JS regex delimiters (e.g. "/^\\d{1,5}$/" → "^\\d{1,5}$")
           const raw = variantDigits.pattern.replace(/^\/|\/$/g, "");
           const regex = new RegExp(raw);
           if (!regex.test(digits)) {
-            newErrors.plate_digits =
-              t("certificates.error_digits_pattern") || "Invalid digits format";
+            newErrors.plate_digits = t("certificates.error_digits_pattern");
           }
         } catch {
           // invalid regex from API — skip pattern check
@@ -207,9 +242,9 @@ export default function CertificateForm({
       }
     }
 
-    if (!selectedFile)
-      newErrors.mulkiya =
-        t("certificates.mulkiya_required") || "Please upload your Mulkiya";
+    if (!selectedFile) {
+      newErrors.mulkiya = t("certificates.mulkiya_required");
+    }
     return newErrors;
   };
 
@@ -291,35 +326,156 @@ export default function CertificateForm({
           value={form.plate_variant}
           onChange={(value) => {
             const newVariant = variants.find((v) => v.key === value);
-            const newFields = newVariant?.fields || ["plate_code", "plate_digits"];
+            const newFields = newVariant?.fields || [
+              "plate_code",
+              "plate_digits",
+            ];
             setForm((prev) => ({
               ...prev,
               plate_variant: value,
-              plate_code: newFields.includes("plate_code") ? prev.plate_code : "",
+              plate_code: newFields.includes("plate_code")
+                ? prev.plate_code
+                : "",
               plate_digits: "",
             }));
             setErrors({});
           }}
-          placeholder={t("common.select") || "Select..."}
+          placeholder={t("common.select")}
         />
 
         {/* Code & Digits */}
         <div className="grid grid-cols-2 gap-4">
           {showCodeField ? (
-            <Input
-              name="plate_code"
-              label={t("listings.code")}
-              type="text"
-              placeholder={
-                variantPlateCodes && variantPlateCodes.length > 0
-                  ? variantPlateCodes.slice(0, 3).join(", ") + "..."
-                  : "M"
-              }
-              value={form.plate_code}
-              onChange={(e) => handleChange("plate_code", e.target.value.toUpperCase())}
-              onBlur={() => handleBlur("plate_code")}
-              error={touched.plate_code ? errors.plate_code : undefined}
-            />
+            variantPlateCodes.length > 0 ? (
+              /* Dropdown with search for plate codes */
+              <div ref={codeDropdownRef}>
+                <label
+                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("secondaryText") }}
+                >
+                  {t("listings.code")}
+                </label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setCodeDropdownOpen(!codeDropdownOpen)}
+                    className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    style={{
+                      borderColor:
+                        touched.plate_code && errors.plate_code
+                          ? getColor("error")
+                          : getColor("border"),
+                      color: form.plate_code
+                        ? getColor("primaryText")
+                        : getColor("mutedText"),
+                    }}
+                  >
+                    <span>
+                      {form.plate_code || t("certificates.select_code")}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${codeDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {codeDropdownOpen && (
+                    <div
+                      className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg border overflow-hidden"
+                      style={{ borderColor: getColor("border") }}
+                    >
+                      {/* Search input */}
+                      <div
+                        className="p-2 border-b"
+                        style={{ borderColor: getColor("border") }}
+                      >
+                        <div className="relative">
+                          <Search
+                            className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isRTL ? "right-3" : "left-3"}`}
+                            style={{ color: getColor("mutedText") }}
+                          />
+                          <input
+                            type="text"
+                            placeholder={t("common.search")}
+                            value={codeSearch}
+                            onChange={(e) => setCodeSearch(e.target.value)}
+                            className={`w-full py-2 text-sm bg-transparent focus:outline-none ${isRTL ? "pr-8 pl-3 text-right" : "pl-8 pr-3 text-left"}`}
+                            style={{ color: getColor("primaryText") }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Codes list */}
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredCodes.length > 0 ? (
+                          filteredCodes.map((code) => (
+                            <button
+                              key={code}
+                              type="button"
+                              onClick={() => handleCodeSelect(code)}
+                              className={`w-full px-4 py-2.5 text-sm transition-colors hover:bg-opacity-10 ${isRTL ? "text-right" : "text-left"}`}
+                              style={{
+                                color:
+                                  code === form.plate_code
+                                    ? getColor("primary")
+                                    : getColor("primaryText"),
+                                backgroundColor:
+                                  code === form.plate_code
+                                    ? `${getColor("primary")}10`
+                                    : "transparent",
+                              }}
+                              onMouseEnter={(e) => {
+                                if (code !== form.plate_code) {
+                                  e.currentTarget.style.backgroundColor = `${getColor("primary")}05`;
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (code !== form.plate_code) {
+                                  e.currentTarget.style.backgroundColor =
+                                    "transparent";
+                                }
+                              }}
+                            >
+                              {code}
+                            </button>
+                          ))
+                        ) : (
+                          <div
+                            className="px-4 py-3 text-xs"
+                            style={{ color: getColor("mutedText") }}
+                          >
+                            {t("common.no_results")}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {touched.plate_code && errors.plate_code && (
+                  <div
+                    className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                    style={{ color: getColor("error") }}
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{errors.plate_code}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Regular input for plate code */
+              <Input
+                name="plate_code"
+                label={t("listings.code")}
+                type="text"
+                placeholder="M"
+                value={form.plate_code}
+                onChange={(e) =>
+                  handleChange("plate_code", e.target.value.toUpperCase())
+                }
+                onBlur={() => handleBlur("plate_code")}
+                error={touched.plate_code ? errors.plate_code : undefined}
+              />
+            )
           ) : (
             <div>
               <label
@@ -336,7 +492,7 @@ export default function CertificateForm({
                   color: getColor("mutedText"),
                 }}
               >
-                {t("certificates.digits_only") || "Digits only"}
+                {t("certificates.digits_only")}
               </div>
             </div>
           )}
@@ -344,7 +500,11 @@ export default function CertificateForm({
             name="plate_digits"
             label={t("listings.digits")}
             type="text"
-            placeholder={variantDigits?.min ? `${variantDigits.min}-${variantDigits.max || ""} digits` : "777"}
+            placeholder={
+              variantDigits?.min
+                ? `${variantDigits.min}-${variantDigits.max || ""} digits`
+                : "777"
+            }
             maxLength={variantDigits?.max}
             value={form.plate_digits}
             onChange={(e) => handleChange("plate_digits", e.target.value)}
@@ -359,7 +519,7 @@ export default function CertificateForm({
             className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
             style={{ color: getColor("secondaryText") }}
           >
-            {t("certificates.your_estimate") || "Your estimate"}
+            {t("certificates.your_estimate")}
           </label>
           <div className="relative">
             <input
@@ -394,7 +554,7 @@ export default function CertificateForm({
             className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
             style={{ color: getColor("secondaryText") }}
           >
-            {t("certificates.justification") || "Justification"}
+            {t("certificates.justification")}
           </label>
           <textarea
             className={`w-full rounded-xl border bg-white py-3 px-4 text-sm resize-none focus:outline-none focus:ring-2 transition-all ${isRTL ? "text-right" : "text-left"}`}
@@ -409,6 +569,7 @@ export default function CertificateForm({
             value={form.description}
             onChange={(e) => handleChange("description", e.target.value)}
             onBlur={() => handleBlur("description")}
+            placeholder={t("certificates.justification_placeholder")}
           />
           {touched.description && errors.description && (
             <div
@@ -538,7 +699,7 @@ export default function CertificateForm({
               className="text-[10px] font-bold uppercase tracking-wider"
               style={{ color: getColor("secondaryText") }}
             >
-              {t("certificates.live_preview") || "LIVE PREVIEW"}
+              {t("certificates.live_preview")}
             </span>
           </div>
           <div className="flex items-center justify-center px-4 py-4">
@@ -563,7 +724,7 @@ export default function CertificateForm({
           disabled={isLoading}
         >
           {isLoading
-            ? t("common.loading") || "Sending..."
+            ? t("common.loading")
             : t("certificates.order_certificate")}
           <ArrowRight
             className={`w-5 h-5 ${isRTL ? "mr-2 rotate-180" : "ml-2"}`}

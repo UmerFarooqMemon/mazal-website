@@ -104,7 +104,7 @@ export default function Header() {
               className={`hidden lg:flex items-center gap-8 text-sm ${isRTL ? "flex-row-reverse" : ""}`}
             >
               {/* Home Link - Always visible, NO ICON */}
-              <Link
+              {/* <Link
                 href=""
                 className={`transition-colors ${
                   pathname === `/${locale}` || pathname === `/${locale}/`
@@ -119,7 +119,7 @@ export default function Header() {
                 }}
               >
                 {t("common.home")}
-              </Link>
+              </Link> */}
 
               {/* Dashboard - Only visible when authenticated AND mounted (client-side), NO ICON */}
               {mounted && isAuthenticated && (
@@ -323,7 +323,7 @@ export default function Header() {
 
               {/* Navigation - WITH ICONS in burger menu */}
               <nav className="space-y-1">
-                <Link
+                {/* <Link
                   href=""
                   onClick={closeMenu}
                   className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
@@ -355,7 +355,7 @@ export default function Header() {
                       style={{ backgroundColor: getColor("primary") }}
                     />
                   )}
-                </Link>
+                </Link> */}
 
                 {isAuthenticated && (
                   <Link

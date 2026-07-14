@@ -1,4 +1,4 @@
-import { Cairo, Inter } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import { LocaleProvider } from "@/context/LocaleContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import {
@@ -13,13 +13,6 @@ const inter = Inter({
   display: "swap",
 });
 
-const cairo = Cairo({
-  subsets: ["arabic"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-cairo",
-  display: "swap",
-});
-
 export default async function LocaleLayout({
   children,
   params,
@@ -31,7 +24,7 @@ export default async function LocaleLayout({
   const validLocale = locale === "ar" ? "ar" : "en";
 
   return (
-    <div className={validLocale === "ar" ? cairo.className : inter.className}>
+    <div className={inter.className}>
       <LocaleProvider initialLocale={validLocale}>
         <ThemeProvider>
           <Toaster

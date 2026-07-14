@@ -29,7 +29,7 @@ const AuthHero = forwardRef<HTMLDivElement, AuthHeroProps>(
       <div
         ref={ref}
         dir={locale === "ar" ? "rtl" : "ltr"}
-        className={`hidden lg:flex flex-col w-full p-8 lg:p-12 relative overflow-hidden h-full rounded-none ${className}`}
+        className={`flex flex-col w-full p-8 lg:p-12 relative overflow-hidden h-full rounded-none ${className}`}
         style={{
           background: getGradient("primary"),
         }}

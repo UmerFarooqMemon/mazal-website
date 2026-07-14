@@ -20,11 +20,11 @@ export default function CertificateRequestPage() {
   const { token, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    fetch("/api/number-plates/options")
+    fetch(`/api/number-plates/options?locale=${locale}`)
       .then((r) => r.json())
       .then((data) => setOptions(data.data))
       .catch(console.error);
-  }, []);
+  }, [locale]);
 
   const handleSubmitValuation = async (formData: any) => {
     if (isSubmitting) return;

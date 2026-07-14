@@ -6,38 +6,13 @@ import FooterBottom from "@/components/layout/FooterBottom";
 export function ConditionalHeader() {
   const pathname = usePathname();
 
-  // Auth pages - no header (work with both /en/ and /ar/)
-  const authPaths = [
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/verify-code",
-    "/reset-password",
-    "/password-updated",
-  ];
-
-  const isAuthPage = authPaths.some((path) => pathname.includes(path));
-
-  if (isAuthPage) return null;
-
+  // Show header on all pages including auth
   return <Header />;
 }
 
 export function ConditionalFooter() {
   const pathname = usePathname();
 
-  const authPaths = [
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/verify-code",
-    "/reset-password",
-    "/password-updated",
-  ];
-
-  const isAuthPage = authPaths.some((path) => pathname.includes(path));
-
-  if (isAuthPage) return null;
-
+  // Show footer on all pages including auth
   return <FooterBottom />;
 }

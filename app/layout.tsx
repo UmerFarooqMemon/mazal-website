@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Cairo, Inter } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -8,10 +8,9 @@ const inter = Inter({
   display: "swap",
 });
 
-const cairo = Cairo({
-  subsets: ["arabic"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-cairo",
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
@@ -19,11 +18,6 @@ export const metadata: Metadata = {
   title: "Mazal - UAE Plate Marketplace",
   description:
     "The UAE's trust-first marketplace for distinctive vehicle plates.",
-  icons: {
-    icon: "/api/favicon",
-    shortcut: "/api/favicon",
-    apple: "/api/favicon",
-  },
 };
 
 export default function RootLayout({
@@ -34,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       suppressHydrationWarning
-      className={`${inter.variable} ${cairo.variable}`}
+      className={`${inter.variable} ${fraunces.variable}`}
     >
       <body>{children}</body>
     </html>
