@@ -10,12 +10,13 @@ import { forgotPassword } from "@/services/auth";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { ShieldCheck, X } from "lucide-react";
+import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor, branding } = useTheme();
+  const { getColor, branding, loading: themeLoading } = useTheme();
   const [login, setLogin] = useState("");
   const [loading, setLoading] = useState(false);
   const [fieldError, setFieldError] = useState("");
@@ -53,6 +54,9 @@ export default function ForgotPasswordPage() {
       setLoading(false);
     }
   };
+
+  if (themeLoading || localeLoading)
+    return <AuthSkeleton locale={locale} type="forgot-password" />;
 
   return (
     <div

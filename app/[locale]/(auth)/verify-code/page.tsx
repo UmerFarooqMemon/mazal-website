@@ -8,12 +8,13 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import Button from "@/components/ui/Button";
 import { ShieldCheck, X } from "lucide-react";
+import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 
 export default function VerifyCodePage() {
   const router = useRouter();
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor, branding } = useTheme();
+  const { getColor, branding, loading: themeLoading } = useTheme();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -81,6 +82,9 @@ export default function VerifyCodePage() {
 
     toast.success(t("common.code_resent"));
   };
+
+  if (themeLoading || localeLoading)
+    return <AuthSkeleton locale={locale} type="verify-code" />;
 
   return (
     <div

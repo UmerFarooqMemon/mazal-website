@@ -20,12 +20,13 @@ import {
   EyeOff,
   ArrowRight,
 } from "lucide-react";
+import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 
 export default function RegisterPage() {
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
   const router = useRouter();
   const isRTL = locale === "ar";
-  const { getColor, branding } = useTheme();
+  const { getColor, branding, loading: themeLoading } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -35,10 +36,14 @@ export default function RegisterPage() {
     password: "",
     agree_terms: false,
   });
-  // Field-level errors
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { register, loading } = useAuth();
+
+  // Show skeleton while theme & locale are loading
+  if (themeLoading || localeLoading) {
+    return <AuthSkeleton locale={locale} type="register" />;
+  }
 
   // Validate fields
   const validateFields = () => {
@@ -111,7 +116,7 @@ export default function RegisterPage() {
         <div className="rounded-3xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-2">
           {/* Form Side */}
           <div
-            className={`flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-1"}`}
+            className={`flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
             style={{ backgroundColor: getColor("surface") }}
           >
             <div className="w-full max-w-md">
@@ -333,8 +338,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Auth Hero */}
-          <div className={`${isRTL ? "lg:order-2" : "lg:order-2"}`}>
+          {/* Auth Hero - right for AR, left for EN */}
+          <div className={`${isRTL ? "lg:order-1" : "lg:order-2"}`}>
             <AuthHero
               titleKey="auth.register_hero_title"
               subtitleKey="auth.register_hero_subtitle"

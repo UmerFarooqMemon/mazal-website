@@ -28,7 +28,7 @@ export default async function LocaleLayout({
       <LocaleProvider initialLocale={validLocale}>
         <ThemeProvider>
           <Toaster
-            position="top-center"
+            position="bottom-center"
             reverseOrder={false}
             toastOptions={{
               duration: 4000,

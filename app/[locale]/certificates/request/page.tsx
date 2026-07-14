@@ -9,12 +9,13 @@ import CertificatePreview from "@/components/certificates/CertificatePreview";
 import CertificateFAQ from "@/components/certificates/CertificateFAQ";
 import { BadgeCheck, ShieldCheck, Sparkles, Stamp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import CertificatesRequestSkeleton from "@/components/skeletons/dashboard/valuation-certificates/CertificatesRequestSkeleton";
 
 export default function CertificateRequestPage() {
   const router = useRouter();
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor } = useTheme();
+  const { getColor, loading: themeLoading } = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [options, setOptions] = useState<any>(null);
   const { token, isAuthenticated } = useAuth();
@@ -82,6 +83,10 @@ export default function CertificateRequestPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (themeLoading || localeLoading) {
+    return <CertificatesRequestSkeleton />;
+  }
 
   return (
     <div

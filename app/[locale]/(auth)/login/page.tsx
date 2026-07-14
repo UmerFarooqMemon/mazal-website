@@ -11,12 +11,13 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { Icons } from "@/components/ui/Icons";
 import { useAuth } from "@/hooks/useAuth";
+import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 
 export default function LoginPage() {
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
   const router = useRouter();
   const isRTL = locale === "ar";
-  const { getColor, branding } = useTheme();
+  const { getColor, branding, loading: themeLoading } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     login: "",
@@ -29,6 +30,11 @@ export default function LoginPage() {
   }>({});
 
   const { login, loading } = useAuth();
+
+  // Show skeleton while theme & locale are loading
+  if (themeLoading || localeLoading) {
+    return <AuthSkeleton locale={locale} type="login" />;
+  }
 
   const validateFields = () => {
     const errors: { login?: string; password?: string } = {};
@@ -73,8 +79,9 @@ export default function LoginPage() {
       style={{ backgroundColor: getColor("background") }}
     >
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl">
+        {/* AuthHero - right for AR, left for EN */}
         <div
-          className={`hidden lg: w-full lg:w-1/2 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
+          className={`hidden lg:flex w-full lg:w-1/2 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
         >
           <AuthHero
             titleKey="auth.hero_title"
@@ -84,6 +91,7 @@ export default function LoginPage() {
           />
         </div>
 
+        {/* Form - left for AR, right for EN */}
         <div
           className={`w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
           style={{ backgroundColor: getColor("surface") }}

@@ -31,7 +31,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
 
   // Auth state is immediately available from localStorage (no flicker)
-  const { user, isAuthenticated, loading, logout } = useAuth();
+  const { user, isAuthenticated, loading, logout, isLoggingOut } = useAuth();
 
   // Set mounted to true after first render (client-side only)
   useEffect(() => {
@@ -59,6 +59,7 @@ export default function Header() {
   };
 
   const handleLogout = async () => {
+    if (isLoggingOut) return; // منع الضغط المتكرر
     await logout();
     closeMenu();
     router.push(`/${locale}`);
@@ -203,11 +204,12 @@ export default function Header() {
                       style={{ backgroundColor: getColor("border") }}
                     ></span>
 
-                    {/* Logout */}
+                    {/* Logout - Red color with press effect */}
                     <button
                       onClick={handleLogout}
-                      className="h-9 w-9 flex items-center justify-center rounded-lg transition-all"
-                      style={{ color: getColor("mutedText") }}
+                      disabled={isLoggingOut}
+                      className="h-9 w-9 flex items-center justify-center rounded-lg transition-all duration-150 hover:bg-red-50 active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ color: "#EF4444" }}
                       title={t("common.sign_out")}
                     >
                       <LogOut className="w-4.5 h-4.5" strokeWidth={1.5} />
@@ -415,8 +417,9 @@ export default function Header() {
                 {isAuthenticated ? (
                   <button
                     onClick={handleLogout}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-colors ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
-                    style={{ color: getColor("error") }}
+                    disabled={isLoggingOut}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all duration-150 hover:bg-red-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    style={{ color: "#EF4444" }}
                   >
                     <LogOut className="w-5 h-5" />
                     <span>{t("common.sign_out")}</span>

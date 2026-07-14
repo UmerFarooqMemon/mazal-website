@@ -22,24 +22,59 @@ interface User {
 }
 
 export function useAuth() {
-  // Read initial state directly from localStorage to avoid flicker
   const [token, setToken] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("access_token");
+      const savedToken = localStorage.getItem("access_token");
+      console.log(
+        "Initial token from localStorage:",
+        savedToken ? "exists" : "null",
+      );
+      return savedToken;
     }
     return null;
   });
+
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== "undefined") {
       const savedUser = localStorage.getItem("user");
+      console.log(
+        "Initial user from localStorage:",
+        savedUser ? JSON.parse(savedUser) : "null",
+      );
       return savedUser ? JSON.parse(savedUser) : null;
     }
     return null;
   });
-  const [loading, setLoading] = useState(false); // used only during API calls now
+
+  const [loading, setLoading] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Background token validation – does not affect initial render
+  // Listen for auth changes
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const newToken = localStorage.getItem("access_token");
+      const savedUser = localStorage.getItem("user");
+      console.log(
+        "Auth changed event - token:",
+        newToken ? "exists" : "null",
+        "user:",
+        savedUser ? "exists" : "null",
+      );
+      setToken(newToken);
+      setUser(savedUser ? JSON.parse(savedUser) : null);
+    };
+
+    window.addEventListener("auth-changed", handleAuthChange);
+    window.addEventListener("storage", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("auth-changed", handleAuthChange);
+      window.removeEventListener("storage", handleAuthChange);
+    };
+  }, []);
+
+  // Background token validation
   useEffect(() => {
     if (!token) return;
 
@@ -48,32 +83,35 @@ export function useAuth() {
     })
       .then((res) => {
         if (!res.ok && res.status === 401) {
-          // Token is invalid – clean up
+          console.log("Token invalid, clearing...");
           localStorage.removeItem("access_token");
           localStorage.removeItem("user");
           setToken(null);
           setUser(null);
+          window.dispatchEvent(new Event("auth-changed"));
         }
       })
-      .catch(() => {
-        // Network error – keep session alive
-      });
-  }, []); // run only once on mount
+      .catch(() => {});
+  }, []);
 
-  // Keep localStorage in sync with state
+  // Keep localStorage in sync
   useEffect(() => {
     if (token) {
       localStorage.setItem("access_token", token);
+      console.log("Token saved to localStorage");
     } else {
       localStorage.removeItem("access_token");
+      console.log("Token removed from localStorage");
     }
   }, [token]);
 
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
+      console.log("User saved to localStorage:", user.name);
     } else {
       localStorage.removeItem("user");
+      console.log("User removed from localStorage");
     }
   }, [user]);
 
@@ -82,11 +120,18 @@ export function useAuth() {
     setError(null);
     try {
       const response = await loginApi(data);
+      console.log("Login response:", response);
       if (response.data?.access_token) {
         setToken(response.data.access_token);
         if (response.data.user) {
           setUser(response.data.user);
         }
+        // Force save to localStorage immediately
+        localStorage.setItem("access_token", response.data.access_token);
+        if (response.data.user) {
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+        }
+        window.dispatchEvent(new Event("auth-changed"));
       }
       return response;
     } catch (err: any) {
@@ -102,11 +147,18 @@ export function useAuth() {
     setError(null);
     try {
       const response = await registerApi(data);
+      console.log("Register response:", response);
       if (response.data?.access_token) {
         setToken(response.data.access_token);
         if (response.data.user) {
           setUser(response.data.user);
         }
+        // Force save to localStorage immediately
+        localStorage.setItem("access_token", response.data.access_token);
+        if (response.data.user) {
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+        }
+        window.dispatchEvent(new Event("auth-changed"));
       }
       return response;
     } catch (err: any) {
@@ -118,7 +170,8 @@ export function useAuth() {
   }, []);
 
   const logout = useCallback(async () => {
-    setLoading(true);
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
     try {
       if (token) {
         await logoutApi(token);
@@ -128,9 +181,12 @@ export function useAuth() {
     } finally {
       setToken(null);
       setUser(null);
-      setLoading(false);
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      setIsLoggingOut(false);
+      window.dispatchEvent(new Event("auth-changed"));
     }
-  }, [token]);
+  }, [token, isLoggingOut]);
 
   const forgotPassword = useCallback(async (data: ForgotPasswordRequest) => {
     setLoading(true);
@@ -184,6 +240,7 @@ export function useAuth() {
     loading,
     error,
     isAuthenticated: !!token && !!user,
+    isLoggingOut,
     login,
     register,
     logout,

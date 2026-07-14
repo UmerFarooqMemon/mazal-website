@@ -1,11 +1,18 @@
 "use client";
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { Locale, loadAllTranslations } from "../config/translations";
 
 interface LocaleContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (path: string) => string;
+  loading: boolean;
 }
 
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
@@ -20,6 +27,7 @@ export function LocaleProvider({
   const [locale, setLocale] = useState<Locale>(
     initialLocale === "ar" ? "ar" : "en",
   );
+  const [loading, setLoading] = useState(true);
 
   const translations = loadAllTranslations(locale);
 
@@ -37,8 +45,13 @@ export function LocaleProvider({
     return typeof value === "string" ? value : path;
   };
 
+  // Set loading to false after first render (translations are synchronous)
+  useEffect(() => {
+    setLoading(false);
+  }, []);
+
   return (
-    <LocaleContext.Provider value={{ locale, setLocale, t }}>
+    <LocaleContext.Provider value={{ locale, setLocale, t, loading }}>
       {children}
     </LocaleContext.Provider>
   );

@@ -4,14 +4,16 @@ import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
-import CertificateRequestCard from "@/components/dashboard/CertificateRequestCard";
 import { FileText, Plus, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui";
+import CertificateRequestCard from "@/components/dashboard/CertificateRequestCard";
+import DashboardCertificatesSkeleton from "@/components/skeletons/dashboard/valuation-certificates/DashboardCertificatesSkeleton";
+import DashboardCertificateRequestCardSkeleton from "@/components/skeletons/dashboard/valuation-certificates/DashboardCertificateRequestCardSkeleton";
 
 export default function DashboardCertificatesPage() {
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor, getGradient } = useTheme();
+  const { getColor, getGradient, loading: themeLoading } = useTheme();
   const { token } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +24,6 @@ export default function DashboardCertificatesPage() {
 
   useEffect(() => {
     const fetchAll = async () => {
-      // Fetch plate options (for preview configs) and user's plates in parallel
       const [optionsRes, platesRes] = await Promise.allSettled([
         fetch("/api/number-plates/options").then((r) => r.json()),
         token
@@ -32,7 +33,6 @@ export default function DashboardCertificatesPage() {
           : Promise.resolve(null),
       ]);
 
-      // Build variant key → preview lookup from options
       if (optionsRes.status === "fulfilled") {
         const options = optionsRes.value?.data;
         const map: Record<string, any> = {};
@@ -44,7 +44,6 @@ export default function DashboardCertificatesPage() {
         setPreviewMap(map);
       }
 
-      // Parse number plates list
       if (platesRes.status === "fulfilled" && platesRes.value) {
         const result = platesRes.value;
         let list: any[] = [];
@@ -66,7 +65,6 @@ export default function DashboardCertificatesPage() {
     fetchAll();
   }, [token]);
 
-  // Smart filtering
   const pendingCount = requests.filter((req: any) => {
     const s = req.status?.toLowerCase() || "";
     return !["completed", "approved", "issued"].includes(s);
@@ -105,6 +103,10 @@ export default function DashboardCertificatesPage() {
       ? "Issued"
       : "Pending";
   };
+
+  if (themeLoading || localeLoading) {
+    return <DashboardCertificatesSkeleton />;
+  }
 
   return (
     <div
@@ -203,25 +205,12 @@ export default function DashboardCertificatesPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-white border rounded-2xl p-5 animate-pulse"
-                style={{ borderColor: getColor("border") }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-20 h-20 bg-gray-200 rounded-full" />
-                  <div className="space-y-2">
-                    <div className="h-5 w-32 bg-gray-200 rounded" />
-                    <div className="h-3 w-40 bg-gray-200 rounded" />
-                  </div>
-                </div>
-              </div>
+              <DashboardCertificateRequestCardSkeleton key={i} />
             ))}
           </div>
         ) : filteredRequests.length === 0 ? (
-          /* Smart Empty State */
           <div className="text-center py-16">
             <FileText
               className="w-12 h-12 mx-auto mb-4"

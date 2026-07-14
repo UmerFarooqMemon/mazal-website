@@ -6,16 +6,20 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import Button from "@/components/ui/Button";
+import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 
 export default function PasswordUpdatedPage() {
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor, branding } = useTheme();
+  const { getColor, branding, loading: themeLoading } = useTheme();
 
   // Show success toast on page load
   useEffect(() => {
     toast.success(t("common.password_updated_title"));
   }, [t]);
+
+  if (themeLoading || localeLoading)
+    return <AuthSkeleton locale={locale} type="password-updated" />;
 
   return (
     <div
