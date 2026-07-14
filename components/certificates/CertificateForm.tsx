@@ -17,6 +17,12 @@ import {
 } from "lucide-react";
 
 // Types
+interface PlateCodeItem {
+  code: string;
+  label: string;
+  show_on_preview: boolean;
+}
+
 interface Variant {
   key: string;
   label: string;
@@ -24,7 +30,7 @@ interface Variant {
   plate_design: string;
   has_code: boolean;
   fields?: string[];
-  plate_codes?: string[] | null;
+  plate_codes?: (string | PlateCodeItem)[] | null;
   digits?: {
     min?: number;
     max?: number;
@@ -141,11 +147,25 @@ export default function CertificateForm({
   const showCodeField =
     variantFields.includes("plate_code") && (selectedVariant?.has_code ?? true);
   const variantDigits = selectedVariant?.digits;
-  const variantPlateCodes = selectedVariant?.plate_codes || [];
+  const rawPlateCodes = selectedVariant?.plate_codes || [];
+
+  // Normalize plate codes to { code, label, show_on_preview } format
+  const variantPlateCodes: PlateCodeItem[] = Array.isArray(rawPlateCodes)
+    ? rawPlateCodes.map((item) =>
+        typeof item === "string"
+          ? { code: item, label: item, show_on_preview: true }
+          : item && typeof item === "object" && "code" in item
+            ? item
+            : { code: String(item), label: String(item), show_on_preview: true },
+      )
+    : [];
+
+  // Codes available for selection in the dropdown (all codes)
+  const selectableCodes = variantPlateCodes;
 
   // Filter codes based on search
-  const filteredCodes = variantPlateCodes.filter((code) =>
-    code.toLowerCase().includes(codeSearch.toLowerCase()),
+  const filteredCodes = selectableCodes.filter((c) =>
+    String(c.code || "").toLowerCase().includes(String(codeSearch || "").toLowerCase()),
   );
 
   // Mark field as touched on blur
@@ -209,8 +229,8 @@ export default function CertificateForm({
       const code = form.plate_code.trim();
       if (!code) {
         newErrors.plate_code = t("certificates.error_code_required");
-      } else if (variantPlateCodes.length > 0) {
-        if (!variantPlateCodes.includes(code)) {
+      } else if (selectableCodes.length > 0) {
+        if (!selectableCodes.some((c) => c.code === code)) {
           newErrors.plate_code = t("certificates.error_code_invalid");
         }
       }
@@ -408,35 +428,35 @@ export default function CertificateForm({
                       {/* Codes list */}
                       <div className="max-h-48 overflow-y-auto">
                         {filteredCodes.length > 0 ? (
-                          filteredCodes.map((code) => (
+                          filteredCodes.map((item) => (
                             <button
-                              key={code}
+                              key={item.code}
                               type="button"
-                              onClick={() => handleCodeSelect(code)}
+                              onClick={() => handleCodeSelect(item.code)}
                               className={`w-full px-4 py-2.5 text-sm transition-colors hover:bg-opacity-10 ${isRTL ? "text-right" : "text-left"}`}
                               style={{
                                 color:
-                                  code === form.plate_code
+                                  item.code === form.plate_code
                                     ? getColor("primary")
                                     : getColor("primaryText"),
                                 backgroundColor:
-                                  code === form.plate_code
+                                  item.code === form.plate_code
                                     ? `${getColor("primary")}10`
                                     : "transparent",
                               }}
                               onMouseEnter={(e) => {
-                                if (code !== form.plate_code) {
+                                if (item.code !== form.plate_code) {
                                   e.currentTarget.style.backgroundColor = `${getColor("primary")}05`;
                                 }
                               }}
                               onMouseLeave={(e) => {
-                                if (code !== form.plate_code) {
+                                if (item.code !== form.plate_code) {
                                   e.currentTarget.style.backgroundColor =
                                     "transparent";
                                 }
                               }}
                             >
-                              {code}
+                              {item.label}
                             </button>
                           ))
                         ) : (
