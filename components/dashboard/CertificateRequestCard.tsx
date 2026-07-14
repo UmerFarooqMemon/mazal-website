@@ -158,6 +158,7 @@ export default function CertificateRequestCard({
             overflow: "hidden",
             mixBlendMode: "multiply",
             backgroundColor: "#F5F5F5",
+            pointerEvents: "none",
           }}
         >
           <PlateWithOverlay
@@ -168,7 +169,10 @@ export default function CertificateRequestCard({
             isRTL={isRTL}
           />
         </div>
-        <div className={`flex items-center justify-between mt-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+        <div
+          className={`flex items-center justify-between mt-2 ${isRTL ? "flex-row-reverse" : ""}`}
+          style={{ position: "relative", zIndex: 10 }}
+        >
           <p
             className="text-[9px]"
             style={{ color: getColor("secondaryText") }}
@@ -178,10 +182,11 @@ export default function CertificateRequestCard({
           {showDownload && (
             <button
               onClick={handleDownload}
-              className="flex items-center justify-center h-8 w-8 rounded-full transition-colors"
+              className="flex items-center justify-center h-8 w-8 rounded-full transition-colors relative"
               style={{
                 color: getColor("primary"),
                 backgroundColor: `${getColor("primary")}10`,
+                zIndex: 11,
               }}
             >
               <Download className="w-3.5 h-3.5" />
