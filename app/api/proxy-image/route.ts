@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ALLOWED_HOSTS = ["admin.mazal.cloud"];
+const ALLOWED_HOSTS = (process.env.NEXT_PUBLIC_API_BASE_URL
+  ? [new URL(process.env.NEXT_PUBLIC_API_BASE_URL).hostname]
+  : []
+).concat(["admin.mazal.cloud"]);
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get("url");

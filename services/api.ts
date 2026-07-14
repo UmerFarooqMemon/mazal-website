@@ -1,5 +1,5 @@
 // API Base URL
-const API_BASE_URL = "https://admin.mazal.cloud/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.mazal.cloud/api";
 
 // ----- Response Types -----
 

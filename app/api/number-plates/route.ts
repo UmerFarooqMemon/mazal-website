@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE_URL = "https://admin.mazal.cloud/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.mazal.cloud/api";
 
 // GET - List all user's number plates
 export async function GET(request: NextRequest) {

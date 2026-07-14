@@ -33,20 +33,22 @@ export default function DashboardCertificatesPage() {
           : Promise.resolve(null),
       ]);
 
+      let previewMap: Record<string, any> = {};
       if (optionsRes.status === "fulfilled") {
         const options = optionsRes.value?.data;
-        const map: Record<string, any> = {};
         for (const em of options?.emirates || []) {
           for (const v of em?.variants || []) {
-            if (v.key && v.preview) map[v.key] = v.preview;
+            if (v.key && v.preview) {
+              previewMap[v.key] = v.preview;
+              previewMap[`${v.plate_type}_${v.plate_design}`] = v.preview;
+            }
           }
         }
-        setPreviewMap(map);
       }
 
+      let list: any[] = [];
       if (platesRes.status === "fulfilled" && platesRes.value) {
         const result = platesRes.value;
-        let list: any[] = [];
         if (
           result.data?.number_plates &&
           Array.isArray(result.data.number_plates)
@@ -57,9 +59,10 @@ export default function DashboardCertificatesPage() {
         } else if (Array.isArray(result)) {
           list = result;
         }
-        setRequests(list);
       }
 
+      setRequests(list);
+      setPreviewMap(previewMap);
       setLoading(false);
     };
     fetchAll();
@@ -257,7 +260,12 @@ export default function DashboardCertificatesPage() {
                 title={t("certificates.request_submitted")}
                 date={formatDate(req.created_at)}
                 showDownload={getStatus(req) === "Issued"}
-                preview={req.preview}
+                downloadUrl={req.valuation_certificate_url}
+                preview={
+                  previewMap[req.plate_variant] ||
+                  previewMap[`${req.plate_type}_${req.plate_design}`] ||
+                  req.preview
+                }
               />
             ))}
           </div>

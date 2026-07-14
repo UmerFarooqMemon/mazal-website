@@ -1,9 +1,8 @@
 "use client";
-import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
-import { Download, Eye } from "lucide-react";
+import { Download } from "lucide-react";
 
 type RequestStatus = "Pending" | "Issued";
 
@@ -16,6 +15,7 @@ interface CertificateRequestCardProps {
   title?: string;
   date: string;
   showDownload?: boolean;
+  downloadUrl?: string;
   preview?: any;
 }
 
@@ -28,11 +28,24 @@ export default function CertificateRequestCard({
   title,
   date,
   showDownload = false,
+  downloadUrl,
   preview,
 }: CertificateRequestCardProps) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
   const { getColor } = useTheme();
+
+  const handleDownload = () => {
+    if (downloadUrl) {
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = "";
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   const statusConfig = {
     Issued: {
@@ -51,24 +64,22 @@ export default function CertificateRequestCard({
 
   return (
     <div
-      className="rounded-2xl p-4 shadow-sm"
+      className="rounded-2xl p-4 shadow-sm overflow-hidden"
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
         borderWidth: "1px",
       }}
     >
-      {/* ============ 3 COLUMNS LAYOUT - ALL DEVICES ============ */}
-      <div
-        className={`flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
-      >
+      {/* Desktop: 3 columns */}
+      <div className={`hidden sm:flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}>
         {/* Column 1: Badge + Title + Date */}
         <div
           className={`flex flex-col gap-1.5 shrink-0 ${isRTL ? "items-end text-right" : "items-start text-left"}`}
           style={{ minWidth: "120px", maxWidth: "180px" }}
         >
           <span
-            className="inline-flex items-center w-fit px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold"
+            className="inline-flex items-center w-fit px-2.5 py-1 rounded-full text-xs font-bold"
             style={{
               backgroundColor: config.backgroundColor,
               color: config.color,
@@ -77,50 +88,104 @@ export default function CertificateRequestCard({
             {config.label}
           </span>
           <h4
-            className="text-xs sm:text-sm font-medium"
+            className="text-sm font-medium"
             style={{ color: getColor("primaryText") }}
           >
             {title || t("certificates.request_submitted")}
           </h4>
           <p
-            className="text-[9px] sm:text-[10px]"
+            className="text-[10px]"
             style={{ color: getColor("secondaryText") }}
           >
             {date}
           </p>
         </div>
 
-        {/* Column 2: Plate - Centered */}
-        <div className="flex-1 flex justify-center items-center">
+        {/* Column 2: Plate */}
+        <div
+          className="flex-1 flex justify-center"
+          style={{
+            marginTop: "-15%",
+            marginBottom: "-15%",
+            paddingTop: "1%",
+            overflow: "hidden",
+            mixBlendMode: "multiply",
+            backgroundColor: "#F5F5F5",
+          }}
+        >
           <PlateWithOverlay
             plate_code={plate_code}
             plate_digits={plate_digits}
             emirate={emirate}
             preview={preview}
+            isRTL={isRTL}
           />
         </div>
 
         {/* Column 3: Action */}
         <div className="shrink-0">
-          {showDownload ? (
+          {showDownload && (
             <button
-              className="flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-colors"
+              onClick={handleDownload}
+              className="flex items-center justify-center h-9 w-9 rounded-full transition-colors"
               style={{
                 color: getColor("primary"),
                 backgroundColor: `${getColor("primary")}10`,
               }}
             >
-              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Download className="w-4 h-4" />
             </button>
-          ) : (
-            <Link
-              href={`/${locale}/valuation/${id}`}
-              className="text-[10px] sm:text-xs font-medium hover:underline whitespace-nowrap flex items-center gap-1"
-              style={{ color: getColor("primary") }}
+          )}
+        </div>
+      </div>
+
+      {/* Mobile */}
+      <div className="sm:hidden">
+        <span
+          className="inline-flex items-center w-fit px-2.5 py-1 rounded-full text-[10px] font-bold mb-2"
+          style={{
+            backgroundColor: config.backgroundColor,
+            color: config.color,
+          }}
+        >
+          {config.label}
+        </span>
+        <div
+          className="flex justify-center"
+          style={{
+            marginTop: "-10%",
+            marginBottom: "-10%",
+            overflow: "hidden",
+            mixBlendMode: "multiply",
+            backgroundColor: "#F5F5F5",
+          }}
+        >
+          <PlateWithOverlay
+            plate_code={plate_code}
+            plate_digits={plate_digits}
+            emirate={emirate}
+            preview={preview}
+            isRTL={isRTL}
+          />
+        </div>
+        <div className={`flex items-center justify-between mt-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <p
+            className="text-[9px]"
+            style={{ color: getColor("secondaryText") }}
+          >
+            {date}
+          </p>
+          {showDownload && (
+            <button
+              onClick={handleDownload}
+              className="flex items-center justify-center h-8 w-8 rounded-full transition-colors"
+              style={{
+                color: getColor("primary"),
+                backgroundColor: `${getColor("primary")}10`,
+              }}
             >
-              <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              {t("certificates.view_status")}
-            </Link>
+              <Download className="w-3.5 h-3.5" />
+            </button>
           )}
         </div>
       </div>

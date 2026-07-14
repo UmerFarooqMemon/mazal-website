@@ -653,48 +653,15 @@ export default function CertificateForm({
           )}
         </div>
 
-        {/* Rush Delivery */}
-        <div
-          className={`flex items-center border rounded-xl p-4 ${isRTL ? "flex-row-reverse" : ""}`}
-          style={{
-            borderColor: getColor("border"),
-            backgroundColor: getColor("surface"),
-          }}
-        >
-          <div
-            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
-          >
-            <input
-              type="checkbox"
-              className="w-5 h-5 rounded shrink-0"
-              style={{ accentColor: getColor("primary") }}
-            />
-            <div className={isRTL ? "text-right" : "text-left"}>
-              <div
-                className="font-medium text-sm"
-                style={{ color: getColor("primaryText") }}
-              >
-                {t("certificates.rush_delivery")}
-              </div>
-              <div
-                className="text-xs"
-                style={{ color: getColor("secondaryText") }}
-              >
-                {t("certificates.rush_desc")}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* LIVE PREVIEW Box */}
         <div
           className="rounded-xl overflow-hidden border"
           style={{
             borderColor: getColor("border"),
-            backgroundColor: getColor("primaryLight"),
+            backgroundColor: "#F5F5F5",
           }}
         >
-          <div className={`px-5 pt-5 ${isRTL ? "text-right" : "text-left"}`}>
+          <div className={`px-5 pt-5 pb-3 ${isRTL ? "text-right" : "text-left"}`}>
             <span
               className="text-[10px] font-bold uppercase tracking-wider"
               style={{ color: getColor("secondaryText") }}
@@ -702,14 +669,20 @@ export default function CertificateForm({
               {t("certificates.live_preview")}
             </span>
           </div>
-          <div className="flex items-center justify-center px-4 py-4">
+          <div
+            style={{
+              marginTop: "-22%",
+              marginBottom: "-22%",
+              overflow: "hidden",
+              mixBlendMode: "multiply",
+            }}
+          >
             <PlateWithOverlay
               plate_code={form.plate_code}
               plate_digits={form.plate_digits}
               emirate={t("listings.emirate_dubai")}
               preview={selectedVariant?.preview}
               isRTL={isRTL}
-              removeWhiteBg
             />
           </div>
         </div>

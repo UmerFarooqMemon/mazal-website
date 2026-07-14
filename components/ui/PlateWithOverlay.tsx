@@ -35,7 +35,6 @@ interface PlateWithOverlayProps {
   imageUrl?: string;
   preview?: PlatePreview;
   isRTL?: boolean;
-  removeWhiteBg?: boolean;
 }
 
 export default function PlateWithOverlay({
@@ -48,7 +47,6 @@ export default function PlateWithOverlay({
   imageUrl,
   preview,
   isRTL = false,
-  removeWhiteBg = false,
 }: PlateWithOverlayProps) {
   const { getColor } = useTheme();
 
@@ -88,10 +86,10 @@ export default function PlateWithOverlay({
     if (overlay.right) style.right = overlay.right;
     if (overlay.top) style.top = overlay.top;
     if (overlay.transform) style.transform = overlay.transform;
-    if (overlay.font_size) style.fontSize = overlay.font_size;
+    if (overlay.font_size) style.fontSize = overlay.font_size.replace(/vw/g, "cqw");
     if (overlay.font_weight) style.fontWeight = overlay.font_weight;
     if (overlay.color) style.color = overlay.color;
-    if (overlay.font_family) style.fontFamily = overlay.font_family;
+    style.fontFamily = "'CharlesWright', sans-serif";
 
     // Match backend: code (left-positioned) centers, digits (right-positioned) align right
     if (overlay.left && !overlay.right) style.textAlign = "center";
@@ -118,7 +116,6 @@ export default function PlateWithOverlay({
         borderRadius: "3px",
         overflow: "hidden",
         containerType: "inline-size",
-        ...(removeWhiteBg ? { mixBlendMode: "multiply" as const } : {}),
       }}
     >
       <style jsx>{`
