@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -34,11 +34,18 @@ export default function RegisterPage() {
     email: "",
     emirates_id: "",
     password: "",
+    password_confirmation: "",
     agree_terms: false,
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const { register, loading } = useAuth();
+  const { register, loading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(`/${locale}/dashboard-certificates`);
+    }
+  }, [isAuthenticated, locale, router]);
 
   // Show skeleton while theme & locale are loading
   if (themeLoading || localeLoading) {
@@ -60,6 +67,9 @@ export default function RegisterPage() {
       errors.password = t("common.error_field_required");
     } else if (formData.password.length < 8) {
       errors.password = t("common.password_min_length");
+    }
+    if (formData.password !== formData.password_confirmation) {
+      errors.password_confirmation = t("common.passwords_dont_match");
     }
     if (!formData.agree_terms) {
       errors.agree_terms = t("common.agree_terms_error");
@@ -118,6 +128,7 @@ export default function RegisterPage() {
           <div
             className={`flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
             style={{ backgroundColor: getColor("surface") }}
+            dir={isRTL ? "rtl" : "ltr"}
           >
             <div className="w-full max-w-md">
               {/* Logo - Only from API */}
@@ -255,6 +266,20 @@ export default function RegisterPage() {
                       )}
                     </button>
                   }
+                />
+
+                <Input
+                  name="password_confirmation"
+                  label={t("common.confirm_password")}
+                  icon={<Lock size={20} strokeWidth={1.5} />}
+                  type={showPassword ? "text" : "password"}
+                  placeholder={t("common.password_placeholder")}
+                  value={formData.password_confirmation}
+                  onChange={(e) =>
+                    handleFieldChange("password_confirmation", e.target.value)
+                  }
+                  autoComplete="new-password"
+                  error={fieldErrors.password_confirmation}
                 />
 
                 {/* Terms Agreement */}

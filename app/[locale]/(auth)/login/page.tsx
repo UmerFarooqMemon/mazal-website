@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -29,7 +29,13 @@ export default function LoginPage() {
     password?: string;
   }>({});
 
-  const { login, loading } = useAuth();
+  const { login, loading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(`/${locale}/dashboard-certificates`);
+    }
+  }, [isAuthenticated, locale, router]);
 
   // Show skeleton while theme & locale are loading
   if (themeLoading || localeLoading) {
@@ -92,10 +98,11 @@ export default function LoginPage() {
         </div>
 
         {/* Form - left for AR, right for EN */}
-        <div
-          className={`w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
-          style={{ backgroundColor: getColor("surface") }}
-        >
+          <div
+            className={`w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
+            style={{ backgroundColor: getColor("surface") }}
+            dir={isRTL ? "rtl" : "ltr"}
+          >
           <div className="w-full max-w-md">
             {/* Logo - Only from API */}
             {branding.logoUrl && (

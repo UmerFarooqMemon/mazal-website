@@ -527,7 +527,7 @@ export default function CertificateForm({
             }
             maxLength={variantDigits?.max}
             value={form.plate_digits}
-            onChange={(e) => handleChange("plate_digits", e.target.value)}
+            onChange={(e) => handleChange("plate_digits", e.target.value.replace(/\D/g, ""))}
             onBlur={() => handleBlur("plate_digits")}
             error={touched.plate_digits ? errors.plate_digits : undefined}
           />
