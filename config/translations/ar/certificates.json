@@ -74,5 +74,20 @@
   "signatory_2": "كبير المحللين · مازال",
   "certified": "معتمد من مازال",
   "verify_text": "تحقق من الصحة على",
-  "using_certificate": "باستخدام رقم الشهادة"
+  "using_certificate": "باستخدام رقم الشهادة",
+  "verify_eyebrow": "التحقق من الشهادة",
+  "verify_title": "تحقق من شهادة تقييم مازال",
+  "verify_subtitle": "أكد صحة شهادة التقييم الخاصة بك.",
+  "verify_hint": "أدخل رمز الشهادة الفريد أدناه.",
+  "verify_code_label": "الرمز",
+  "verify_button": "تحقق من الشهادة",
+  "verifying": "جارٍ التحقق...",
+  "verify_code_required": "يرجى إدخال رمز الشهادة",
+  "verify_success": "تم التحقق من الشهادة",
+  "verify_failed": "فشل التحقق",
+  "verify_invalid": "تعذر التحقق من هذه الشهادة",
+  "live_preview_title": "معاينة حية",
+  "preview_badge": "معاينة",
+  "signatory_1_name": "عبدالله الأمير",
+  "signatory_2_name": "أحمد الناصر"
 }

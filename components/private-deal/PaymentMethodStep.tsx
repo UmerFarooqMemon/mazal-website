@@ -1,0 +1,659 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  CreditCard,
+  FileCheck,
+  Banknote,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  CheckCircle2,
+  Play,
+} from "lucide-react";
+import { useLocale } from "@/context/LocaleContext";
+import { Button, Input } from "@/components/ui";
+import Select from "@/components/ui/Select";
+
+export type PaymentMethod =
+  | "bank"
+  | "card"
+  | "managers_check"
+  | "cash";
+
+export type PaymentMode = "single" | "split";
+
+export type SplitPaymentStatus = "awaiting" | "completed";
+
+export interface SplitPaymentEntry {
+  id: string;
+  method: PaymentMethod;
+  amount: number;
+  notes: string;
+  bank?: string;
+  accountNumber?: string;
+  iban?: string;
+  status: SplitPaymentStatus;
+  createdAt: string;
+}
+
+interface DraftSplit {
+  id: string;
+  method: PaymentMethod;
+  amount: string;
+  notes: string;
+  bank: string;
+  accountNumber: string;
+  iban: string;
+  expanded: boolean;
+}
+
+interface PaymentMethodStepProps {
+  method: PaymentMethod;
+  mode: PaymentMode;
+  totalAmount: number;
+  splitPayments: SplitPaymentEntry[];
+  onMethodChange: (method: PaymentMethod) => void;
+  onModeChange: (mode: PaymentMode) => void;
+  onSplitPaymentsChange: (payments: SplitPaymentEntry[]) => void;
+  onAllocatedChange?: (allocated: number) => void;
+  onBack: () => void;
+  onContinue: () => void;
+  onProcessSplit: (paymentId: string) => void;
+}
+
+const METHODS: {
+  key: PaymentMethod;
+  titleKey: string;
+  icon: typeof Building2;
+}[] = [
+  { key: "bank", titleKey: "bank_transfer", icon: Building2 },
+  { key: "card", titleKey: "card_payment", icon: CreditCard },
+  { key: "managers_check", titleKey: "managers_check", icon: FileCheck },
+  { key: "cash", titleKey: "cash_collection", icon: Banknote },
+];
+
+const BANKS = [
+  { key: "emirates_nbd", label: "Emirates NBD" },
+  { key: "fab", label: "First Abu Dhabi Bank" },
+  { key: "adcb", label: "ADCB" },
+  { key: "mashreq", label: "Mashreq" },
+  { key: "dubai_islamic", label: "Dubai Islamic Bank" },
+];
+
+function formatAed(amount: number) {
+  return `AED ${amount.toLocaleString("en-AE")}`;
+}
+
+function parseAmount(value: string) {
+  const n = Number(value.replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function createDraft(method: PaymentMethod, remaining: number): DraftSplit {
+  return {
+    id: `draft-${method}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    method,
+    amount: remaining > 0 ? String(remaining) : "",
+    notes: "",
+    bank: "emirates_nbd",
+    accountNumber: "",
+    iban: "",
+    expanded: true,
+  };
+}
+
+function methodMeta(method: PaymentMethod) {
+  return METHODS.find((m) => m.key === method)!;
+}
+
+export default function PaymentMethodStep({
+  method,
+  mode,
+  totalAmount,
+  splitPayments,
+  onMethodChange,
+  onModeChange,
+  onSplitPaymentsChange,
+  onAllocatedChange,
+  onBack,
+  onContinue,
+  onProcessSplit,
+}: PaymentMethodStepProps) {
+  const { t, locale } = useLocale();
+  const isRTL = locale === "ar";
+  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+  const NextIcon = isRTL ? ArrowLeft : ArrowRight;
+
+  const [drafts, setDrafts] = useState<DraftSplit[]>([]);
+  const [showSavedList, setShowSavedList] = useState(
+    () => splitPayments.length > 0,
+  );
+
+  useEffect(() => {
+    if (mode === "split" && drafts.length === 0 && splitPayments.length === 0) {
+      setDrafts([createDraft("bank", totalAmount)]);
+      setShowSavedList(false);
+    }
+  }, [mode, drafts.length, splitPayments.length, totalAmount]);
+
+  const draftAllocated = useMemo(
+    () => drafts.reduce((sum, d) => sum + parseAmount(d.amount), 0),
+    [drafts],
+  );
+  const savedAllocated = useMemo(
+    () => splitPayments.reduce((sum, p) => sum + p.amount, 0),
+    [splitPayments],
+  );
+  const allocated = showSavedList ? savedAllocated : draftAllocated;
+  const remaining = Math.max(0, totalAmount - allocated);
+
+  useEffect(() => {
+    if (mode === "split") {
+      onAllocatedChange?.(allocated);
+    }
+  }, [mode, allocated, onAllocatedChange]);
+  const canSave =
+    drafts.length > 0 &&
+    drafts.every((d) => parseAmount(d.amount) > 0) &&
+    Math.abs(draftAllocated - totalAmount) < 0.5;
+
+  const patchDraft = (id: string, patch: Partial<DraftSplit>) => {
+    setDrafts((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+  };
+
+  const removeDraft = (id: string) => {
+    setDrafts((prev) => {
+      const next = prev.filter((d) => d.id !== id);
+      return next.length ? next : [createDraft("bank", totalAmount)];
+    });
+  };
+
+  const addMethod = (key: PaymentMethod) => {
+    setDrafts((prev) => {
+      const rem =
+        totalAmount - prev.reduce((s, d) => s + parseAmount(d.amount), 0);
+      return [
+        ...prev.map((d) => ({ ...d, expanded: false })),
+        createDraft(key, Math.max(0, rem)),
+      ];
+    });
+    setShowSavedList(false);
+  };
+
+  const saveSplits = () => {
+    if (!canSave) return;
+    const now = new Date().toISOString();
+    const saved: SplitPaymentEntry[] = drafts.map((d) => ({
+      id: d.id.replace("draft-", "split-"),
+      method: d.method,
+      amount: parseAmount(d.amount),
+      notes: d.notes,
+      bank: d.bank,
+      accountNumber: d.accountNumber,
+      iban: d.iban,
+      status: "awaiting",
+      createdAt: now,
+    }));
+    onSplitPaymentsChange(saved);
+    setShowSavedList(true);
+  };
+
+  const deleteSaved = (id: string) => {
+    const next = splitPayments.filter((p) => p.id !== id);
+    onSplitPaymentsChange(next);
+    if (next.length === 0) {
+      setShowSavedList(false);
+      setDrafts([createDraft("bank", totalAmount)]);
+    }
+  };
+
+  const handleModeChange = (next: PaymentMode) => {
+    onModeChange(next);
+    if (next === "split") {
+      if (splitPayments.length > 0) {
+        setShowSavedList(true);
+      } else {
+        setShowSavedList(false);
+        setDrafts([createDraft("bank", totalAmount)]);
+      }
+    }
+  };
+
+  const formatSavedDate = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleString(locale === "ar" ? "ar-AE" : "en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    } catch {
+      return iso;
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-[20px] border border-[#d9dee6] shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8">
+      <div
+        className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+      >
+        <div className={isRTL ? "text-right" : "text-left"}>
+          <h2 className="text-2xl font-serif text-[#081123] mb-1">
+            {t("private-deal.payment_title")}
+          </h2>
+          <p className="text-sm text-[#545e6f]">
+            {t("private-deal.payment_subtitle")}
+          </p>
+        </div>
+
+        <div className="inline-flex rounded-full border border-[#d9dee6] p-1 bg-[#f7f8fb] self-start">
+          <button
+            type="button"
+            onClick={() => handleModeChange("single")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              mode === "single"
+                ? "bg-[#0a2f94] text-white"
+                : "text-[#545e6f] hover:text-[#081123]"
+            }`}
+          >
+            {t("private-deal.single_payment")}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleModeChange("split")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              mode === "split"
+                ? "bg-[#0a2f94] text-white"
+                : "text-[#545e6f] hover:text-[#081123]"
+            }`}
+          >
+            {t("private-deal.split_payment")}
+          </button>
+        </div>
+      </div>
+
+      {mode === "single" ? (
+        <>
+          <div className="space-y-3 mb-8">
+            {METHODS.map((item) => {
+              const Icon = item.icon;
+              const selected = method === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => onMethodChange(item.key)}
+                  className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all ${
+                    selected
+                      ? "border-[#0a2f94] bg-[rgba(10,47,148,0.04)]"
+                      : "border-[#d9dee6] bg-white hover:border-gray-300"
+                  } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                >
+                  <div
+                    className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      selected
+                        ? "bg-[#0a2f94]/10 text-[#0a2f94]"
+                        : "bg-[#f3f5fa] text-[#545e6f]"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[#081123]">
+                      {t(`private-deal.${item.titleKey}`)}
+                    </div>
+                    <div className="text-sm text-[#8b95a7]">
+                      {t("private-deal.secure_online")}
+                    </div>
+                  </div>
+                  <div
+                    className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      selected ? "border-[#0a2f94]" : "border-[#d9dee6]"
+                    }`}
+                  >
+                    {selected && (
+                      <div className="size-2.5 rounded-full bg-[#0a2f94]" />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div
+            className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+          >
+            <Button
+              variant="outline"
+              size="md"
+              onClick={onBack}
+              leftIcon={<BackIcon className="w-4 h-4" />}
+            >
+              {t("private-deal.back")}
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={onContinue}
+              rightIcon={<NextIcon className="w-4 h-4" />}
+            >
+              {t("private-deal.continue")}
+            </Button>
+          </div>
+        </>
+      ) : showSavedList ? (
+        <>
+          <div className="space-y-3 mb-6">
+            {splitPayments.map((payment) => {
+              const meta = methodMeta(payment.method);
+              const Icon = meta.icon;
+              return (
+                <div
+                  key={payment.id}
+                  className="rounded-2xl border border-[#d9dee6] bg-[#fafbfd] px-4 py-4"
+                >
+                  <div
+                    className={`flex flex-col sm:flex-row sm:items-center gap-4 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+                  >
+                    <div
+                      className={`flex items-start gap-3 flex-1 min-w-0 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+                    >
+                      <div className="size-10 rounded-xl bg-[#0a2f94]/10 text-[#0a2f94] flex items-center justify-center shrink-0">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-medium text-[#081123]">
+                          {t(`private-deal.${meta.titleKey}`)}
+                        </div>
+                        <div className="text-sm text-[#8b95a7]">
+                          {t("private-deal.plate_transfer")}
+                        </div>
+                        <div className="text-xs text-[#8b95a7] mt-0.5">
+                          {formatSavedDate(payment.createdAt)}
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center rounded-full bg-[rgba(10,47,148,0.08)] text-[#0a2f94] text-[11px] font-medium px-2.5 py-1 shrink-0">
+                        {payment.status === "completed"
+                          ? t("private-deal.completed")
+                          : t("private-deal.awaiting_payment")}
+                      </span>
+                    </div>
+
+                    <div
+                      className={`flex items-center gap-2 shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
+                    >
+                      <span className="text-sm font-semibold text-[#081123] min-w-[96px]">
+                        {formatAed(payment.amount)}
+                      </span>
+                      {payment.status !== "completed" && (
+                        <button
+                          type="button"
+                          onClick={() => onProcessSplit(payment.id)}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-[#0a2f94] text-[#0a2f94] text-sm font-medium px-3 py-1.5 hover:bg-[rgba(10,47,148,0.04)]"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          {t("private-deal.process")}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => deleteSaved(payment.id)}
+                        className="p-2 rounded-lg text-[#8b95a7] hover:text-red-600 hover:bg-red-50"
+                        aria-label={t("private-deal.delete")}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowSavedList(false);
+              setDrafts(
+                splitPayments.map((p) => ({
+                  id: `draft-${p.id}`,
+                  method: p.method,
+                  amount: String(p.amount),
+                  notes: p.notes,
+                  bank: p.bank || "emirates_nbd",
+                  accountNumber: p.accountNumber || "",
+                  iban: p.iban || "",
+                  expanded: false,
+                })),
+              );
+            }}
+            className="text-sm font-medium text-[#0a2f94] hover:underline mb-6"
+          >
+            {t("private-deal.edit_split_payments")}
+          </button>
+
+          <div
+            className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+          >
+            <Button
+              variant="outline"
+              size="md"
+              onClick={onBack}
+              leftIcon={<BackIcon className="w-4 h-4" />}
+            >
+              {t("private-deal.back")}
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="space-y-4 mb-5">
+            {drafts.map((draft) => {
+              const meta = methodMeta(draft.method);
+              const Icon = meta.icon;
+              return (
+                <div
+                  key={draft.id}
+                  className="rounded-2xl border border-[#d9dee6] overflow-hidden"
+                >
+                  <div
+                    className={`flex items-center gap-3 px-4 py-3.5 bg-[#fafbfd] ${isRTL ? "flex-row-reverse" : ""}`}
+                  >
+                    <div className="size-10 rounded-xl bg-[#0a2f94]/10 text-[#0a2f94] flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div
+                      className={`flex-1 min-w-0 ${isRTL ? "text-right" : "text-left"}`}
+                    >
+                      <div className="font-medium text-[#081123]">
+                        {t(`private-deal.${meta.titleKey}`)}
+                      </div>
+                      <div className="text-sm text-[#8b95a7]">
+                        {t("private-deal.secure_online")}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        patchDraft(draft.id, { expanded: !draft.expanded })
+                      }
+                      className="p-1.5 text-[#545e6f] hover:text-[#081123]"
+                    >
+                      {draft.expanded ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeDraft(draft.id)}
+                      className="p-1.5 text-[#8b95a7] hover:text-red-600"
+                      aria-label={t("private-deal.delete")}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {draft.expanded && (
+                    <div className="px-4 pb-4 pt-3 border-t border-[#eef1f6] space-y-3">
+                      {draft.method === "bank" ? (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <Input
+                              label={t("private-deal.amount")}
+                              value={draft.amount}
+                              onChange={(e) =>
+                                patchDraft(draft.id, {
+                                  amount: e.target.value.replace(/[^\d.]/g, ""),
+                                })
+                              }
+                              placeholder="AED 100,000"
+                            />
+                            <Select
+                              label={t("private-deal.select_bank")}
+                              options={BANKS}
+                              value={draft.bank}
+                              onChange={(v) =>
+                                patchDraft(draft.id, { bank: v })
+                              }
+                              placeholder={t("private-deal.select_bank")}
+                            />
+                          </div>
+                          <Input
+                            label={t("private-deal.account_number")}
+                            value={draft.accountNumber}
+                            onChange={(e) =>
+                              patchDraft(draft.id, {
+                                accountNumber: e.target.value,
+                              })
+                            }
+                            placeholder="100,000"
+                          />
+                          <Input
+                            label={t("private-deal.iban")}
+                            value={draft.iban}
+                            onChange={(e) =>
+                              patchDraft(draft.id, { iban: e.target.value })
+                            }
+                            placeholder="AE07 0331 2345 6789 0123 456"
+                          />
+                          <div>
+                            <label
+                              className={`block text-[11px] font-medium mb-1.5 text-[#545e6f] ${isRTL ? "text-right" : "text-left"}`}
+                            >
+                              {t("private-deal.notes")}
+                            </label>
+                            <textarea
+                              value={draft.notes}
+                              onChange={(e) =>
+                                patchDraft(draft.id, { notes: e.target.value })
+                              }
+                              placeholder={t("private-deal.notes_placeholder")}
+                              rows={3}
+                              className={`w-full rounded-xl border border-[#d9dee6] bg-white py-3 px-4 text-sm text-[#081123] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a2f94]/20 focus:border-[#0a2f94] ${isRTL ? "text-right" : "text-left"}`}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Input
+                            label={t("private-deal.amount")}
+                            value={draft.amount}
+                            onChange={(e) =>
+                              patchDraft(draft.id, {
+                                amount: e.target.value.replace(/[^\d.]/g, ""),
+                              })
+                            }
+                            placeholder="AED 100,000"
+                          />
+                          <div>
+                            <label
+                              className={`block text-[11px] font-medium mb-1.5 text-[#545e6f] ${isRTL ? "text-right" : "text-left"}`}
+                            >
+                              {t("private-deal.notes")}
+                            </label>
+                            <textarea
+                              value={draft.notes}
+                              onChange={(e) =>
+                                patchDraft(draft.id, { notes: e.target.value })
+                              }
+                              placeholder={t("private-deal.notes_placeholder")}
+                              rows={3}
+                              className={`w-full rounded-xl border border-[#d9dee6] bg-white py-3 px-4 text-sm text-[#081123] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a2f94]/20 focus:border-[#0a2f94] ${isRTL ? "text-right" : "text-left"}`}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className={`mb-2 ${isRTL ? "text-right" : "text-left"}`}>
+            <div className="text-sm font-medium text-[#081123] mb-2.5">
+              {t("private-deal.add_payment_method")}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {METHODS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => addMethod(item.key)}
+                    className={`inline-flex items-center gap-2 rounded-full border border-[#d9dee6] bg-white px-3.5 py-2 text-sm text-[#545e6f] hover:border-[#0a2f94] hover:text-[#0a2f94] transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+                  >
+                    <span className="size-1.5 rounded-full bg-[#0a2f94]" />
+                    <Icon className="w-3.5 h-3.5" />
+                    {t(`private-deal.${item.titleKey}`)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {!canSave && drafts.length > 0 && (
+            <p
+              className={`text-xs text-[#8b95a7] mt-3 mb-1 ${isRTL ? "text-right" : "text-left"}`}
+            >
+              {t("private-deal.split_allocate_hint")} {formatAed(remaining)}
+            </p>
+          )}
+
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
+            className="mt-5 mb-6"
+            onClick={saveSplits}
+            disabled={!canSave}
+            leftIcon={<CheckCircle2 className="w-4 h-4" />}
+          >
+            {t("private-deal.save_split_payment")}
+          </Button>
+
+          <div
+            className={`flex items-center border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+          >
+            <Button
+              variant="outline"
+              size="md"
+              onClick={onBack}
+              leftIcon={<BackIcon className="w-4 h-4" />}
+            >
+              {t("private-deal.back")}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

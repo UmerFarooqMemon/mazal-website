@@ -18,6 +18,7 @@ import {
   LogOut,
   Home,
   LayoutDashboard,
+  BadgeCheck,
 } from "lucide-react";
 
 export default function Header() {
@@ -140,6 +141,19 @@ export default function Header() {
                   {t("common.dashboard")}
                 </Link>
               )}
+              <Link
+                href={`/${locale}/verify`}
+                className={`transition-colors ${
+                  isActive("/verify") ? "font-medium" : "hover:transition-colors"
+                }`}
+                style={{
+                  color: isActive("/verify")
+                    ? getColor("primary")
+                    : getColor("secondaryText"),
+                }}
+              >
+                {t("common.verify_certificate") || "Verify certificate"}
+              </Link>
             </nav>
 
             {/* Desktop Actions */}
@@ -358,6 +372,35 @@ export default function Header() {
                     />
                   )}
                 </Link> */}
+
+                <Link
+                  href={`/${locale}/verify`}
+                  onClick={closeMenu}
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
+                    isActive("/verify") ? "font-medium" : ""
+                  } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                  style={{
+                    backgroundColor: isActive("/verify")
+                      ? `${getColor("primary")}10`
+                      : "transparent",
+                    color: isActive("/verify")
+                      ? getColor("primary")
+                      : getColor("primaryText"),
+                  }}
+                >
+                  <span
+                    className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                  >
+                    <BadgeCheck className="w-5 h-5" strokeWidth={2} />
+                    {t("common.verify_certificate") || "Verify certificate"}
+                  </span>
+                  {isActive("/verify") && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: getColor("primary") }}
+                    />
+                  )}
+                </Link>
 
                 {isAuthenticated && (
                   <Link

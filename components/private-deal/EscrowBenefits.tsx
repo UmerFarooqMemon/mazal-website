@@ -1,6 +1,7 @@
 "use client";
+
+import { Shield, Lock, Handshake, CreditCard, Sparkles } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
-import { Shield, Lock, Handshake, CreditCard, Star } from "lucide-react";
 
 export default function EscrowBenefits() {
   const { t, locale } = useLocale();
@@ -14,34 +15,27 @@ export default function EscrowBenefits() {
   ];
 
   return (
-    <div className="bg-[#FFF9F0] border border-[#D4AF37]/30 rounded-2xl p-6">
-      {/* Title */}
+    <div className="bg-[rgba(224,174,87,0.05)] border border-[rgba(224,174,87,0.4)] rounded-2xl p-6">
       <div
-        className={`flex items-center gap-2 text-[#041443] font-semibold mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center gap-2 text-[#081123] font-medium mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
       >
-        <Star
-          className="w-4.5 h-4.5 text-[#D4AF37] shrink-0"
-          strokeWidth={2.5}
-        />
+        <Sparkles className="w-4 h-4 text-[#e0ae57] shrink-0" strokeWidth={2} />
         <span className="text-sm">{t("private-deal.why_escrow")}</span>
       </div>
 
-      {/* Benefits List */}
-      <ul className="space-y-3 text-sm text-gray-600">
+      <ul className="space-y-2.5 text-sm text-[#545e6f]">
         {bullets.map((bullet) => {
           const Icon = bullet.icon;
           return (
             <li
               key={bullet.key}
-              className={`flex items-start gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse text-right" : ""}`}
             >
               <Icon
-                className="w-4.5 h-4.5 text-[#0A3B9E] mt-0.5 shrink-0"
+                className="w-4 h-4 text-[#0a2f94] mt-0.5 shrink-0"
                 strokeWidth={2}
               />
-              <span className={isRTL ? "text-right" : "text-left"}>
-                {t(`private-deal.${bullet.key}`)}
-              </span>
+              <span>{t(`private-deal.${bullet.key}`)}</span>
             </li>
           );
         })}

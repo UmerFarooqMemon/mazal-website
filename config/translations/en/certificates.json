@@ -74,5 +74,20 @@
   "signatory_2": "Senior Analyst · Mazal",
   "certified": "Mazal Certified",
   "verify_text": "Verify authenticity at",
-  "using_certificate": "using certificate number"
+  "using_certificate": "using certificate number",
+  "verify_eyebrow": "Certificate verification",
+  "verify_title": "Verify Mazal Valuation Certificate",
+  "verify_subtitle": "Confirm the authenticity of your valuation certificate.",
+  "verify_hint": "Enter the unique certificate code below.",
+  "verify_code_label": "Code",
+  "verify_button": "Verify Certificate",
+  "verifying": "Verifying...",
+  "verify_code_required": "Please enter a certificate code",
+  "verify_success": "Certificate verified",
+  "verify_failed": "Verification failed",
+  "verify_invalid": "This certificate could not be verified",
+  "live_preview_title": "Live Preview",
+  "preview_badge": "PREVIEW",
+  "signatory_1_name": "Abdullah Almeer",
+  "signatory_2_name": "Ahmed Al Nasser"
 }

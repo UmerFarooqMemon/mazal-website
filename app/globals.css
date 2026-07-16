@@ -24,6 +24,10 @@ body {
   font-display: swap;
 }
 
+.font-serif {
+  font-family: var(--font-fraunces), serif !important;
+}
+
 .plate-text {
   font-family: "CharlesWright", sans-serif !important;
   text-shadow:

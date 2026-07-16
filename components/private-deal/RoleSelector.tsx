@@ -1,140 +1,118 @@
 "use client";
+
+import { Building2, User, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui"; // ✅ استيراد الـ Button
+import { Button } from "@/components/ui";
+import toast from "react-hot-toast";
 
 interface RoleSelectorProps {
   role: "seller" | "buyer" | null;
   setRole: (role: "seller" | "buyer") => void;
+  onContinue: () => void;
+  onBack?: () => void;
 }
 
-export default function RoleSelector({ role, setRole }: RoleSelectorProps) {
+export default function RoleSelector({
+  role,
+  setRole,
+  onContinue,
+  onBack,
+}: RoleSelectorProps) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+  const NextIcon = isRTL ? ArrowLeft : ArrowRight;
+
+  const handleContinue = () => {
+    if (!role) {
+      toast.error(t("private-deal.select_role_error"));
+      return;
+    }
+    onContinue();
+  };
 
   return (
-    <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 p-8">
-      {/* Card Title */}
+    <div className="bg-white rounded-[20px] border border-[#d9dee6] shadow-[0_30px_60px_-25px_rgba(1,15,81,0.35)] p-8 md:p-10">
       <h2
-        className={`text-2xl font-serif font-bold text-[#041443] mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif text-[#081123] tracking-tight mb-1 ${isRTL ? "text-right" : "text-left"}`}
       >
         {t("private-deal.card_title")}
       </h2>
       <p
-        className={`text-gray-500 text-sm mb-8 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-[#545e6f] text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
       >
         {t("private-deal.card_subtitle")}
       </p>
 
-      {/* Role Options Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-        {/* Seller Option */}
-        <div
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <button
+          type="button"
           onClick={() => setRole("seller")}
-          className={`p-6 rounded-2xl cursor-pointer transition-all duration-200 border-[1.5px] shadow-sm ${
+          className={`text-start p-5 rounded-2xl border transition-all duration-200 ${
             role === "seller"
-              ? "border-[#0A3B9E] bg-[#0A3B9E]/5 ring-1 ring-[#0A3B9E]"
-              : "border-gray-200 bg-white hover:border-gray-300"
-          }`}
+              ? "border-[#0a2f94] bg-[rgba(10,47,148,0.05)] shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)]"
+              : "border-[#d9dee6] bg-white hover:border-gray-300"
+          } ${isRTL ? "text-right" : "text-left"}`}
         >
           <div
-            className={`flex items-center gap-3 mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-3 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={role === "seller" ? "#0A3B9E" : "#041443"}
-              strokeWidth="2"
-            >
-              <path d="M3 21h18" />
-              <path d="M9 8h1" />
-              <path d="M9 12h1" />
-              <path d="M9 16h1" />
-              <path d="M14 8h1" />
-              <path d="M14 12h1" />
-              <path d="M14 16h1" />
-              <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
-            </svg>
-            <span className="font-semibold text-base">
+            <Building2
+              className={`w-5 h-5 ${role === "seller" ? "text-[#0a2f94]" : "text-[#081123]"}`}
+            />
+            <span className="font-serif text-lg text-[#081123]">
               {t("private-deal.role_seller_title")}
             </span>
           </div>
-          <p className="text-sm text-gray-500 leading-relaxed text-left">
+          <p className="text-sm text-[#545e6f] leading-relaxed">
             {t("private-deal.role_seller_desc")}
           </p>
-        </div>
+        </button>
 
-        {/* Buyer Option */}
-        <div
+        <button
+          type="button"
           onClick={() => setRole("buyer")}
-          className={`p-6 rounded-2xl cursor-pointer transition-all duration-200 border-[1.5px] shadow-sm ${
+          className={`text-start p-5 rounded-2xl border transition-all duration-200 ${
             role === "buyer"
-              ? "border-[#0A3B9E] bg-[#0A3B9E]/5 ring-1 ring-[#0A3B9E]"
-              : "border-gray-200 bg-white hover:border-gray-300"
-          }`}
+              ? "border-[#0a2f94] bg-[rgba(10,47,148,0.05)] shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)]"
+              : "border-[#d9dee6] bg-white hover:border-gray-300"
+          } ${isRTL ? "text-right" : "text-left"}`}
         >
           <div
-            className={`flex items-center gap-3 mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-3 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={role === "buyer" ? "#0A3B9E" : "#041443"}
-              strokeWidth="2"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            <span className="font-semibold text-base">
+            <User
+              className={`w-5 h-5 ${role === "buyer" ? "text-[#0a2f94]" : "text-[#081123]"}`}
+            />
+            <span className="font-serif text-lg text-[#081123]">
               {t("private-deal.role_buyer_title")}
             </span>
           </div>
-          <p className="text-sm text-gray-500 leading-relaxed text-left">
+          <p className="text-sm text-[#545e6f] leading-relaxed">
             {t("private-deal.role_buyer_desc")}
           </p>
-        </div>
+        </button>
       </div>
 
       <div
-        className={`flex justify-between items-center border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
       >
-        {/* Back Button */}
         <Button
-          variant="ghost"
-          size="sm"
-          className={`flex items-center gap-1 text-gray-400 hover:text-gray-600 ${isRTL ? "flex-row-reverse" : ""}`}
+          variant="outline"
+          size="md"
+          onClick={onBack}
+          leftIcon={<BackIcon className="w-4 h-4" />}
+          className="opacity-70"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className={isRTL ? "rotate-180" : ""}
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
           {t("private-deal.back")}
         </Button>
-
-        {/* Continue Button */}
-        <Button variant="primary" size="lg" className="flex items-center gap-2">
+        <Button
+          variant="primary"
+          size="md"
+          onClick={handleContinue}
+          rightIcon={<NextIcon className="w-4 h-4" />}
+        >
           {t("private-deal.continue")}
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className={isRTL ? "rotate-180" : ""}
-          >
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
         </Button>
       </div>
     </div>

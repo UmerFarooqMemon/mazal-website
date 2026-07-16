@@ -1,51 +1,82 @@
 "use client";
+
+import { Check } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 
-export default function Stepper() {
-  const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
+export type StepStatus = "completed" | "current" | "upcoming";
 
-  const steps = [
-    t("private-deal.stepper_1"),
-    t("private-deal.stepper_2"),
-    t("private-deal.stepper_3"),
-    t("private-deal.stepper_4"),
-    t("private-deal.stepper_5"),
-  ];
+export interface StepItem {
+  key: string;
+  label: string;
+  status: StepStatus;
+}
+
+interface StepperProps {
+  steps: StepItem[];
+}
+
+export default function Stepper({ steps }: StepperProps) {
+  const { locale } = useLocale();
+  const isRTL = locale === "ar";
 
   return (
     <div
-      className={`flex flex-wrap items-center gap-2 md:gap-4 mb-12 overflow-x-auto pb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+      className={`flex flex-wrap gap-3 w-full pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
     >
-      {steps.map((step, index) => (
-        <div
-          key={step}
-          className={`flex items-center gap-2 md:gap-3 shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
-        >
-          {/* Step Number Circle */}
+      {steps.map((step) => {
+        const isCompleted = step.status === "completed";
+        const isCurrent = step.status === "current";
+
+        return (
           <div
-            className={`flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold ${
-              index === 0
-                ? "bg-[#0A3B9E] text-white"
-                : "bg-white border border-gray-200 text-gray-400"
+            key={step.key}
+            className={`flex-1 min-w-[140px] rounded-[14px] border p-3.5 ${
+              isCompleted
+                ? "bg-[#f8f5ef] border-[#e0ae57]/60"
+                : isCurrent
+                  ? "bg-[#f3f5fa] border-[#0a2f94]/25"
+                  : "bg-white border-[#d9dee6]"
             }`}
           >
-            {index + 1}
+            <div
+              className={`flex items-center gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}
+            >
+              <div
+                className={`flex items-center justify-center size-[23px] rounded-full shrink-0 ${
+                  isCompleted
+                    ? "bg-[#e0ae57]"
+                    : isCurrent
+                      ? "bg-[#0a2f94]"
+                      : "bg-[#eaeff7]"
+                }`}
+              >
+                {isCompleted ? (
+                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                ) : (
+                  <span
+                    className={`text-[11px] font-semibold ${
+                      isCurrent ? "text-white" : "text-[#545e6f]"
+                    }`}
+                  >
+                    {steps.findIndex((s) => s.key === step.key) + 1}
+                  </span>
+                )}
+              </div>
+              <span
+                className={`text-[12px] md:text-[13px] font-medium tracking-[0.06em] uppercase ${
+                  isCurrent
+                    ? "text-[#0a2f94]"
+                    : isCompleted
+                      ? "text-[#081123]"
+                      : "text-[#545e6f]"
+                }`}
+              >
+                {step.label}
+              </span>
+            </div>
           </div>
-
-          {/* Step Label */}
-          <span
-            className={`text-xs font-semibold ${index === 0 ? "text-[#0A3B9E]" : "text-gray-400"}`}
-          >
-            {step}
-          </span>
-
-          {/* Connector Line */}
-          {index < 4 && (
-            <div className="w-4 h-px bg-gray-200 hidden md:block"></div>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
