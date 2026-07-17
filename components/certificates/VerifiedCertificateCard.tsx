@@ -89,23 +89,42 @@ export default function VerifiedCertificateCard({
 
   return (
     <div
-      className={`relative w-full rounded-xl md:rounded-2xl overflow-hidden border-2 shadow-[0_12px_30px_-10px_rgba(1,15,81,0.35)] md:shadow-[0_30px_60px_-25px_rgba(1,15,81,0.35)] ${className}`}
-      style={{
-        backgroundColor: "#FBFAF7",
-        borderColor: "rgba(10,47,148,0.2)",
-      }}
+      className={`relative w-full ${
+        data.showPreviewBadge
+          ? isRTL
+            ? "pt-3 pl-4 md:pt-3.5 md:pl-5"
+            : "pt-3 pr-4 md:pt-3.5 md:pr-5"
+          : ""
+      } ${className}`}
     >
-      {data.showPreviewBadge && (
-        <div className="absolute -top-1.5 -right-1.5 z-10 rotate-6">
+      <div className="relative">
+        {data.showPreviewBadge && (
           <div
-            className="px-2 py-0.5 rounded text-[10px] md:text-[11px] font-medium uppercase tracking-[0.08em] text-white"
-            style={{ background: getGradient("primary") }}
+            className={`absolute z-20 pointer-events-none ${
+              isRTL
+                ? "-top-[8px] -left-[12px] md:-top-[10px] md:-left-[16px] -rotate-[10deg]"
+                : "-top-[8px] -right-[12px] md:-top-[10px] md:-right-[16px] rotate-[10deg]"
+            }`}
           >
-            {t("certificates.preview_badge") || "PREVIEW"}
+            <div
+              className="px-2.5 py-0.5 md:px-3 md:py-1 rounded-[6px] text-[9px] md:text-[11px] font-semibold uppercase tracking-[0.08em] text-white"
+              style={{
+                background: getGradient("primary"),
+                boxShadow: "0 2px 8px rgba(0,0,0,0.22)",
+              }}
+            >
+              {t("certificates.preview_badge") || "PREVIEW"}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
+        <div
+          className="relative w-full rounded-xl md:rounded-2xl overflow-hidden border-2 shadow-[0_12px_30px_-10px_rgba(1,15,81,0.35)] md:shadow-[0_30px_60px_-25px_rgba(1,15,81,0.35)]"
+          style={{
+            backgroundColor: "#FBFAF7",
+            borderColor: "rgba(10,47,148,0.2)",
+          }}
+        >
       {/* Header */}
       <div
         className={`flex items-center justify-between gap-3 px-4 py-3 md:px-10 md:py-6 ${isRTL ? "flex-row-reverse" : ""}`}
@@ -416,6 +435,8 @@ export default function VerifiedCertificateCard({
           }}
           aria-hidden
         />
+      </div>
+        </div>
       </div>
     </div>
   );

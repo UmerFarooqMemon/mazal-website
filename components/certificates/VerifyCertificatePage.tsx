@@ -10,9 +10,12 @@ import { Button } from "@/components/ui";
 import VerifiedCertificateCard, {
   SAMPLE_CERTIFICATE,
   type CertificateDisplayData,
-  type PlatePreviewConfig,
 } from "@/components/certificates/VerifiedCertificateCard";
 import VerifyCertificateSkeleton from "@/components/skeletons/certificates/VerifyCertificateSkeleton";
+import {
+  buildPlatePreviewLookup,
+  resolvePlatePreview,
+} from "@/lib/plate-preview";
 import type {
   CertificateVerifyCertificate,
   CertificateVerifyResponse,
@@ -131,47 +134,6 @@ function mapVerifyResponse(
   };
 }
 
-function buildPreviewMap(optionsData: {
-  emirates?: {
-    variants?: {
-      key?: string;
-      plate_type?: string;
-      plate_design?: string;
-      preview?: PlatePreviewConfig;
-    }[];
-  }[];
-}): Record<string, PlatePreviewConfig> {
-  const map: Record<string, PlatePreviewConfig> = {};
-  for (const em of optionsData?.emirates || []) {
-    for (const v of em?.variants || []) {
-      if (!v?.preview) continue;
-      if (v.key) map[v.key] = v.preview;
-      if (v.plate_type && v.plate_design) {
-        map[`${v.plate_type}_${v.plate_design}`] = v.preview;
-      }
-      // First variant for a plate_type wins as fallback (e.g. classic_car)
-      if (v.plate_type && !map[v.plate_type]) {
-        map[v.plate_type] = v.preview;
-      }
-    }
-  }
-  return map;
-}
-
-function resolvePlatePreview(
-  previewMap: Record<string, PlatePreviewConfig>,
-  data: CertificateDisplayData,
-): PlatePreviewConfig | null {
-  return (
-    (data.plateVariant && previewMap[data.plateVariant]) ||
-    (data.plateType &&
-      data.plateDesign &&
-      previewMap[`${data.plateType}_${data.plateDesign}`]) ||
-    (data.plateType && previewMap[data.plateType]) ||
-    null
-  );
-}
-
 async function attachPlatePreview(
   mapped: CertificateDisplayData,
   locale: string,
@@ -179,8 +141,8 @@ async function attachPlatePreview(
   try {
     const res = await fetch(`/api/number-plates/options?locale=${locale}`);
     const json = await res.json();
-    const previewMap = buildPreviewMap(json?.data || {});
-    const platePreview = resolvePlatePreview(previewMap, mapped);
+    const lookup = buildPlatePreviewLookup(json?.data || {});
+    const platePreview = resolvePlatePreview(lookup, mapped);
     return { ...mapped, platePreview };
   } catch {
     return mapped;

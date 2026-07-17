@@ -8,35 +8,12 @@ import { useTheme } from "@/context/ThemeContext";
 import VerifiedCertificateCard, {
   SAMPLE_CERTIFICATE,
   type CertificateDisplayData,
-  type PlatePreviewConfig,
 } from "@/components/certificates/VerifiedCertificateCard";
 import VerifyPreviewSkeleton from "@/components/skeletons/certificates/VerifyPreviewSkeleton";
-
-function buildPreviewMap(optionsData: {
-  emirates?: {
-    variants?: {
-      key?: string;
-      plate_type?: string;
-      plate_design?: string;
-      preview?: PlatePreviewConfig;
-    }[];
-  }[];
-}): Record<string, PlatePreviewConfig> {
-  const map: Record<string, PlatePreviewConfig> = {};
-  for (const em of optionsData?.emirates || []) {
-    for (const v of em?.variants || []) {
-      if (!v?.preview) continue;
-      if (v.key) map[v.key] = v.preview;
-      if (v.plate_type && v.plate_design) {
-        map[`${v.plate_type}_${v.plate_design}`] = v.preview;
-      }
-      if (v.plate_type && !map[v.plate_type]) {
-        map[v.plate_type] = v.preview;
-      }
-    }
-  }
-  return map;
-}
+import {
+  buildPlatePreviewLookup,
+  resolvePlatePreview,
+} from "@/lib/plate-preview";
 
 async function ensurePlatePreview(
   data: CertificateDisplayData,
@@ -48,14 +25,8 @@ async function ensurePlatePreview(
   try {
     const res = await fetch(`/api/number-plates/options?locale=${locale}`);
     const json = await res.json();
-    const previewMap = buildPreviewMap(json?.data || {});
-    const platePreview =
-      (data.plateVariant && previewMap[data.plateVariant]) ||
-      (data.plateType &&
-        data.plateDesign &&
-        previewMap[`${data.plateType}_${data.plateDesign}`]) ||
-      (data.plateType && previewMap[data.plateType]) ||
-      null;
+    const lookup = buildPlatePreviewLookup(json?.data || {});
+    const platePreview = resolvePlatePreview(lookup, data);
     return { ...data, platePreview };
   } catch {
     return data;
