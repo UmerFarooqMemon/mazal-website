@@ -149,9 +149,7 @@ export default function TrendingSection() {
             code={plate.code}
             price={plate.price}
             type={
-              translated.types[plate.type as keyof typeof translated.types] as
-                | "DIRECT"
-                | "AUCTION"
+              translated.types[plate.type as keyof typeof translated.types]
             }
             views={plate.views}
             seller={
@@ -161,6 +159,13 @@ export default function TrendingSection() {
             }
             rating={plate.rating}
             isFavorite={plate.isFavorite}
+            tier={
+              plate.type === "AUCTION"
+                ? "gold"
+                : plate.isFavorite
+                  ? "silver"
+                  : "diamond"
+            }
           />
         ))}
       </div>

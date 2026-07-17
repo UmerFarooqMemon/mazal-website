@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import RoleSelector from "@/components/private-deal/RoleSelector";
 import DealSummary, { type DealData } from "@/components/private-deal/DealSummary";
@@ -25,18 +26,20 @@ import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 
 export default function PrivateDealPage() {
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
+  const { getColor, loading: themeLoading } = useTheme();
   const router = useRouter();
   const isRTL = locale === "ar";
 
   const [step, setStep] = useState(0);
   const [deal, setDeal] = useState<DealData>({
     role: null,
-    emirate: "DUBAI",
+    emirate: "dubai",
     plateType: "private",
-    code: "AA",
-    digit: "777",
-    price: 450000,
+    plateVariant: "private_new_colorful",
+    code: "",
+    digit: "",
+    price: 0,
   });
   const [details, setDetails] = useState<ConfirmDetailsData>({
     fullName: "",
@@ -276,26 +279,53 @@ export default function PrivateDealPage() {
 
   const showSplitAllocation = isBuyer && step >= 3 && paymentMode === "split";
 
+  if (themeLoading || localeLoading) {
+    return (
+      <div
+        className="min-h-screen"
+        style={{ backgroundColor: getColor("background") }}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#fbfaf7]">
-      <section className="border-b border-[#d9dee6] bg-gradient-to-b from-[rgba(234,239,247,0.4)] to-[#fbfaf7]">
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: getColor("background") }}
+    >
+      <section
+        className="border-b"
+        style={{
+          borderColor: getColor("border"),
+          background: `linear-gradient(to bottom, ${getColor("primaryLight")}66, ${getColor("background")})`,
+        }}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
           <div
-            className={`inline-flex items-center gap-2 bg-[rgba(10,47,148,0.05)] border border-[rgba(10,47,148,0.2)] text-[#0a2f94] text-[12px] tracking-[0.2em] uppercase px-3.5 py-1.5 rounded-full mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`inline-flex items-center gap-2 text-[12px] tracking-[0.2em] uppercase px-3.5 py-1.5 rounded-full mb-4 border ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{
+              backgroundColor: `${getColor("primary")}0D`,
+              borderColor: `${getColor("primary")}33`,
+              color: getColor("primary"),
+            }}
           >
             <Shield className="w-3.5 h-3.5" />
             {t("private-deal.badge")}
           </div>
 
           <h1
-            className={`max-w-3xl font-serif text-4xl md:text-5xl text-[#081123] tracking-tight leading-[1.15] mb-4 ${isRTL ? "text-right mr-0 ml-auto" : "text-left"}`}
+            className={`max-w-3xl font-serif text-4xl md:text-5xl tracking-tight leading-[1.15] mb-4 ${isRTL ? "text-right mr-0 ml-auto" : "text-left"}`}
+            style={{ color: getColor("primaryText") }}
           >
             <span>{t("private-deal.title_line1")} </span>
-            <span className="text-[#0a2f94]">{t("private-deal.title_line2")}</span>
+            <span style={{ color: getColor("primary") }}>
+              {t("private-deal.title_line2")}
+            </span>
           </h1>
 
           <p
-            className={`max-w-2xl text-[#545e6f] text-base md:text-lg leading-relaxed ${isRTL ? "text-right mr-0 ml-auto" : "text-left"}`}
+            className={`max-w-2xl text-base md:text-lg leading-relaxed ${isRTL ? "text-right mr-0 ml-auto" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
           >
             {t("private-deal.description")}
           </p>

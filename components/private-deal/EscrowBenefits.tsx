@@ -2,9 +2,11 @@
 
 import { Shield, Lock, Handshake, CreditCard, Sparkles } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function EscrowBenefits() {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
 
   const bullets = [
@@ -15,15 +17,29 @@ export default function EscrowBenefits() {
   ];
 
   return (
-    <div className="bg-[rgba(224,174,87,0.05)] border border-[rgba(224,174,87,0.4)] rounded-2xl p-6">
+    <div
+      className="rounded-2xl p-6 border"
+      style={{
+        backgroundColor: `${getColor("accent")}0D`,
+        borderColor: `${getColor("accent")}66`,
+      }}
+    >
       <div
-        className={`flex items-center gap-2 text-[#081123] font-medium mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center gap-2 font-medium mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+        style={{ color: getColor("primaryText") }}
       >
-        <Sparkles className="w-4 h-4 text-[#e0ae57] shrink-0" strokeWidth={2} />
+        <Sparkles
+          className="w-4 h-4 shrink-0"
+          strokeWidth={2}
+          style={{ color: getColor("accent") }}
+        />
         <span className="text-sm">{t("private-deal.why_escrow")}</span>
       </div>
 
-      <ul className="space-y-2.5 text-sm text-[#545e6f]">
+      <ul
+        className="space-y-2.5 text-sm"
+        style={{ color: getColor("secondaryText") }}
+      >
         {bullets.map((bullet) => {
           const Icon = bullet.icon;
           return (
@@ -32,8 +48,9 @@ export default function EscrowBenefits() {
               className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse text-right" : ""}`}
             >
               <Icon
-                className="w-4 h-4 text-[#0a2f94] mt-0.5 shrink-0"
+                className="w-4 h-4 mt-0.5 shrink-0"
                 strokeWidth={2}
+                style={{ color: getColor("primary") }}
               />
               <span>{t(`private-deal.${bullet.key}`)}</span>
             </li>

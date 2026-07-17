@@ -91,22 +91,46 @@ export interface PreviewsListResponse {
 }
 
 // Certificate Verification (public)
-export interface CertificateVerifyResponse {
-  data: {
-    valid: boolean;
-    certificate_number: string;
-    plate: {
-      emirate: string;
-      plate_type: string;
-      plate_code: string;
-      plate_digits: string;
-      plate_design: string;
-    };
-    assessed_value: number;
-    issued_at: string;
-    expires_at: string;
-    status: string;
+export interface CertificateVerifyCertificate {
+  certificate_number: string;
+  is_valid?: boolean;
+  is_expired?: boolean;
+  issued_at?: string;
+  valid_until?: string;
+  expires_at?: string;
+  display_plate?: string;
+  emirate?: string;
+  emirate_label?: string;
+  plate_type?: string;
+  plate_type_label?: string;
+  plate_variant?: string;
+  plate_design?: string;
+  plate_code?: string;
+  plate_digits?: string;
+  valued_amount?: string | number;
+  assessed_value?: number;
+  fair_market_low?: string | number;
+  fair_market_high?: string | number;
+  certificate_purpose?: string;
+  holder_name?: string;
+  /** Legacy nested plate shape (older API) */
+  plate?: {
+    emirate?: string;
+    plate_type?: string;
+    plate_code?: string;
+    plate_digits?: string;
+    plate_design?: string;
   };
+  valid?: boolean;
+  status?: string;
+}
+
+export interface CertificateVerifyResponse {
+  status?: boolean;
+  message?: string;
+  data: {
+    certificate?: CertificateVerifyCertificate;
+  } & Partial<CertificateVerifyCertificate>;
 }
 
 // ----- Generic API Request Helper -----

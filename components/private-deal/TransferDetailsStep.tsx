@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Copy, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 
 interface TransferDetailsStepProps {
@@ -49,6 +50,7 @@ export default function TransferDetailsStep({
   onComplete,
 }: TransferDetailsStepProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -67,14 +69,22 @@ export default function TransferDetailsStep({
   };
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#d9dee6] shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8">
+    <div
+      className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8"
+      style={{
+        backgroundColor: getColor("surface"),
+        borderColor: getColor("border"),
+      }}
+    >
       <h2
-        className={`text-2xl font-serif text-[#081123] mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("primaryText") }}
       >
         {t("private-deal.transfer_title")}
       </h2>
       <p
-        className={`text-sm text-[#545e6f] mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.transfer_subtitle")}
       </p>
@@ -90,11 +100,23 @@ export default function TransferDetailsStep({
           return (
             <div
               key={field.key}
-              className={`flex items-center justify-between gap-3 rounded-xl border border-[#d9dee6] bg-[#fafbfd] px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+              className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+              style={{
+                borderColor: getColor("border"),
+                backgroundColor: getColor("primaryLight"),
+              }}
             >
               <div className="min-w-0">
-                <div className="text-xs text-[#8b95a7] mb-0.5">{label}</div>
-                <div className="text-sm font-medium text-[#081123] truncate">
+                <div
+                  className="text-xs mb-0.5"
+                  style={{ color: getColor("mutedText") }}
+                >
+                  {label}
+                </div>
+                <div
+                  className="text-sm font-medium truncate"
+                  style={{ color: getColor("primaryText") }}
+                >
                   {value}
                 </div>
               </div>
@@ -102,11 +124,15 @@ export default function TransferDetailsStep({
                 <button
                   type="button"
                   onClick={() => copyValue(field.key, value)}
-                  className="shrink-0 p-2 rounded-lg hover:bg-white text-[#0a2f94] transition-colors"
+                  className="shrink-0 p-2 rounded-lg transition-colors"
+                  style={{ color: getColor("primary") }}
                   aria-label="Copy"
                 >
                   {copiedKey === field.key ? (
-                    <Check className="w-4 h-4 text-green-600" />
+                    <Check
+                      className="w-4 h-4"
+                      style={{ color: getColor("success") }}
+                    />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
@@ -124,15 +150,20 @@ export default function TransferDetailsStep({
           type="checkbox"
           checked={agreed}
           onChange={(e) => setAgreed(e.target.checked)}
-          className="mt-1 size-4 rounded border-[#d9dee6] accent-[#0a2f94]"
+          className="mt-1 size-4 rounded"
+          style={{
+            borderColor: getColor("border"),
+            accentColor: getColor("primary"),
+          }}
         />
-        <span className="text-sm text-[#545e6f]">
+        <span className="text-sm" style={{ color: getColor("secondaryText") }}>
           {t("private-deal.agree_terms")}
         </span>
       </label>
 
       <div
-        className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        style={{ borderColor: getColor("border") }}
       >
         <Button
           variant="outline"

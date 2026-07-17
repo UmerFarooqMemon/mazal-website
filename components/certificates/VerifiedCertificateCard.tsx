@@ -2,6 +2,18 @@
 
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+
+export type PlatePreviewConfig = {
+  background_image_url?: string;
+  width?: number;
+  height?: number;
+  aspect_ratio?: string;
+  overlays?: {
+    plate_code?: Record<string, unknown>;
+    plate_digits?: Record<string, unknown>;
+  };
+};
 
 export type CertificateDisplayData = {
   certificateNumber: string;
@@ -18,6 +30,14 @@ export type CertificateDisplayData = {
   signatory2Name?: string;
   signatory2Title?: string;
   showPreviewBadge?: boolean;
+  emirate?: string;
+  emirateLabel?: string;
+  plateType?: string;
+  plateVariant?: string;
+  plateDesign?: string;
+  holderName?: string;
+  /** Variant preview from /api/number-plates/options — drives PlateWithOverlay */
+  platePreview?: PlatePreviewConfig | null;
 };
 
 function formatAed(value: number) {
@@ -147,32 +167,59 @@ export default function VerifiedCertificateCard({
           </p>
         </div>
 
-        {/* Plate */}
+        {/* Plate — same PlateWithOverlay as certificates/request live preview */}
         <div className="relative mx-auto w-full max-w-[340px] md:max-w-[440px]">
-          <div className="relative w-full aspect-[748/180]">
-            <img
-              src="/plate-empty.png"
-              alt={t("certificates.plate_preview") || "Plate"}
-              className="absolute inset-0 w-full h-full object-contain"
-            />
+          {data.platePreview?.background_image_url ? (
             <div
-              className={`absolute inset-0 flex items-center justify-between px-[8%] ${isRTL ? "flex-row-reverse" : ""}`}
+              style={{
+                marginTop: "-8%",
+                marginBottom: "-8%",
+                overflow: "hidden",
+                mixBlendMode: "multiply",
+              }}
             >
-              <span
-                className="font-serif font-bold text-[28px] sm:text-[36px] md:text-[48px] tracking-wide leading-none"
-                style={{ color: getColor("primaryText") || "#081123" }}
-              >
-                {data.plateCode}
-              </span>
-              <span className="flex-1" aria-hidden />
-              <span
-                className="font-serif font-bold text-[28px] sm:text-[36px] md:text-[48px] tracking-wide leading-none"
-                style={{ color: getColor("primaryText") || "#081123" }}
-              >
-                {data.plateDigits}
-              </span>
+              <PlateWithOverlay
+                plate_code={
+                  !data.plateCode || data.plateCode === "—"
+                    ? ""
+                    : data.plateCode
+                }
+                plate_digits={
+                  !data.plateDigits || data.plateDigits === "—"
+                    ? ""
+                    : data.plateDigits
+                }
+                emirate={data.emirateLabel || data.emirate || "DUBAI"}
+                preview={data.platePreview as any}
+                isRTL={isRTL}
+              />
             </div>
-          </div>
+          ) : (
+            <div className="relative w-full aspect-[748/180]">
+              <img
+                src="/plate-empty.png"
+                alt={t("certificates.plate_preview") || "Plate"}
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+              <div
+                className={`absolute inset-0 flex items-center justify-between px-[8%] ${isRTL ? "flex-row-reverse" : ""}`}
+              >
+                <span
+                  className="font-serif font-bold text-[28px] sm:text-[36px] md:text-[48px] tracking-wide leading-none"
+                  style={{ color: getColor("primaryText") || "#081123" }}
+                >
+                  {data.plateCode}
+                </span>
+                <span className="flex-1" aria-hidden />
+                <span
+                  className="font-serif font-bold text-[28px] sm:text-[36px] md:text-[48px] tracking-wide leading-none"
+                  style={{ color: getColor("primaryText") || "#081123" }}
+                >
+                  {data.plateDigits}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Values */}

@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 
 interface OtpVerificationStepProps {
@@ -19,6 +20,7 @@ export default function OtpVerificationStep({
   onContinue,
 }: OtpVerificationStepProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -57,14 +59,22 @@ export default function OtpVerificationStep({
   };
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#d9dee6] shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8">
+    <div
+      className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8"
+      style={{
+        backgroundColor: getColor("surface"),
+        borderColor: getColor("border"),
+      }}
+    >
       <h2
-        className={`text-2xl font-serif text-[#081123] mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("primaryText") }}
       >
         {t("private-deal.otp_title")}
       </h2>
       <p
-        className={`text-sm text-[#545e6f] mb-8 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-8 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.otp_subtitle")}
       </p>
@@ -85,13 +95,19 @@ export default function OtpVerificationStep({
             value={digit}
             onChange={(e) => setDigit(index, e.target.value)}
             onKeyDown={(e) => onKeyDown(index, e)}
-            className="w-11 h-12 sm:w-14 sm:h-14 rounded-xl border border-[#d9dee6] bg-white text-center text-xl font-semibold text-[#081123] focus:outline-none focus:border-[#0a2f94] focus:ring-2 focus:ring-[#0a2f94]/15"
+            className="w-11 h-12 sm:w-14 sm:h-14 rounded-xl border text-center text-xl font-semibold focus:outline-none focus:ring-2"
+            style={{
+              borderColor: getColor("border"),
+              backgroundColor: getColor("surface"),
+              color: getColor("primaryText"),
+            }}
           />
         ))}
       </div>
 
       <div
-        className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        style={{ borderColor: getColor("border") }}
       >
         <Button
           variant="outline"

@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 
@@ -35,6 +36,7 @@ export default function ConfirmDetailsStep({
   continueLabel,
 }: ConfirmDetailsStepProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -58,14 +60,22 @@ export default function ConfirmDetailsStep({
         : t("private-deal.emirates_id");
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#d9dee6] shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8">
+    <div
+      className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8"
+      style={{
+        backgroundColor: getColor("surface"),
+        borderColor: getColor("border"),
+      }}
+    >
       <h2
-        className={`text-2xl font-serif text-[#081123] mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("primaryText") }}
       >
         {t("private-deal.confirm_title")}
       </h2>
       <p
-        className={`text-sm text-[#545e6f] mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.confirm_subtitle")}
       </p>
@@ -143,11 +153,24 @@ export default function ConfirmDetailsStep({
       </div>
 
       <div
-        className={`flex gap-3 rounded-2xl border border-[rgba(10,47,148,0.25)] bg-[rgba(10,47,148,0.04)] p-4 mb-6 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+        className={`flex gap-3 rounded-2xl border p-4 mb-6 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+        style={{
+          borderColor: `${getColor("primary")}40`,
+          backgroundColor: `${getColor("primary")}0D`,
+        }}
       >
-        <ShieldCheck className="w-5 h-5 text-[#0a2f94] shrink-0 mt-0.5" />
-        <p className="text-sm text-[#545e6f] leading-relaxed">
-          <span className="font-medium text-[#081123]">
+        <ShieldCheck
+          className="w-5 h-5 shrink-0 mt-0.5"
+          style={{ color: getColor("primary") }}
+        />
+        <p
+          className="text-sm leading-relaxed"
+          style={{ color: getColor("secondaryText") }}
+        >
+          <span
+            className="font-medium"
+            style={{ color: getColor("primaryText") }}
+          >
             {t("private-deal.verify_box_title")}{" "}
           </span>
           {t("private-deal.verify_box_desc")}
@@ -155,7 +178,8 @@ export default function ConfirmDetailsStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        style={{ borderColor: getColor("border") }}
       >
         <Button
           variant="outline"

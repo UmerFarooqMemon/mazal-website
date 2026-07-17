@@ -10,8 +10,13 @@ import { Button } from "@/components/ui";
 import VerifiedCertificateCard, {
   SAMPLE_CERTIFICATE,
   type CertificateDisplayData,
+  type PlatePreviewConfig,
 } from "@/components/certificates/VerifiedCertificateCard";
-import type { CertificateVerifyResponse } from "@/services/api";
+import VerifyCertificateSkeleton from "@/components/skeletons/certificates/VerifyCertificateSkeleton";
+import type {
+  CertificateVerifyCertificate,
+  CertificateVerifyResponse,
+} from "@/services/api";
 
 function formatIssuedLabel(
   issuedAt?: string,
@@ -39,20 +44,147 @@ function formatIssuedLabel(
   return `Issued ${issuedStr} · Valid ${days} days`;
 }
 
+function toAmount(value?: string | number | null): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.round(value);
+  }
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number.parseFloat(value.replace(/,/g, ""));
+    return Number.isFinite(parsed) ? Math.round(parsed) : 0;
+  }
+  return 0;
+}
+
+/** Split "M777" / "M 777" / "55555" into code + digits when API only sends display_plate. */
+function parseDisplayPlate(display?: string): {
+  plateCode: string;
+  plateDigits: string;
+} {
+  const raw = (display || "").trim();
+  if (!raw) return { plateCode: "", plateDigits: "" };
+
+  const match = raw.match(/^([A-Za-z]+)\s*[-]?\s*(\d+)$/);
+  if (match) {
+    return { plateCode: match[1].toUpperCase(), plateDigits: match[2] };
+  }
+
+  if (/^\d+$/.test(raw)) {
+    return { plateCode: "", plateDigits: raw };
+  }
+
+  return { plateCode: "", plateDigits: raw };
+}
+
+function unwrapCertificate(
+  result: CertificateVerifyResponse | Record<string, unknown>,
+): CertificateVerifyCertificate {
+  const root = (result as CertificateVerifyResponse)?.data ?? result;
+  const nested = (root as CertificateVerifyResponse["data"])?.certificate;
+  if (nested && typeof nested === "object") {
+    return nested;
+  }
+  return root as CertificateVerifyCertificate;
+}
+
 function mapVerifyResponse(
-  payload: CertificateVerifyResponse["data"],
+  payload: CertificateVerifyCertificate,
+  fallbackCode: string,
 ): CertificateDisplayData {
-  const assessed = payload.assessed_value || 0;
+  const fromPlate = payload.plate;
+  const parsed = parseDisplayPlate(payload.display_plate);
+
+  const plateCode =
+    payload.plate_code || fromPlate?.plate_code || parsed.plateCode || "";
+  const plateDigits =
+    payload.plate_digits ||
+    fromPlate?.plate_digits ||
+    parsed.plateDigits ||
+    "";
+
+  const assessed =
+    toAmount(payload.valued_amount) || toAmount(payload.assessed_value);
+  const marketLow =
+    toAmount(payload.fair_market_low) ||
+    (assessed ? Math.round(assessed * 0.88) : 0);
+  const marketHigh =
+    toAmount(payload.fair_market_high) ||
+    (assessed ? Math.round(assessed * 1.14) : 0);
+
+  const expiresAt = payload.valid_until || payload.expires_at;
+
   return {
-    certificateNumber: payload.certificate_number,
-    plateCode: payload.plate?.plate_code || "—",
-    plateDigits: payload.plate?.plate_digits || "—",
+    certificateNumber: payload.certificate_number || fallbackCode,
+    // Keep empty string when no code (classic plates) so PlateWithOverlay can hide it
+    plateCode: plateCode || (plateDigits ? "" : "—"),
+    plateDigits: plateDigits || "—",
     assessedValue: assessed,
-    marketLow: Math.round(assessed * 0.88),
-    marketHigh: Math.round(assessed * 1.14),
-    issuedLabel: formatIssuedLabel(payload.issued_at, payload.expires_at),
+    marketLow,
+    marketHigh,
+    issuedLabel: formatIssuedLabel(payload.issued_at, expiresAt),
     showPreviewBadge: false,
+    emirate: payload.emirate || fromPlate?.emirate,
+    emirateLabel: payload.emirate_label,
+    plateType: payload.plate_type || fromPlate?.plate_type,
+    plateVariant: payload.plate_variant,
+    plateDesign: payload.plate_design || fromPlate?.plate_design,
+    holderName: payload.holder_name,
   };
+}
+
+function buildPreviewMap(optionsData: {
+  emirates?: {
+    variants?: {
+      key?: string;
+      plate_type?: string;
+      plate_design?: string;
+      preview?: PlatePreviewConfig;
+    }[];
+  }[];
+}): Record<string, PlatePreviewConfig> {
+  const map: Record<string, PlatePreviewConfig> = {};
+  for (const em of optionsData?.emirates || []) {
+    for (const v of em?.variants || []) {
+      if (!v?.preview) continue;
+      if (v.key) map[v.key] = v.preview;
+      if (v.plate_type && v.plate_design) {
+        map[`${v.plate_type}_${v.plate_design}`] = v.preview;
+      }
+      // First variant for a plate_type wins as fallback (e.g. classic_car)
+      if (v.plate_type && !map[v.plate_type]) {
+        map[v.plate_type] = v.preview;
+      }
+    }
+  }
+  return map;
+}
+
+function resolvePlatePreview(
+  previewMap: Record<string, PlatePreviewConfig>,
+  data: CertificateDisplayData,
+): PlatePreviewConfig | null {
+  return (
+    (data.plateVariant && previewMap[data.plateVariant]) ||
+    (data.plateType &&
+      data.plateDesign &&
+      previewMap[`${data.plateType}_${data.plateDesign}`]) ||
+    (data.plateType && previewMap[data.plateType]) ||
+    null
+  );
+}
+
+async function attachPlatePreview(
+  mapped: CertificateDisplayData,
+  locale: string,
+): Promise<CertificateDisplayData> {
+  try {
+    const res = await fetch(`/api/number-plates/options?locale=${locale}`);
+    const json = await res.json();
+    const previewMap = buildPreviewMap(json?.data || {});
+    const platePreview = resolvePlatePreview(previewMap, mapped);
+    return { ...mapped, platePreview };
+  } catch {
+    return mapped;
+  }
 }
 
 export default function VerifyCertificatePage() {
@@ -102,18 +234,34 @@ export default function VerifyCertificatePage() {
         );
       }
 
-      const data = (result.data || result) as CertificateVerifyResponse["data"];
-      if (data?.valid === false) {
+      if (result.status === false) {
+        throw new Error(
+          result.message ||
+            t("certificates.verify_invalid") ||
+            "This certificate could not be verified",
+        );
+      }
+
+      const cert = unwrapCertificate(result);
+
+      if (cert.is_valid === false || cert.valid === false) {
         throw new Error(
           t("certificates.verify_invalid") ||
             "This certificate could not be verified",
         );
       }
 
-      const mapped = mapVerifyResponse({
-        ...data,
-        certificate_number: data.certificate_number || certificateCode,
-      });
+      if (cert.is_expired === true) {
+        throw new Error(
+          t("certificates.verify_expired") ||
+            "This certificate has expired",
+        );
+      }
+
+      const mapped = await attachPlatePreview(
+        mapVerifyResponse(cert, certificateCode),
+        locale,
+      );
       setCertificate(mapped);
       setCode(certificateCode);
       setMobileView("preview");
@@ -160,11 +308,7 @@ export default function VerifyCertificatePage() {
   }, []);
 
   if (themeLoading || localeLoading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-[#FBFAF7]">
-        <div className="h-8 w-8 rounded-full border-2 border-[#0A2F94] border-t-transparent animate-spin" />
-      </div>
-    );
+    return <VerifyCertificateSkeleton />;
   }
 
   const BackButton = ({ onClick }: { onClick: () => void }) => (
@@ -272,8 +416,9 @@ export default function VerifyCertificatePage() {
           {t("certificates.live_preview_title") || "Live Preview"}
         </h1>
 
-        <VerifiedCertificateCard data={displayCertificate} />
-
+        <VerifiedCertificateCard
+          data={{ ...displayCertificate, showPreviewBadge: true }}
+        />
         <div className="mt-10">
           <div
             className="h-px w-full mb-7"
@@ -363,11 +508,10 @@ export default function VerifyCertificatePage() {
             <VerifiedCertificateCard
               data={{
                 ...displayCertificate,
-                showPreviewBadge: !certificate,
+                showPreviewBadge: true,
               }}
               className="max-w-[896px]"
-            />
-          </div>
+            />          </div>
         </section>
       </div>
     </div>

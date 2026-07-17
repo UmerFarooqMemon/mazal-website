@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export type StepStatus = "completed" | "current" | "upcoming";
 
@@ -17,6 +18,7 @@ interface StepperProps {
 
 export default function Stepper({ steps }: StepperProps) {
   const { locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
 
   return (
@@ -30,46 +32,61 @@ export default function Stepper({ steps }: StepperProps) {
         return (
           <div
             key={step.key}
-            className={`flex-1 min-w-[140px] rounded-[14px] border p-3.5 ${
+            className="flex-1 min-w-[140px] rounded-[14px] border p-3.5"
+            style={
               isCompleted
-                ? "bg-[#f8f5ef] border-[#e0ae57]/60"
+                ? {
+                    backgroundColor: `${getColor("accent")}14`,
+                    borderColor: `${getColor("accent")}99`,
+                  }
                 : isCurrent
-                  ? "bg-[#f3f5fa] border-[#0a2f94]/25"
-                  : "bg-white border-[#d9dee6]"
-            }`}
+                  ? {
+                      backgroundColor: getColor("primaryLight"),
+                      borderColor: `${getColor("primary")}40`,
+                    }
+                  : {
+                      backgroundColor: getColor("surface"),
+                      borderColor: getColor("border"),
+                    }
+            }
           >
             <div
               className={`flex items-center gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <div
-                className={`flex items-center justify-center size-[23px] rounded-full shrink-0 ${
-                  isCompleted
-                    ? "bg-[#e0ae57]"
+                className="flex items-center justify-center size-[23px] rounded-full shrink-0"
+                style={{
+                  backgroundColor: isCompleted
+                    ? getColor("accent")
                     : isCurrent
-                      ? "bg-[#0a2f94]"
-                      : "bg-[#eaeff7]"
-                }`}
+                      ? getColor("primary")
+                      : getColor("primaryLight"),
+                }}
               >
                 {isCompleted ? (
                   <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                 ) : (
                   <span
-                    className={`text-[11px] font-semibold ${
-                      isCurrent ? "text-white" : "text-[#545e6f]"
-                    }`}
+                    className="text-[11px] font-semibold"
+                    style={{
+                      color: isCurrent
+                        ? "#fff"
+                        : getColor("secondaryText"),
+                    }}
                   >
                     {steps.findIndex((s) => s.key === step.key) + 1}
                   </span>
                 )}
               </div>
               <span
-                className={`text-[12px] md:text-[13px] font-medium tracking-[0.06em] uppercase ${
-                  isCurrent
-                    ? "text-[#0a2f94]"
+                className="text-[12px] md:text-[13px] font-medium tracking-[0.06em] uppercase"
+                style={{
+                  color: isCurrent
+                    ? getColor("primary")
                     : isCompleted
-                      ? "text-[#081123]"
-                      : "text-[#545e6f]"
-                }`}
+                      ? getColor("primaryText")
+                      : getColor("secondaryText"),
+                }}
               >
                 {step.label}
               </span>

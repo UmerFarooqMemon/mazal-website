@@ -28,7 +28,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium leading-none mb-2 ${isRTL ? "text-right" : "text-left"}`}
             style={{ color: getColor("secondaryText") }}
           >
             {label}
@@ -40,7 +40,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {/* Left / Right Icon */}
           {icon && (
             <div
-              className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 pointer-events-none`}
+              className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center`}
               style={{ color: getColor("mutedText") }}
             >
               {icon}

@@ -16,6 +16,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import type { PaymentMethod, SplitPaymentEntry } from "./PaymentMethodStep";
@@ -52,6 +53,7 @@ export default function SplitPaymentProcessStep({
   onComplete,
 }: SplitPaymentProcessStepProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const meta = METHOD_META[payment.method];
@@ -86,19 +88,41 @@ export default function SplitPaymentProcessStep({
       : t("private-deal.pay_now");
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#d9dee6] shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8">
-      <div className="rounded-2xl border border-[#d9dee6] overflow-hidden">
+    <div
+      className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8"
+      style={{
+        backgroundColor: getColor("surface"),
+        borderColor: getColor("border"),
+      }}
+    >
+      <div
+        className="rounded-2xl border overflow-hidden"
+        style={{ borderColor: getColor("border") }}
+      >
         <div
-          className={`flex items-center gap-3 px-4 py-3.5 bg-[#fafbfd] border-b border-[#eef1f6] ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-3 px-4 py-3.5 border-b ${isRTL ? "flex-row-reverse" : ""}`}
+          style={{
+            backgroundColor: getColor("primaryLight"),
+            borderColor: getColor("border"),
+          }}
         >
-          <div className="size-10 rounded-xl bg-[#0a2f94]/10 text-[#0a2f94] flex items-center justify-center shrink-0">
+          <div
+            className="size-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: `${getColor("primary")}1A`,
+              color: getColor("primary"),
+            }}
+          >
             <Icon className="w-5 h-5" />
           </div>
           <div className={`min-w-0 ${isRTL ? "text-right" : "text-left"}`}>
-            <div className="font-medium text-[#081123]">
+            <div
+              className="font-medium"
+              style={{ color: getColor("primaryText") }}
+            >
               {t(`private-deal.${meta.titleKey}`)}
             </div>
-            <div className="text-sm text-[#8b95a7]">
+            <div className="text-sm" style={{ color: getColor("mutedText") }}>
               {t("private-deal.secure_online")}
             </div>
           </div>
@@ -109,20 +133,34 @@ export default function SplitPaymentProcessStep({
             <>
               <div>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 text-[#545e6f] ${isRTL ? "text-right" : "text-left"}`}
+                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.upload_payment_proof")}
                 </label>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="w-full rounded-xl border border-dashed border-[#d9dee6] bg-[#fafbfd] py-10 px-4 text-center hover:border-[#0a2f94]/40 transition-colors"
+                  className="w-full rounded-xl border border-dashed py-10 px-4 text-center transition-colors"
+                  style={{
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("primaryLight"),
+                  }}
                 >
-                  <Upload className="w-[18px] h-[18px] text-[#0a2f94] mx-auto mb-2" />
-                  <div className="text-sm font-medium text-[#081123]">
+                  <Upload
+                    className="w-[18px] h-[18px] mx-auto mb-2"
+                    style={{ color: getColor("primary") }}
+                  />
+                  <div
+                    className="text-sm font-medium"
+                    style={{ color: getColor("primaryText") }}
+                  >
                     {proofName || t("private-deal.click_upload_proof")}
                   </div>
-                  <div className="text-xs text-[#8b95a7] mt-1">
+                  <div
+                    className="text-xs mt-1"
+                    style={{ color: getColor("mutedText") }}
+                  >
                     {t("private-deal.upload_hint")}
                   </div>
                 </button>
@@ -197,15 +235,26 @@ export default function SplitPaymentProcessStep({
                 value={formatAed(payment.amount)}
                 readOnly
               />
-              <div className="rounded-xl border border-[rgba(10,47,148,0.15)] bg-[rgba(10,47,148,0.04)] p-4">
+              <div
+                className="rounded-xl border p-4"
+                style={{
+                  borderColor: `${getColor("primary")}26`,
+                  backgroundColor: `${getColor("primary")}0D`,
+                }}
+              >
                 <div
-                  className={`flex items-center gap-2 text-sm font-medium text-[#081123] mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex items-center gap-2 text-sm font-medium mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  style={{ color: getColor("primaryText") }}
                 >
-                  <Info className="w-4 h-4 text-[#0a2f94] shrink-0" />
+                  <Info
+                    className="w-4 h-4 shrink-0"
+                    style={{ color: getColor("primary") }}
+                  />
                   {t("private-deal.instructions")}
                 </div>
                 <p
-                  className={`text-sm text-[#545e6f] leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                  className={`text-sm leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.managers_check_instructions")}
                 </p>
@@ -259,15 +308,26 @@ export default function SplitPaymentProcessStep({
                 value={formatAed(payment.amount)}
                 readOnly
               />
-              <div className="rounded-xl border border-[rgba(10,47,148,0.15)] bg-[rgba(10,47,148,0.04)] p-4">
+              <div
+                className="rounded-xl border p-4"
+                style={{
+                  borderColor: `${getColor("primary")}26`,
+                  backgroundColor: `${getColor("primary")}0D`,
+                }}
+              >
                 <div
-                  className={`flex items-center gap-2 text-sm font-medium text-[#081123] mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex items-center gap-2 text-sm font-medium mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  style={{ color: getColor("primaryText") }}
                 >
-                  <Info className="w-4 h-4 text-[#0a2f94] shrink-0" />
+                  <Info
+                    className="w-4 h-4 shrink-0"
+                    style={{ color: getColor("primary") }}
+                  />
                   {t("private-deal.instructions")}
                 </div>
                 <p
-                  className={`text-sm text-[#545e6f] leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                  className={`text-sm leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.cash_collection_instructions")}
                 </p>
@@ -319,7 +379,8 @@ export default function SplitPaymentProcessStep({
       </div>
 
       <div
-        className={`flex items-center border-t border-[#d9dee6] pt-6 mt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center border-t pt-6 mt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        style={{ borderColor: getColor("border") }}
       >
         <Button
           variant="outline"

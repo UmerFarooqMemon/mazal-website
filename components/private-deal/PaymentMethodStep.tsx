@@ -15,6 +15,7 @@ import {
   Play,
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 
@@ -124,6 +125,7 @@ export default function PaymentMethodStep({
   onProcessSplit,
 }: PaymentMethodStepProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -237,40 +239,74 @@ export default function PaymentMethodStep({
     }
   };
 
+  const methodCardStyle = (selected: boolean) =>
+    selected
+      ? {
+          borderColor: getColor("primary"),
+          backgroundColor: `${getColor("primary")}0D`,
+        }
+      : {
+          borderColor: getColor("border"),
+          backgroundColor: getColor("surface"),
+        };
+
   return (
-    <div className="bg-white rounded-[20px] border border-[#d9dee6] shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8">
+    <div
+      className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8"
+      style={{
+        backgroundColor: getColor("surface"),
+        borderColor: getColor("border"),
+      }}
+    >
       <div
         className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 ${isRTL ? "sm:flex-row-reverse" : ""}`}
       >
         <div className={isRTL ? "text-right" : "text-left"}>
-          <h2 className="text-2xl font-serif text-[#081123] mb-1">
+          <h2
+            className="text-2xl font-serif mb-1"
+            style={{ color: getColor("primaryText") }}
+          >
             {t("private-deal.payment_title")}
           </h2>
-          <p className="text-sm text-[#545e6f]">
+          <p className="text-sm" style={{ color: getColor("secondaryText") }}>
             {t("private-deal.payment_subtitle")}
           </p>
         </div>
 
-        <div className="inline-flex rounded-full border border-[#d9dee6] p-1 bg-[#f7f8fb] self-start">
+        <div
+          className="inline-flex rounded-full border p-1 self-start"
+          style={{
+            borderColor: getColor("border"),
+            backgroundColor: getColor("primaryLight"),
+          }}
+        >
           <button
             type="button"
             onClick={() => handleModeChange("single")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+            style={
               mode === "single"
-                ? "bg-[#0a2f94] text-white"
-                : "text-[#545e6f] hover:text-[#081123]"
-            }`}
+                ? {
+                    backgroundColor: getColor("primary"),
+                    color: "#FFFFFF",
+                  }
+                : { color: getColor("secondaryText") }
+            }
           >
             {t("private-deal.single_payment")}
           </button>
           <button
             type="button"
             onClick={() => handleModeChange("split")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+            style={
               mode === "split"
-                ? "bg-[#0a2f94] text-white"
-                : "text-[#545e6f] hover:text-[#081123]"
-            }`}
+                ? {
+                    backgroundColor: getColor("primary"),
+                    color: "#FFFFFF",
+                  }
+                : { color: getColor("secondaryText") }
+            }
           >
             {t("private-deal.split_payment")}
           </button>
@@ -288,36 +324,52 @@ export default function PaymentMethodStep({
                   key={item.key}
                   type="button"
                   onClick={() => onMethodChange(item.key)}
-                  className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all ${
-                    selected
-                      ? "border-[#0a2f94] bg-[rgba(10,47,148,0.04)]"
-                      : "border-[#d9dee6] bg-white hover:border-gray-300"
-                  } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                  className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                  style={methodCardStyle(selected)}
                 >
                   <div
-                    className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    className="size-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={
                       selected
-                        ? "bg-[#0a2f94]/10 text-[#0a2f94]"
-                        : "bg-[#f3f5fa] text-[#545e6f]"
-                    }`}
+                        ? {
+                            backgroundColor: `${getColor("primary")}1A`,
+                            color: getColor("primary"),
+                          }
+                        : {
+                            backgroundColor: getColor("primaryLight"),
+                            color: getColor("secondaryText"),
+                          }
+                    }
                   >
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-[#081123]">
+                    <div
+                      className="font-medium"
+                      style={{ color: getColor("primaryText") }}
+                    >
                       {t(`private-deal.${item.titleKey}`)}
                     </div>
-                    <div className="text-sm text-[#8b95a7]">
+                    <div
+                      className="text-sm"
+                      style={{ color: getColor("mutedText") }}
+                    >
                       {t("private-deal.secure_online")}
                     </div>
                   </div>
                   <div
-                    className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      selected ? "border-[#0a2f94]" : "border-[#d9dee6]"
-                    }`}
+                    className="size-5 rounded-full border-2 flex items-center justify-center shrink-0"
+                    style={{
+                      borderColor: selected
+                        ? getColor("primary")
+                        : getColor("border"),
+                    }}
                   >
                     {selected && (
-                      <div className="size-2.5 rounded-full bg-[#0a2f94]" />
+                      <div
+                        className="size-2.5 rounded-full"
+                        style={{ backgroundColor: getColor("primary") }}
+                      />
                     )}
                   </div>
                 </button>
@@ -326,7 +378,8 @@ export default function PaymentMethodStep({
           </div>
 
           <div
-            className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{ borderColor: getColor("border") }}
           >
             <Button
               variant="outline"
@@ -355,7 +408,11 @@ export default function PaymentMethodStep({
               return (
                 <div
                   key={payment.id}
-                  className="rounded-2xl border border-[#d9dee6] bg-[#fafbfd] px-4 py-4"
+                  className="rounded-2xl border px-4 py-4"
+                  style={{
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("primaryLight"),
+                  }}
                 >
                   <div
                     className={`flex flex-col sm:flex-row sm:items-center gap-4 ${isRTL ? "sm:flex-row-reverse" : ""}`}
@@ -363,21 +420,42 @@ export default function PaymentMethodStep({
                     <div
                       className={`flex items-start gap-3 flex-1 min-w-0 ${isRTL ? "flex-row-reverse text-right" : ""}`}
                     >
-                      <div className="size-10 rounded-xl bg-[#0a2f94]/10 text-[#0a2f94] flex items-center justify-center shrink-0">
+                      <div
+                        className="size-10 rounded-xl flex items-center justify-center shrink-0"
+                        style={{
+                          backgroundColor: `${getColor("primary")}1A`,
+                          color: getColor("primary"),
+                        }}
+                      >
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <div className="font-medium text-[#081123]">
+                        <div
+                          className="font-medium"
+                          style={{ color: getColor("primaryText") }}
+                        >
                           {t(`private-deal.${meta.titleKey}`)}
                         </div>
-                        <div className="text-sm text-[#8b95a7]">
+                        <div
+                          className="text-sm"
+                          style={{ color: getColor("mutedText") }}
+                        >
                           {t("private-deal.plate_transfer")}
                         </div>
-                        <div className="text-xs text-[#8b95a7] mt-0.5">
+                        <div
+                          className="text-xs mt-0.5"
+                          style={{ color: getColor("mutedText") }}
+                        >
                           {formatSavedDate(payment.createdAt)}
                         </div>
                       </div>
-                      <span className="inline-flex items-center rounded-full bg-[rgba(10,47,148,0.08)] text-[#0a2f94] text-[11px] font-medium px-2.5 py-1 shrink-0">
+                      <span
+                        className="inline-flex items-center rounded-full text-[11px] font-medium px-2.5 py-1 shrink-0"
+                        style={{
+                          backgroundColor: `${getColor("primary")}14`,
+                          color: getColor("primary"),
+                        }}
+                      >
                         {payment.status === "completed"
                           ? t("private-deal.completed")
                           : t("private-deal.awaiting_payment")}
@@ -387,14 +465,21 @@ export default function PaymentMethodStep({
                     <div
                       className={`flex items-center gap-2 shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
                     >
-                      <span className="text-sm font-semibold text-[#081123] min-w-[96px]">
+                      <span
+                        className="text-sm font-semibold min-w-[96px]"
+                        style={{ color: getColor("primaryText") }}
+                      >
                         {formatAed(payment.amount)}
                       </span>
                       {payment.status !== "completed" && (
                         <button
                           type="button"
                           onClick={() => onProcessSplit(payment.id)}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-[#0a2f94] text-[#0a2f94] text-sm font-medium px-3 py-1.5 hover:bg-[rgba(10,47,148,0.04)]"
+                          className="inline-flex items-center gap-1.5 rounded-full border text-sm font-medium px-3 py-1.5"
+                          style={{
+                            borderColor: getColor("primary"),
+                            color: getColor("primary"),
+                          }}
                         >
                           <Play className="w-3.5 h-3.5" />
                           {t("private-deal.process")}
@@ -403,7 +488,8 @@ export default function PaymentMethodStep({
                       <button
                         type="button"
                         onClick={() => deleteSaved(payment.id)}
-                        className="p-2 rounded-lg text-[#8b95a7] hover:text-red-600 hover:bg-red-50"
+                        className="p-2 rounded-lg hover:text-red-600 hover:bg-red-50"
+                        style={{ color: getColor("mutedText") }}
                         aria-label={t("private-deal.delete")}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -432,13 +518,15 @@ export default function PaymentMethodStep({
                 })),
               );
             }}
-            className="text-sm font-medium text-[#0a2f94] hover:underline mb-6"
+            className="text-sm font-medium hover:underline mb-6"
+            style={{ color: getColor("primary") }}
           >
             {t("private-deal.edit_split_payments")}
           </button>
 
           <div
-            className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{ borderColor: getColor("border") }}
           >
             <Button
               variant="outline"
@@ -459,21 +547,35 @@ export default function PaymentMethodStep({
               return (
                 <div
                   key={draft.id}
-                  className="rounded-2xl border border-[#d9dee6] overflow-hidden"
+                  className="rounded-2xl border overflow-hidden"
+                  style={{ borderColor: getColor("border") }}
                 >
                   <div
-                    className={`flex items-center gap-3 px-4 py-3.5 bg-[#fafbfd] ${isRTL ? "flex-row-reverse" : ""}`}
+                    className={`flex items-center gap-3 px-4 py-3.5 ${isRTL ? "flex-row-reverse" : ""}`}
+                    style={{ backgroundColor: getColor("primaryLight") }}
                   >
-                    <div className="size-10 rounded-xl bg-[#0a2f94]/10 text-[#0a2f94] flex items-center justify-center shrink-0">
+                    <div
+                      className="size-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{
+                        backgroundColor: `${getColor("primary")}1A`,
+                        color: getColor("primary"),
+                      }}
+                    >
                       <Icon className="w-5 h-5" />
                     </div>
                     <div
                       className={`flex-1 min-w-0 ${isRTL ? "text-right" : "text-left"}`}
                     >
-                      <div className="font-medium text-[#081123]">
+                      <div
+                        className="font-medium"
+                        style={{ color: getColor("primaryText") }}
+                      >
                         {t(`private-deal.${meta.titleKey}`)}
                       </div>
-                      <div className="text-sm text-[#8b95a7]">
+                      <div
+                        className="text-sm"
+                        style={{ color: getColor("mutedText") }}
+                      >
                         {t("private-deal.secure_online")}
                       </div>
                     </div>
@@ -482,7 +584,8 @@ export default function PaymentMethodStep({
                       onClick={() =>
                         patchDraft(draft.id, { expanded: !draft.expanded })
                       }
-                      className="p-1.5 text-[#545e6f] hover:text-[#081123]"
+                      className="p-1.5"
+                      style={{ color: getColor("secondaryText") }}
                     >
                       {draft.expanded ? (
                         <ChevronUp className="w-4 h-4" />
@@ -493,7 +596,8 @@ export default function PaymentMethodStep({
                     <button
                       type="button"
                       onClick={() => removeDraft(draft.id)}
-                      className="p-1.5 text-[#8b95a7] hover:text-red-600"
+                      className="p-1.5 hover:text-red-600"
+                      style={{ color: getColor("mutedText") }}
                       aria-label={t("private-deal.delete")}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -501,7 +605,10 @@ export default function PaymentMethodStep({
                   </div>
 
                   {draft.expanded && (
-                    <div className="px-4 pb-4 pt-3 border-t border-[#eef1f6] space-y-3">
+                    <div
+                      className="px-4 pb-4 pt-3 border-t space-y-3"
+                      style={{ borderColor: getColor("border") }}
+                    >
                       {draft.method === "bank" ? (
                         <>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -545,7 +652,8 @@ export default function PaymentMethodStep({
                           />
                           <div>
                             <label
-                              className={`block text-[11px] font-medium mb-1.5 text-[#545e6f] ${isRTL ? "text-right" : "text-left"}`}
+                              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                              style={{ color: getColor("secondaryText") }}
                             >
                               {t("private-deal.notes")}
                             </label>
@@ -556,7 +664,12 @@ export default function PaymentMethodStep({
                               }
                               placeholder={t("private-deal.notes_placeholder")}
                               rows={3}
-                              className={`w-full rounded-xl border border-[#d9dee6] bg-white py-3 px-4 text-sm text-[#081123] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a2f94]/20 focus:border-[#0a2f94] ${isRTL ? "text-right" : "text-left"}`}
+                              className={`w-full rounded-xl border py-3 px-4 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                              style={{
+                                borderColor: getColor("border"),
+                                backgroundColor: getColor("surface"),
+                                color: getColor("primaryText"),
+                              }}
                             />
                           </div>
                         </>
@@ -574,7 +687,8 @@ export default function PaymentMethodStep({
                           />
                           <div>
                             <label
-                              className={`block text-[11px] font-medium mb-1.5 text-[#545e6f] ${isRTL ? "text-right" : "text-left"}`}
+                              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                              style={{ color: getColor("secondaryText") }}
                             >
                               {t("private-deal.notes")}
                             </label>
@@ -585,7 +699,12 @@ export default function PaymentMethodStep({
                               }
                               placeholder={t("private-deal.notes_placeholder")}
                               rows={3}
-                              className={`w-full rounded-xl border border-[#d9dee6] bg-white py-3 px-4 text-sm text-[#081123] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a2f94]/20 focus:border-[#0a2f94] ${isRTL ? "text-right" : "text-left"}`}
+                              className={`w-full rounded-xl border py-3 px-4 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                              style={{
+                                borderColor: getColor("border"),
+                                backgroundColor: getColor("surface"),
+                                color: getColor("primaryText"),
+                              }}
                             />
                           </div>
                         </>
@@ -598,7 +717,10 @@ export default function PaymentMethodStep({
           </div>
 
           <div className={`mb-2 ${isRTL ? "text-right" : "text-left"}`}>
-            <div className="text-sm font-medium text-[#081123] mb-2.5">
+            <div
+              className="text-sm font-medium mb-2.5"
+              style={{ color: getColor("primaryText") }}
+            >
               {t("private-deal.add_payment_method")}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -609,9 +731,17 @@ export default function PaymentMethodStep({
                     key={item.key}
                     type="button"
                     onClick={() => addMethod(item.key)}
-                    className={`inline-flex items-center gap-2 rounded-full border border-[#d9dee6] bg-white px-3.5 py-2 text-sm text-[#545e6f] hover:border-[#0a2f94] hover:text-[#0a2f94] transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+                    style={{
+                      borderColor: getColor("border"),
+                      backgroundColor: getColor("surface"),
+                      color: getColor("secondaryText"),
+                    }}
                   >
-                    <span className="size-1.5 rounded-full bg-[#0a2f94]" />
+                    <span
+                      className="size-1.5 rounded-full"
+                      style={{ backgroundColor: getColor("primary") }}
+                    />
                     <Icon className="w-3.5 h-3.5" />
                     {t(`private-deal.${item.titleKey}`)}
                   </button>
@@ -622,7 +752,8 @@ export default function PaymentMethodStep({
 
           {!canSave && drafts.length > 0 && (
             <p
-              className={`text-xs text-[#8b95a7] mt-3 mb-1 ${isRTL ? "text-right" : "text-left"}`}
+              className={`text-xs mt-3 mb-1 ${isRTL ? "text-right" : "text-left"}`}
+              style={{ color: getColor("mutedText") }}
             >
               {t("private-deal.split_allocate_hint")} {formatAed(remaining)}
             </p>
@@ -641,7 +772,8 @@ export default function PaymentMethodStep({
           </Button>
 
           <div
-            className={`flex items-center border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{ borderColor: getColor("border") }}
           >
             <Button
               variant="outline"

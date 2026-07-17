@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Copy, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
 import type { PaymentMethod } from "./PaymentMethodStep";
 
@@ -29,6 +30,7 @@ export default function PaymentDetailsStep({
   onContinue,
 }: PaymentDetailsStepProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -52,9 +54,16 @@ export default function PaymentDetailsStep({
   };
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#d9dee6] shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8">
+    <div
+      className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8"
+      style={{
+        backgroundColor: getColor("surface"),
+        borderColor: getColor("border"),
+      }}
+    >
       <h2
-        className={`text-2xl font-serif text-[#081123] mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("primaryText") }}
       >
         {method === "card"
           ? t("private-deal.card_payment")
@@ -65,7 +74,8 @@ export default function PaymentDetailsStep({
               : t("private-deal.cash_collection")}
       </h2>
       <p
-        className={`text-sm text-[#545e6f] mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.secure_online")} · AED {amount.toLocaleString("en-AE")}
       </p>
@@ -116,11 +126,23 @@ export default function PaymentDetailsStep({
           {BANK_DETAILS.map((row) => (
             <div
               key={row.label}
-              className={`flex items-center justify-between gap-3 rounded-xl border border-[#d9dee6] bg-[#fafbfd] px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+              className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+              style={{
+                borderColor: getColor("border"),
+                backgroundColor: getColor("primaryLight"),
+              }}
             >
               <div className="min-w-0">
-                <div className="text-xs text-[#8b95a7] mb-0.5">{row.label}</div>
-                <div className="text-sm font-medium text-[#081123] truncate">
+                <div
+                  className="text-xs mb-0.5"
+                  style={{ color: getColor("mutedText") }}
+                >
+                  {row.label}
+                </div>
+                <div
+                  className="text-sm font-medium truncate"
+                  style={{ color: getColor("primaryText") }}
+                >
                   {method === "cash"
                     ? row.label === "Bank Name"
                       ? "Mazal Collection Desk — Dubai"
@@ -131,10 +153,14 @@ export default function PaymentDetailsStep({
               <button
                 type="button"
                 onClick={() => copyValue(row.label, row.value)}
-                className="shrink-0 p-2 rounded-lg hover:bg-white text-[#0a2f94]"
+                className="shrink-0 p-2 rounded-lg"
+                style={{ color: getColor("primary") }}
               >
                 {copied === row.label ? (
-                  <Check className="w-4 h-4 text-green-600" />
+                  <Check
+                    className="w-4 h-4"
+                    style={{ color: getColor("success") }}
+                  />
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
@@ -145,7 +171,8 @@ export default function PaymentDetailsStep({
       )}
 
       <div
-        className={`flex items-center justify-between border-t border-[#d9dee6] pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        style={{ borderColor: getColor("border") }}
       >
         <Button
           variant="outline"

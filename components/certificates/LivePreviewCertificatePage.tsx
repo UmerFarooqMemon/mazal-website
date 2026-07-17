@@ -8,7 +8,59 @@ import { useTheme } from "@/context/ThemeContext";
 import VerifiedCertificateCard, {
   SAMPLE_CERTIFICATE,
   type CertificateDisplayData,
+  type PlatePreviewConfig,
 } from "@/components/certificates/VerifiedCertificateCard";
+import VerifyPreviewSkeleton from "@/components/skeletons/certificates/VerifyPreviewSkeleton";
+
+function buildPreviewMap(optionsData: {
+  emirates?: {
+    variants?: {
+      key?: string;
+      plate_type?: string;
+      plate_design?: string;
+      preview?: PlatePreviewConfig;
+    }[];
+  }[];
+}): Record<string, PlatePreviewConfig> {
+  const map: Record<string, PlatePreviewConfig> = {};
+  for (const em of optionsData?.emirates || []) {
+    for (const v of em?.variants || []) {
+      if (!v?.preview) continue;
+      if (v.key) map[v.key] = v.preview;
+      if (v.plate_type && v.plate_design) {
+        map[`${v.plate_type}_${v.plate_design}`] = v.preview;
+      }
+      if (v.plate_type && !map[v.plate_type]) {
+        map[v.plate_type] = v.preview;
+      }
+    }
+  }
+  return map;
+}
+
+async function ensurePlatePreview(
+  data: CertificateDisplayData,
+  locale: string,
+): Promise<CertificateDisplayData> {
+  if (data.platePreview?.background_image_url) return data;
+  if (!data.plateType && !data.plateVariant) return data;
+
+  try {
+    const res = await fetch(`/api/number-plates/options?locale=${locale}`);
+    const json = await res.json();
+    const previewMap = buildPreviewMap(json?.data || {});
+    const platePreview =
+      (data.plateVariant && previewMap[data.plateVariant]) ||
+      (data.plateType &&
+        data.plateDesign &&
+        previewMap[`${data.plateType}_${data.plateDesign}`]) ||
+      (data.plateType && previewMap[data.plateType]) ||
+      null;
+    return { ...data, platePreview };
+  } catch {
+    return data;
+  }
+}
 
 export default function LivePreviewCertificatePage() {
   const router = useRouter();
@@ -19,23 +71,28 @@ export default function LivePreviewCertificatePage() {
     useState<CertificateDisplayData>(SAMPLE_CERTIFICATE);
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("mazal_verified_certificate");
-      if (raw) {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const raw = sessionStorage.getItem("mazal_verified_certificate");
+        if (!raw) return;
         const parsed = JSON.parse(raw) as CertificateDisplayData;
-        setCertificate(parsed);
+        const withPreview = await ensurePlatePreview(parsed, locale);
+        if (!cancelled) setCertificate(withPreview);
+      } catch {
+        /* keep sample */
       }
-    } catch {
-      /* keep sample */
-    }
-  }, []);
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
 
   if (themeLoading || localeLoading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-[#FBFAF7]">
-        <div className="h-8 w-8 rounded-full border-2 border-[#0A2F94] border-t-transparent animate-spin" />
-      </div>
-    );
+    return <VerifyPreviewSkeleton />;
   }
 
   return (
@@ -49,7 +106,9 @@ export default function LivePreviewCertificatePage() {
           {t("certificates.live_preview_title") || "Live Preview"}
         </h1>
 
-        <VerifiedCertificateCard data={certificate} />
+        <VerifiedCertificateCard
+          data={{ ...certificate, showPreviewBadge: true }}
+        />
 
         <div className="mt-10">
           <div
@@ -98,7 +157,7 @@ export default function LivePreviewCertificatePage() {
           </div>
 
           <VerifiedCertificateCard
-            data={certificate}
+            data={{ ...certificate, showPreviewBadge: true }}
             className="max-w-[896px]"
           />
 
