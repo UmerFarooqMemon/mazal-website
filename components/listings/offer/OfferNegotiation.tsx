@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Handshake, RefreshCw } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -34,6 +35,8 @@ function parseAmount(raw: string) {
 }
 
 export default function OfferNegotiation() {
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
@@ -184,6 +187,11 @@ export default function OfferNegotiation() {
                       variant="primary"
                       size="lg"
                       className="flex-1"
+                      onClick={() =>
+                        router.push(
+                          `/${locale}/listings/${params.id}/checkout?role=buyer&price=${round.amount}`,
+                        )
+                      }
                     >
                       {t("offer.accept")}
                     </Button>

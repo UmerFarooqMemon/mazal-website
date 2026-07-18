@@ -8,9 +8,12 @@ import PrivateDealHeader from "@/components/private-deal/PrivateDealHeader";
 import PrivateDealFooter from "@/components/private-deal/PrivateDealFooter";
 import LayoutSkeleton from "@/components/skeletons/layout/LayoutSkeleton";
 
-function isPrivateDealPath(pathname: string | null) {
+function isFocusedDealPath(pathname: string | null) {
   if (!pathname) return false;
-  return /\/(en|ar)\/private-deal(\/|$)/.test(pathname);
+  return (
+    /\/(en|ar)\/private-deal(\/|$)/.test(pathname) ||
+    /\/(en|ar)\/listings\/[^/]+\/(offer|checkout)(\/|$)/.test(pathname)
+  );
 }
 
 export function ConditionalHeader() {
@@ -22,7 +25,7 @@ export function ConditionalHeader() {
     return <LayoutSkeleton showHeaderOnly />;
   }
 
-  if (isPrivateDealPath(pathname)) {
+  if (isFocusedDealPath(pathname)) {
     return <PrivateDealHeader />;
   }
 
@@ -38,7 +41,7 @@ export function ConditionalFooter() {
     return <LayoutSkeleton showFooterBottomOnly />;
   }
 
-  if (isPrivateDealPath(pathname)) {
+  if (isFocusedDealPath(pathname)) {
     return <PrivateDealFooter />;
   }
 

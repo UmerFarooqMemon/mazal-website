@@ -20,5 +20,14 @@
   "service_transfer": "Service & transfer (3%)",
   "total_fees": "Total fees (8%)",
   "you_receive_net": "You receive (net)",
-  "total_amount": "Total Amount"
+  "total_amount": "Total Amount",
+  "checkout_badge": "MARKETPLACE ESCROW",
+  "checkout_buyer_title": "Complete your plate purchase safely through Mazal.",
+  "checkout_seller_title": "Complete your plate sale safely through Mazal.",
+  "checkout_description": "The plate and price are confirmed from the marketplace listing. Verify your details, choose payment, and Mazal will secure the transaction through escrow.",
+  "checkout_role": "YOUR ROLE",
+  "checkout_verification": "VERIFICATION",
+  "checkout_confirm": "CONFIRM DETAILS",
+  "checkout_payment": "PAYMENT METHOD",
+  "checkout_escrow": "ESCROW LIVE"
 }

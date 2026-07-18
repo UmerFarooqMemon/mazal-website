@@ -75,7 +75,10 @@ export default function ListingSidebar({
       </div>
 
       <div className="flex flex-col gap-3 mb-6">
-        <Link href={`/${locale}/private-deal`} className="block">
+        <Link
+          href={`/${locale}/listings/${listingId}/checkout?role=buyer&price=12500000`}
+          className="block"
+        >
           <Button variant="primary" size="lg" fullWidth className="shadow-md">
             {t("listings.buy_escrow")}
           </Button>
