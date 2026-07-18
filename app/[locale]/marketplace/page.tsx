@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { SlidersHorizontal } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import SearchBar from "../../../components/marketplace/SearchBar";
@@ -153,10 +152,9 @@ export default function MarketplacePage() {
             className={`lg:col-span-1 ${isRTL ? "lg:col-start-4 lg:row-start-1" : ""}`}
           >
             <div
-              className={`flex items-center gap-2 text-sm font-bold tracking-[0.08em] uppercase mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
-              style={{ color: getColor("primaryText") }}
+              className={`flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
+              style={{ color: getColor("mutedText") }}
             >
-              <SlidersHorizontal className="w-4 h-4" strokeWidth={2} />
               {t("marketplace.filters")}
             </div>
             <MarketplaceFilters />
@@ -191,8 +189,8 @@ export default function MarketplacePage() {
             </div>
 
             <div className="flex justify-center mt-10">
-              <button
-                type="button"
+              <Link
+                href={`/${locale}/auctions`}
                 className="inline-flex items-center justify-center h-[42px] px-8 rounded-full border text-sm font-semibold transition-colors"
                 style={{
                   borderColor: getColor("border"),
@@ -209,7 +207,7 @@ export default function MarketplacePage() {
                 }}
               >
                 {t("marketplace.load_more")}
-              </button>
+              </Link>
             </div>
           </div>
         </div>

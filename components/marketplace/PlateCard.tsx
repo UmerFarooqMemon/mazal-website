@@ -17,6 +17,7 @@ interface PlateCardProps {
   rating: number;
   isFavorite?: boolean;
   isBlurred?: boolean;
+  previouslySold?: boolean;
 }
 
 const TIER_LABELS = {
@@ -34,6 +35,7 @@ export default function PlateCard({
   tier,
   views,
   rating,
+  previouslySold,
 }: PlateCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -59,13 +61,24 @@ export default function PlateCard({
   return (
     <Link
       href={`/${locale}/listings/${id}`}
-      className="group block rounded-2xl border p-5 transition-all duration-300 hover:shadow-[0_20px_50px_-12px_rgba(10,59,158,0.2)] hover:-translate-y-1"
+      className="group relative block rounded-2xl border p-5 transition-all duration-300 hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] hover:-translate-y-0.5"
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
       }}
     >
-      {/* Badge + Views */}
+      {previouslySold && (
+        <span
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+          style={{
+            backgroundColor: "#F5E6D3",
+            color: "#8B5E2B",
+          }}
+        >
+          Previously sold
+        </span>
+      )}
+
       <div
         className={`flex justify-between items-center mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
       >
@@ -87,7 +100,6 @@ export default function PlateCard({
         </div>
       </div>
 
-      {/* Plate image */}
       <div
         className="relative w-full aspect-[250/60] mb-4 overflow-hidden"
         style={{ backgroundColor: getColor("surface") }}
@@ -101,10 +113,9 @@ export default function PlateCard({
         />
       </div>
 
-      {/* Price + rating */}
       <div className={`${isRTL ? "text-right" : "text-left"}`}>
         <div
-          className="text-[22px] leading-8 font-bold tracking-tight"
+          className="text-[22px] leading-8 font-serif font-bold tracking-tight"
           style={{ color: getColor("primaryText") }}
         >
           {formattedPrice}

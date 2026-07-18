@@ -1,5 +1,6 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import PlateCard from "../marketplace/PlateCard";
 
 const similarPlates = [
@@ -32,19 +33,24 @@ const similarPlates = [
     views: 6004,
     seller: "Al Marwan",
     rating: 4.9,
+    previouslySold: true,
   },
 ];
 
 export default function SimilarPlates() {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
 
   return (
     <div className={`mt-12 ${isRTL ? "text-right" : "text-left"}`}>
-      <h2 className="text-2xl font-serif font-bold text-[#041443] mb-1">
+      <h2
+        className="text-2xl font-serif font-bold mb-1"
+        style={{ color: getColor("primaryText") }}
+      >
         {t("listings.similar_title")}
       </h2>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm mb-6" style={{ color: getColor("mutedText") }}>
         {t("listings.similar_subtitle")}
       </p>
 
@@ -60,6 +66,7 @@ export default function SimilarPlates() {
             views={plate.views}
             seller={plate.seller}
             rating={plate.rating}
+            previouslySold={plate.previouslySold}
           />
         ))}
       </div>

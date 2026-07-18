@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export interface DealData {
   role: "seller" | "buyer" | null;
@@ -12,6 +15,14 @@ export interface DealData {
   code: string;
   digit: string;
   price: number;
+}
+
+interface Variant {
+  key: string;
+  plate_type?: string;
+  has_code?: boolean;
+  fields?: string[];
+  preview?: PlatePreviewConfig;
 }
 
 interface DealSummaryProps {
@@ -40,6 +51,31 @@ export default function DealSummary({
   const remaining = Math.max(0, price - allocated);
   const pct = price > 0 ? Math.min(100, Math.round((allocated / price) * 100)) : 0;
 
+  const [variants, setVariants] = useState<Variant[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/number-plates/options?locale=${locale}`)
+      .then((r) => r.json())
+      .then((res) => {
+        const emirates = res?.data?.emirates || [];
+        const dubai = emirates.find(
+          (e: { key: string }) => e.key === "dubai",
+        );
+        setVariants(dubai?.variants || []);
+      })
+      .catch(console.error);
+  }, [locale]);
+
+  const selectedVariant =
+    variants.find((v) => v.key === data.plateVariant) || variants[0];
+  const variantFields = selectedVariant?.fields || [
+    "plate_code",
+    "plate_digits",
+  ];
+  const showCodeField =
+    variantFields.includes("plate_code") &&
+    (selectedVariant?.has_code ?? true);
+
   return (
     <div
       className="rounded-2xl border shadow-[0_8px_30px_rgba(1,15,81,0.06)] p-6"
@@ -56,36 +92,27 @@ export default function DealSummary({
       </div>
 
       <div
-        className="border rounded-xl py-4 px-4 mb-5 flex items-center justify-center"
+        className="rounded-xl overflow-hidden border mb-5"
         style={{
-          backgroundColor: getColor("primaryLight"),
           borderColor: getColor("border"),
+          backgroundColor: "#F5F5F5",
         }}
       >
-        <div className="text-center">
-          <div
-            className="text-[9px] font-bold uppercase tracking-[0.2em] mb-1"
-            style={{ color: getColor("mutedText") }}
-          >
-            {data.emirate === "dubai" || !data.emirate
-              ? t("listings.emirate_dubai")
-              : data.emirate}
-          </div>
-          <div
-            className="flex items-center justify-center gap-2 text-2xl font-serif font-bold leading-none"
-            style={{ color: getColor("primary") }}
-          >
-            {data.code ? <span>{data.code}</span> : null}
-            {data.code && data.digit ? (
-              <span
-                className="font-light text-base"
-                style={{ color: getColor("border") }}
-              >
-                |
-              </span>
-            ) : null}
-            <span>{data.digit || "—"}</span>
-          </div>
+        <div
+          style={{
+            marginTop: "-22%",
+            marginBottom: "-22%",
+            overflow: "hidden",
+            mixBlendMode: "multiply",
+          }}
+        >
+          <PlateWithOverlay
+            plate_code={showCodeField ? data.code : ""}
+            plate_digits={data.digit}
+            emirate={t("listings.emirate_dubai")}
+            preview={selectedVariant?.preview}
+            isRTL={isRTL}
+          />
         </div>
       </div>
 

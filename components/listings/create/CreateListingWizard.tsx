@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import PlatePriceFormStep from "./PlatePriceFormStep";
 import BoostStep from "./BoostStep";
@@ -13,6 +14,8 @@ export type BoostTier = "silver" | "gold" | "diamond";
 
 export interface CreateListingData {
   emirate: string;
+  plateType: string;
+  plateVariant: string;
   code: string;
   digits: string;
   hideCode: boolean;
@@ -27,9 +30,11 @@ export interface CreateListingData {
 }
 
 const INITIAL: CreateListingData = {
-  emirate: "Dubai",
-  code: "AA",
-  digits: "777",
+  emirate: "dubai",
+  plateType: "private",
+  plateVariant: "private_new_colorful",
+  code: "",
+  digits: "",
   hideCode: false,
   price: "68000",
   notes: "",
@@ -45,7 +50,8 @@ type Step = 1 | 2 | 3;
 
 export default function CreateListingWizard() {
   const router = useRouter();
-  const { t, locale } = useLocale();
+  const { t, locale, loading: localeLoading } = useLocale();
+  const { getColor, loading: themeLoading } = useTheme();
   const isRTL = locale === "ar";
   const [step, setStep] = useState<Step>(1);
   const [data, setData] = useState<CreateListingData>(INITIAL);
@@ -108,22 +114,43 @@ export default function CreateListingWizard() {
     }
   };
 
+  if (themeLoading || localeLoading) {
+    return (
+      <div
+        className="min-h-screen"
+        style={{ backgroundColor: getColor("background") }}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-16">
-      <div className="border-b border-[#E5E7EB] bg-[#FAFAF8]">
+    <div
+      className="min-h-screen pb-16"
+      style={{ backgroundColor: getColor("background") }}
+    >
+      <div
+        className="border-b"
+        style={{
+          borderColor: getColor("border"),
+          backgroundColor: getColor("background"),
+        }}
+      >
         <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10 pb-8">
           <p
-            className={`text-xs font-bold uppercase tracking-[0.14em] text-[#0A3B9E] mb-3 ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-xs font-bold uppercase tracking-[0.14em] mb-3 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("primary") }}
           >
             {eyebrow}
           </p>
           <h1
-            className={`text-3xl md:text-4xl font-serif font-bold text-[#041443] leading-tight max-w-xl ${isRTL ? "text-right ml-auto" : "text-left"}`}
+            className={`text-3xl md:text-4xl font-serif font-bold leading-tight max-w-xl ${isRTL ? "text-right ml-auto" : "text-left"}`}
+            style={{ color: getColor("primaryText") }}
           >
             {title}
           </h1>
           <p
-            className={`text-[#6B7280] text-base mt-3 max-w-2xl leading-relaxed ${isRTL ? "text-right ml-auto" : "text-left"}`}
+            className={`text-base mt-3 max-w-2xl leading-relaxed ${isRTL ? "text-right ml-auto" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
           >
             {description}
           </p>

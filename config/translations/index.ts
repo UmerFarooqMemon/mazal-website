@@ -8,6 +8,7 @@ import enAuctions from "@/config/translations/en/auctions.json";
 import enDashboard from "@/config/translations/en/dashboard.json";
 import enListings from "@/config/translations/en/listings.json";
 import enPrivateDeal from "@/config/translations/en/private-deal.json";
+import enOffer from "@/config/translations/en/offer.json";
 import enAbout from "@/config/translations/en/about.json";
 import enCertificates from "@/config/translations/en/certificates.json";
 import enValuation from "@/config/translations/en/valuation.json";
@@ -20,6 +21,7 @@ import arAuctions from "@/config/translations/ar/auctions.json";
 import arDashboard from "@/config/translations/ar/dashboard.json";
 import arListings from "@/config/translations/ar/listings.json";
 import arPrivateDeal from "@/config/translations/ar/private-deal.json";
+import arOffer from "@/config/translations/ar/offer.json";
 import arAbout from "@/config/translations/ar/about.json";
 import arCertificates from "@/config/translations/ar/certificates.json";
 import arValuation from "@/config/translations/ar/valuation.json";
@@ -34,6 +36,7 @@ const translationsMap: Record<Locale, any> = {
     dashboard: enDashboard,
     listings: enListings,
     "private-deal": enPrivateDeal,
+    offer: enOffer,
     about: enAbout,
     certificates: enCertificates,
     valuation: enValuation,
@@ -47,6 +50,7 @@ const translationsMap: Record<Locale, any> = {
     dashboard: arDashboard,
     listings: arListings,
     "private-deal": arPrivateDeal,
+    offer: arOffer,
     about: arAbout,
     certificates: arCertificates,
     valuation: arValuation,

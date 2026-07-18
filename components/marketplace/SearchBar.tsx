@@ -1,5 +1,5 @@
 "use client";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
@@ -11,14 +11,14 @@ export default function SearchBar() {
 
   return (
     <div
-      className={`w-full border rounded-xl h-[62px] px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+      className={`w-full border rounded-full h-[62px] px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
       }}
     >
       <div
-        className={`grow flex items-center gap-3 px-2 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`grow flex items-center gap-3 px-3 ${isRTL ? "flex-row-reverse" : ""}`}
       >
         <Search
           className="w-4 h-4 shrink-0"
@@ -36,9 +36,9 @@ export default function SearchBar() {
       <Button
         variant="primary"
         size="md"
-        className={`!rounded-lg px-5 h-9 flex items-center gap-2 justify-center whitespace-nowrap shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`!rounded-full px-5 h-10 flex items-center gap-2 justify-center whitespace-nowrap shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
       >
-        <Search className="w-4 h-4" strokeWidth={2.5} />
+        <SlidersHorizontal className="w-4 h-4" strokeWidth={2.5} />
         <span>{t("marketplace.search_button")}</span>
       </Button>
     </div>

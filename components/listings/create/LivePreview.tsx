@@ -1,14 +1,20 @@
 "use client";
 
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
+import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 interface LivePreviewProps {
   code: string;
   digits: string;
   emirate: string;
+  plateVariant: string;
   price: string;
   hideCode?: boolean;
+  showCode?: boolean;
+  preview?: PlatePreviewConfig;
   label?: string;
 }
 
@@ -16,12 +22,57 @@ export default function LivePreview({
   code,
   digits,
   emirate,
+  plateVariant,
   price,
   hideCode = false,
+  showCode: showCodeProp,
+  preview: previewProp,
   label,
 }: LivePreviewProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
+  const [fetchedPreview, setFetchedPreview] = useState<PlatePreviewConfig>();
+  const [fetchedShowCode, setFetchedShowCode] = useState(true);
+
+  useEffect(() => {
+    if (previewProp) return;
+
+    let active = true;
+    fetch(`/api/number-plates/options?locale=${locale}`)
+      .then((response) => response.json())
+      .then((result) => {
+        if (!active) return;
+        const emirates = result?.data?.emirates || [];
+        const variants = emirates.flatMap(
+          (item: {
+            variants?: Array<{
+              key: string;
+              has_code?: boolean;
+              fields?: string[];
+              preview?: PlatePreviewConfig;
+            }>;
+          }) => item.variants || [],
+        );
+        const selected = variants.find(
+          (variant: { key: string }) => variant.key === plateVariant,
+        );
+        setFetchedPreview(selected?.preview);
+        setFetchedShowCode(
+          (selected?.fields?.includes("plate_code") ?? true) &&
+            (selected?.has_code ?? true),
+        );
+      })
+      .catch(console.error);
+
+    return () => {
+      active = false;
+    };
+  }, [locale, plateVariant, previewProp]);
+
+  const preview = previewProp || fetchedPreview;
+  const showCode =
+    showCodeProp !== undefined ? showCodeProp : fetchedShowCode;
 
   const formattedPrice = price
     ? new Intl.NumberFormat(locale === "ar" ? "ar-AE" : "en-US", {
@@ -32,45 +83,68 @@ export default function LivePreview({
     : "AED 0";
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_12px_40px_-20px_rgba(4,20,67,0.2)] p-6">
+    <div
+      className="rounded-2xl border shadow-[0_12px_40px_-20px_rgba(4,20,67,0.2)] p-6"
+      style={{
+        backgroundColor: getColor("surface"),
+        borderColor: getColor("border"),
+      }}
+    >
       <div
-        className={`text-[11px] font-bold tracking-[0.14em] uppercase text-[#9CA3AF] mb-5 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-[11px] font-bold tracking-[0.14em] uppercase mb-5 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("mutedText") }}
       >
         {label || t("listings.live_preview")}
       </div>
 
       <div
-        className={`relative w-full rounded-xl border border-[#E5E7EB] bg-[#F8F9FB] overflow-hidden mb-6 ${hideCode ? "blur-sm select-none" : ""}`}
+        className={`relative w-full rounded-xl border overflow-hidden mb-6 ${hideCode ? "blur-sm select-none" : ""}`}
+        style={{
+          borderColor: getColor("border"),
+          backgroundColor: "#F5F5F5",
+        }}
       >
-        <div className="relative w-full aspect-[458/109]">
-          <Image
-            src="/home-new.png"
-            alt={`${emirate} plate preview`}
-            fill
-            className="object-contain p-4"
-            sizes="560px"
+        <div
+          style={{
+            marginTop: "-22%",
+            marginBottom: "-22%",
+            overflow: "hidden",
+            mixBlendMode: "multiply",
+          }}
+        >
+          <PlateWithOverlay
+            plate_code={showCode ? code : ""}
+            plate_digits={digits}
+            emirate={emirate}
+            preview={preview}
+            isRTL={isRTL}
           />
-        </div>
-        <div className="absolute inset-x-0 bottom-2 flex justify-center">
-          <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#0A3B9E]/80 bg-white/80 px-2 py-0.5 rounded">
-            {(code || "AA").toUpperCase()} · {digits || "777"}
-          </span>
         </div>
       </div>
 
-      <div className="border-t border-[#E5E7EB] pt-5">
+      <div
+        className="border-t pt-5"
+        style={{ borderColor: getColor("border") }}
+      >
         <div
           className={`flex items-center justify-between gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
         >
-          <span className="text-xs font-medium text-[#6B7280] uppercase tracking-wider">
+          <span
+            className="text-xs font-medium uppercase tracking-wider"
+            style={{ color: getColor("secondaryText") }}
+          >
             {t("listings.total_amount")}
           </span>
-          <span className="text-2xl md:text-3xl font-bold text-[#041443]">
+          <span
+            className="text-2xl md:text-3xl font-bold"
+            style={{ color: getColor("primaryText") }}
+          >
             {formattedPrice}
           </span>
         </div>
         <p
-          className={`text-[11px] text-[#9CA3AF] mt-2 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-[11px] mt-2 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("mutedText") }}
         >
           {emirate}
         </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
@@ -25,11 +25,14 @@ import PaymentDetailsStep from "@/components/private-deal/PaymentDetailsStep";
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 
+const STICKY_HEADER_OFFSET = 69;
+
 export default function PrivateDealPage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
   const router = useRouter();
   const isRTL = locale === "ar";
+  const stepperRef = useRef<HTMLDivElement>(null);
 
   const [step, setStep] = useState(0);
   const [deal, setDeal] = useState<DealData>({
@@ -60,6 +63,20 @@ export default function PrivateDealPage() {
   const [processingSplitId, setProcessingSplitId] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    if (step < 1) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      return;
+    }
+
+    const el = stepperRef.current;
+    if (!el) return;
+
+    const top =
+      el.getBoundingClientRect().top + window.scrollY - STICKY_HEADER_OFFSET;
+    window.scrollTo({ top: Math.max(0, top), left: 0, behavior: "auto" });
+  }, [step, processingSplitId]);
 
   const isSeller = deal.role === "seller";
   const isBuyer = deal.role === "buyer";
@@ -331,7 +348,9 @@ export default function PrivateDealPage() {
           </p>
 
           {visibleStepper && (
-            <Stepper steps={isBuyer ? buyerSteps : sellerSteps} />
+            <div ref={stepperRef}>
+              <Stepper steps={isBuyer ? buyerSteps : sellerSteps} />
+            </div>
           )}
         </div>
       </section>

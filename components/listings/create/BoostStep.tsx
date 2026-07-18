@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Check, Crown, Gem, Stars } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import LivePreview from "./LivePreview";
 import type { BoostTier, CreateListingData } from "./CreateListingWizard";
@@ -65,6 +66,7 @@ export default function BoostStep({
   onContinue,
 }: BoostStepProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -73,14 +75,22 @@ export default function BoostStep({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-8 items-start">
-      <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-6 md:p-9">
+      <div
+        className="rounded-2xl border shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-6 md:p-9"
+        style={{
+          backgroundColor: getColor("surface"),
+          borderColor: getColor("border"),
+        }}
+      >
         <h2
-          className={`text-2xl font-serif font-bold text-[#041443] ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-2xl font-serif font-bold ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("primaryText") }}
         >
           {t("listings.choose_tier")}
         </h2>
         <p
-          className={`text-sm text-[#6B7280] mt-1 mb-8 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-sm mt-1 mb-8 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("secondaryText") }}
         >
           {t("listings.tier_subtitle")}
         </p>
@@ -96,44 +106,79 @@ export default function BoostStep({
                 onClick={() => onChange({ boostTier: tier.key })}
                 className={`relative text-left rounded-2xl border p-5 transition-all ${
                   isSelected
-                    ? "border-[#0A3B9E] bg-[#F5F8FF] shadow-[0_8px_24px_-12px_rgba(10,59,158,0.35)]"
-                    : "border-[#E5E7EB] bg-white hover:border-[#0A3B9E]/40"
+                    ? "shadow-[0_8px_24px_-12px_rgba(10,59,158,0.35)]"
+                    : ""
                 } ${isRTL ? "text-right" : ""}`}
+                style={{
+                  borderColor: isSelected
+                    ? getColor("primary")
+                    : getColor("border"),
+                  backgroundColor: isSelected
+                    ? getColor("primaryLight")
+                    : getColor("surface"),
+                }}
               >
                 {tier.badge && (
-                  <span className="absolute top-4 end-3 text-[9px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+                  <span
+                    className="absolute top-4 end-3 text-[9px] font-bold uppercase tracking-wider"
+                    style={{ color: getColor("mutedText") }}
+                  >
                     {tier.badge}
                   </span>
                 )}
-                <div className="size-9 rounded-xl bg-[#EEF2F8] flex items-center justify-center mb-4">
-                  <Icon className="w-5 h-5 text-[#0A3B9E]" />
+                <div
+                  className="size-9 rounded-xl flex items-center justify-center mb-4"
+                  style={{ backgroundColor: `${getColor("primary")}12` }}
+                >
+                  <Icon
+                    className="w-5 h-5"
+                    style={{ color: getColor("primary") }}
+                  />
                 </div>
-                <div className="text-lg font-serif font-bold text-[#041443]">
+                <div
+                  className="text-lg font-serif font-bold"
+                  style={{ color: getColor("primaryText") }}
+                >
                   {t(`listings.tier_${tier.key}`)}
                 </div>
-                <div className="text-[10px] font-bold tracking-[0.12em] uppercase text-[#9CA3AF] mt-1">
+                <div
+                  className="text-[10px] font-bold tracking-[0.12em] uppercase mt-1"
+                  style={{ color: getColor("mutedText") }}
+                >
                   {t("listings.days_30")}
                 </div>
-                <div className="text-lg font-bold text-[#041443] mt-3 mb-4">
+                <div
+                  className="text-lg font-bold mt-3 mb-4"
+                  style={{ color: getColor("primaryText") }}
+                >
                   AED {tier.price.toLocaleString()}
                 </div>
                 <ul className="space-y-2.5 mb-5 min-h-[120px]">
                   {tier.features.map((feature) => (
                     <li
                       key={feature}
-                      className={`flex items-start gap-2 text-[11px] text-[#6B7280] border-t border-[#F3F4F6] pt-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                      className={`flex items-start gap-2 text-[11px] border-t pt-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                      style={{
+                        color: getColor("secondaryText"),
+                        borderColor: getColor("border"),
+                      }}
                     >
-                      <Check className="w-3 h-3 text-[#0A3B9E] mt-0.5 shrink-0" />
+                      <Check
+                        className="w-3 h-3 mt-0.5 shrink-0"
+                        style={{ color: getColor("primary") }}
+                      />
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
                 <div
-                  className={`w-full h-7 rounded-lg text-[11px] font-semibold flex items-center justify-center ${
-                    isSelected
-                      ? "bg-[#0A3B9E] text-white"
-                      : "bg-[#EEF2F8] text-[#0A3B9E]"
-                  }`}
+                  className="w-full h-7 rounded-lg text-[11px] font-semibold flex items-center justify-center"
+                  style={{
+                    backgroundColor: isSelected
+                      ? getColor("primary")
+                      : `${getColor("primary")}12`,
+                    color: isSelected ? "#fff" : getColor("primary"),
+                  }}
                 >
                   {isSelected ? t("listings.selected") : t("listings.choose")}
                 </div>
@@ -143,14 +188,16 @@ export default function BoostStep({
         </div>
 
         <div
-          className={`flex items-center justify-between border-t border-[#E5E7EB] mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center justify-between border-t mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          style={{ borderColor: getColor("border") }}
         >
           <Button
             type="button"
             variant="ghost"
             onClick={onBack}
             leftIcon={<BackIcon className="w-4 h-4" />}
-            className="!rounded-lg text-[#6B7280]"
+            className="!rounded-lg"
+            style={{ color: getColor("secondaryText") }}
           >
             {t("listings.back")}
           </Button>
@@ -171,13 +218,23 @@ export default function BoostStep({
           code={data.code}
           digits={data.digits}
           emirate={data.emirate}
+          plateVariant={data.plateVariant}
           price={data.price}
           hideCode={data.hideCode}
           label={t("listings.preview")}
         />
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
-          <div className="flex items-center justify-center gap-3 rounded-xl bg-[#041443] text-white py-4 px-4 mb-5">
-            <Gem className="w-5 h-5 text-[#D4AF37]" />
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            backgroundColor: getColor("surface"),
+            borderColor: getColor("border"),
+          }}
+        >
+          <div
+            className="flex items-center justify-center gap-3 rounded-xl text-white py-4 px-4 mb-5"
+            style={{ backgroundColor: getColor("primaryText") }}
+          >
+            <Gem className="w-5 h-5" style={{ color: getColor("accent") }} />
             <span className="text-[11px] font-bold tracking-[0.1em] uppercase">
               {t(`listings.tier_${selected.key}`)} {t("listings.featured")} —{" "}
               {t("listings.days_30")}
@@ -194,16 +251,23 @@ export default function BoostStep({
             ].map(([label, value]) => (
               <div
                 key={label}
-                className={`flex items-center justify-between py-3.5 border-b border-[#F3F4F6] last:border-0 text-xs ${isRTL ? "flex-row-reverse" : ""}`}
+                className={`flex items-center justify-between py-3.5 border-b last:border-0 text-xs ${isRTL ? "flex-row-reverse" : ""}`}
+                style={{ borderColor: getColor("border") }}
               >
-                <span className="text-[#6B7280]">{label}</span>
-                <span className="font-semibold text-[#041443] uppercase">
+                <span style={{ color: getColor("secondaryText") }}>{label}</span>
+                <span
+                  className="font-semibold uppercase"
+                  style={{ color: getColor("primaryText") }}
+                >
                   {value}
                 </span>
               </div>
             ))}
           </div>
-          <p className="text-xs text-[#0A3B9E] mt-4 font-medium">
+          <p
+            className="text-xs mt-4 font-medium"
+            style={{ color: getColor("primary") }}
+          >
             {t("listings.see_featured")} →
           </p>
         </div>

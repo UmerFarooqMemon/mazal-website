@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
 import type { CreateListingData } from "./CreateListingWizard";
 
@@ -21,6 +22,7 @@ export default function GoLiveStep({
   loading = false,
 }: GoLiveStepProps) {
   const { t, locale } = useLocale();
+  const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -33,9 +35,16 @@ export default function GoLiveStep({
 
   return (
     <div className="max-w-[944px] mx-auto">
-      <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-6 md:p-9">
+      <div
+        className="rounded-2xl border shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-6 md:p-9"
+        style={{
+          backgroundColor: getColor("surface"),
+          borderColor: getColor("border"),
+        }}
+      >
         <h2
-          className={`text-2xl font-serif font-bold text-[#041443] mb-6 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-2xl font-serif font-bold mb-6 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("primaryText") }}
         >
           {t("listings.go_live_heading")}
         </h2>
@@ -76,14 +85,16 @@ export default function GoLiveStep({
         </div>
 
         <div
-          className={`flex items-center justify-between border-t border-[#E5E7EB] mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center justify-between border-t mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          style={{ borderColor: getColor("border") }}
         >
           <Button
             type="button"
             variant="ghost"
             onClick={onBack}
             leftIcon={<BackIcon className="w-4 h-4" />}
-            className="!rounded-lg text-[#6B7280]"
+            className="!rounded-lg"
+            style={{ color: getColor("secondaryText") }}
           >
             {t("listings.back")}
           </Button>
