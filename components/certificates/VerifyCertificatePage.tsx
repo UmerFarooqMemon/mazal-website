@@ -18,6 +18,7 @@ import {
 } from "@/lib/plate-preview";
 import type {
   CertificateVerifyCertificate,
+  CertificateVerifyNumberPlate,
   CertificateVerifyResponse,
 } from "@/services/api";
 
@@ -78,27 +79,61 @@ function parseDisplayPlate(display?: string): {
   return { plateCode: "", plateDigits: raw };
 }
 
-function unwrapCertificate(
+function unwrapVerifyResponse(
   result: CertificateVerifyResponse | Record<string, unknown>,
-): CertificateVerifyCertificate {
+): {
+  certificate: CertificateVerifyCertificate;
+  numberPlate?: CertificateVerifyNumberPlate;
+} {
   const root = (result as CertificateVerifyResponse)?.data ?? result;
   const nested = (root as CertificateVerifyResponse["data"])?.certificate;
-  if (nested && typeof nested === "object") {
-    return nested;
-  }
-  return root as CertificateVerifyCertificate;
+  const numberPlate = (root as CertificateVerifyResponse["data"])
+    ?.number_plate;
+
+  return {
+    certificate:
+      nested && typeof nested === "object"
+        ? nested
+        : (root as CertificateVerifyCertificate),
+    numberPlate,
+  };
 }
 
 function mapVerifyResponse(
   payload: CertificateVerifyCertificate,
+  numberPlate: CertificateVerifyNumberPlate | undefined,
   fallbackCode: string,
 ): CertificateDisplayData {
   const fromPlate = payload.plate;
-  const parsed = parseDisplayPlate(payload.display_plate);
+  const preview = numberPlate?.preview
+    ? {
+        ...numberPlate.preview,
+        background_image_url:
+          numberPlate.preview.background_image_url ||
+          numberPlate.preview.background_image?.url,
+        width:
+          numberPlate.preview.width ||
+          numberPlate.preview.background_image?.width,
+        height:
+          numberPlate.preview.height ||
+          numberPlate.preview.background_image?.height,
+        aspect_ratio:
+          numberPlate.preview.aspect_ratio ||
+          numberPlate.preview.background_image?.aspect_ratio,
+      }
+    : null;
+  const parsed = parseDisplayPlate(
+    numberPlate?.display_plate || payload.display_plate,
+  );
 
   const plateCode =
-    payload.plate_code || fromPlate?.plate_code || parsed.plateCode || "";
+    numberPlate?.plate_code ??
+    payload.plate_code ??
+    fromPlate?.plate_code ??
+    parsed.plateCode ??
+    "";
   const plateDigits =
+    numberPlate?.plate_digits ||
     payload.plate_digits ||
     fromPlate?.plate_digits ||
     parsed.plateDigits ||
@@ -124,13 +159,22 @@ function mapVerifyResponse(
     marketLow,
     marketHigh,
     issuedLabel: formatIssuedLabel(payload.issued_at, expiresAt),
+    issuedAt: payload.issued_at,
+    expiresAt,
     showPreviewBadge: false,
-    emirate: payload.emirate || fromPlate?.emirate,
-    emirateLabel: payload.emirate_label,
-    plateType: payload.plate_type || fromPlate?.plate_type,
-    plateVariant: payload.plate_variant,
-    plateDesign: payload.plate_design || fromPlate?.plate_design,
+    emirate:
+      numberPlate?.emirate || payload.emirate || fromPlate?.emirate,
+    emirateLabel: numberPlate?.emirate_label || payload.emirate_label,
+    plateType:
+      numberPlate?.plate_type || payload.plate_type || fromPlate?.plate_type,
+    plateVariant: numberPlate?.plate_variant || payload.plate_variant,
+    plateDesign:
+      numberPlate?.plate_design ||
+      preview?.design_key ||
+      payload.plate_design ||
+      fromPlate?.plate_design,
     holderName: payload.holder_name,
+    platePreview: preview,
   };
 }
 
@@ -138,6 +182,10 @@ async function attachPlatePreview(
   mapped: CertificateDisplayData,
   locale: string,
 ): Promise<CertificateDisplayData> {
+  // Current verify API returns the exact stored template on number_plate.preview.
+  // Only query options for older responses that do not include it.
+  if (mapped.platePreview?.background_image_url) return mapped;
+
   try {
     const res = await fetch(`/api/number-plates/options?locale=${locale}`);
     const json = await res.json();
@@ -204,7 +252,7 @@ export default function VerifyCertificatePage() {
         );
       }
 
-      const cert = unwrapCertificate(result);
+      const { certificate: cert, numberPlate } = unwrapVerifyResponse(result);
 
       if (cert.is_valid === false || cert.valid === false) {
         throw new Error(
@@ -221,26 +269,14 @@ export default function VerifyCertificatePage() {
       }
 
       const mapped = await attachPlatePreview(
-        mapVerifyResponse(cert, certificateCode),
+        mapVerifyResponse(cert, numberPlate, certificateCode),
         locale,
       );
       setCertificate(mapped);
       setCode(certificateCode);
       setMobileView("preview");
 
-      if (!options?.silent) {
-        toast.success(
-          t("certificates.verify_success") || "Certificate verified",
-        );
-      }
-
-      if (typeof window !== "undefined" && window.innerWidth >= 768) {
-        requestAnimationFrame(() => {
-          document
-            .getElementById("live-preview")
-            ?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-      } else if (typeof window !== "undefined") {
+      if (typeof window !== "undefined") {
         try {
           sessionStorage.setItem(
             "mazal_verified_certificate",
@@ -249,6 +285,25 @@ export default function VerifyCertificatePage() {
         } catch {
           /* ignore */
         }
+      }
+
+      if (!options?.silent) {
+        toast.success(
+          t("certificates.verify_success") || "Certificate verified",
+        );
+      }
+
+      if (typeof window !== "undefined" && window.innerWidth >= 768) {
+        router.replace(
+          `/${locale}/verify?code=${encodeURIComponent(certificateCode)}`,
+          { scroll: false },
+        );
+        requestAnimationFrame(() => {
+          document
+            .getElementById("live-preview")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      } else if (typeof window !== "undefined") {
         router.push(`/${locale}/verify/preview`);
       }
     } catch (error: any) {
@@ -295,6 +350,7 @@ export default function VerifyCertificatePage() {
 
   return (
     <div
+      dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: "#FBFAF7" }}
     >
@@ -329,6 +385,7 @@ export default function VerifyCertificatePage() {
           {t("certificates.verify_code_label") || "Code"}
         </label>
         <input
+          dir="ltr"
           id="verify-code-mobile"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -336,7 +393,7 @@ export default function VerifyCertificatePage() {
             if (e.key === "Enter") void handleVerify();
           }}
           placeholder="MZL-VAL-55K0-2026"
-          className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+          className="w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-left outline-none focus:ring-2"
           style={{
             borderColor: getColor("border") || "#D9DEE6",
             color: getColor("primaryText") || "#081123",
@@ -435,10 +492,11 @@ export default function VerifyCertificatePage() {
               }}
             >
               <input
+                dir="ltr"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="MZL-VAL-55K0-2026"
-                className={`flex-1 min-w-0 bg-transparent text-lg lg:text-2xl outline-none ${isRTL ? "text-right" : "text-left"}`}
+                className="flex-1 min-w-0 bg-transparent text-left text-lg lg:text-2xl outline-none"
                 style={{ color: getColor("primaryText") || "#081123" }}
                 aria-label={t("certificates.verify_code_label") || "Code"}
               />

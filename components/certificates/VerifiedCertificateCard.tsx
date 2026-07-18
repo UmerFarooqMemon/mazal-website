@@ -3,17 +3,9 @@
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
-export type PlatePreviewConfig = {
-  background_image_url?: string;
-  width?: number;
-  height?: number;
-  aspect_ratio?: string;
-  overlays?: {
-    plate_code?: Record<string, unknown>;
-    plate_digits?: Record<string, unknown>;
-  };
-};
+export type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export type CertificateDisplayData = {
   certificateNumber: string;
@@ -23,6 +15,8 @@ export type CertificateDisplayData = {
   marketLow: number;
   marketHigh: number;
   issuedLabel: string;
+  issuedAt?: string;
+  expiresAt?: string;
   methodology?: string;
   comparableSales?: { label: string; amount: string }[];
   signatory1Name?: string;
@@ -42,6 +36,36 @@ export type CertificateDisplayData = {
 
 function formatAed(value: number) {
   return `AED ${value.toLocaleString("en-AE")}`;
+}
+
+function formatIssuedLabel(data: CertificateDisplayData, locale: string) {
+  if (!data.issuedAt) return data.issuedLabel;
+
+  const issued = new Date(data.issuedAt);
+  if (Number.isNaN(issued.getTime())) return data.issuedLabel;
+
+  const date = issued.toLocaleDateString(
+    locale === "ar" ? "ar-AE" : "en-GB",
+    { day: "2-digit", month: "long", year: "numeric" },
+  );
+
+  if (!data.expiresAt) {
+    return locale === "ar" ? `صدرت ${date}` : `Issued ${date}`;
+  }
+
+  const expires = new Date(data.expiresAt);
+  if (Number.isNaN(expires.getTime())) return data.issuedLabel;
+
+  const days = Math.max(
+    0,
+    Math.round(
+      (expires.getTime() - issued.getTime()) / (1000 * 60 * 60 * 24),
+    ),
+  );
+
+  return locale === "ar"
+    ? `صدرت ${date} · صالحة لمدة ${days.toLocaleString("ar-AE")} يومًا`
+    : `Issued ${date} · Valid ${days} days`;
 }
 
 export const SAMPLE_CERTIFICATE: CertificateDisplayData = {
@@ -89,6 +113,7 @@ export default function VerifiedCertificateCard({
 
   return (
     <div
+      dir={isRTL ? "rtl" : "ltr"}
       className={`relative w-full ${
         data.showPreviewBadge
           ? isRTL
@@ -182,12 +207,15 @@ export default function VerifiedCertificateCard({
             className="text-[6px] md:text-sm mt-1"
             style={{ color: getColor("mutedText") || "#545E6F" }}
           >
-            {data.issuedLabel}
+            {formatIssuedLabel(data, locale)}
           </p>
         </div>
 
         {/* Plate — same PlateWithOverlay as certificates/request live preview */}
-        <div className="relative mx-auto w-full max-w-[340px] md:max-w-[440px]">
+        <div
+          dir="ltr"
+          className="relative mx-auto w-full max-w-[340px] md:max-w-[440px]"
+        >
           {data.platePreview?.background_image_url ? (
             <div
               style={{
@@ -209,7 +237,7 @@ export default function VerifiedCertificateCard({
                     : data.plateDigits
                 }
                 emirate={data.emirateLabel || data.emirate || "DUBAI"}
-                preview={data.platePreview as any}
+                preview={data.platePreview}
                 isRTL={isRTL}
               />
             </div>
@@ -221,7 +249,8 @@ export default function VerifiedCertificateCard({
                 className="absolute inset-0 w-full h-full object-contain"
               />
               <div
-                className={`absolute inset-0 flex items-center justify-between px-[8%] ${isRTL ? "flex-row-reverse" : ""}`}
+                dir="ltr"
+                className="absolute inset-0 flex items-center justify-between px-[8%]"
               >
                 <span
                   className="font-serif font-bold text-[28px] sm:text-[36px] md:text-[48px] tracking-wide leading-none"

@@ -1,29 +1,9 @@
 "use client";
 
-import { useTheme } from "@/context/ThemeContext";
-
-interface OverlayConfig {
-  left?: string;
-  right?: string;
-  top?: string;
-  transform?: string;
-  font_size?: string;
-  font_weight?: string;
-  color?: string;
-  font_family?: string;
-  hide_when_code?: string[];
-}
-
-interface PlatePreview {
-  background_image_url?: string;
-  width?: number;
-  height?: number;
-  aspect_ratio?: string;
-  overlays?: {
-    plate_code?: OverlayConfig;
-    plate_digits?: OverlayConfig;
-  };
-}
+import type {
+  PlateOverlayConfig,
+  PlatePreviewConfig,
+} from "@/lib/plate-preview";
 
 interface PlateWithOverlayProps {
   plate_code: string;
@@ -33,23 +13,17 @@ interface PlateWithOverlayProps {
   width?: number;
   className?: string;
   imageUrl?: string;
-  preview?: PlatePreview;
+  preview?: PlatePreviewConfig;
   isRTL?: boolean;
 }
 
 export default function PlateWithOverlay({
   plate_code,
   plate_digits,
-  emirate = "DUBAI",
-  isMobile = false,
   width,
   className = "",
-  imageUrl,
   preview,
-  isRTL = false,
 }: PlateWithOverlayProps) {
-  const { getColor } = useTheme();
-
   const backgroundUrl = preview?.background_image_url || "";
 
   const parseAspectRatio = (ratio?: string): string => {
@@ -68,7 +42,9 @@ export default function PlateWithOverlay({
     codeOverlay?.hide_when_code?.includes(plate_code) || false;
 
   // Build overlay styles directly from API config
-  const buildOverlayStyle = (overlay: OverlayConfig | undefined): React.CSSProperties => {
+  const buildOverlayStyle = (
+    overlay: PlateOverlayConfig | undefined,
+  ): React.CSSProperties => {
     if (!overlay) return { display: "none" };
 
     const style: React.CSSProperties = {
@@ -89,7 +65,8 @@ export default function PlateWithOverlay({
     if (overlay.font_size) style.fontSize = overlay.font_size.replace(/vw/g, "cqw");
     if (overlay.font_weight) style.fontWeight = overlay.font_weight;
     if (overlay.color) style.color = overlay.color;
-    style.fontFamily = "'CharlesWright', sans-serif";
+    style.fontFamily =
+      overlay.font_family || "'CharlesWright', sans-serif";
 
     // Match backend: code (left-positioned) centers, digits (right-positioned) align right
     if (overlay.left && !overlay.right) style.textAlign = "center";
@@ -104,6 +81,7 @@ export default function PlateWithOverlay({
 
   return (
     <div
+      dir="ltr"
       className={`relative shrink-0 ${className}`}
       style={{
         width: width ? `${width}px` : "100%",
@@ -116,6 +94,7 @@ export default function PlateWithOverlay({
         borderRadius: "3px",
         overflow: "hidden",
         containerType: "inline-size",
+        direction: "ltr",
       }}
     >
       <style jsx>{`
@@ -130,13 +109,13 @@ export default function PlateWithOverlay({
       `}</style>
 
       {!shouldHideCode && plate_code && codeOverlay && (
-        <span className="plate-text" style={codeStyle}>
+        <span dir="ltr" className="plate-text" style={codeStyle}>
           {plate_code}
         </span>
       )}
 
       {plate_digits && digitsOverlay && (
-        <span className="plate-text" style={digitsStyle}>
+        <span dir="ltr" className="plate-text" style={digitsStyle}>
           {plate_digits}
         </span>
       )}

@@ -67,7 +67,10 @@ export default function LivePreviewCertificatePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      className="min-h-screen flex flex-col bg-white"
+    >
       {/* Mobile layout — matches Figma Live Preview */}
       <section className="md:hidden flex-1 flex flex-col px-6 pt-6 pb-8">
         <h1

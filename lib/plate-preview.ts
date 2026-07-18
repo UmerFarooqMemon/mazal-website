@@ -1,4 +1,41 @@
-import type { PlatePreviewConfig } from "@/components/certificates/VerifiedCertificateCard";
+export type PlateOverlayConfig = {
+  left?: string;
+  right?: string;
+  top?: string;
+  transform?: string;
+  font_size?: string;
+  font_weight?: string;
+  color?: string;
+  font_family?: string;
+  hide_when_code?: string[];
+  metal_plate_text?: boolean;
+};
+
+export type PlatePreviewConfig = {
+  emirate?: string;
+  emirate_label?: string;
+  plate_type?: string;
+  plate_type_label?: string;
+  design_key?: string;
+  design_label?: string;
+  background_image?: {
+    url?: string;
+    path?: string;
+    width?: number;
+    height?: number;
+    aspect_ratio?: string;
+  };
+  background_image_url?: string;
+  background_image_path?: string;
+  width?: number;
+  height?: number;
+  aspect_ratio?: string;
+  overlay_layout?: string;
+  overlays?: {
+    plate_code?: PlateOverlayConfig;
+    plate_digits?: PlateOverlayConfig;
+  };
+};
 
 type VariantLike = {
   key?: string;

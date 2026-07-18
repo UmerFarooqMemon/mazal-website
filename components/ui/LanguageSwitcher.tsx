@@ -20,7 +20,8 @@ export default function LanguageSwitcher() {
       segments.splice(1, 0, newLocale);
     }
     const newPathname = segments.join("/");
-    router.replace(newPathname);
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    router.replace(`${newPathname}${search}`);
   };
 
   return (

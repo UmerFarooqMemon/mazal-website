@@ -1,3 +1,5 @@
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
+
 // API Base URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.mazal.cloud/api";
 
@@ -91,6 +93,23 @@ export interface PreviewsListResponse {
 }
 
 // Certificate Verification (public)
+export type CertificatePlatePreview = PlatePreviewConfig;
+
+export interface CertificateVerifyNumberPlate {
+  id?: string | number;
+  title?: string;
+  emirate?: string;
+  emirate_label?: string;
+  plate_type?: string;
+  plate_type_label?: string;
+  plate_variant?: string;
+  plate_code?: string | null;
+  plate_digits?: string;
+  plate_design?: string;
+  display_plate?: string;
+  preview?: CertificatePlatePreview;
+}
+
 export interface CertificateVerifyCertificate {
   certificate_number: string;
   is_valid?: boolean;
@@ -130,6 +149,7 @@ export interface CertificateVerifyResponse {
   message?: string;
   data: {
     certificate?: CertificateVerifyCertificate;
+    number_plate?: CertificateVerifyNumberPlate;
   } & Partial<CertificateVerifyCertificate>;
 }
 
