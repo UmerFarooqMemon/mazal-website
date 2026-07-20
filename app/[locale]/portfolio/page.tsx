@@ -32,7 +32,7 @@ export default function PortfolioPage() {
           className={`mb-5 flex justify-end ${isRTL ? "justify-start" : ""}`}
         >
           <Link
-            href={`/${locale}/portfolio/plate/list`}
+            href={`/${locale}/portfolio/add`}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95 ${isRTL ? "flex-row-reverse" : ""}`}
             style={{ background: getGradient("primaryButton") }}
           >
