@@ -106,9 +106,18 @@ interface Branding {
   faviconUrl: string | null;
 }
 
+export interface FooterColors {
+  bg: string;
+  text: string;
+  heading: string;
+  link: string;
+  linkHover: string;
+}
+
 interface ThemeContextType {
   colors: ThemeColors;
   branding: Branding;
+  footerColors: FooterColors;
   loading: boolean;
   getColor: (key: keyof ThemeColors) => string;
   getGradient: (key: keyof ThemeColors) => string;
@@ -140,9 +149,18 @@ const defaultBranding: Branding = {
   faviconUrl: null,
 };
 
+const defaultFooterColors: FooterColors = {
+  bg: "#000000",
+  text: "#a3a3a3",
+  heading: "#ffffff",
+  link: "#a3a3a3",
+  linkHover: "#ffffff",
+};
+
 const ThemeContext = createContext<ThemeContextType>({
   colors: defaultColors,
   branding: defaultBranding,
+  footerColors: defaultFooterColors,
   loading: true,
   getColor: () => "transparent",
   getGradient: () => "transparent",
@@ -151,6 +169,8 @@ const ThemeContext = createContext<ThemeContextType>({
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [colors, setColors] = useState<ThemeColors>(defaultColors);
   const [branding, setBranding] = useState<Branding>(defaultBranding);
+  const [footerColors, setFooterColors] =
+    useState<FooterColors>(defaultFooterColors);
   const [loading, setLoading] = useState(true);
 
   // Get the primary (start) color from a gradient object
@@ -232,6 +252,25 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         };
         setColors(newColors);
 
+        // Footer colors: prefer gradients.start, then flat colors (same merge order as theme)
+        const resolveFooterColor = (key: string, fallback: string) =>
+          apiGradients[key]?.start || apiColors[key] || fallback;
+
+        const newFooterColors: FooterColors = {
+          bg: resolveFooterColor("footer_bg", defaultFooterColors.bg),
+          text: resolveFooterColor("footer_text", defaultFooterColors.text),
+          heading: resolveFooterColor(
+            "footer_heading",
+            defaultFooterColors.heading,
+          ),
+          link: resolveFooterColor("footer_link", defaultFooterColors.link),
+          linkHover: resolveFooterColor(
+            "footer_link_hover",
+            defaultFooterColors.linkHover,
+          ),
+        };
+        setFooterColors(newFooterColors);
+
         // Apply colors to CSS custom properties using newColors directly
         // (getColor reads from stale state closure inside useEffect)
         const cssVar = (key: keyof typeof newColors) =>
@@ -256,6 +295,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         root.style.setProperty("--color-surface", cssVar("surface"));
         root.style.setProperty("--color-border", cssVar("border"));
         root.style.setProperty("--color-muted-text", cssVar("mutedText"));
+        root.style.setProperty("--color-footer-bg", newFooterColors.bg);
+        root.style.setProperty("--color-footer-text", newFooterColors.text);
+        root.style.setProperty("--color-footer-heading", newFooterColors.heading);
+        root.style.setProperty("--color-footer-link", newFooterColors.link);
+        root.style.setProperty(
+          "--color-footer-link-hover",
+          newFooterColors.linkHover,
+        );
       } catch (error) {
         console.error("Failed to fetch theme settings:", error);
         // Keep using default colors and branding on error
@@ -268,7 +315,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider
-      value={{ colors, branding, loading, getColor, getGradient }}
+      value={{
+        colors,
+        branding,
+        footerColors,
+        loading,
+        getColor,
+        getGradient,
+      }}
     >
       {children}
     </ThemeContext.Provider>

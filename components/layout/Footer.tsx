@@ -28,14 +28,19 @@ function FooterColumnBlock({
   title,
   links,
   isRTL,
+  headingColor,
 }: {
   title: string;
   links: { href: string; label: string }[];
   isRTL: boolean;
+  headingColor: string;
 }) {
   return (
     <div className={isRTL ? "text-right" : "text-left"}>
-      <h4 className="mb-4 text-[15px] font-semibold leading-none text-white">
+      <h4
+        className="mb-4 text-[15px] font-semibold leading-none"
+        style={{ color: headingColor }}
+      >
         {title}
       </h4>
       <ul className="space-y-2.5">
@@ -43,7 +48,7 @@ function FooterColumnBlock({
           <li key={link.href + link.label}>
             <Link
               href={link.href}
-              className="text-sm leading-snug text-[#A3A3A3] transition-colors hover:text-white"
+              className="footer-link text-sm leading-snug transition-colors"
             >
               {link.label}
             </Link>
@@ -56,7 +61,7 @@ function FooterColumnBlock({
 
 export default function Footer() {
   const { t, locale } = useLocale();
-  const { branding, getColor } = useTheme();
+  const { branding, getColor, footerColors } = useTheme();
   const isRTL = locale === "ar";
 
   const primaryColor =
@@ -120,7 +125,15 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-black text-white">
+    <footer
+      className="footer-root"
+      style={{
+        backgroundColor: footerColors.bg,
+        color: footerColors.text,
+        ["--footer-link" as string]: footerColors.link,
+        ["--footer-link-hover" as string]: footerColors.linkHover,
+      }}
+    >
       <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8 lg:py-16">
         <div
           className={`grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,360px)_1fr] lg:gap-x-20 lg:gap-y-0 ${isRTL ? "lg:grid-flow-col-dense" : ""}`}
@@ -143,13 +156,19 @@ export default function Footer() {
                   unoptimized
                 />
               ) : (
-                <span className="text-[34px] font-bold tracking-[0.18em] text-white">
+                <span
+                  className="text-[34px] font-bold tracking-[0.18em]"
+                  style={{ color: footerColors.heading }}
+                >
                   MAZAL
                 </span>
               )}
             </Link>
 
-            <p className="mt-5 max-w-[320px] text-sm leading-[1.6] text-[#A3A3A3]">
+            <p
+              className="mt-5 max-w-[320px] text-sm leading-[1.6]"
+              style={{ color: footerColors.text }}
+            >
               {t("common.footer_desc")}
             </p>
 
@@ -211,7 +230,10 @@ export default function Footer() {
               </a>
             </div>
 
-            <p className="mt-10 text-xs leading-none text-[#737373]">
+            <p
+              className="mt-10 text-xs leading-none opacity-70"
+              style={{ color: footerColors.text }}
+            >
               {t("common.copyright")}
             </p>
           </div>
@@ -229,6 +251,7 @@ export default function Footer() {
                   label: t(`common.${link.labelKey}`),
                 }))}
                 isRTL={isRTL}
+                headingColor={footerColors.heading}
               />
             ))}
           </div>

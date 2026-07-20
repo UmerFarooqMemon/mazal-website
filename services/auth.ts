@@ -30,19 +30,33 @@ export interface ChangePasswordRequest {
   password_confirmation: string;
 }
 
+export interface AuthUser {
+  id: number;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  login?: string;
+  role?: string;
+  image_url?: string | null;
+  emirates_id?: string | null;
+  emirates_id_verified?: boolean;
+  is_active?: boolean;
+}
+
 export interface AuthResponse {
   status: boolean;
+  message?: string;
   data: {
     access_token: string;
     token_type: string;
     expires_in: number;
-    user?: {
-      id: number;
-      name: string;
-      login: string;
-      role: string;
-    };
+    is_new_user?: boolean;
+    user?: AuthUser;
   };
+}
+
+export interface GoogleLoginRequest {
+  id_token: string;
 }
 
 export interface LogoutResponse {
@@ -69,6 +83,16 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
 // Login (Email or Phone)
 export async function login(data: LoginRequest): Promise<AuthResponse> {
   return apiRequest<AuthResponse>("/v1/auth/login", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// Google login via ID token (Google Identity Services → Mazal JWT)
+export async function loginWithGoogle(
+  data: GoogleLoginRequest,
+): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>("/v1/auth/google", {
     method: "POST",
     body: JSON.stringify(data),
   });

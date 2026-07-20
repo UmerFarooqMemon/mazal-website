@@ -12,6 +12,7 @@ import Button from "@/components/ui/Button";
 import { Icons } from "@/components/ui/Icons";
 import { useAuth } from "@/hooks/useAuth";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
+import { requestGoogleIdToken } from "@/lib/google-auth";
 
 export default function LoginPage() {
   const { t, locale, loading: localeLoading } = useLocale();
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const isRTL = locale === "ar";
   const { getColor, branding, loading: themeLoading } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [formData, setFormData] = useState({
     login: "",
     password: "",
@@ -29,7 +31,7 @@ export default function LoginPage() {
     password?: string;
   }>({});
 
-  const { login, loading, isAuthenticated } = useAuth();
+  const { login, loginWithGoogle, loading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -76,6 +78,32 @@ export default function LoginPage() {
     } catch (err) {
       toast.dismiss(loadingToast);
       toast.error(t("common.invalid_credentials"));
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (googleLoading || loading) return;
+
+    setGoogleLoading(true);
+    const loadingToast = toast.loading(t("common.signing_in_google"));
+
+    try {
+      // Step 1: Google Identity Services → id_token
+      const idToken = await requestGoogleIdToken();
+      // Step 2: POST /api/v1/auth/google → Mazal JWT
+      await loginWithGoogle(idToken);
+      toast.dismiss(loadingToast);
+      toast.success(t("common.login_success"));
+      setTimeout(() => router.push(`/${locale}/dashboard-certificates`), 800);
+    } catch (err: unknown) {
+      toast.dismiss(loadingToast);
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : t("common.google_signin_failed");
+      toast.error(message);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -246,6 +274,63 @@ export default function LoginPage() {
                 {loading ? t("common.loading") : t("common.sign_in")}
               </Button>
             </form>
+
+            <div className="mt-6 flex items-center gap-3">
+              <div
+                className="h-px flex-1"
+                style={{ backgroundColor: getColor("border") }}
+              />
+              <span
+                className="shrink-0 text-[11px] font-medium uppercase tracking-wider"
+                style={{ color: getColor("mutedText") }}
+              >
+                {t("common.or_continue_with")}
+              </span>
+              <div
+                className="h-px flex-1"
+                style={{ backgroundColor: getColor("border") }}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading || loading}
+              className="mt-4 flex w-full items-center justify-center gap-3 rounded-full border bg-white px-4 py-3 text-sm font-medium transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                borderColor: getColor("border"),
+                color: getColor("primaryText"),
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
+                  fill="#EA4335"
+                />
+              </svg>
+              {googleLoading
+                ? t("common.loading")
+                : t("common.continue_with_google")}
+            </button>
 
             <div className="mt-6 text-center text-sm">
               <span style={{ color: getColor("secondaryText") }}>

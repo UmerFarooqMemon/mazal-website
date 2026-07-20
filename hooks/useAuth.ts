@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   login as loginApi,
+  loginWithGoogle as loginWithGoogleApi,
   register as registerApi,
   logout as logoutApi,
   forgotPassword as forgotPasswordApi,
@@ -12,6 +13,8 @@ import {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
+  AuthUser,
+  AuthResponse,
 } from "@/services/auth";
 
 interface User {
@@ -19,6 +22,36 @@ interface User {
   name: string;
   login: string;
   role: string;
+  email?: string | null;
+  phone?: string | null;
+}
+
+function normalizeUser(user: AuthUser): User {
+  return {
+    id: user.id,
+    name: user.name,
+    login: user.login || user.email || user.phone || "",
+    role: user.role || "user",
+    email: user.email ?? null,
+    phone: user.phone ?? null,
+  };
+}
+
+function persistSession(response: AuthResponse) {
+  if (!response.data?.access_token) return null;
+
+  localStorage.setItem("access_token", response.data.access_token);
+
+  const normalized = response.data.user
+    ? normalizeUser(response.data.user)
+    : null;
+
+  if (normalized) {
+    localStorage.setItem("user", JSON.stringify(normalized));
+  }
+
+  window.dispatchEvent(new Event("auth-changed"));
+  return { token: response.data.access_token, user: normalized };
 }
 
 export function useAuth() {
@@ -120,22 +153,33 @@ export function useAuth() {
     setError(null);
     try {
       const response = await loginApi(data);
-      console.log("Login response:", response);
-      if (response.data?.access_token) {
-        setToken(response.data.access_token);
-        if (response.data.user) {
-          setUser(response.data.user);
-        }
-        // Force save to localStorage immediately
-        localStorage.setItem("access_token", response.data.access_token);
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-        }
-        window.dispatchEvent(new Event("auth-changed"));
+      const session = persistSession(response);
+      if (session) {
+        setToken(session.token);
+        if (session.user) setUser(session.user);
       }
       return response;
     } catch (err: any) {
       setError(err.message || "Login failed");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await loginWithGoogleApi({ id_token: idToken });
+      const session = persistSession(response);
+      if (session) {
+        setToken(session.token);
+        if (session.user) setUser(session.user);
+      }
+      return response;
+    } catch (err: any) {
+      setError(err.message || "Google sign-in failed");
       throw err;
     } finally {
       setLoading(false);
@@ -147,18 +191,10 @@ export function useAuth() {
     setError(null);
     try {
       const response = await registerApi(data);
-      console.log("Register response:", response);
-      if (response.data?.access_token) {
-        setToken(response.data.access_token);
-        if (response.data.user) {
-          setUser(response.data.user);
-        }
-        // Force save to localStorage immediately
-        localStorage.setItem("access_token", response.data.access_token);
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-        }
-        window.dispatchEvent(new Event("auth-changed"));
+      const session = persistSession(response);
+      if (session) {
+        setToken(session.token);
+        if (session.user) setUser(session.user);
       }
       return response;
     } catch (err: any) {
@@ -242,6 +278,7 @@ export function useAuth() {
     isAuthenticated: !!token && !!user,
     isLoggingOut,
     login,
+    loginWithGoogle,
     register,
     logout,
     forgotPassword,

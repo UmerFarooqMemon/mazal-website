@@ -44,6 +44,11 @@ export interface SiteSettingsResponse {
       success?: string;
       warning?: string;
       error?: string;
+      footer_bg?: string;
+      footer_text?: string;
+      footer_heading?: string;
+      footer_link?: string;
+      footer_link_hover?: string;
     };
     gradients: Record<string, GradientValue | null>;
     fees?: {

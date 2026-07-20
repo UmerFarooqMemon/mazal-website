@@ -123,6 +123,8 @@
   "home": "Home",
   "back": "Back",
   "signing_in": "Signing in...",
+  "signing_in_google": "Signing in with Google...",
+  "google_signin_failed": "Google sign-in failed. Please try again.",
   "login_success": "Login successful! Redirecting...",
   "invalid_credentials": "Invalid email or password. Please try again.",
   "error_fill_fields": "Please fill in all required fields.",
