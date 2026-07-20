@@ -1,46 +1,50 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import PlateCard from "../marketplace/PlateCard";
+import {
+  getSimilarListings,
+  mapListingToPlateCard,
+} from "@/services/marketplace";
 
-const similarPlates = [
-  {
-    id: 4,
-    emirate: "SHARJAH",
-    code: "1 | 5",
-    price: 920000,
-    type: "DIRECT" as const,
-    views: 1880,
-    seller: "Sharjah Auto",
-    rating: 4.6,
-  },
-  {
-    id: 10,
-    emirate: "ABU DHABI",
-    code: "13 | 9",
-    price: 2200000,
-    type: "AUCTION" as const,
-    views: 4022,
-    seller: "Capital Plates",
-    rating: 4.8,
-  },
-  {
-    id: 11,
-    emirate: "DUBAI",
-    code: "T | 8",
-    price: 6200000,
-    type: "AUCTION" as const,
-    views: 6004,
-    seller: "Al Marwan",
-    rating: 4.9,
-    previouslySold: true,
-  },
-];
+interface SimilarPlatesProps {
+  listingId: string | number;
+}
 
-export default function SimilarPlates() {
+export default function SimilarPlates({ listingId }: SimilarPlatesProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
+  const [plates, setPlates] = useState<
+    ReturnType<typeof mapListingToPlateCard>[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+
+    getSimilarListings(listingId, locale)
+      .then((response) => {
+        if (!active) return;
+        setPlates((response.data.listings || []).map(mapListingToPlateCard));
+      })
+      .catch(() => {
+        if (active) setPlates([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [listingId, locale]);
+
+  if (!loading && plates.length === 0) {
+    return null;
+  }
 
   return (
     <div className={`mt-12 ${isRTL ? "text-right" : "text-left"}`}>
@@ -54,22 +58,28 @@ export default function SimilarPlates() {
         {t("listings.similar_subtitle")}
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {similarPlates.map((plate) => (
-          <PlateCard
-            key={plate.id}
-            id={plate.id}
-            emirate={plate.emirate}
-            code={plate.code}
-            price={plate.price}
-            type={plate.type}
-            views={plate.views}
-            seller={plate.seller}
-            rating={plate.rating}
-            previouslySold={plate.previouslySold}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div className="text-sm py-8" style={{ color: getColor("mutedText") }}>
+          {t("common.loading") || "Loading..."}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plates.map((plate) => (
+            <PlateCard
+              key={plate.id}
+              id={plate.id}
+              emirate={plate.emirate}
+              code={plate.code}
+              price={plate.price}
+              type={plate.type}
+              views={plate.views}
+              rating={plate.rating}
+              previouslySold={plate.previouslySold}
+              imageUrl={plate.imageUrl}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

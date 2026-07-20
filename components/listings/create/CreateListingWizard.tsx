@@ -9,6 +9,7 @@ import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import PlatePriceFormStep from "./PlatePriceFormStep";
 import BoostStep from "./BoostStep";
 import GoLiveStep from "./GoLiveStep";
+import { createListing } from "@/services/marketplace";
 
 export type BoostTier = "silver" | "gold" | "diamond";
 
@@ -104,11 +105,30 @@ export default function CreateListingWizard() {
   const handleProceed = async () => {
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 800));
+      const title = `${data.emirate} ${data.code ? data.code + " " : ""}${data.digits}`.trim();
+      const payload = {
+        listing_type: "direct" as const,
+        title,
+        emirate: data.emirate,
+        plate_variant: data.plateVariant || undefined,
+        plate_type: data.plateType || undefined,
+        plate_code: data.code || undefined,
+        plate_digits: data.digits,
+        asking_price: Number(data.price.replace(/[^\d.]/g, "")) || 0,
+        description: data.notes || undefined,
+        hide_code: data.hideCode,
+        status: "active" as const,
+      };
+
+      await createListing(payload, locale);
       toast.success(t("listings.publish_success"));
       router.push(`/${locale}/marketplace`);
-    } catch {
-      toast.error(t("common.error_submission") || "Something went wrong");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("common.error_submission") || "Something went wrong",
+      );
     } finally {
       setLoading(false);
     }

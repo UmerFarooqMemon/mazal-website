@@ -11,20 +11,32 @@ import {
   Upload,
   Info,
   CheckCircle2,
-  MapPin,
   Calendar,
   Clock,
+  Copy,
+  Check,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
-import Select from "@/components/ui/Select";
 import type { PaymentMethod, SplitPaymentEntry } from "./PaymentMethodStep";
 
 interface SplitPaymentProcessStepProps {
   payment: SplitPaymentEntry;
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (payload: {
+    paymentReference?: string;
+    senderBankName?: string;
+    senderAccountLast4?: string;
+    notes?: string;
+    evidence?: File | null;
+    checkNumber?: string;
+    collectionDate?: string;
+    collectionTime?: string;
+  }) => void;
+  submitting?: boolean;
+  custodyInstructions?: Record<string, unknown>;
 }
 
 const METHOD_META: Record<
@@ -37,12 +49,6 @@ const METHOD_META: Record<
   cash: { titleKey: "cash_collection", icon: Banknote },
 };
 
-const CARD_TYPES = [
-  { key: "visa", label: "Visa" },
-  { key: "mastercard", label: "Mastercard" },
-  { key: "amex", label: "American Express" },
-];
-
 function formatAed(amount: number) {
   return `AED ${amount.toLocaleString("en-AE")}`;
 }
@@ -51,6 +57,8 @@ export default function SplitPaymentProcessStep({
   payment,
   onBack,
   onComplete,
+  submitting = false,
+  custodyInstructions,
 }: SplitPaymentProcessStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -61,31 +69,79 @@ export default function SplitPaymentProcessStep({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [proofName, setProofName] = useState("");
-  const [card, setCard] = useState({
-    type: "",
-    name: "",
-    number: "",
-    expiry: "",
-    cvv: "",
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [bankTransfer, setBankTransfer] = useState({
+    paymentReference: "",
+    senderBankName: payment.bank || "",
+    senderAccountLast4: payment.accountNumber?.slice(-4) || "",
+    notes: payment.notes || "",
   });
   const [check, setCheck] = useState({
     number: "",
-    location: "",
-    address: "",
     date: "",
     time: "",
+    notes: payment.notes || "",
   });
   const [cash, setCash] = useState({
-    location: "",
-    address: "",
     date: "",
     time: "",
+    notes: payment.notes || "",
   });
 
   const ctaLabel =
     payment.method === "bank"
       ? t("private-deal.transfer_completed")
       : t("private-deal.pay_now");
+
+  const instructionRows = Object.entries(custodyInstructions || {}).filter(
+    ([, value]) => value != null && value !== "",
+  );
+
+  const copyValue = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(key);
+      toast.success(t("private-deal.copied"));
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
+
+  const handleSubmit = () => {
+    if (payment.method === "bank") {
+      onComplete({
+        paymentReference: bankTransfer.paymentReference,
+        senderBankName: bankTransfer.senderBankName,
+        senderAccountLast4: bankTransfer.senderAccountLast4,
+        notes: bankTransfer.notes,
+        evidence: proofFile,
+      });
+      return;
+    }
+
+    if (payment.method === "card") {
+      onComplete({});
+      return;
+    }
+
+    if (payment.method === "managers_check") {
+      onComplete({
+        checkNumber: check.number,
+        collectionDate: check.date,
+        collectionTime: check.time,
+        notes: check.notes,
+      });
+      return;
+    }
+
+    onComplete({
+      collectionDate: cash.date,
+      collectionTime: cash.time,
+      notes: cash.notes,
+    });
+  };
 
   return (
     <div
@@ -129,8 +185,88 @@ export default function SplitPaymentProcessStep({
         </div>
 
         <div className="p-4 md:p-5 space-y-4">
+          {instructionRows.length > 0 && (
+            <div className="space-y-3">
+              {instructionRows.map(([key, value]) => (
+                <div
+                  key={key}
+                  className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+                  style={{
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("primaryLight"),
+                  }}
+                >
+                  <div className="min-w-0">
+                    <div
+                      className="text-xs mb-0.5"
+                      style={{ color: getColor("mutedText") }}
+                    >
+                      {key.replace(/_/g, " ")}
+                    </div>
+                    <div
+                      className="text-sm font-medium truncate"
+                      style={{ color: getColor("primaryText") }}
+                    >
+                      {String(value)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyValue(key, String(value))}
+                    className="shrink-0 p-2 rounded-lg"
+                    style={{ color: getColor("primary") }}
+                  >
+                    {copiedKey === key ? (
+                      <Check
+                        className="w-4 h-4"
+                        style={{ color: getColor("success") }}
+                      />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {payment.method === "bank" && (
             <>
+              <Input
+                label={t("private-deal.payment_reference")}
+                value={bankTransfer.paymentReference}
+                onChange={(e) =>
+                  setBankTransfer((prev) => ({
+                    ...prev,
+                    paymentReference: e.target.value,
+                  }))
+                }
+                placeholder="BANK-TRANSFER-REFERENCE-001"
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label={t("private-deal.sender_bank_name")}
+                  value={bankTransfer.senderBankName}
+                  onChange={(e) =>
+                    setBankTransfer((prev) => ({
+                      ...prev,
+                      senderBankName: e.target.value,
+                    }))
+                  }
+                  placeholder="Example UAE Bank"
+                />
+                <Input
+                  label={t("private-deal.sender_account_last4")}
+                  value={bankTransfer.senderAccountLast4}
+                  onChange={(e) =>
+                    setBankTransfer((prev) => ({
+                      ...prev,
+                      senderAccountLast4: e.target.value.replace(/\D/g, "").slice(0, 4),
+                    }))
+                  }
+                  placeholder="1234"
+                />
+              </div>
               <div>
                 <label
                   className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
@@ -171,7 +307,31 @@ export default function SplitPaymentProcessStep({
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) setProofName(file.name);
+                    if (file) {
+                      setProofName(file.name);
+                      setProofFile(file);
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("secondaryText") }}
+                >
+                  {t("private-deal.notes")}
+                </label>
+                <textarea
+                  value={bankTransfer.notes}
+                  onChange={(e) =>
+                    setBankTransfer((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  rows={3}
+                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("surface"),
+                    color: getColor("primaryText"),
                   }}
                 />
               </div>
@@ -179,53 +339,20 @@ export default function SplitPaymentProcessStep({
           )}
 
           {payment.method === "card" && (
-            <>
-              <Select
-                label={t("private-deal.card_type")}
-                options={CARD_TYPES}
-                value={card.type}
-                onChange={(v) => setCard({ ...card, type: v })}
-                placeholder={t("private-deal.select_card_type")}
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input
-                  label={t("private-deal.card_holder_name")}
-                  value={card.name}
-                  onChange={(e) => setCard({ ...card, name: e.target.value })}
-                  placeholder={t("private-deal.name_on_card")}
-                />
-                <Input
-                  label={t("private-deal.card_number")}
-                  value={card.number}
-                  onChange={(e) =>
-                    setCard({
-                      ...card,
-                      number: e.target.value
-                        .replace(/[^\d\s]/g, "")
-                        .slice(0, 19),
-                    })
-                  }
-                  placeholder="1234 1234 1234 1234"
-                />
-                <Input
-                  label={t("private-deal.expiry")}
-                  value={card.expiry}
-                  onChange={(e) => setCard({ ...card, expiry: e.target.value })}
-                  placeholder="MM/YY"
-                />
-                <Input
-                  label={t("private-deal.cvv")}
-                  value={card.cvv}
-                  onChange={(e) =>
-                    setCard({
-                      ...card,
-                      cvv: e.target.value.replace(/\D/g, "").slice(0, 4),
-                    })
-                  }
-                  placeholder="***"
-                />
-              </div>
-            </>
+            <div
+              className="rounded-xl border p-4"
+              style={{
+                borderColor: `${getColor("primary")}26`,
+                backgroundColor: `${getColor("primary")}0D`,
+              }}
+            >
+              <p
+                className={`text-sm leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                style={{ color: getColor("secondaryText") }}
+              >
+                {t("private-deal.card_redirect_notice")}
+              </p>
+            </div>
           )}
 
           {payment.method === "managers_check" && (
@@ -265,23 +392,6 @@ export default function SplitPaymentProcessStep({
                 onChange={(e) => setCheck({ ...check, number: e.target.value })}
                 placeholder="eg. 000123"
               />
-              <Input
-                label={t("private-deal.collection_location")}
-                value={check.location}
-                onChange={(e) =>
-                  setCheck({ ...check, location: e.target.value })
-                }
-                placeholder="eg. Dubai Marina"
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <Input
-                label={t("private-deal.collection_address")}
-                value={check.address}
-                onChange={(e) =>
-                  setCheck({ ...check, address: e.target.value })
-                }
-                placeholder="eg. 000123"
-              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
                   label={t("private-deal.collection_date")}
@@ -296,6 +406,25 @@ export default function SplitPaymentProcessStep({
                   value={check.time}
                   onChange={(e) => setCheck({ ...check, time: e.target.value })}
                   icon={<Clock className="w-4 h-4" />}
+                />
+              </div>
+              <div>
+                <label
+                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("secondaryText") }}
+                >
+                  {t("private-deal.notes")}
+                </label>
+                <textarea
+                  value={check.notes}
+                  onChange={(e) => setCheck({ ...check, notes: e.target.value })}
+                  rows={3}
+                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("surface"),
+                    color: getColor("primaryText"),
+                  }}
                 />
               </div>
             </>
@@ -332,21 +461,6 @@ export default function SplitPaymentProcessStep({
                   {t("private-deal.cash_collection_instructions")}
                 </p>
               </div>
-              <Input
-                label={t("private-deal.collection_location")}
-                value={cash.location}
-                onChange={(e) =>
-                  setCash({ ...cash, location: e.target.value })
-                }
-                placeholder="eg. Dubai Marina"
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <Input
-                label={t("private-deal.collection_address")}
-                value={cash.address}
-                onChange={(e) => setCash({ ...cash, address: e.target.value })}
-                placeholder={t("private-deal.full_street_address")}
-              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
                   label={t("private-deal.collection_date")}
@@ -363,6 +477,25 @@ export default function SplitPaymentProcessStep({
                   icon={<Clock className="w-4 h-4" />}
                 />
               </div>
+              <div>
+                <label
+                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{ color: getColor("secondaryText") }}
+                >
+                  {t("private-deal.notes")}
+                </label>
+                <textarea
+                  value={cash.notes}
+                  onChange={(e) => setCash({ ...cash, notes: e.target.value })}
+                  rows={3}
+                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                  style={{
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("surface"),
+                    color: getColor("primaryText"),
+                  }}
+                />
+              </div>
             </>
           )}
 
@@ -370,10 +503,11 @@ export default function SplitPaymentProcessStep({
             variant="primary"
             size="md"
             fullWidth
-            onClick={onComplete}
+            onClick={handleSubmit}
+            disabled={submitting}
             leftIcon={<CheckCircle2 className="w-4 h-4" />}
           >
-            {ctaLabel}
+            {submitting ? t("private-deal.processing") : ctaLabel}
           </Button>
         </div>
       </div>

@@ -1,11 +1,103 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { Button } from "@/components/ui";
+import { getMyListings } from "@/services/marketplace";
+
+const FALLBACK_LISTINGS = [
+  {
+    id: 1,
+    emirate: "DUBAI",
+    code: "M | 7",
+    title: "Dubai · M 7",
+    status: "Active · 3 edits this week",
+    price: "12,500,000",
+    margin: "+28%",
+  },
+  {
+    id: 2,
+    emirate: "ABU DHABI",
+    code: "1 | 88",
+    title: "Abu Dhabi · 1 88",
+    status: "In escrow · 2 edits this week",
+    price: "4,800,000",
+    margin: "+28%",
+  },
+  {
+    id: 3,
+    emirate: "DUBAI",
+    code: "AA | 999",
+    title: "Dubai · AA 999",
+    status: "Pending reveal · 1 edits this week",
+    price: "1,850,000",
+    margin: "+28%",
+    isBlurred: true,
+  },
+  {
+    id: 4,
+    emirate: "SHARJAH",
+    code: "1 | 5",
+    title: "Sharjah · 1 5",
+    status: "Active · 3 edits this week",
+    price: "920,000",
+    margin: "+28%",
+  },
+  {
+    id: 5,
+    emirate: "DUBAI",
+    code: "K | 55",
+    title: "Dubai · K 55",
+    status: "Active · 2 edits this week",
+    price: "680,000",
+    margin: "+28%",
+  },
+  {
+    id: 6,
+    emirate: "ABU DHABI",
+    code: "5 | 777",
+    title: "Abu Dhabi · 5 777",
+    status: "Active · 1 edits this week",
+    price: "540,000",
+    margin: "+28%",
+  },
+];
 
 export default function TraderDashboardPage() {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const [listings, setListings] = useState(FALLBACK_LISTINGS);
+
+  useEffect(() => {
+    let active = true;
+
+    getMyListings(locale)
+      .then((response) => {
+        if (!active || !response.data.listings?.length) return;
+        setListings(
+          response.data.listings.map((listing) => ({
+            id: listing.id,
+            emirate: listing.emirate_label?.toUpperCase() || listing.emirate,
+            code:
+              listing.plate_code && listing.plate_digits
+                ? `${listing.plate_code} | ${listing.plate_digits}`
+                : listing.display_plate,
+            title: listing.title,
+            status: `${listing.status} · ${listing.view_count} views`,
+            price: listing.asking_price.toLocaleString("en-AE"),
+            margin: "+—",
+            isBlurred: listing.code_hidden,
+          })),
+        );
+      })
+      .catch(() => {
+        // Keep fallback mock data
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [locale]);
 
   // Statistical data (we used translation keys)
   const stats = [
@@ -28,65 +120,6 @@ export default function TraderDashboardPage() {
       label: t("dashboard.avg_hold_period"),
       value: "8.4 months",
       sub: t("dashboard.across_active"),
-    },
-  ];
-
-  // Active Lists Data
-  const listings = [
-    {
-      id: 1,
-      emirate: "DUBAI",
-      code: "M | 7",
-      title: "Dubai · M 7",
-      status: "Active · 3 edits this week",
-      price: "12,500,000",
-      margin: "+28%",
-    },
-    {
-      id: 2,
-      emirate: "ABU DHABI",
-      code: "1 | 88",
-      title: "Abu Dhabi · 1 88",
-      status: "In escrow · 2 edits this week",
-      price: "4,800,000",
-      margin: "+28%",
-    },
-    {
-      id: 3,
-      emirate: "DUBAI",
-      code: "AA | 999",
-      title: "Dubai · AA 999",
-      status: "Pending reveal · 1 edits this week",
-      price: "1,850,000",
-      margin: "+28%",
-      isBlurred: true,
-    },
-    {
-      id: 4,
-      emirate: "SHARJAH",
-      code: "1 | 5",
-      title: "Sharjah · 1 5",
-      status: "Active · 3 edits this week",
-      price: "920,000",
-      margin: "+28%",
-    },
-    {
-      id: 5,
-      emirate: "DUBAI",
-      code: "K | 55",
-      title: "Dubai · K 55",
-      status: "Active · 2 edits this week",
-      price: "680,000",
-      margin: "+28%",
-    },
-    {
-      id: 6,
-      emirate: "ABU DHABI",
-      code: "5 | 777",
-      title: "Abu Dhabi · 5 777",
-      status: "Active · 1 edits this week",
-      price: "540,000",
-      margin: "+28%",
     },
   ];
 

@@ -11,6 +11,7 @@ interface OtpVerificationStepProps {
   onChange: (otp: string[]) => void;
   onBack: () => void;
   onContinue: () => void;
+  loading?: boolean;
 }
 
 export default function OtpVerificationStep({
@@ -18,6 +19,7 @@ export default function OtpVerificationStep({
   onChange,
   onBack,
   onContinue,
+  loading = false,
 }: OtpVerificationStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -122,9 +124,9 @@ export default function OtpVerificationStep({
           size="md"
           onClick={onContinue}
           rightIcon={<NextIcon className="w-4 h-4" />}
-          disabled={otp.some((d) => !d)}
+          disabled={loading || otp.some((d) => !d)}
         >
-          {t("private-deal.continue")}
+          {loading ? t("private-deal.processing") : t("private-deal.continue")}
         </Button>
       </div>
     </div>

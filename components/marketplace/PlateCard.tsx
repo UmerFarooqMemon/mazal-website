@@ -18,6 +18,7 @@ interface PlateCardProps {
   isFavorite?: boolean;
   isBlurred?: boolean;
   previouslySold?: boolean;
+  imageUrl?: string;
 }
 
 const TIER_LABELS = {
@@ -36,6 +37,7 @@ export default function PlateCard({
   views,
   rating,
   previouslySold,
+  imageUrl,
 }: PlateCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -105,7 +107,7 @@ export default function PlateCard({
         style={{ backgroundColor: getColor("surface") }}
       >
         <Image
-          src="/home-new.png"
+          src={imageUrl || "/home-new.png"}
           alt={`${emirate} ${code} Plate`}
           fill
           className="object-contain"

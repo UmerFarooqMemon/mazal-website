@@ -9,10 +9,12 @@ import { Button } from "@/components/ui";
 
 interface TransferProgressStepProps {
   otp?: string;
+  shareUrl?: string;
 }
 
 export default function TransferProgressStep({
   otp = "256 256 1245",
+  shareUrl,
 }: TransferProgressStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -33,7 +35,8 @@ export default function TransferProgressStep({
   const handleShare = async () => {
     const shareData = {
       title: "Mazal Private Deal",
-      text: `Join this Mazal private escrow deal. OTP: ${otp}`,
+      text: `Join this Mazal private escrow deal. OTP: ${otp}${shareUrl ? ` ${shareUrl}` : ""}`,
+      url: shareUrl,
     };
     if (navigator.share) {
       try {

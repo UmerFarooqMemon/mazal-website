@@ -3,8 +3,13 @@ import Image from "next/image";
 import { Shield, Clock, Star, Eye } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import type { MarketplaceListingDetail } from "@/services/marketplace";
 
-export default function PlateHero() {
+interface PlateHeroProps {
+  listing?: MarketplaceListingDetail | null;
+}
+
+export default function PlateHero({ listing }: PlateHeroProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
@@ -23,12 +28,16 @@ export default function PlateHero() {
     {
       icon: Star,
       title: t("listings.seller_rating_title"),
-      desc: t("listings.seller_rating_desc"),
+      desc: listing?.seller
+        ? `${listing.seller.rating.toFixed(1)} · ${listing.seller.completed_deals} deals`
+        : t("listings.seller_rating_desc"),
     },
     {
       icon: Eye,
       title: t("listings.views_title"),
-      desc: t("listings.views_desc"),
+      desc: listing
+        ? `${listing.view_count.toLocaleString()} views`
+        : t("listings.views_desc"),
     },
   ];
 
@@ -43,8 +52,8 @@ export default function PlateHero() {
       >
         <div className="relative w-full max-w-xl aspect-[250/60]">
           <Image
-            src="/home-new.png"
-            alt="Dubai plate AA 7777"
+            src={listing?.preview?.image_url || "/home-new.png"}
+            alt={listing?.display_plate || "Plate preview"}
             fill
             className="object-contain"
             sizes="(max-width: 768px) 100vw, 560px"

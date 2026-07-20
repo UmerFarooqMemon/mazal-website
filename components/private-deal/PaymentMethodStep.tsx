@@ -37,6 +37,7 @@ export interface SplitPaymentEntry {
   bank?: string;
   accountNumber?: string;
   iban?: string;
+  backendPaymentId?: number;
   status: SplitPaymentStatus;
   createdAt: string;
 }
@@ -59,11 +60,12 @@ interface PaymentMethodStepProps {
   splitPayments: SplitPaymentEntry[];
   onMethodChange: (method: PaymentMethod) => void;
   onModeChange: (mode: PaymentMode) => void;
-  onSplitPaymentsChange: (payments: SplitPaymentEntry[]) => void;
+  onSplitPaymentsChange: (payments: SplitPaymentEntry[]) => void | Promise<void>;
   onAllocatedChange?: (allocated: number) => void;
   onBack: () => void;
   onContinue: () => void;
   onProcessSplit: (paymentId: string) => void;
+  saving?: boolean;
 }
 
 const METHODS: {
@@ -123,6 +125,7 @@ export default function PaymentMethodStep({
   onBack,
   onContinue,
   onProcessSplit,
+  saving = false,
 }: PaymentMethodStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -134,13 +137,6 @@ export default function PaymentMethodStep({
   const [showSavedList, setShowSavedList] = useState(
     () => splitPayments.length > 0,
   );
-
-  useEffect(() => {
-    if (mode === "split" && drafts.length === 0 && splitPayments.length === 0) {
-      setDrafts([createDraft("bank", totalAmount)]);
-      setShowSavedList(false);
-    }
-  }, [mode, drafts.length, splitPayments.length, totalAmount]);
 
   const draftAllocated = useMemo(
     () => drafts.reduce((sum, d) => sum + parseAmount(d.amount), 0),
@@ -186,7 +182,7 @@ export default function PaymentMethodStep({
     setShowSavedList(false);
   };
 
-  const saveSplits = () => {
+  const saveSplits = async () => {
     if (!canSave) return;
     const now = new Date().toISOString();
     const saved: SplitPaymentEntry[] = drafts.map((d) => ({
@@ -200,7 +196,7 @@ export default function PaymentMethodStep({
       status: "awaiting",
       createdAt: now,
     }));
-    onSplitPaymentsChange(saved);
+    await onSplitPaymentsChange(saved);
     setShowSavedList(true);
   };
 
@@ -394,8 +390,9 @@ export default function PaymentMethodStep({
               size="md"
               onClick={onContinue}
               rightIcon={<NextIcon className="w-4 h-4" />}
+              disabled={saving}
             >
-              {t("private-deal.continue")}
+              {saving ? t("private-deal.processing") : t("private-deal.continue")}
             </Button>
           </div>
         </>
@@ -765,10 +762,12 @@ export default function PaymentMethodStep({
             fullWidth
             className="mt-5 mb-6"
             onClick={saveSplits}
-            disabled={!canSave}
+            disabled={saving || !canSave}
             leftIcon={<CheckCircle2 className="w-4 h-4" />}
           >
-            {t("private-deal.save_split_payment")}
+            {saving
+              ? t("private-deal.processing")
+              : t("private-deal.save_split_payment")}
           </Button>
 
           <div

@@ -1,21 +1,23 @@
 "use client";
-import { useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 
-type FilterKey = "emirate" | "digit_count" | "price_range" | "type";
+export type FilterKey = "emirate" | "digit_count" | "price_range" | "type";
 
-export default function MarketplaceFilters() {
+export type MarketplaceFilterState = Record<FilterKey, string>;
+
+interface MarketplaceFiltersProps {
+  selected: MarketplaceFilterState;
+  onChange: (key: FilterKey, value: string) => void;
+}
+
+export default function MarketplaceFilters({
+  selected,
+  onChange,
+}: MarketplaceFiltersProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
-
-  const [selected, setSelected] = useState<Record<FilterKey, string>>({
-    emirate: "Dubai",
-    digit_count: "Any",
-    price_range: "",
-    type: "",
-  });
 
   const filterSections: {
     key: FilterKey;
@@ -88,11 +90,10 @@ export default function MarketplaceFilters() {
                   key={option.value}
                   type="button"
                   onClick={() =>
-                    setSelected((prev) => ({
-                      ...prev,
-                      [section.key]:
-                        prev[section.key] === option.value ? "" : option.value,
-                    }))
+                    onChange(
+                      section.key,
+                      selected[section.key] === option.value ? "" : option.value,
+                    )
                   }
                   className="px-3 py-1.5 rounded-full text-xs font-medium border transition-opacity"
                   style={

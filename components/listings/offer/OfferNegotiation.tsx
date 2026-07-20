@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Handshake, RefreshCw } from "lucide-react";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import OfferDealSummary from "./OfferDealSummary";
+import {
+  getListingDetail,
+  submitOffer,
+} from "@/services/marketplace";
 
 type OfferCardKind =
   | "listing"
@@ -42,6 +47,8 @@ export default function OfferNegotiation() {
   const isRTL = locale === "ar";
 
   const askingPrice = 680000;
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [resolvedAskingPrice, setResolvedAskingPrice] = useState(askingPrice);
 
   const [rounds, setRounds] = useState<OfferRound[]>([
     {
@@ -94,10 +101,50 @@ export default function OfferNegotiation() {
     },
   ]);
 
+  useEffect(() => {
+    getListingDetail(params.id, locale)
+      .then((response) => {
+        setResolvedAskingPrice(response.data.listing.asking_price);
+        setRounds((prev) =>
+          prev.map((round) =>
+            round.kind === "listing"
+              ? { ...round, amount: response.data.listing.asking_price }
+              : round,
+          ),
+        );
+      })
+      .catch(() => {
+        // Keep fallback mock data
+      });
+  }, [locale, params.id]);
+
   const updateAmount = (id: string, amount: number) => {
     setRounds((prev) =>
       prev.map((r) => (r.id === id ? { ...r, amount } : r)),
     );
+  };
+
+  const handleSendOffer = async (round: OfferRound) => {
+    if (round.amount < 1) {
+      toast.error(t("offer.invalid_amount") || "Enter a valid offer amount.");
+      return;
+    }
+
+    setSubmittingId(round.id);
+    try {
+      await submitOffer(
+        params.id,
+        { amount: round.amount, message: round.title },
+        locale,
+      );
+      toast.success(t("offer.sent_success") || "Offer submitted successfully.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit offer.",
+      );
+    } finally {
+      setSubmittingId(null);
+    }
   };
 
   return (
@@ -176,8 +223,16 @@ export default function OfferNegotiation() {
                 />
 
                 {round.primaryAction === "send" ? (
-                  <Button variant="primary" size="lg" fullWidth>
-                    {t("offer.send_offer")}
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    disabled={submittingId === round.id}
+                    onClick={() => handleSendOffer(round)}
+                  >
+                    {submittingId === round.id
+                      ? t("common.loading") || "Loading..."
+                      : t("offer.send_offer")}
                   </Button>
                 ) : (
                   <div
@@ -233,7 +288,7 @@ export default function OfferNegotiation() {
           <div
             className={`lg:col-span-2 sticky top-24 ${isRTL ? "lg:col-start-1 lg:row-start-1" : ""}`}
           >
-            <OfferDealSummary askingPrice={askingPrice} />
+            <OfferDealSummary askingPrice={resolvedAskingPrice} />
           </div>
         </div>
       </div>

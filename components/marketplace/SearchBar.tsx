@@ -1,16 +1,33 @@
 "use client";
+import { FormEvent } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 
-export default function SearchBar() {
+interface SearchBarProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSearch: () => void;
+}
+
+export default function SearchBar({
+  value,
+  onChange,
+  onSearch,
+}: SearchBarProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
 
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    onSearch();
+  };
+
   return (
-    <div
+    <form
+      onSubmit={handleSubmit}
       className={`w-full border rounded-full h-[62px] px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
       style={{
         backgroundColor: getColor("surface"),
@@ -27,6 +44,8 @@ export default function SearchBar() {
         />
         <input
           type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           placeholder={t("marketplace.search_placeholder")}
           className={`w-full bg-transparent outline-none text-sm placeholder:opacity-60 ${isRTL ? "text-right" : "text-left"}`}
           style={{ color: getColor("primaryText") }}
@@ -34,6 +53,7 @@ export default function SearchBar() {
       </div>
 
       <Button
+        type="submit"
         variant="primary"
         size="md"
         className={`!rounded-full px-5 h-10 flex items-center gap-2 justify-center whitespace-nowrap shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
@@ -41,6 +61,6 @@ export default function SearchBar() {
         <SlidersHorizontal className="w-4 h-4" strokeWidth={2.5} />
         <span>{t("marketplace.search_button")}</span>
       </Button>
-    </div>
+    </form>
   );
 }

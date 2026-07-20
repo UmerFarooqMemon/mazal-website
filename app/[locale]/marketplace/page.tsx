@@ -1,99 +1,101 @@
 "use client";
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import SearchBar from "../../../components/marketplace/SearchBar";
-import MarketplaceFilters from "../../../components/marketplace/MarketplaceFilters";
+import MarketplaceFilters, {
+  type MarketplaceFilterState,
+} from "../../../components/marketplace/MarketplaceFilters";
 import PlateCard from "../../../components/marketplace/PlateCard";
+import {
+  mapEmirateToApi,
+  mapListingToPlateCard,
+  mapListingTypeToApi,
+  searchListings,
+} from "@/services/marketplace";
 
-const platesData = [
-  {
-    id: 1,
-    emirate: "DUBAI",
-    code: "M | 7",
-    price: 5100000,
-    tier: "diamond" as const,
-    views: 8421,
-    rating: 4.9,
-  },
-  {
-    id: 2,
-    emirate: "ABU DHABI",
-    code: "1 | 88",
-    price: 2200000,
-    tier: "diamond" as const,
-    views: 6004,
-    rating: 4.9,
-  },
-  {
-    id: 3,
-    emirate: "DUBAI",
-    code: "T | 8",
-    price: 6200000,
-    tier: "diamond" as const,
-    views: 6004,
-    rating: 4.9,
-  },
-  {
-    id: 4,
-    emirate: "DUBAI",
-    code: "K | 55",
-    price: 5100000,
-    tier: "diamond" as const,
-    views: 6004,
-    rating: 4.9,
-  },
-  {
-    id: 5,
-    emirate: "ABU DHABI",
-    code: "13 | 9",
-    price: 2200000,
-    tier: "diamond" as const,
-    views: 6004,
-    rating: 4.9,
-  },
-  {
-    id: 6,
-    emirate: "ABU DHABI",
-    code: "5 | 777",
-    price: 6200000,
-    tier: "diamond" as const,
-    views: 6004,
-    rating: 4.9,
-  },
-  {
-    id: 7,
-    emirate: "DUBAI",
-    code: "O | 2024",
-    price: 5100000,
-    tier: "gold" as const,
-    views: 6004,
-    rating: 4.9,
-  },
-  {
-    id: 8,
-    emirate: "RAS AL KHAIMAH",
-    code: "C | 11",
-    price: 2200000,
-    tier: "silver" as const,
-    views: 6004,
-    rating: 4.9,
-  },
-  {
-    id: 9,
-    emirate: "DUBAI",
-    code: "P | 111",
-    price: 6200000,
-    tier: "diamond" as const,
-    views: 6004,
-    rating: 4.9,
-  },
-];
+const INITIAL_FILTERS: MarketplaceFilterState = {
+  emirate: "",
+  digit_count: "",
+  price_range: "",
+  type: "",
+};
 
 export default function MarketplacePage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
   const isRTL = locale === "ar";
+
+  const [filters, setFilters] =
+    useState<MarketplaceFilterState>(INITIAL_FILTERS);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
+  const [listings, setListings] = useState<
+    ReturnType<typeof mapListingToPlateCard>[]
+  >([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchListings = useCallback(
+    async (pageNum: number, append = false) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await searchListings(
+          {
+            emirate: mapEmirateToApi(filters.emirate),
+            listing_type: mapListingTypeToApi(filters.type),
+            digit_count:
+              filters.digit_count && filters.digit_count !== "Any"
+                ? Number(filters.digit_count)
+                : undefined,
+            price_range: filters.price_range || undefined,
+            q: appliedQuery || undefined,
+            page: pageNum,
+            per_page: 12,
+          },
+          locale,
+        );
+
+        const mapped = (response.data.listings || []).map(mapListingToPlateCard);
+        setListings((prev) => (append ? [...prev, ...mapped] : mapped));
+        setTotalCount(response.data.pagination?.total ?? mapped.length);
+        setLastPage(response.data.pagination?.last_page ?? 1);
+        setPage(pageNum);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load listings.");
+        if (!append) setListings([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [appliedQuery, filters, locale],
+  );
+
+  useEffect(() => {
+    fetchListings(1);
+  }, [fetchListings]);
+
+  const handleFilterChange = (
+    key: keyof MarketplaceFilterState,
+    value: string,
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSearch = () => {
+    setAppliedQuery(searchQuery.trim());
+  };
+
+  const handleLoadMore = () => {
+    if (page < lastPage) {
+      fetchListings(page + 1, true);
+    }
+  };
 
   if (themeLoading || localeLoading) {
     return (
@@ -109,7 +111,6 @@ export default function MarketplacePage() {
       className="min-h-screen pb-16"
       style={{ backgroundColor: getColor("background") }}
     >
-      {/* Hero + search */}
       <div
         className="border-b"
         style={{
@@ -141,11 +142,14 @@ export default function MarketplacePage() {
           >
             {t("marketplace.subtitle")}
           </p>
-          <SearchBar />
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+          />
         </div>
       </div>
 
-      {/* Filters + grid */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           <aside
@@ -157,7 +161,7 @@ export default function MarketplacePage() {
             >
               {t("marketplace.filters")}
             </div>
-            <MarketplaceFilters />
+            <MarketplaceFilters selected={filters} onChange={handleFilterChange} />
           </aside>
 
           <div
@@ -168,47 +172,73 @@ export default function MarketplacePage() {
               style={{ color: getColor("mutedText") }}
             >
               <span>
-                {platesData.length} {t("marketplace.results_count")}
+                {totalCount} {t("marketplace.results_count")}
               </span>
               <span>{t("marketplace.sorted_by")}</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {platesData.map((plate) => (
-                <PlateCard
-                  key={plate.id}
-                  id={plate.id}
-                  emirate={plate.emirate}
-                  code={plate.code}
-                  price={plate.price}
-                  tier={plate.tier}
-                  views={plate.views}
-                  rating={plate.rating}
-                />
-              ))}
-            </div>
-
-            <div className="flex justify-center mt-10">
-              <Link
-                href={`/${locale}/auctions`}
-                className="inline-flex items-center justify-center h-[42px] px-8 rounded-full border text-sm font-semibold transition-colors"
-                style={{
-                  borderColor: getColor("border"),
-                  backgroundColor: getColor("surface"),
-                  color: getColor("primaryText"),
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = getColor("primary");
-                  e.currentTarget.style.color = getColor("primary");
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = getColor("border");
-                  e.currentTarget.style.color = getColor("primaryText");
-                }}
+            {error && (
+              <p
+                className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+                style={{ color: "#DC2626" }}
               >
-                {t("marketplace.load_more")}
-              </Link>
-            </div>
+                {error}
+              </p>
+            )}
+
+            {loading && listings.length === 0 ? (
+              <div
+                className="text-sm py-12 text-center"
+                style={{ color: getColor("mutedText") }}
+              >
+                {t("common.loading") || "Loading..."}
+              </div>
+            ) : listings.length === 0 ? (
+              <div
+                className="text-sm py-12 text-center"
+                style={{ color: getColor("mutedText") }}
+              >
+                {t("common.no_results") || "No listings found."}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {listings.map((plate) => (
+                  <PlateCard
+                    key={plate.id}
+                    id={plate.id}
+                    emirate={plate.emirate}
+                    code={plate.code}
+                    price={plate.price}
+                    type={plate.type}
+                    views={plate.views}
+                    rating={plate.rating}
+                    previouslySold={plate.previouslySold}
+                    isFavorite={plate.isFavorite}
+                    imageUrl={plate.imageUrl}
+                  />
+                ))}
+              </div>
+            )}
+
+            {page < lastPage && (
+              <div className="flex justify-center mt-10">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  className="inline-flex items-center justify-center h-[42px] px-8 rounded-full border text-sm font-semibold transition-colors disabled:opacity-60"
+                  style={{
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("surface"),
+                    color: getColor("primaryText"),
+                  }}
+                >
+                  {loading
+                    ? t("common.loading") || "Loading..."
+                    : t("marketplace.load_more")}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Shield } from "lucide-react";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
@@ -21,20 +22,48 @@ import PaymentMethodStep, {
   type PaymentMode,
   type SplitPaymentEntry,
 } from "@/components/private-deal/PaymentMethodStep";
-import PaymentDetailsStep from "@/components/private-deal/PaymentDetailsStep";
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
+import {
+  createPrivateDeal,
+  createPrivateDealCheckout,
+  extractPrivateDeal,
+  getPrivateDeal,
+  getPrivateDealOptions,
+  issuePrivateDealInvitation,
+  joinPrivateDeal,
+  savePrivateDealParty,
+  savePrivateDealPaymentPlan,
+  submitPrivateDealPayment,
+  type PrivateDeal,
+  type PrivateDealOptions,
+} from "@/services/private-deals";
 
 const STICKY_HEADER_OFFSET = 69;
+
+const PAYMENT_METHOD_MAP: Record<PaymentMethod, string> = {
+  bank: "bank_transfer",
+  card: "card",
+  managers_check: "managers_check",
+  cash: "cash_collection",
+};
 
 export default function PrivateDealPage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isRTL = locale === "ar";
   const stepperRef = useRef<HTMLDivElement>(null);
+  const dealIdRef = useRef<string | null>(null);
 
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [options, setOptions] = useState<PrivateDealOptions | null>(null);
+  const [dealId, setDealId] = useState<string | null>(null);
+  const [apiDeal, setApiDeal] = useState<PrivateDeal | null>(null);
+  const [shareUrl, setShareUrl] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [deal, setDeal] = useState<DealData>({
     role: null,
     emirate: "dubai",
@@ -63,6 +92,62 @@ export default function PrivateDealPage() {
   const [processingSplitId, setProcessingSplitId] = useState<string | null>(
     null,
   );
+
+  const resolveDealId = () => dealIdRef.current || dealId;
+
+  function hydrateFromApiDeal(
+    nextDeal: PrivateDeal,
+    roleOverride?: "seller" | "buyer",
+  ) {
+    if (nextDeal?.id == null) {
+      throw new Error("Deal response is missing an id.");
+    }
+
+    const nextDealId = String(nextDeal.id);
+    dealIdRef.current = nextDealId;
+    setApiDeal(nextDeal);
+    setDealId(nextDealId);
+    setDeal((prev) => ({
+      ...prev,
+      role: roleOverride || prev.role,
+      emirate: nextDeal.plate?.emirate || prev.emirate,
+      plateType: nextDeal.plate?.type || prev.plateType,
+      plateVariant: nextDeal.plate?.variant || prev.plateVariant,
+      code: nextDeal.plate?.code || prev.code,
+      digit: nextDeal.plate?.digits || prev.digit,
+      price: Number(nextDeal.agreed_price || prev.price || 0),
+    }));
+  }
+
+  useEffect(() => {
+    let ignore = false;
+
+    const init = async () => {
+      try {
+        const optionsResponse = await getPrivateDealOptions(locale);
+
+        if (!ignore) {
+          setOptions(optionsResponse.data);
+        }
+
+        const sharedDealId = searchParams.get("deal");
+        if (sharedDealId && !dealIdRef.current) {
+          const dealResponse = await getPrivateDeal(sharedDealId, locale);
+          if (!ignore) {
+            hydrateFromApiDeal(extractPrivateDeal(dealResponse), "buyer");
+          }
+        }
+      } catch {
+        // Keep page usable even if API bootstrap fails.
+      }
+    };
+
+    void init();
+
+    return () => {
+      ignore = true;
+    };
+  }, [locale, searchParams]);
 
   useEffect(() => {
     if (step < 1) {
@@ -161,6 +246,260 @@ export default function PrivateDealPage() {
     }
   };
 
+  const asMoney = (value: number) => value.toFixed(2);
+
+  const withSubmit = async (task: () => Promise<void>) => {
+    try {
+      setSubmitting(true);
+      await task();
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Something went wrong.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getPartyPayload = () => {
+    const isCompany = details.personType === "organization";
+    if (isCompany) {
+      return {
+        intent: "complete",
+        party_type: "company",
+        full_name: details.fullName,
+        trade_license_number:
+          details.identification === "trade_license"
+            ? details.identificationValue
+            : details.emiratesId,
+        license_source:
+          details.licenseSource ||
+          Object.keys(options?.license_sources || {})[0] ||
+          "dubai_det",
+        authorized_mobile: details.secondaryMobile || details.mobile,
+        email: details.email,
+        accept_terms: true,
+      };
+    }
+
+    return {
+      intent: "complete",
+      party_type: "individual",
+      full_name: details.fullName,
+      mobile_number: details.mobile,
+      email: details.email,
+      emirates_id:
+        details.identification === "traffic"
+          ? undefined
+          : details.emiratesId || details.identificationValue,
+      identification_type:
+        details.identification === "traffic" ? "traffic_file" : "emirates_id",
+      traffic_file_number:
+        details.identification === "traffic"
+          ? details.identificationValue
+          : undefined,
+      accept_terms: true,
+      role_details: {
+        notes: "",
+      },
+    };
+  };
+
+  const persistPaymentPlan = async (payments: SplitPaymentEntry[]) => {
+    const activeDealId = resolveDealId();
+    if (!activeDealId) {
+      throw new Error("Deal not found.");
+    }
+
+    const response = await savePrivateDealPaymentPlan(
+      activeDealId,
+      {
+        intent: "complete",
+        plan: payments.length > 1 ? "split" : "single",
+        entries: payments.map((payment) => ({
+          amount: asMoney(payment.amount),
+          method: PAYMENT_METHOD_MAP[payment.method],
+          notes: payment.notes || undefined,
+        })),
+      },
+      locale,
+    );
+
+    const nextDeal = extractPrivateDeal(response);
+    hydrateFromApiDeal(nextDeal);
+
+    const backendPayments = nextDeal.payments || [];
+    setSplitPayments(
+      payments.map((payment, index) => ({
+        ...payment,
+        backendPaymentId: backendPayments[index]?.id,
+      })),
+    );
+  };
+
+  const handleSellerDealCreate = async () => {
+    await withSubmit(async () => {
+      const response = await createPrivateDeal(
+        {
+          intent: "complete",
+          emirate: deal.emirate,
+          plate_variant: deal.plateVariant,
+          plate_type: deal.plateType,
+          plate_code: deal.code || undefined,
+          plate_digits: deal.digit,
+          plate_design: undefined,
+          agreed_price: asMoney(deal.price),
+        },
+        locale,
+      );
+
+      const createdDeal = extractPrivateDeal(response);
+      hydrateFromApiDeal(createdDeal, "seller");
+      setStep(2);
+    });
+  };
+
+  const handleSavePartyDetails = async (variant: "seller" | "buyer") => {
+    await withSubmit(async () => {
+      const activeDealId = resolveDealId();
+      if (!activeDealId) {
+        throw new Error("Deal not found.");
+      }
+
+      const response = await savePrivateDealParty(
+        activeDealId,
+        getPartyPayload(),
+        locale,
+      );
+      hydrateFromApiDeal(extractPrivateDeal(response), variant);
+      setStep(variant === "seller" ? 3 : 3);
+    });
+  };
+
+  const handleIssueInvitation = async () => {
+    await withSubmit(async () => {
+      const activeDealId = resolveDealId();
+      if (!activeDealId) {
+        throw new Error("Deal not found.");
+      }
+
+      const response = await issuePrivateDealInvitation(activeDealId, locale);
+      hydrateFromApiDeal(extractPrivateDeal(response), "seller");
+      setVerificationCode(response.data.verification_code);
+      setShareUrl(response.data.invitation.share_url);
+      setStep(4);
+    });
+  };
+
+  const handleJoinDeal = async () => {
+    await withSubmit(async () => {
+      const sharedDealId = resolveDealId() || searchParams.get("deal");
+      if (!sharedDealId) {
+        throw new Error("Invite link is missing a deal id.");
+      }
+
+      const response = await joinPrivateDeal(
+        sharedDealId,
+        otp.join(""),
+        locale,
+      );
+      hydrateFromApiDeal(extractPrivateDeal(response), "buyer");
+      setStep(2);
+    });
+  };
+
+  const handleSinglePaymentContinue = async () => {
+    await withSubmit(async () => {
+      const singlePayment: SplitPaymentEntry = {
+        id: "single-payment",
+        method: paymentMethod,
+        amount: deal.price,
+        notes: "",
+        status: "awaiting",
+        createdAt: new Date().toISOString(),
+      };
+
+      await persistPaymentPlan([singlePayment]);
+      setProcessingSplitId("single-payment");
+      setStep(4);
+    });
+  };
+
+  const handleSplitPaymentSave = async (payments: SplitPaymentEntry[]) => {
+    await withSubmit(async () => {
+      await persistPaymentPlan(payments);
+    });
+  };
+
+  const handleSubmitPayment = async (payload: {
+    paymentReference?: string;
+    senderBankName?: string;
+    senderAccountLast4?: string;
+    notes?: string;
+    evidence?: File | null;
+    checkNumber?: string;
+    collectionDate?: string;
+    collectionTime?: string;
+  }) => {
+    await withSubmit(async () => {
+      const activeDealId = resolveDealId();
+      if (!activeDealId || !processingPayment?.backendPaymentId) {
+        throw new Error("Payment is not ready yet.");
+      }
+
+      if (processingPayment.method === "card") {
+        const checkout = await createPrivateDealCheckout(
+          activeDealId,
+          processingPayment.backendPaymentId,
+          locale,
+        );
+        const redirectUrl = checkout.data.redirect_url;
+        if (!redirectUrl) {
+          throw new Error("Missing checkout URL.");
+        }
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      const formData = new FormData();
+      if (processingPayment.method === "bank") {
+        formData.append("payment_reference", payload.paymentReference || "");
+        formData.append("sender_bank_name", payload.senderBankName || "");
+        formData.append(
+          "sender_account_last4",
+          payload.senderAccountLast4 || "",
+        );
+        formData.append("notes", payload.notes || "");
+        if (payload.evidence) {
+          formData.append("evidence", payload.evidence);
+        }
+      }
+
+      if (processingPayment.method === "managers_check") {
+        formData.append("check_number", payload.checkNumber || "");
+        formData.append("collection_date", payload.collectionDate || "");
+        formData.append("collection_time", payload.collectionTime || "");
+        formData.append("notes", payload.notes || "");
+      }
+
+      if (processingPayment.method === "cash") {
+        formData.append("collection_date", payload.collectionDate || "");
+        formData.append("collection_time", payload.collectionTime || "");
+        formData.append("notes", payload.notes || "");
+      }
+
+      const response = await submitPrivateDealPayment(
+        activeDealId,
+        processingPayment.backendPaymentId,
+        formData,
+        locale,
+      );
+
+      hydrateFromApiDeal(extractPrivateDeal(response), "buyer");
+      completeSplitPayment();
+    });
+  };
+
   const renderMain = () => {
     if (step === 0) {
       return (
@@ -185,7 +524,7 @@ export default function PrivateDealPage() {
             data={deal}
             onChange={patchDeal}
             onBack={() => setStep(0)}
-            onContinue={() => setStep(2)}
+            onContinue={handleSellerDealCreate}
           />
         );
       }
@@ -195,7 +534,7 @@ export default function PrivateDealPage() {
             data={details}
             onChange={patchDetails}
             onBack={() => setStep(1)}
-            onContinue={() => setStep(3)}
+            onContinue={() => void handleSavePartyDetails("seller")}
             variant="seller"
           />
         );
@@ -204,11 +543,13 @@ export default function PrivateDealPage() {
         return (
           <TransferDetailsStep
             onBack={() => setStep(2)}
-            onComplete={() => setStep(4)}
+            onComplete={() => void handleIssueInvitation()}
           />
         );
       }
-      return <TransferProgressStep />;
+      return (
+        <TransferProgressStep otp={verificationCode} shareUrl={shareUrl} />
+      );
     }
 
     if (isBuyer) {
@@ -218,7 +559,8 @@ export default function PrivateDealPage() {
             otp={otp}
             onChange={setOtp}
             onBack={() => setStep(0)}
-            onContinue={() => setStep(2)}
+            onContinue={() => void handleJoinDeal()}
+            loading={submitting}
           />
         );
       }
@@ -228,7 +570,7 @@ export default function PrivateDealPage() {
             data={details}
             onChange={patchDetails}
             onBack={() => setStep(1)}
-            onContinue={() => setStep(3)}
+            onContinue={() => void handleSavePartyDetails("buyer")}
             variant="buyer"
             continueLabel={t("private-deal.confirm")}
           />
@@ -246,19 +588,20 @@ export default function PrivateDealPage() {
               setPaymentMode(mode);
               setProcessingSplitId(null);
             }}
-            onSplitPaymentsChange={setSplitPayments}
+            onSplitPaymentsChange={handleSplitPaymentSave}
             onAllocatedChange={setSplitAllocatedLive}
             onBack={() => setStep(2)}
-            onContinue={() => setStep(4)}
+            onContinue={() => void handleSinglePaymentContinue()}
             onProcessSplit={(id) => {
               setProcessingSplitId(id);
               setStep(4);
             }}
+            saving={submitting}
           />
         );
       }
       if (step === 4) {
-        if (paymentMode === "split" && processingPayment) {
+        if (processingPayment) {
           return (
             <SplitPaymentProcessStep
               payment={processingPayment}
@@ -266,18 +609,17 @@ export default function PrivateDealPage() {
                 setProcessingSplitId(null);
                 setStep(3);
               }}
-              onComplete={completeSplitPayment}
+              onComplete={(payload) => void handleSubmitPayment(payload)}
+              submitting={submitting}
+              custodyInstructions={
+                apiDeal?.payments?.find(
+                  (item) => item.id === processingPayment.backendPaymentId,
+                )?.custody_instructions
+              }
             />
           );
         }
-        return (
-          <PaymentDetailsStep
-            method={paymentMethod}
-            amount={deal.price}
-            onBack={() => setStep(3)}
-            onContinue={() => setStep(5)}
-          />
-        );
+        return null;
       }
       return (
         <PaymentSuccessStep

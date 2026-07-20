@@ -1,11 +1,16 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import PlateHero from "../../../../components/listings/PlateHero";
 import ListingSidebar from "../../../../components/listings/ListingSidebar";
 import SimilarPlates from "../../../../components/listings/SimilarPlates";
+import {
+  getListingDetail,
+  type MarketplaceListingDetail,
+} from "@/services/marketplace";
 
 export default function ListingDetailPage() {
   const { t, locale, loading: localeLoading } = useLocale();
@@ -14,30 +19,37 @@ export default function ListingDetailPage() {
   const listingId = (params?.id as string) || "1";
   const isRTL = locale === "ar";
 
-  const emirate = "Dubai";
-  const type = "Direct";
+  const [listing, setListing] = useState<MarketplaceListingDetail | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getEmirateTranslation = (emirateName: string) => {
-    const emirateMap: Record<string, string> = {
-      Dubai: "listings.emirate_dubai",
-      "Abu Dhabi": "listings.emirate_abu_dhabi",
-      Sharjah: "listings.emirate_sharjah",
-      Ajman: "listings.emirate_ajman",
-      "Ras Al Khaimah": "listings.emirate_rak",
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    getListingDetail(listingId, locale)
+      .then((response) => {
+        if (!active) return;
+        setListing(response.data.listing);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err instanceof Error ? err.message : "Failed to load listing.");
+        setListing(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
     };
-    return t(emirateMap[emirateName] || emirateName);
-  };
+  }, [listingId, locale]);
 
-  const getTypeTranslation = (typeName: string) => {
-    const typeMap: Record<string, string> = {
-      Direct: "listings.type_direct",
-      Auction: "listings.type_auction",
-      Spot: "listings.type_spot",
-    };
-    return t(typeMap[typeName] || typeName);
-  };
-
-  if (themeLoading || localeLoading) {
+  if (themeLoading || localeLoading || loading) {
     return (
       <div
         className="min-h-screen"
@@ -45,6 +57,21 @@ export default function ListingDetailPage() {
       />
     );
   }
+
+  if (error || !listing) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ backgroundColor: getColor("background") }}
+      >
+        <p style={{ color: getColor("mutedText") }}>
+          {error || t("common.not_found") || "Listing not found."}
+        </p>
+      </div>
+    );
+  }
+
+  const typeLabel = listing.listing_type_label || listing.listing_type;
 
   return (
     <div
@@ -64,11 +91,9 @@ export default function ListingDetailPage() {
             {t("listings.breadcrumb_marketplace")}
           </Link>
           <span>/</span>
-          <span>{getEmirateTranslation(emirate)}</span>
+          <span>{listing.emirate_label}</span>
           <span>/</span>
-          <span style={{ color: getColor("secondaryText") }}>
-            {getTypeTranslation(type)}
-          </span>
+          <span style={{ color: getColor("secondaryText") }}>{typeLabel}</span>
         </div>
 
         <div
@@ -77,20 +102,20 @@ export default function ListingDetailPage() {
           <div
             className={`lg:col-span-3 space-y-8 ${isRTL ? "lg:col-start-3 lg:row-start-1" : "lg:col-start-1 lg:row-start-1"}`}
           >
-            <PlateHero />
+            <PlateHero listing={listing} />
 
             <div className={isRTL ? "text-right" : "text-left"}>
               <h3
                 className="text-lg font-serif font-bold mb-2"
                 style={{ color: getColor("primaryText") }}
               >
-                {t("listings.description_title")}
+                {listing.title || t("listings.description_title")}
               </h3>
               <p
                 className="text-sm leading-relaxed max-w-2xl"
                 style={{ color: getColor("mutedText") }}
               >
-                {t("listings.description_text")}
+                {listing.description || t("listings.description_text")}
               </p>
             </div>
           </div>
@@ -98,15 +123,11 @@ export default function ListingDetailPage() {
           <div
             className={`lg:col-span-2 ${isRTL ? "lg:col-start-1 lg:row-start-1" : "lg:col-start-4 lg:row-start-1"}`}
           >
-            <ListingSidebar
-              listingId={listingId}
-              emirate={emirate}
-              type={type}
-            />
+            <ListingSidebar listing={listing} />
           </div>
         </div>
 
-        <SimilarPlates />
+        <SimilarPlates listingId={listingId} />
       </div>
     </div>
   );

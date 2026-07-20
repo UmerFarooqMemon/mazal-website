@@ -1,52 +1,103 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { Heart, Share2 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui";
+import type { MarketplaceListingDetail } from "@/services/marketplace";
+import {
+  addToWatchlist,
+  removeFromWatchlist,
+} from "@/services/marketplace";
 
 interface ListingSidebarProps {
-  listingId: string | number;
-  emirate: string;
-  type: string;
+  listing: MarketplaceListingDetail;
 }
 
-export default function ListingSidebar({
-  listingId,
-  emirate,
-  type,
-}: ListingSidebarProps) {
+export default function ListingSidebar({ listing }: ListingSidebarProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const { isAuthenticated } = useAuth();
   const isRTL = locale === "ar";
+  const [watchlisted, setWatchlisted] = useState(
+    listing.is_watchlisted ?? false,
+  );
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
 
-  const getEmirateTranslation = (emirateName: string) => {
-    const emirateMap: Record<string, string> = {
-      Dubai: "listings.emirate_dubai",
-      "Abu Dhabi": "listings.emirate_abu_dhabi",
-      Sharjah: "listings.emirate_sharjah",
-      Ajman: "listings.emirate_ajman",
-      "Ras Al Khaimah": "listings.emirate_rak",
-    };
-    return t(emirateMap[emirateName] || emirateName);
-  };
+  const typeLabel = listing.listing_type_label || listing.listing_type;
+  const formattedPrice = new Intl.NumberFormat(
+    locale === "ar" ? "ar-AE" : "en-US",
+    {
+      style: "currency",
+      currency: "AED",
+      minimumFractionDigits: 0,
+    },
+  ).format(listing.asking_price);
 
-  const getTypeTranslation = (typeName: string) => {
-    const typeMap: Record<string, string> = {
-      Direct: "listings.type_direct",
-      Auction: "listings.type_auction",
-      Spot: "listings.type_spot",
-    };
-    return t(typeMap[typeName] || typeName);
-  };
+  const plateCode = listing.code_hidden
+    ? "•••"
+    : listing.plate_code || "—";
+  const plateDigits = listing.code_hidden
+    ? "•••"
+    : listing.plate_digits || "—";
+  const digitLabel = listing.digit_count
+    ? `${listing.digit_count}-digit`
+    : "";
 
   const rows = [
-    { label: t("listings.emirate"), value: getEmirateTranslation(emirate) },
-    { label: t("listings.code"), value: "AA" },
-    { label: t("listings.digits"), value: "7777 (4-digit)" },
-    // { label: t("listings.seller"), value: "Al Marwan" },
-    { label: t("listings.type"), value: getTypeTranslation(type) },
+    { label: t("listings.emirate"), value: listing.emirate_label },
+    { label: t("listings.code"), value: plateCode },
+    {
+      label: t("listings.digits"),
+      value: digitLabel ? `${plateDigits} (${digitLabel})` : plateDigits,
+    },
+    { label: t("listings.type"), value: typeLabel },
   ];
+
+  const handleWatchlistToggle = async () => {
+    if (!isAuthenticated) {
+      toast.error(t("common.login_required") || "Please login to continue.");
+      return;
+    }
+
+    setWatchlistLoading(true);
+    try {
+      if (watchlisted) {
+        await removeFromWatchlist(listing.id, locale);
+        setWatchlisted(false);
+        toast.success(
+          t("listings.watchlist_removed") || "Removed from watchlist.",
+        );
+      } else {
+        await addToWatchlist(listing.id, locale);
+        setWatchlisted(true);
+        toast.success(t("listings.watchlist_added") || "Added to watchlist.");
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Watchlist update failed.",
+      );
+    } finally {
+      setWatchlistLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: listing.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(t("listings.link_copied") || "Link copied.");
+      }
+    } catch {
+      // User cancelled share
+    }
+  };
 
   return (
     <div
@@ -67,7 +118,7 @@ export default function ListingSidebar({
           className="text-4xl md:text-5xl font-serif font-bold mb-2"
           style={{ color: getColor("primaryText") }}
         >
-          AED 12,500,000
+          {formattedPrice}
         </div>
         <div className="text-xs" style={{ color: getColor("mutedText") }}>
           {t("listings.fees_breakdown")}
@@ -76,7 +127,7 @@ export default function ListingSidebar({
 
       <div className="flex flex-col gap-3 mb-6">
         <Link
-          href={`/${locale}/listings/${listingId}/checkout?role=buyer&price=12500000`}
+          href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
           className="block"
         >
           <Button variant="primary" size="lg" fullWidth className="shadow-md">
@@ -84,22 +135,43 @@ export default function ListingSidebar({
           </Button>
         </Link>
 
-        <Link
-          href={`/${locale}/listings/${listingId}/offer`}
-          className="block"
-        >
-          <Button
-            variant="outline"
-            size="lg"
-            fullWidth
-            style={{
-              borderColor: getColor("border"),
-              color: getColor("primaryText"),
-            }}
+        {listing.can_make_offer !== false && !listing.is_owner && (
+          <Link
+            href={`/${locale}/listings/${listing.id}/offer`}
+            className="block"
           >
-            {t("listings.make_offer")}
-          </Button>
-        </Link>
+            <Button
+              variant="outline"
+              size="lg"
+              fullWidth
+              style={{
+                borderColor: getColor("border"),
+                color: getColor("primaryText"),
+              }}
+            >
+              {t("listings.make_offer")}
+            </Button>
+          </Link>
+        )}
+
+        {listing.code_hidden && (
+          <Link
+            href={`/${locale}/listings/${listing.id}/reveal`}
+            className="block"
+          >
+            <Button
+              variant="outline"
+              size="lg"
+              fullWidth
+              style={{
+                borderColor: getColor("primary"),
+                color: getColor("primary"),
+              }}
+            >
+              {t("listings.reveal_code") || "Reveal plate code"}
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div
@@ -108,19 +180,24 @@ export default function ListingSidebar({
         <Button
           variant="outline"
           size="md"
+          disabled={watchlistLoading}
+          onClick={handleWatchlistToggle}
           className={`flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
           style={{
             borderColor: getColor("border"),
             color: getColor("secondaryText"),
           }}
         >
-          <Heart className="w-4 h-4 fill-[#E11D48] text-[#E11D48]" />
+          <Heart
+            className={`w-4 h-4 ${watchlisted ? "fill-[#E11D48] text-[#E11D48]" : ""}`}
+          />
           {t("listings.watchlist")}
         </Button>
 
         <Button
           variant="outline"
           size="md"
+          onClick={handleShare}
           className={`flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
           style={{
             borderColor: getColor("border"),
