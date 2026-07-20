@@ -116,7 +116,7 @@ export default function CreateListingWizard() {
         plate_digits: data.digits,
         asking_price: Number(data.price.replace(/[^\d.]/g, "")) || 0,
         description: data.notes || undefined,
-        hide_code: data.hideCode,
+        hide_code: Boolean(data.code) && data.hideCode,
         status: "active" as const,
       };
 

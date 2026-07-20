@@ -111,7 +111,7 @@ export default function LivePreview({
             emirate={emirate}
             preview={preview}
             isRTL={isRTL}
-            hideCode={hideCode}
+            hideCode={showCode && hideCode}
           />
         </div>
       </div>

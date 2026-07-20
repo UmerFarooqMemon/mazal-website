@@ -201,6 +201,11 @@ export default function PlatePriceFormStep({
                 plateType: newVariant?.plate_type || data.plateType,
                 code: newFields.includes("plate_code") ? data.code : "",
                 digits: "",
+                hideCode:
+                  (newFields.includes("plate_code") &&
+                    (newVariant?.has_code ?? true))
+                    ? data.hideCode
+                    : false,
               });
             }}
             placeholder={t("common.select")}
@@ -352,10 +357,14 @@ export default function PlatePriceFormStep({
           >
             <button
               type="button"
-              onClick={() => onChange({ hideCode: !data.hideCode })}
-              className={`inline-flex items-center gap-2 h-8 px-3 rounded-full border text-xs font-medium transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+              disabled={!showCodeField}
+              onClick={() => {
+                if (!showCodeField) return;
+                onChange({ hideCode: !data.hideCode });
+              }}
+              className={`inline-flex items-center gap-2 h-8 px-3 rounded-full border text-xs font-medium transition-colors ${isRTL ? "flex-row-reverse" : ""} ${!showCodeField ? "opacity-50 cursor-not-allowed" : ""}`}
               style={
-                data.hideCode
+                showCodeField && data.hideCode
                   ? {
                       backgroundColor: getColor("primary"),
                       borderColor: getColor("primary"),
@@ -367,6 +376,9 @@ export default function PlatePriceFormStep({
                       color: getColor("secondaryText"),
                     }
               }
+              title={
+                !showCodeField ? t("listings.hide_code_unavailable") : undefined
+              }
             >
               <EyeOff className="w-4 h-4" />
               {t("listings.hide_code")}
@@ -375,7 +387,9 @@ export default function PlatePriceFormStep({
               className={`flex items-center gap-1.5 text-xs ${isRTL ? "flex-row-reverse text-right" : ""}`}
               style={{ color: getColor("secondaryText") }}
             >
-              {t("listings.hide_code_hint")}
+              {showCodeField
+                ? t("listings.hide_code_hint")
+                : t("listings.hide_code_unavailable")}
               <Info
                 className="w-3.5 h-3.5 shrink-0"
                 style={{ color: getColor("mutedText") }}
@@ -394,7 +408,7 @@ export default function PlatePriceFormStep({
             placeholder="68,000"
           />
 
-          <button
+          {/* <button
             type="button"
             className="w-full rounded-xl border border-dashed py-8 px-4 flex flex-col items-center justify-center gap-2 text-sm transition-colors"
             style={{
@@ -405,7 +419,7 @@ export default function PlatePriceFormStep({
           >
             <Camera className="w-6 h-6" />
             <span>{t("listings.scan_plate")}</span>
-          </button>
+          </button> */}
 
           <div>
             <label
@@ -498,7 +512,7 @@ export default function PlatePriceFormStep({
           preview={selectedVariant?.preview}
           showCode={showCodeField}
           price={data.price}
-          hideCode={data.hideCode}
+          hideCode={showCodeField && data.hideCode}
         />
       </div>
     </div>

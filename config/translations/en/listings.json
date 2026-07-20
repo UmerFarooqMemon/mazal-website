@@ -70,6 +70,7 @@
   "total_amount": "Total Amount",
   "hide_code": "Hide Code",
   "hide_code_hint": "Digits blurred until buyer pays a reveal fee.",
+  "hide_code_unavailable": "Classic and retro plates have no code to hide",
   "asking_price_aed": "Asking price (AED)",
   "scan_plate": "Or scan the plate — auto-fills emirate, code and digits.",
   "seller_notes": "Seller notes (optional)",

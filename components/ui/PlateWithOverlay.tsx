@@ -15,7 +15,7 @@ interface PlateWithOverlayProps {
   imageUrl?: string;
   preview?: PlatePreviewConfig;
   isRTL?: boolean;
-  /** When true, hides only the plate code letter — digits stay in their API position */
+  /** When true, blurs only the plate code letter — digits stay sharp in their API position */
   hideCode?: boolean;
 }
 
@@ -46,14 +46,11 @@ export default function PlateWithOverlay({
     codeOverlay?.hide_when_code?.includes(plate_code) || false;
 
   const showCode =
-    !shouldHideCode &&
-    !hideCode &&
-    Boolean(plate_code) &&
-    Boolean(codeOverlay);
+    !shouldHideCode && Boolean(plate_code) && Boolean(codeOverlay);
 
   const showDigits = Boolean(plate_digits) && Boolean(digitsOverlay);
 
-  // Build overlay styles directly from API config — never move digits when code is hidden
+  // Build overlay styles directly from API config
   const buildOverlayStyle = (
     overlay: PlateOverlayConfig | undefined,
   ): React.CSSProperties => {
@@ -87,7 +84,16 @@ export default function PlateWithOverlay({
     return style;
   };
 
-  const codeStyle = buildOverlayStyle(codeOverlay);
+  const codeStyle: React.CSSProperties = {
+    ...buildOverlayStyle(codeOverlay),
+    ...(hideCode
+      ? {
+          filter: "blur(5px)",
+          userSelect: "none",
+          WebkitUserSelect: "none",
+        }
+      : {}),
+  };
   const digitsStyle = buildOverlayStyle(digitsOverlay);
 
   return (
@@ -121,7 +127,13 @@ export default function PlateWithOverlay({
       `}</style>
 
       {showCode && (
-        <span dir="ltr" lang="en" className="plate-text" style={codeStyle}>
+        <span
+          dir="ltr"
+          lang="en"
+          className={`plate-text${hideCode ? " select-none" : ""}`}
+          style={codeStyle}
+          aria-hidden={hideCode || undefined}
+        >
           {plate_code}
         </span>
       )}
