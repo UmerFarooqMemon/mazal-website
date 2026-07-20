@@ -43,3 +43,42 @@ body {
      1px  1px 1px rgba(0,0,0,0.08),
     0 0 3px rgba(0,0,0,0.25);
 }
+
+/*
+  Plate PNG templates are taller than the metal plate and sit slightly high
+  in the canvas (more padding below than above).   Crop the tall plate canvas so the metal plate is framed with balanced
+  vertical padding (asymmetric margins account for extra bottom padding
+  in the source PNGs).
+*/
+.plate-crop {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  mix-blend-mode: multiply;
+  direction: ltr;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.plate-crop--form {
+  margin-top: -23%;
+  margin-bottom: -27%;
+}
+
+.plate-crop--card {
+  margin-top: -20%;
+  margin-bottom: -24%;
+}
+
+@media (min-width: 640px) {
+  .plate-crop--card {
+    margin-top: -21%;
+    margin-bottom: -25%;
+  }
+}
+
+.plate-crop--certificate {
+  margin-top: -19%;
+  margin-bottom: -23%;
+}

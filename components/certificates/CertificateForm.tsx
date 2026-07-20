@@ -689,14 +689,7 @@ export default function CertificateForm({
               {t("certificates.live_preview")}
             </span>
           </div>
-          <div
-            style={{
-              marginTop: "-22%",
-              marginBottom: "-22%",
-              overflow: "hidden",
-              mixBlendMode: "multiply",
-            }}
-          >
+          <div className="plate-crop plate-crop--form">
             <PlateWithOverlay
               plate_code={form.plate_code}
               plate_digits={form.plate_digits}

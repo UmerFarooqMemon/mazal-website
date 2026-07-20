@@ -217,14 +217,7 @@ export default function VerifiedCertificateCard({
           className="relative mx-auto w-full max-w-[340px] md:max-w-[440px]"
         >
           {data.platePreview?.background_image_url ? (
-            <div
-              style={{
-                marginTop: "-8%",
-                marginBottom: "-8%",
-                overflow: "hidden",
-                mixBlendMode: "multiply",
-              }}
-            >
+            <div className="plate-crop plate-crop--certificate">
               <PlateWithOverlay
                 plate_code={
                   !data.plateCode || data.plateCode === "—"

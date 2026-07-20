@@ -104,14 +104,7 @@ export default function LivePreview({
           backgroundColor: "#F5F5F5",
         }}
       >
-        <div
-          style={{
-            marginTop: "-22%",
-            marginBottom: "-22%",
-            overflow: "hidden",
-            mixBlendMode: "multiply",
-          }}
-        >
+        <div className="plate-crop plate-crop--form">
           <PlateWithOverlay
             plate_code={showCode ? code : ""}
             plate_digits={digits}

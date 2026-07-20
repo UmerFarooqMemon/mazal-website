@@ -98,14 +98,7 @@ export default function DealSummary({
           backgroundColor: "#F5F5F5",
         }}
       >
-        <div
-          style={{
-            marginTop: "-22%",
-            marginBottom: "-22%",
-            overflow: "hidden",
-            mixBlendMode: "multiply",
-          }}
-        >
+        <div className="plate-crop plate-crop--form">
           <PlateWithOverlay
             plate_code={showCodeField ? data.code : ""}
             plate_digits={data.digit}

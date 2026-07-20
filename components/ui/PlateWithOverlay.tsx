@@ -15,7 +15,7 @@ interface PlateWithOverlayProps {
   imageUrl?: string;
   preview?: PlatePreviewConfig;
   isRTL?: boolean;
-  /** When true, hides only the plate code letter — digits & plate image stay visible */
+  /** When true, hides only the plate code letter — digits stay in their API position */
   hideCode?: boolean;
 }
 
@@ -27,7 +27,8 @@ export default function PlateWithOverlay({
   preview,
   hideCode = false,
 }: PlateWithOverlayProps) {
-  const backgroundUrl = preview?.background_image_url || "";
+  const backgroundUrl =
+    preview?.background_image_url || "/plate-empty.png";
 
   const parseAspectRatio = (ratio?: string): string => {
     if (ratio) return ratio;
@@ -44,7 +45,15 @@ export default function PlateWithOverlay({
   const shouldHideCode =
     codeOverlay?.hide_when_code?.includes(plate_code) || false;
 
-  // Build overlay styles directly from API config
+  const showCode =
+    !shouldHideCode &&
+    !hideCode &&
+    Boolean(plate_code) &&
+    Boolean(codeOverlay);
+
+  const showDigits = Boolean(plate_digits) && Boolean(digitsOverlay);
+
+  // Build overlay styles directly from API config — never move digits when code is hidden
   const buildOverlayStyle = (
     overlay: PlateOverlayConfig | undefined,
   ): React.CSSProperties => {
@@ -65,13 +74,12 @@ export default function PlateWithOverlay({
     if (overlay.right) style.right = overlay.right;
     if (overlay.top) style.top = overlay.top;
     if (overlay.transform) style.transform = overlay.transform;
-    if (overlay.font_size) style.fontSize = overlay.font_size.replace(/vw/g, "cqw");
+    if (overlay.font_size)
+      style.fontSize = overlay.font_size.replace(/vw/g, "cqw");
     if (overlay.font_weight) style.fontWeight = overlay.font_weight;
     if (overlay.color) style.color = overlay.color;
-    style.fontFamily =
-      overlay.font_family || "'CharlesWright', sans-serif";
+    style.fontFamily = overlay.font_family || "'CharlesWright', sans-serif";
 
-    // Match backend: code (left-positioned) centers, digits (right-positioned) align right
     if (overlay.left && !overlay.right) style.textAlign = "center";
     else if (overlay.right && !overlay.left) style.textAlign = "right";
     else style.textAlign = "center";
@@ -85,14 +93,15 @@ export default function PlateWithOverlay({
   return (
     <div
       dir="ltr"
-      className={`relative shrink-0 ${className}`}
+      className={`relative mx-auto shrink-0 ${className}`}
       style={{
         width: width ? `${width}px` : "100%",
+        maxWidth: "100%",
         aspectRatio,
         backgroundImage: `url("${backgroundUrl}")`,
         backgroundSize: "100% 100%",
         backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
+        backgroundPosition: "center center",
         backgroundColor: "transparent",
         borderRadius: "3px",
         overflow: "hidden",
@@ -111,13 +120,13 @@ export default function PlateWithOverlay({
         }
       `}</style>
 
-      {!shouldHideCode && !hideCode && plate_code && codeOverlay && (
+      {showCode && (
         <span dir="ltr" lang="en" className="plate-text" style={codeStyle}>
           {plate_code}
         </span>
       )}
 
-      {plate_digits && digitsOverlay && (
+      {showDigits && (
         <span dir="ltr" lang="en" className="plate-text" style={digitsStyle}>
           {plate_digits}
         </span>

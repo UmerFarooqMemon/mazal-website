@@ -485,14 +485,7 @@ export default function PlatePriceStep({
             {t("private-deal.live_preview")}
           </span>
         </div>
-        <div
-          style={{
-            marginTop: "-22%",
-            marginBottom: "-22%",
-            overflow: "hidden",
-            mixBlendMode: "multiply",
-          }}
-        >
+        <div className="plate-crop plate-crop--form">
           <PlateWithOverlay
             plate_code={showCodeField ? data.code : ""}
             plate_digits={data.digit}

@@ -103,13 +103,8 @@ export default function CertificateRequestCard({
 
         {/* Column 2: Plate */}
         <div
-          className="flex-1 flex justify-center"
+          className="plate-crop plate-crop--card flex-1"
           style={{
-            marginTop: "-15%",
-            marginBottom: "-15%",
-            paddingTop: "1%",
-            overflow: "hidden",
-            mixBlendMode: "multiply",
             backgroundColor: "#F5F5F5",
           }}
         >
@@ -151,12 +146,8 @@ export default function CertificateRequestCard({
           {config.label}
         </span>
         <div
-          className="flex justify-center"
+          className="plate-crop plate-crop--card"
           style={{
-            marginTop: "-10%",
-            marginBottom: "-10%",
-            overflow: "hidden",
-            mixBlendMode: "multiply",
             backgroundColor: "#F5F5F5",
             pointerEvents: "none",
           }}
