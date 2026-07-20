@@ -15,6 +15,8 @@ interface PlateWithOverlayProps {
   imageUrl?: string;
   preview?: PlatePreviewConfig;
   isRTL?: boolean;
+  /** When true, hides only the plate code letter — digits & plate image stay visible */
+  hideCode?: boolean;
 }
 
 export default function PlateWithOverlay({
@@ -23,6 +25,7 @@ export default function PlateWithOverlay({
   width,
   className = "",
   preview,
+  hideCode = false,
 }: PlateWithOverlayProps) {
   const backgroundUrl = preview?.background_image_url || "";
 
@@ -108,14 +111,14 @@ export default function PlateWithOverlay({
         }
       `}</style>
 
-      {!shouldHideCode && plate_code && codeOverlay && (
-        <span dir="ltr" className="plate-text" style={codeStyle}>
+      {!shouldHideCode && !hideCode && plate_code && codeOverlay && (
+        <span dir="ltr" lang="en" className="plate-text" style={codeStyle}>
           {plate_code}
         </span>
       )}
 
       {plate_digits && digitsOverlay && (
-        <span dir="ltr" className="plate-text" style={digitsStyle}>
+        <span dir="ltr" lang="en" className="plate-text" style={digitsStyle}>
           {plate_digits}
         </span>
       )}

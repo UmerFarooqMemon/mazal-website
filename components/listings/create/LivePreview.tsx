@@ -98,7 +98,7 @@ export default function LivePreview({
       </div>
 
       <div
-        className={`relative w-full rounded-xl border overflow-hidden mb-6 ${hideCode ? "blur-sm select-none" : ""}`}
+        className="relative w-full rounded-xl border overflow-hidden mb-6"
         style={{
           borderColor: getColor("border"),
           backgroundColor: "#F5F5F5",
@@ -118,6 +118,7 @@ export default function LivePreview({
             emirate={emirate}
             preview={preview}
             isRTL={isRTL}
+            hideCode={hideCode}
           />
         </div>
       </div>

@@ -4,8 +4,8 @@ body {
   font-family: var(--font-inter), sans-serif;
 }
 
-/* Force Inter on all elements */
-* {
+/* Force Inter on all elements except plate overlay text */
+*:not(.plate-text) {
   font-family: var(--font-inter), sans-serif !important;
 }
 
@@ -30,6 +30,8 @@ body {
 
 .plate-text {
   font-family: "CharlesWright", sans-serif !important;
+  direction: ltr;
+  unicode-bidi: isolate;
   text-shadow:
     0 -1px 1px rgba(255,255,255,0.55),
     0  1px 1px rgba(255,255,255,0.35),
