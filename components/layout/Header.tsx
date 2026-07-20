@@ -88,7 +88,7 @@ export default function Header() {
             className={`flex h-16 items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
           >
             {/* Logo */}
-            <Link href="" className="flex items-center shrink-0">
+            <Link href={`/${locale}`} className="flex items-center shrink-0">
               {branding.logoUrl ? (
                 <Image
                   src={branding.logoUrl}
@@ -160,7 +160,7 @@ export default function Header() {
                   >
                     {/* User Profile */}
                     <Link
-                      href=""
+                      href={`/${locale}/dashboard-certificates`}
                       className={`flex items-center gap-3 group ${isRTL ? "flex-row-reverse" : ""}`}
                     >
                       <div className="relative shrink-0">
@@ -229,8 +229,16 @@ export default function Header() {
                   </Link>
                 )
               ) : (
-                /* Placeholder while mounting - prevents hydration mismatch */
-                <div className="h-9 w-20" />
+                <Link href={`/${locale}/login`}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="h-9 px-4 text-xs rounded-full"
+                  >
+                    <User className="w-4 h-4" strokeWidth={2} />
+                    <span className="ml-1.5">{t("common.sign_in")}</span>
+                  </Button>
+                </Link>
               )}
             </div>
 
@@ -239,9 +247,9 @@ export default function Header() {
               className={`flex items-center gap-2 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <LanguageSwitcher />
-              {mounted && isAuthenticated && (
+              {mounted && isAuthenticated ? (
                 <Link
-                  href=""
+                  href={`/${locale}/dashboard-certificates`}
                   className="h-9 w-9 flex items-center justify-center rounded-lg transition-colors"
                 >
                   <div
@@ -250,6 +258,16 @@ export default function Header() {
                   >
                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
+                </Link>
+              ) : (
+                <Link href={`/${locale}/login`}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="h-9 px-3 text-xs rounded-full"
+                  >
+                    <User className="w-4 h-4" strokeWidth={2} />
+                  </Button>
                 </Link>
               )}
               <button
