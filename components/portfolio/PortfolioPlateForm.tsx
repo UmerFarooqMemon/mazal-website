@@ -673,28 +673,22 @@ export default function PortfolioPlateForm({
           )}
         </div>
 
-        {/* LIVE PREVIEW Box */}
-        <div
-          className="rounded-xl overflow-hidden border"
-          style={{
-            borderColor: getColor("border"),
-            backgroundColor: "#F5F5F5",
-          }}
-        >
-          <div className={`px-5 pt-5 pb-3 ${isRTL ? "text-right" : "text-left"}`}>
-            <span
-              className="text-[10px] font-bold uppercase tracking-wider"
-              style={{ color: getColor("secondaryText") }}
-            >
-              {t("portfolio.add_plate_live_preview")}
-            </span>
-          </div>
+        {/* Live Preview */}
+        <div>
+          <label
+            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
+          >
+            {t("portfolio.add_plate_live_preview")}
+          </label>
           <NumberPlateDisplay
-            plate_code={form.plate_code}
+            plate_code={showCodeField ? form.plate_code : ""}
             plate_digits={form.plate_digits}
             emirate={t("listings.emirate_dubai")}
             preview={selectedVariant?.preview}
-            crop="form"
+            plateVariant={form.plate_variant}
+            crop="card"
+            showCode={showCodeField}
           />
         </div>
 

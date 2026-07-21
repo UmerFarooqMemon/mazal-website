@@ -17,7 +17,6 @@ export type PlateCropVariant =
   | "certificate"
   | "hero"
   | "compact"
-  | "private-deal"
   | "deal-summary";
 
 const CROP_CLASS: Record<PlateCropVariant, string> = {
@@ -27,7 +26,6 @@ const CROP_CLASS: Record<PlateCropVariant, string> = {
   certificate: "plate-crop--certificate",
   hero: "plate-crop--hero",
   compact: "plate-crop--compact",
-  "private-deal": "plate-crop--private-deal",
   "deal-summary": "plate-crop--deal-summary",
 };
 
@@ -83,6 +81,8 @@ export default function NumberPlateDisplay({
       : (variantMeta?.fields?.includes("plate_code") ?? true) &&
         (variantMeta?.has_code ?? Boolean(plate_code));
 
+  const usesPlateWidthFont = crop === "deal-summary";
+
   return (
     <div dir="ltr" lang="en" className={wrapperClassName}>
       <div className={`plate-crop ${CROP_CLASS[crop]}`}>
@@ -94,7 +94,7 @@ export default function NumberPlateDisplay({
           hideCode={showCodeField && hideCode}
           width={width}
           className={className}
-          scaleFontToWidth={scaleFontToWidth || crop === "deal-summary"}
+          scaleFontToWidth={scaleFontToWidth || usesPlateWidthFont}
           fontScaleMultiplier={
             crop === "deal-summary" ? DEAL_SUMMARY_FONT_SCALE : 1
           }

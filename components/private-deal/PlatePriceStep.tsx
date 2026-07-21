@@ -468,34 +468,22 @@ export default function PlatePriceStep({
         </div>
       </div>
 
-      <div
-        className="rounded-xl overflow-hidden border mb-6"
-        style={{
-          borderColor: getColor("border"),
-          backgroundColor: "#F5F5F5",
-        }}
-      >
-        <div
-          className={`px-5 pt-5 pb-3 ${isRTL ? "text-right" : "text-left"}`}
+      <div className="mb-4">
+        <label
+          className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("secondaryText") }}
         >
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider"
-            style={{ color: getColor("secondaryText") }}
-          >
-            {t("private-deal.live_preview")}
-          </span>
-        </div>
-        <div className="px-5">
-          <NumberPlateDisplay
-            plate_code={showCodeField ? data.code : ""}
-            plate_digits={data.digit}
-            emirate={t("listings.emirate_dubai")}
-            preview={selectedVariant?.preview}
-            plateVariant={data.plateVariant}
-            crop="private-deal"
-            showCode={showCodeField}
-          />
-        </div>
+          {t("private-deal.live_preview")}
+        </label>
+        <NumberPlateDisplay
+          plate_code={showCodeField ? data.code : ""}
+          plate_digits={data.digit}
+          emirate={t("listings.emirate_dubai")}
+          preview={selectedVariant?.preview}
+          plateVariant={data.plateVariant}
+          crop="card"
+          showCode={showCodeField}
+        />
       </div>
 
       <div className="w-full mb-6">

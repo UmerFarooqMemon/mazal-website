@@ -186,15 +186,6 @@ body[dir="rtl"] {
   mix-blend-mode: normal;
 }
 
-/* Private deal page — tight PNG crop + 15px top/bottom padding on wrapper (30px total) */
-.plate-crop--private-deal {
-  margin-top: calc(-16% - 40px);
-  margin-bottom: calc(-16% - 60px);
-  padding: 0;
-  overflow: hidden;
-  mix-blend-mode: normal;
-}
-
 /* Deal summary sidebar — crop contained in frame so title isn't overlapped */
 .deal-summary-plate-frame {
   overflow: hidden;
