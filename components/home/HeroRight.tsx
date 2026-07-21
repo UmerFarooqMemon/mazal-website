@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { useLocale } from "@/context/LocaleContext";
 import { Button } from "@/components/ui";
 
@@ -39,13 +39,13 @@ export default function HeroRight() {
             {t("home.hero_featured_label")}
           </div>
 
-          <div className="relative w-full aspect-2.5/1 mb-6 rounded-xl bg-white overflow-hidden">
-            <Image
-              src="/home-new.png"
-              alt="Dubai M 7 Plate"
-              fill
-              className="object-contain"
-              priority
+          <div className="mb-6">
+            <NumberPlateDisplay
+              plate_code="M"
+              plate_digits="7"
+              emirate="DUBAI"
+              plateVariant="private_new_colorful"
+              crop="card"
             />
           </div>
 

@@ -264,21 +264,42 @@ export function mapListingTypeToApi(value: string) {
 }
 
 export function mapListingToPlateCard(listing: MarketplaceListingCard) {
+  let plateCode = listing.plate_code || "";
+  let plateDigits = listing.plate_digits || "";
+
+  if (!plateDigits && listing.display_plate) {
+    const match = listing.display_plate.match(/^([A-Za-z]+)\s*[-|]?\s*(\d+)$/);
+    if (match) {
+      plateCode = plateCode || match[1].toUpperCase();
+      plateDigits = match[2];
+    } else if (/^\d+$/.test(listing.display_plate.trim())) {
+      plateDigits = listing.display_plate.trim();
+    } else {
+      plateDigits = listing.display_plate.trim();
+    }
+  }
+
   const code =
-    listing.plate_code && listing.plate_digits
-      ? `${listing.plate_code} | ${listing.plate_digits}`
+    plateCode && plateDigits
+      ? `${plateCode} | ${plateDigits}`
       : listing.display_plate;
 
   return {
     id: listing.id,
     emirate: listing.emirate_label?.toUpperCase() || listing.emirate,
+    emirateKey: listing.emirate,
     code,
+    plate_code: plateCode,
+    plate_digits: plateDigits,
+    plate_type: listing.plate_type || undefined,
+    plate_design: listing.plate_design || undefined,
     price: listing.asking_price,
     type: listing.listing_type_label?.toUpperCase() || listing.listing_type,
     views: listing.view_count,
     rating: listing.seller?.rating ?? 0,
     previouslySold: listing.previously_sold,
     isFavorite: listing.is_watchlisted,
+    hideCode: listing.hide_code || listing.code_hidden,
     imageUrl: listing.preview?.image_url,
   };
 }

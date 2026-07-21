@@ -2,7 +2,7 @@
 
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export type { PlatePreviewConfig } from "@/lib/plate-preview";
@@ -212,55 +212,22 @@ export default function VerifiedCertificateCard({
         </div>
 
         {/* Plate — same PlateWithOverlay as certificates/request live preview */}
-        <div
-          dir="ltr"
-          className="relative mx-auto w-full max-w-[340px] md:max-w-[440px]"
-        >
-          {data.platePreview?.background_image_url ? (
-            <div className="plate-crop plate-crop--certificate">
-              <PlateWithOverlay
-                plate_code={
-                  !data.plateCode || data.plateCode === "—"
-                    ? ""
-                    : data.plateCode
-                }
-                plate_digits={
-                  !data.plateDigits || data.plateDigits === "—"
-                    ? ""
-                    : data.plateDigits
-                }
-                emirate={data.emirateLabel || data.emirate || "DUBAI"}
-                preview={data.platePreview}
-                isRTL={isRTL}
-              />
-            </div>
-          ) : (
-            <div className="relative w-full aspect-[748/180]">
-              <img
-                src="/plate-empty.png"
-                alt={t("certificates.plate_preview") || "Plate"}
-                className="absolute inset-0 w-full h-full object-contain"
-              />
-              <div
-                dir="ltr"
-                className="absolute inset-0 flex items-center justify-between px-[8%]"
-              >
-                <span
-                  className="font-serif font-bold text-[28px] sm:text-[36px] md:text-[48px] tracking-wide leading-none"
-                  style={{ color: getColor("primaryText") || "#081123" }}
-                >
-                  {data.plateCode}
-                </span>
-                <span className="flex-1" aria-hidden />
-                <span
-                  className="font-serif font-bold text-[28px] sm:text-[36px] md:text-[48px] tracking-wide leading-none"
-                  style={{ color: getColor("primaryText") || "#081123" }}
-                >
-                  {data.plateDigits}
-                </span>
-              </div>
-            </div>
-          )}
+        <div className="relative mx-auto w-full max-w-[340px] md:max-w-[440px]">
+          <NumberPlateDisplay
+            plate_code={
+              !data.plateCode || data.plateCode === "—" ? "" : data.plateCode
+            }
+            plate_digits={
+              !data.plateDigits || data.plateDigits === "—"
+                ? ""
+                : data.plateDigits
+            }
+            emirate={data.emirateLabel || data.emirate || "DUBAI"}
+            preview={data.platePreview}
+            plateType={data.plateType}
+            plateDesign={data.plateDesign}
+            crop="certificate"
+          />
         </div>
 
         {/* Values */}

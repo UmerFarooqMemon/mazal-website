@@ -1,11 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 
 interface OfferDealSummaryProps {
   askingPrice: number;
+  plate_code?: string;
+  plate_digits?: string;
+  emirate?: string;
+  plate_type?: string;
+  plate_design?: string;
+  hideCode?: boolean;
 }
 
 function formatAed(amount: number) {
@@ -14,6 +20,12 @@ function formatAed(amount: number) {
 
 export default function OfferDealSummary({
   askingPrice,
+  plate_code = "A",
+  plate_digits = "777",
+  emirate = "DUBAI",
+  plate_type,
+  plate_design,
+  hideCode = false,
 }: OfferDealSummaryProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -57,32 +69,25 @@ export default function OfferDealSummary({
         {t("offer.summary_title")}
       </div>
 
-      <div
-        className="rounded-xl overflow-hidden border mb-5 p-4 flex items-center justify-center"
-        style={{
-          borderColor: getColor("border"),
-          backgroundColor: "#F5F5F5",
-        }}
-      >
-        <div className="relative w-full aspect-[250/60]">
-          <Image
-            src="/home-new.png"
-            alt="Dubai plate"
-            fill
-            className="object-contain"
-            sizes="320px"
-          />
-        </div>
+      <div className="mb-5">
+        <NumberPlateDisplay
+          plate_code={plate_code}
+          plate_digits={plate_digits}
+          emirate={emirate}
+          plateType={plate_type}
+          plateDesign={plate_design}
+          crop="form"
+          hideCode={hideCode}
+        />
       </div>
 
       <div className="space-y-3 text-sm mb-6">
         {rows.map((row) => (
           <div
             key={row.label}
-            className={`flex justify-between gap-3 ${isRTL ? "flex-row-reverse" : ""} ${row.bold ? "pt-1" : ""}`}
+            className={`flex items-center justify-between gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
           >
             <span
-              className={row.bold ? "font-bold" : ""}
               style={{
                 color: row.muted
                   ? getColor("mutedText")
@@ -92,7 +97,7 @@ export default function OfferDealSummary({
               {row.label}
             </span>
             <span
-              className={`shrink-0 ${row.bold ? "font-bold" : "font-medium"}`}
+              className={row.bold ? "font-bold" : ""}
               style={{ color: getColor("primaryText") }}
             >
               {row.value}

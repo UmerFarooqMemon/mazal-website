@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { ArrowLeft, FileBadge2 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -42,14 +42,13 @@ export default function PortfolioPlateHero({
           borderColor: getColor("border"),
         }}
       >
-        <div className="relative mx-auto aspect-[752/216] w-full max-w-3xl px-4">
-          <Image
-            src="/home-new.png"
-            alt={`${plate.emirate} ${plate.code} ${plate.digits}`}
-            fill
-            className="object-contain"
-            sizes="(max-width: 768px) 100vw, 752px"
-            priority
+        <div className="mx-auto w-full max-w-3xl px-4">
+          <NumberPlateDisplay
+            plate_code={plate.code}
+            plate_digits={plate.digits}
+            emirate={plate.emirate}
+            plateVariant="private_new_colorful"
+            crop="hero"
           />
         </div>
       </div>

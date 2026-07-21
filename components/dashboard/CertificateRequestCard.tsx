@@ -1,7 +1,7 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { Download } from "lucide-react";
 
 type RequestStatus = "Pending" | "Issued";
@@ -102,18 +102,14 @@ export default function CertificateRequestCard({
         </div>
 
         {/* Column 2: Plate */}
-        <div
-          className="plate-crop plate-crop--card flex-1"
-          style={{
-            backgroundColor: "#F5F5F5",
-          }}
-        >
-          <PlateWithOverlay
+        <div className="flex-1">
+          <NumberPlateDisplay
             plate_code={plate_code}
             plate_digits={plate_digits}
             emirate={emirate}
             preview={preview}
-            isRTL={isRTL}
+            crop="card"
+            wrapperClassName="w-full overflow-hidden flex-1"
           />
         </div>
 
@@ -145,21 +141,13 @@ export default function CertificateRequestCard({
         >
           {config.label}
         </span>
-        <div
-          className="plate-crop plate-crop--card"
-          style={{
-            backgroundColor: "#F5F5F5",
-            pointerEvents: "none",
-          }}
-        >
-          <PlateWithOverlay
-            plate_code={plate_code}
-            plate_digits={plate_digits}
-            emirate={emirate}
-            preview={preview}
-            isRTL={isRTL}
-          />
-        </div>
+        <NumberPlateDisplay
+          plate_code={plate_code}
+          plate_digits={plate_digits}
+          emirate={emirate}
+          preview={preview}
+          crop="card"
+        />
         <div
           className={`flex items-center justify-between mt-2 ${isRTL ? "flex-row-reverse" : ""}`}
           style={{ position: "relative", zIndex: 10 }}

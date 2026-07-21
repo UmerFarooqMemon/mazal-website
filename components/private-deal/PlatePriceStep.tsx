@@ -13,7 +13,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
-import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { DealData } from "./DealSummary";
 
 interface PlateCodeItem {
@@ -485,15 +485,15 @@ export default function PlatePriceStep({
             {t("private-deal.live_preview")}
           </span>
         </div>
-        <div className="plate-crop plate-crop--form">
-          <PlateWithOverlay
-            plate_code={showCodeField ? data.code : ""}
-            plate_digits={data.digit}
-            emirate={t("listings.emirate_dubai")}
-            preview={selectedVariant?.preview}
-            isRTL={isRTL}
-          />
-        </div>
+        <NumberPlateDisplay
+          plate_code={showCodeField ? data.code : ""}
+          plate_digits={data.digit}
+          emirate={t("listings.emirate_dubai")}
+          preview={selectedVariant?.preview}
+          plateVariant={data.plateVariant}
+          crop="form"
+          showCode={showCodeField}
+        />
       </div>
 
       <div className="w-full mb-6">

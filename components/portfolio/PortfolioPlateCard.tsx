@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { MoreVertical, Store } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -85,13 +85,13 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
         </button>
       </div>
 
-      <div className="relative mx-auto mb-4 aspect-[356/103] w-full max-w-[356px] overflow-hidden">
-        <Image
-          src="/home-new.png"
-          alt={`${plate.emirate} ${plate.code} ${plate.digits}`}
-          fill
-          className="object-contain"
-          sizes="(max-width: 768px) 100vw, 395px"
+      <div className="mx-auto mb-4 w-full max-w-[356px]">
+        <NumberPlateDisplay
+          plate_code={plate.code}
+          plate_digits={plate.digits}
+          emirate={plate.emirate}
+          plateVariant="private_new_colorful"
+          crop="card"
         />
       </div>
 

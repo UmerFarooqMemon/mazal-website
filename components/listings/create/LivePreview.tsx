@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 interface LivePreviewProps {
@@ -97,17 +97,17 @@ export default function LivePreview({
         {label || t("listings.live_preview")}
       </div>
 
-      <div className="w-full mb-3 overflow-hidden">
-        <div className="plate-crop plate-crop--live-preview">
-          <PlateWithOverlay
-            plate_code={showCode ? code : ""}
-            plate_digits={digits}
-            emirate={emirate}
-            preview={preview}
-            isRTL={isRTL}
-            hideCode={showCode && hideCode}
-          />
-        </div>
+      <div className="mb-3">
+        <NumberPlateDisplay
+          plate_code={showCode ? code : ""}
+          plate_digits={digits}
+          emirate={emirate}
+          preview={preview}
+          plateVariant={plateVariant}
+          crop="live-preview"
+          hideCode={showCode && hideCode}
+          showCode={showCode}
+        />
       </div>
 
       <div

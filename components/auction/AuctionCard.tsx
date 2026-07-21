@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { useLocale } from "@/context/LocaleContext";
 
 // Helper function to format numbers consistently
@@ -29,12 +29,13 @@ export default function AuctionCard() {
 
       {/* ✅ Panel Box with Image instead of Text */}
       <Link href={`/${locale}/auctions/1`}>
-        <div className="relative w-full aspect-2.5/1 rounded-xl mb-6 bg-white overflow-hidden hover:bg-gray-100 transition-colors cursor-pointer">
-          <Image
-            src="/home-new.png"
-            alt="Live Auction Plate"
-            fill
-            className="object-contain"
+        <div className="mb-6 cursor-pointer">
+          <NumberPlateDisplay
+            plate_code="M"
+            plate_digits="7"
+            emirate="DUBAI"
+            plateVariant="private_new_colorful"
+            crop="card"
           />
         </div>
       </Link>

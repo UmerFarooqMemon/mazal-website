@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export interface DealData {
@@ -91,22 +91,16 @@ export default function DealSummary({
         {t("private-deal.summary_title")}
       </div>
 
-      <div
-        className="rounded-xl overflow-hidden border mb-5"
-        style={{
-          borderColor: getColor("border"),
-          backgroundColor: "#F5F5F5",
-        }}
-      >
-        <div className="plate-crop plate-crop--form">
-          <PlateWithOverlay
-            plate_code={showCodeField ? data.code : ""}
-            plate_digits={data.digit}
-            emirate={t("listings.emirate_dubai")}
-            preview={selectedVariant?.preview}
-            isRTL={isRTL}
-          />
-        </div>
+      <div className="mb-5">
+        <NumberPlateDisplay
+          plate_code={showCodeField ? data.code : ""}
+          plate_digits={data.digit}
+          emirate={t("listings.emirate_dubai")}
+          preview={selectedVariant?.preview}
+          plateVariant={data.plateVariant}
+          crop="form"
+          showCode={showCodeField}
+        />
       </div>
 
       <div className="space-y-3 text-sm">

@@ -11,6 +11,7 @@ import OfferDealSummary from "./OfferDealSummary";
 import {
   getListingDetail,
   submitOffer,
+  type MarketplaceListingDetail,
 } from "@/services/marketplace";
 
 type OfferCardKind =
@@ -49,6 +50,7 @@ export default function OfferNegotiation() {
   const askingPrice = 680000;
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [resolvedAskingPrice, setResolvedAskingPrice] = useState(askingPrice);
+  const [listing, setListing] = useState<MarketplaceListingDetail | null>(null);
 
   const [rounds, setRounds] = useState<OfferRound[]>([
     {
@@ -104,6 +106,7 @@ export default function OfferNegotiation() {
   useEffect(() => {
     getListingDetail(params.id, locale)
       .then((response) => {
+        setListing(response.data.listing);
         setResolvedAskingPrice(response.data.listing.asking_price);
         setRounds((prev) =>
           prev.map((round) =>
@@ -288,7 +291,19 @@ export default function OfferNegotiation() {
           <div
             className={`lg:col-span-2 sticky top-24 ${isRTL ? "lg:col-start-1 lg:row-start-1" : ""}`}
           >
-            <OfferDealSummary askingPrice={resolvedAskingPrice} />
+            <OfferDealSummary
+              askingPrice={resolvedAskingPrice}
+              plate_code={listing?.plate_code || "A"}
+              plate_digits={listing?.plate_digits || "777"}
+              emirate={
+                listing?.emirate_label?.toUpperCase() ||
+                listing?.emirate ||
+                "DUBAI"
+              }
+              plate_type={listing?.plate_type || undefined}
+              plate_design={listing?.plate_design || undefined}
+              hideCode={listing?.hide_code || listing?.code_hidden}
+            />
           </div>
         </div>
       </div>

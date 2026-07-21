@@ -208,42 +208,29 @@ function adjustOverlaysForCode(
     codeForOverlay(code, adjusted.plate_code || undefined),
   );
 
+  // Digits keep their API-configured position when no alphabet is present.
+  if (!hasCode) {
+    return adjusted;
+  }
+
   if (layout === "split_top" && adjusted.plate_digits) {
-    if (!hasCode) {
-      delete adjusted.plate_digits.right;
-      adjusted.plate_digits.left = "58%";
-      adjusted.plate_digits.transform = "translate(-50%, -52%)";
-    } else {
-      delete adjusted.plate_digits.right;
-    }
+    delete adjusted.plate_digits.right;
   }
 
   if (layout === "sharjah_private" && adjusted.plate_digits) {
-    if (hasCode) {
-      adjusted.plate_code = adjusted.plate_code || {};
-      adjusted.plate_code.transform = "translateY(-50%)";
-      adjusted.plate_digits.transform = "translateY(-50%)";
-      delete adjusted.plate_digits.left;
-    } else {
-      delete adjusted.plate_digits.right;
-      adjusted.plate_digits.left = "50%";
-      adjusted.plate_digits.transform = "translate(-50%, -50%)";
-    }
+    adjusted.plate_code = adjusted.plate_code || {};
+    adjusted.plate_code.transform = "translateY(-50%)";
+    adjusted.plate_digits.transform = "translateY(-50%)";
+    delete adjusted.plate_digits.left;
   }
 
   if (layout === "rak_private" && adjusted.plate_digits) {
-    if (hasCode) {
-      adjusted.plate_code = adjusted.plate_code || {};
-      adjusted.plate_code.transform =
-        adjusted.plate_code.transform || "translateY(-50%)";
-      adjusted.plate_digits.transform =
-        adjusted.plate_digits.transform || "translateY(-50%)";
-      delete adjusted.plate_digits.right;
-    } else {
-      adjusted.plate_digits.left = "50%";
-      adjusted.plate_digits.transform = "translate(-50%, -50%)";
-      delete adjusted.plate_digits.right;
-    }
+    adjusted.plate_code = adjusted.plate_code || {};
+    adjusted.plate_code.transform =
+      adjusted.plate_code.transform || "translateY(-50%)";
+    adjusted.plate_digits.transform =
+      adjusted.plate_digits.transform || "translateY(-50%)";
+    delete adjusted.plate_digits.right;
   }
 
   return adjusted;

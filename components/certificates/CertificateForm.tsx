@@ -6,7 +6,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
-import PlateWithOverlay from "@/components/ui/PlateWithOverlay";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import {
   Upload,
   X,
@@ -689,15 +689,13 @@ export default function CertificateForm({
               {t("certificates.live_preview")}
             </span>
           </div>
-          <div className="plate-crop plate-crop--form">
-            <PlateWithOverlay
-              plate_code={form.plate_code}
-              plate_digits={form.plate_digits}
-              emirate={t("listings.emirate_dubai")}
-              preview={selectedVariant?.preview}
-              isRTL={isRTL}
-            />
-          </div>
+          <NumberPlateDisplay
+            plate_code={form.plate_code}
+            plate_digits={form.plate_digits}
+            emirate={t("listings.emirate_dubai")}
+            preview={selectedVariant?.preview}
+            crop="form"
+          />
         </div>
 
         {/* Submit Button */}

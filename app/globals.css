@@ -182,10 +182,20 @@ body[dir="rtl"] {
   margin-bottom: -28%;
   padding-top: 0;
   padding-bottom: 0;
+  overflow: hidden;
+  mix-blend-mode: normal;
 }
 
 /* Listings live preview — mild vertical crop, no white PNG bleed */
 .plate-crop--live-preview {
+  margin-top: calc(-16% - 25px);
+  margin-bottom: calc(-16% - 45px);
+  padding: 0;
+  overflow: hidden;
+  mix-blend-mode: normal;
+}
+
+.plate-crop--hero {
   margin-top: calc(-16% - 25px);
   margin-bottom: calc(-16% - 45px);
   padding: 0;
@@ -198,11 +208,15 @@ body[dir="rtl"] {
   margin-bottom: -26%;
   padding-top: 0;
   padding-bottom: 0;
+  overflow: hidden;
+  mix-blend-mode: normal;
 }
 
 .plate-crop--card {
   margin-top: -20%;
   margin-bottom: -24%;
+  overflow: hidden;
+  mix-blend-mode: normal;
 }
 
 @media (min-width: 640px) {
@@ -215,4 +229,6 @@ body[dir="rtl"] {
 .plate-crop--certificate {
   margin-top: -19%;
   margin-bottom: -23%;
+  overflow: hidden;
+  mix-blend-mode: normal;
 }

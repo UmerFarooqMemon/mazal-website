@@ -1,8 +1,8 @@
 "use client";
-import Image from "next/image";
 import { Shield, Clock, Star, Eye } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { MarketplaceListingDetail } from "@/services/marketplace";
 
 interface PlateHeroProps {
@@ -41,6 +41,12 @@ export default function PlateHero({ listing }: PlateHeroProps) {
     },
   ];
 
+  const plateCode = listing?.plate_code || "";
+  const plateDigits =
+    listing?.plate_digits ||
+    listing?.display_plate?.replace(/^[A-Za-z]+\s*[-|]?\s*/, "") ||
+    "";
+
   return (
     <div className="flex flex-col gap-6">
       <div
@@ -50,14 +56,17 @@ export default function PlateHero({ listing }: PlateHeroProps) {
           borderColor: getColor("border"),
         }}
       >
-        <div className="relative w-full max-w-xl aspect-[250/60]">
-          <Image
-            src={listing?.preview?.image_url || "/home-new.png"}
-            alt={listing?.display_plate || "Plate preview"}
-            fill
-            className="object-contain"
-            sizes="(max-width: 768px) 100vw, 560px"
-            priority
+        <div className="w-full max-w-xl">
+          <NumberPlateDisplay
+            plate_code={plateCode}
+            plate_digits={plateDigits}
+            emirate={
+              listing?.emirate_label?.toUpperCase() || listing?.emirate || ""
+            }
+            plateType={listing?.plate_type || undefined}
+            plateDesign={listing?.plate_design || undefined}
+            crop="hero"
+            hideCode={listing?.hide_code || listing?.code_hidden}
           />
         </div>
       </div>

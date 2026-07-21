@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { useLocale } from "@/context/LocaleContext";
 import { Button } from "@/components/ui";
 
@@ -9,6 +9,8 @@ const upcomingAuctions = [
   {
     id: 2,
     emirate: "ABU DHABI",
+    plate_code: "1",
+    plate_digits: "88",
     code: "1 | 88",
     title: "Abu Dhabi · 1 88",
     time: "Tonight 21:00",
@@ -17,6 +19,8 @@ const upcomingAuctions = [
   {
     id: 3,
     emirate: "ABU DHABI",
+    plate_code: "13",
+    plate_digits: "9",
     code: "13 | 9",
     title: "Abu Dhabi · 13 9",
     time: "Fri 22 Jun, 20:00",
@@ -25,6 +29,8 @@ const upcomingAuctions = [
   {
     id: 4,
     emirate: "DUBAI",
+    plate_code: "K",
+    plate_digits: "55",
     code: "K | 55",
     title: "Dubai · K 55",
     time: "Sat 23 Jun, 21:00",
@@ -37,10 +43,24 @@ function formatPrice(price: number): string {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function PlateImage() {
+function PlatePreview({
+  emirate,
+  plate_code,
+  plate_digits,
+}: {
+  emirate: string;
+  plate_code: string;
+  plate_digits: string;
+}) {
   return (
-    <div className="relative w-27.5 sm:w-35 aspect-2.5/1 shrink-0 bg-white overflow-hidden">
-      <Image src="/home-new.png" alt="Plate" fill className="object-contain" />
+    <div className="w-27.5 sm:w-35 shrink-0">
+      <NumberPlateDisplay
+        plate_code={plate_code}
+        plate_digits={plate_digits}
+        emirate={emirate}
+        plateVariant="private_new_colorful"
+        crop="compact"
+      />
     </div>
   );
 }
@@ -63,7 +83,11 @@ export default function UpcomingAuctionRow() {
               className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               {/* Plate Image */}
-              <PlateImage />
+              <PlatePreview
+                emirate={auction.emirate}
+                plate_code={auction.plate_code}
+                plate_digits={auction.plate_digits}
+              />
 
               {/* Details */}
               <div
@@ -120,7 +144,11 @@ export default function UpcomingAuctionRow() {
             className={`hidden sm:flex items-center gap-4 lg:gap-6 ${isRTL ? "flex-row-reverse" : ""}`}
           >
             {/* Plate Image */}
-            <PlateImage />
+            <PlatePreview
+              emirate={auction.emirate}
+              plate_code={auction.plate_code}
+              plate_digits={auction.plate_digits}
+            />
 
             {/* Auction Details */}
             <div

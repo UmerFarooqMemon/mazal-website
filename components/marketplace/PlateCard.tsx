@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { Eye, Star } from "lucide-react";
 import { useLocale } from "../../context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 
 interface PlateCardProps {
   id: string | number;
@@ -19,6 +19,11 @@ interface PlateCardProps {
   isBlurred?: boolean;
   previouslySold?: boolean;
   imageUrl?: string;
+  plate_code?: string;
+  plate_digits?: string;
+  plate_type?: string;
+  plate_design?: string;
+  hideCode?: boolean;
 }
 
 const TIER_LABELS = {
@@ -37,7 +42,11 @@ export default function PlateCard({
   views,
   rating,
   previouslySold,
-  imageUrl,
+  plate_code,
+  plate_digits,
+  plate_type,
+  plate_design,
+  hideCode = false,
 }: PlateCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -59,6 +68,16 @@ export default function PlateCard({
   const badgeLabel = tier
     ? TIER_LABELS[tier]
     : type || TIER_LABELS.diamond;
+
+  const digits =
+    plate_digits ||
+    (code.includes("|") ? code.split("|").pop()?.trim() : code) ||
+    "";
+
+  const letterCode =
+    plate_code ||
+    (code.includes("|") ? code.split("|")[0]?.trim() : "") ||
+    "";
 
   return (
     <Link
@@ -102,16 +121,15 @@ export default function PlateCard({
         </div>
       </div>
 
-      <div
-        className="relative w-full aspect-[250/60] mb-4 overflow-hidden"
-        style={{ backgroundColor: getColor("surface") }}
-      >
-        <Image
-          src={imageUrl || "/home-new.png"}
-          alt={`${emirate} ${code} Plate`}
-          fill
-          className="object-contain"
-          sizes="(max-width: 768px) 100vw, 280px"
+      <div className="mb-4">
+        <NumberPlateDisplay
+          plate_code={letterCode}
+          plate_digits={digits}
+          emirate={emirate}
+          plateType={plate_type}
+          plateDesign={plate_design}
+          crop="card"
+          hideCode={hideCode}
         />
       </div>
 
