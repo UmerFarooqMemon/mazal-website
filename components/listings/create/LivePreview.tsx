@@ -91,29 +91,23 @@ export default function LivePreview({
       }}
     >
       <div
-        className={`text-[11px] font-bold tracking-[0.14em] uppercase mb-5 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-[11px] font-bold tracking-[0.14em] uppercase mb-4 ${isRTL ? "text-right" : "text-left"}`}
         style={{ color: getColor("mutedText") }}
       >
         {label || t("listings.live_preview")}
       </div>
 
-      <div
-        className="plate-preview-wrap w-full mb-6"
-        style={{
-          maxWidth: "100%",
-          margin: "0 auto",
-          padding: 0,
-          background: "transparent",
-        }}
-      >
-        <PlateWithOverlay
-          plate_code={showCode ? code : ""}
-          plate_digits={digits}
-          emirate={emirate}
-          preview={preview}
-          isRTL={isRTL}
-          hideCode={showCode && hideCode}
-        />
+      <div className="w-full mb-3 overflow-hidden">
+        <div className="plate-crop plate-crop--live-preview">
+          <PlateWithOverlay
+            plate_code={showCode ? code : ""}
+            plate_digits={digits}
+            emirate={emirate}
+            preview={preview}
+            isRTL={isRTL}
+            hideCode={showCode && hideCode}
+          />
+        </div>
       </div>
 
       <div

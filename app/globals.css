@@ -184,6 +184,15 @@ body[dir="rtl"] {
   padding-bottom: 0;
 }
 
+/* Listings live preview — mild vertical crop, no white PNG bleed */
+.plate-crop--live-preview {
+  margin-top: calc(-16% - 25px);
+  margin-bottom: calc(-16% - 45px);
+  padding: 0;
+  overflow: hidden;
+  mix-blend-mode: normal;
+}
+
 .plate-crop--compact {
   margin-top: -22%;
   margin-bottom: -26%;
