@@ -1,9 +1,12 @@
 "use client";
 
-import type {
-  PlateOverlayConfig,
-  PlatePreviewConfig,
-} from "@/lib/plate-preview";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
+import {
+  computePlateRenderState,
+  type OverlayRenderState,
+  type PlateRenderState,
+} from "@/lib/number-plate-preview-render";
 
 interface PlateWithOverlayProps {
   plate_code: string;
@@ -19,6 +22,55 @@ interface PlateWithOverlayProps {
   hideCode?: boolean;
 }
 
+function OverlaySpan({
+  overlay,
+  blur,
+  overlayClass,
+}: {
+  overlay: OverlayRenderState;
+  blur?: boolean;
+  overlayClass?: string;
+}) {
+  if (!overlay.visible) return null;
+
+  const blurStyle = blur
+    ? {
+        filter: "blur(5px)",
+        userSelect: "none" as const,
+        WebkitUserSelect: "none" as const,
+      }
+    : {};
+
+  const className = [overlay.className, overlayClass].filter(Boolean).join(" ");
+
+  if (overlay.inner) {
+    return (
+      <span className={className} style={{ ...overlay.style, ...blurStyle }}>
+        <span
+          className={overlay.inner.className}
+          style={overlay.inner.style}
+          dir="ltr"
+          lang="en"
+        >
+          {overlay.inner.value}
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      dir="ltr"
+      lang="en"
+      className={className}
+      style={{ ...overlay.style, ...blurStyle }}
+      aria-hidden={blur || undefined}
+    >
+      {overlay.value}
+    </span>
+  );
+}
+
 export default function PlateWithOverlay({
   plate_code,
   plate_digits,
@@ -27,122 +79,115 @@ export default function PlateWithOverlay({
   preview,
   hideCode = false,
 }: PlateWithOverlayProps) {
-  const backgroundUrl =
-    preview?.background_image_url || "/plate-empty.png";
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [renderState, setRenderState] = useState<PlateRenderState | null>(() =>
+    preview
+      ? computePlateRenderState(preview, plate_code, plate_digits, 420)
+      : null,
+  );
 
-  const parseAspectRatio = (ratio?: string): string => {
-    if (ratio) return ratio;
-    const w = preview?.width || 840;
-    const h = preview?.height || 592;
-    return `${w} / ${h}`;
-  };
+  const updateRenderState = useCallback(() => {
+    const rootWidth = rootRef.current?.clientWidth || 420;
+    const next = computePlateRenderState(
+      preview,
+      plate_code,
+      plate_digits,
+      rootWidth,
+    );
+    setRenderState(next);
+  }, [preview, plate_code, plate_digits]);
 
-  const aspectRatio = parseAspectRatio(preview?.aspect_ratio);
+  useEffect(() => {
+    updateRenderState();
+  }, [updateRenderState]);
 
-  const codeOverlay = preview?.overlays?.plate_code;
-  const digitsOverlay = preview?.overlays?.plate_digits;
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
 
-  const shouldHideCode =
-    codeOverlay?.hide_when_code?.includes(plate_code) || false;
+    const observer = new ResizeObserver(() => {
+      updateRenderState();
+    });
 
-  const showCode =
-    !shouldHideCode && Boolean(plate_code) && Boolean(codeOverlay);
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [updateRenderState]);
 
-  const showDigits = Boolean(plate_digits) && Boolean(digitsOverlay);
+  useEffect(() => {
+    if (!renderState?.needsAbuDhabiClassicResize) return;
 
-  // Build overlay styles directly from API config
-  const buildOverlayStyle = (
-    overlay: PlateOverlayConfig | undefined,
-  ): React.CSSProperties => {
-    if (!overlay) return { display: "none" };
+    const frame = requestAnimationFrame(() => {
+      updateRenderState();
+    });
 
-    const style: React.CSSProperties = {
-      position: "absolute",
-      zIndex: 3,
-      direction: "ltr",
-      unicodeBidi: "plaintext",
-      display: "inline-block",
-      lineHeight: 1,
-      whiteSpace: "nowrap",
-      pointerEvents: "none",
-    };
+    return () => cancelAnimationFrame(frame);
+  }, [renderState?.needsAbuDhabiClassicResize, updateRenderState]);
 
-    if (overlay.left) style.left = overlay.left;
-    if (overlay.right) style.right = overlay.right;
-    if (overlay.top) style.top = overlay.top;
-    if (overlay.transform) style.transform = overlay.transform;
-    if (overlay.font_size)
-      style.fontSize = overlay.font_size.replace(/vw/g, "cqw");
-    if (overlay.font_weight) style.fontWeight = overlay.font_weight;
-    if (overlay.color) style.color = overlay.color;
-    style.fontFamily = overlay.font_family || "'CharlesWright', sans-serif";
-
-    if (overlay.left && !overlay.right) style.textAlign = "center";
-    else if (overlay.right && !overlay.left) style.textAlign = "right";
-    else style.textAlign = "center";
-
-    return style;
-  };
-
-  const codeStyle: React.CSSProperties = {
-    ...buildOverlayStyle(codeOverlay),
-    ...(hideCode
-      ? {
-          filter: "blur(5px)",
-          userSelect: "none",
-          WebkitUserSelect: "none",
-        }
-      : {}),
-  };
-  const digitsStyle = buildOverlayStyle(digitsOverlay);
+  if (!preview) {
+    return (
+      <div
+        dir="ltr"
+        className={`relative mx-auto shrink-0 plate-preview ${className}`}
+        style={{
+          width: width ? `${width}px` : "100%",
+          maxWidth: "100%",
+          aspectRatio: "840 / 592",
+          backgroundImage: 'url("/plate-empty.png")',
+          backgroundSize: "100% 100%",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center center",
+          backgroundColor: "transparent",
+          borderRadius: "3px",
+          overflow: "hidden",
+        }}
+      />
+    );
+  }
 
   return (
     <div
+      ref={rootRef}
       dir="ltr"
-      className={`relative mx-auto shrink-0 ${className}`}
+      className={`relative mx-auto shrink-0 plate-preview ${className}`}
       style={{
-        width: width ? `${width}px` : "100%",
-        maxWidth: "100%",
-        aspectRatio,
-        backgroundImage: `url("${backgroundUrl}")`,
-        backgroundSize: "100% 100%",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center center",
-        backgroundColor: "transparent",
-        borderRadius: "3px",
-        overflow: "hidden",
-        containerType: "inline-size",
-        direction: "ltr",
+        ...renderState?.rootStyle,
+        width: width ? `${width}px` : renderState?.rootStyle.width || "100%",
       }}
     >
-      <style jsx>{`
-        .plate-text {
-          display: inline-block;
-          isolation: isolate;
-          white-space: nowrap;
-          text-rendering: geometricPrecision;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
+      <OverlaySpan
+        overlay={
+          renderState?.code || {
+            visible: false,
+            value: "",
+            className: "plate-overlay",
+            style: {},
+          }
         }
-      `}</style>
-
-      {showCode && (
-        <span
-          dir="ltr"
-          lang="en"
-          className={`plate-text${hideCode ? " select-none" : ""}`}
-          style={codeStyle}
-          aria-hidden={hideCode || undefined}
-        >
-          {plate_code}
-        </span>
-      )}
-
-      {showDigits && (
-        <span dir="ltr" lang="en" className="plate-text" style={digitsStyle}>
-          {plate_digits}
-        </span>
-      )}
+        overlayClass="plate-overlay-code"
+        blur={hideCode}
+      />
+      <OverlaySpan
+        overlay={
+          renderState?.digitsAr || {
+            visible: false,
+            value: "",
+            className: "plate-overlay",
+            style: {},
+          }
+        }
+        overlayClass="plate-overlay-digits-ar"
+      />
+      <OverlaySpan
+        overlay={
+          renderState?.digits || {
+            visible: false,
+            value: "",
+            className: "plate-overlay",
+            style: {},
+          }
+        }
+        overlayClass="plate-overlay-digits"
+      />
     </div>
   );
 }

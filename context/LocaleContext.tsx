@@ -50,6 +50,16 @@ export function LocaleProvider({
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const dir = locale === "ar" ? "rtl" : "ltr";
+    const lang = locale === "ar" ? "ar" : "en";
+
+    document.documentElement.setAttribute("dir", dir);
+    document.documentElement.setAttribute("lang", lang);
+    document.body.setAttribute("dir", dir);
+    document.body.setAttribute("lang", lang);
+  }, [locale]);
+
   return (
     <LocaleContext.Provider value={{ locale, setLocale, t, loading }}>
       {children}

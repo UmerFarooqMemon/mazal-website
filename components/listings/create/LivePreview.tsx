@@ -98,22 +98,22 @@ export default function LivePreview({
       </div>
 
       <div
-        className="relative w-full rounded-xl border overflow-hidden mb-6"
+        className="plate-preview-wrap w-full mb-6"
         style={{
-          borderColor: getColor("border"),
-          backgroundColor: "#F5F5F5",
+          maxWidth: "100%",
+          margin: "0 auto",
+          padding: 0,
+          background: "transparent",
         }}
       >
-        <div className="plate-crop plate-crop--form">
-          <PlateWithOverlay
-            plate_code={showCode ? code : ""}
-            plate_digits={digits}
-            emirate={emirate}
-            preview={preview}
-            isRTL={isRTL}
-            hideCode={showCode && hideCode}
-          />
-        </div>
+        <PlateWithOverlay
+          plate_code={showCode ? code : ""}
+          plate_digits={digits}
+          emirate={emirate}
+          preview={preview}
+          isRTL={isRTL}
+          hideCode={showCode && hideCode}
+        />
       </div>
 
       <div

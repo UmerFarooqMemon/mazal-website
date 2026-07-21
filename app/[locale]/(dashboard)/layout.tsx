@@ -1,12 +1,11 @@
 "use client";
 import { use } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { LocaleProvider } from "@/context/LocaleContext";
 import { useLocale } from "@/context/LocaleContext";
 import { Button } from "@/components/ui";
 import {
-  LayoutDashboard,
   FileText,
   Car,
   Settings,
@@ -108,10 +107,16 @@ export default function DashboardLayout({
 }) {
   const { locale } = use(params);
   const validLocale = locale === "ar" || locale === "en" ? locale : "en";
+  const dir = validLocale === "ar" ? "rtl" : "ltr";
 
   return (
     <LocaleProvider initialLocale={validLocale as "ar" | "en"}>
-      <div className="flex min-h-screen bg-[#FAFAF8]">
+      <div
+        className="flex min-h-screen bg-[#FAFAF8]"
+        dir={dir}
+        lang={validLocale}
+        data-locale-root
+      >
         <DashboardSidebar />
         <main className="flex-1 p-8">{children}</main>
       </div>

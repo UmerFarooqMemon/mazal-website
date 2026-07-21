@@ -2,13 +2,17 @@ export type PlateOverlayConfig = {
   left?: string;
   right?: string;
   top?: string;
+  height?: string;
   transform?: string;
   font_size?: string;
   font_weight?: string;
   color?: string;
   font_family?: string;
+  layout_mode?: "point_center" | "flex_cell" | string;
   hide_when_code?: string[];
   metal_plate_text?: boolean;
+  text_shadow?: string;
+  letter_spacing?: string;
 };
 
 export type PlatePreviewConfig = {
@@ -34,6 +38,7 @@ export type PlatePreviewConfig = {
   overlays?: {
     plate_code?: PlateOverlayConfig;
     plate_digits?: PlateOverlayConfig;
+    plate_digits_ar?: PlateOverlayConfig;
   };
 };
 

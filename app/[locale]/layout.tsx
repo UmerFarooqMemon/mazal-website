@@ -1,4 +1,4 @@
-import { Inter, Fraunces } from "next/font/google";
+import { Inter } from "next/font/google";
 import { LocaleProvider } from "@/context/LocaleContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import {
@@ -22,9 +22,15 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
   const validLocale = locale === "ar" ? "ar" : "en";
+  const dir = validLocale === "ar" ? "rtl" : "ltr";
 
   return (
-    <div className={inter.className}>
+    <div
+      className={inter.className}
+      dir={dir}
+      lang={validLocale}
+      data-locale-root
+    >
       <LocaleProvider initialLocale={validLocale}>
         <ThemeProvider>
           <Toaster

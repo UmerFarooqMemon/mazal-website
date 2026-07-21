@@ -4,8 +4,13 @@ body {
   font-family: var(--font-inter), sans-serif;
 }
 
+html[dir="rtl"],
+body[dir="rtl"] {
+  direction: rtl;
+}
+
 /* Force Inter on all elements except plate overlay text */
-*:not(.plate-text) {
+*:not(.plate-text):not(.plate-overlay):not(.plate-digit-inner):not(.metal-plate-text):not(.metal-plate-text-light) {
   font-family: var(--font-inter), sans-serif !important;
 }
 
@@ -13,7 +18,15 @@ body {
 :root {
   --font-inter: "Inter", sans-serif;
   --font-fraunces: "Fraunces", serif;
-  --font-charleswright: "CharlesWright", sans-serif;
+  --font-charleswright: "Charles Wright", "CharlesWright", sans-serif;
+}
+
+@font-face {
+  font-family: "Charles Wright";
+  src: url("/fonts/charles-wright/CharlesWright-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
@@ -28,6 +41,39 @@ body {
   font-family: var(--font-fraunces), serif !important;
 }
 
+[data-locale-root][dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+/*
+  Keep Arabic punctuation attached to the visual end of the sentence,
+  especially when content mixes Arabic with Latin text, numbers, or symbols.
+*/
+[data-locale-root][dir="rtl"] :where(
+  p,
+  span,
+  div,
+  li,
+  label,
+  button,
+  a,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  blockquote,
+  figcaption,
+  td,
+  th,
+  input,
+  textarea
+):not(.plate-overlay):not(.plate-digit-inner) {
+  unicode-bidi: plaintext;
+}
+
 .footer-link {
   color: var(--footer-link, var(--color-footer-link, #a3a3a3));
 }
@@ -37,19 +83,81 @@ body {
 }
 
 .plate-text {
-  font-family: "CharlesWright", sans-serif !important;
+  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
+  font-weight: 700 !important;
   direction: ltr;
   unicode-bidi: isolate;
+}
+
+/* Plate preview container — matches backend metal-plate-text.css */
+.plate-preview {
+  position: relative;
+  width: 100%;
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 3px;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.plate-preview-wrap {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  background: transparent;
+}
+
+.plate-preview .plate-overlay,
+.plate-preview .plate-overlay .plate-digit-inner {
+  position: absolute;
+  white-space: nowrap;
+  pointer-events: none;
+  direction: ltr;
+  unicode-bidi: plaintext;
+  display: inline-block;
+  line-height: 1;
+  z-index: 3;
+  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
+  font-weight: 700 !important;
+}
+
+.plate-preview .plate-overlay .plate-digit-inner {
+  position: relative;
+}
+
+.plate-preview .plate-overlay.metal-plate-text,
+.plate-preview .plate-overlay .plate-digit-inner.metal-plate-text,
+.metal-plate-text {
+  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
+  font-weight: 700 !important;
+  color: #0a0a0a;
+  letter-spacing: 0.05em;
   text-shadow:
-    0 -1px 1px rgba(255,255,255,0.55),
-    0  1px 1px rgba(255,255,255,0.35),
-    -1px 0 1px rgba(255,255,255,0.35),
-    1px 0 1px rgba(255,255,255,0.35),
-    -1px -1px 1px rgba(0,0,0,0.08),
-     1px -1px 1px rgba(0,0,0,0.08),
-    -1px  1px 1px rgba(0,0,0,0.08),
-     1px  1px 1px rgba(0,0,0,0.08),
-    0 0 3px rgba(0,0,0,0.25);
+    0.5px 0.5px 0 rgba(255, 255, 255, 0.65),
+    -0.5px -0.5px 0 rgba(0, 0, 0, 0.55),
+    1px 1px 1px rgba(0, 0, 0, 0.35),
+    1.5px 1.5px 2px rgba(0, 0, 0, 0.25),
+    0 0 1px rgba(255, 255, 255, 0.4);
+  filter: drop-shadow(0 1px 0.5px rgba(0, 0, 0, 0.25));
+  -webkit-font-smoothing: antialiased;
+}
+
+.plate-preview .plate-overlay.metal-plate-text-light,
+.plate-preview .plate-overlay .plate-digit-inner.metal-plate-text-light,
+.metal-plate-text-light {
+  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em;
+  text-shadow:
+    0.5px 0.5px 0 rgba(0, 0, 0, 0.55),
+    -0.5px -0.5px 0 rgba(255, 255, 255, 0.35),
+    1px 1px 1px rgba(0, 0, 0, 0.4),
+    1.5px 1.5px 2px rgba(0, 0, 0, 0.3),
+    0 0 1px rgba(255, 255, 255, 0.25);
+  filter: drop-shadow(0 1px 0.5px rgba(0, 0, 0, 0.35));
+  -webkit-font-smoothing: antialiased;
 }
 
 /*
@@ -70,8 +178,17 @@ body {
 }
 
 .plate-crop--form {
-  margin-top: -23%;
-  margin-bottom: -27%;
+  margin-top: -24%;
+  margin-bottom: -28%;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.plate-crop--compact {
+  margin-top: -22%;
+  margin-bottom: -26%;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .plate-crop--card {
