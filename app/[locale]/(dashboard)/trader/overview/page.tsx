@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 import { getMyListings } from "@/services/marketplace";
 
 const FALLBACK_LISTINGS = [
@@ -108,13 +108,13 @@ export default function TraderDashboardPage() {
     },
     {
       label: t("dashboard.invested"),
-      value: "AED 41,200,000",
+      amount: 41_200_000,
       sub: t("dashboard.total_cost_basis"),
     },
     {
       label: t("dashboard.unrealised_value"),
-      value: "AED 56,800,000",
-      sub: "+AED 15,600,000",
+      amount: 56_800_000,
+      subAmount: 15_600_000,
     },
     {
       label: t("dashboard.avg_hold_period"),
@@ -128,25 +128,25 @@ export default function TraderDashboardPage() {
     {
       name: "Hamdan A.",
       deals: "4 deals · last Mar 2026",
-      amount: "AED 8,400,000",
+      amount: 8_400_000,
       tag: "VIP",
     },
     {
       name: "Reem S.",
       deals: "12 deals · last Jun 2026",
-      amount: "AED 22,100,000",
+      amount: 22_100_000,
       tag: "TRADER",
     },
     {
       name: "Khalid M.",
       deals: "2 deals · last Jan 2026",
-      amount: "AED 1,450,000",
+      amount: 1_450_000,
       tag: "COLLECTOR",
     },
     {
       name: "Yousef R.",
       deals: "7 deals · last May 2026",
-      amount: "AED 14,200,000",
+      amount: 14_200_000,
       tag: "VIP",
     },
   ];
@@ -241,9 +241,21 @@ export default function TraderDashboardPage() {
                     {stat.label}
                   </div>
                   <div className="text-2xl font-bold text-[#041443] mb-1">
-                    {stat.value}
+                    {"amount" in stat && stat.amount != null ? (
+                      <DirhamAmount amount={stat.amount} weight="bold" />
+                    ) : (
+                      stat.value
+                    )}
                   </div>
-                  <div className="text-xs text-[#0A3B9E]">{stat.sub}</div>
+                  <div className="text-xs text-[#0A3B9E]">
+                    {"subAmount" in stat && stat.subAmount != null ? (
+                      <>
+                        +<DirhamAmount amount={stat.subAmount} />
+                      </>
+                    ) : (
+                      stat.sub
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -323,7 +335,10 @@ export default function TraderDashboardPage() {
                         {t("dashboard.listed")}
                       </div>
                       <div className="font-bold text-sm text-[#041443]">
-                        AED {item.price}
+                        <DirhamAmount
+                          amount={Number(item.price.replace(/,/g, ""))}
+                          weight="bold"
+                        />
                       </div>
                     </div>
 
@@ -364,7 +379,9 @@ export default function TraderDashboardPage() {
                 </svg>
                 {t("dashboard.realised_pl")}
               </div>
-              <div className="text-4xl font-bold mb-1">AED 7,320,000</div>
+              <div className="text-4xl font-bold mb-1">
+                <DirhamAmount amount={7_320_000} weight="bold" />
+              </div>
               <div className="text-xs text-gray-400 mb-6">
                 {t("dashboard.net_fees")}
               </div>
@@ -431,7 +448,7 @@ export default function TraderDashboardPage() {
                     </div>
                     <div className={`${isRTL ? "text-left" : "text-right"}`}>
                       <div className="text-sm font-bold text-[#041443]">
-                        {client.amount}
+                        <DirhamAmount amount={client.amount} weight="bold" />
                       </div>
                       <div className="text-[8px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded inline-block mt-0.5">
                         {client.tag}

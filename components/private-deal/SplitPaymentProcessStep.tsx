@@ -19,7 +19,7 @@ import {
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
+import { Button, DirhamAmount, Input } from "@/components/ui";
 import type { PaymentMethod, SplitPaymentEntry } from "./PaymentMethodStep";
 
 interface SplitPaymentProcessStepProps {
@@ -49,8 +49,33 @@ const METHOD_META: Record<
   cash: { titleKey: "cash_collection", icon: Banknote },
 };
 
-function formatAed(amount: number) {
-  return `AED ${amount.toLocaleString("en-AE")}`;
+function ReadOnlyAmountField({
+  label,
+  amount,
+  isRTL,
+  getColor,
+}: {
+  label: string;
+  amount: number;
+  isRTL: boolean;
+  getColor: (key: "border" | "primaryText") => string;
+}) {
+  return (
+    <div className="w-full">
+      <label
+        className={`block text-[11px] font-medium leading-none mb-2 ${isRTL ? "text-right" : "text-left"}`}
+        style={{ color: getColor("primaryText") }}
+      >
+        {label}
+      </label>
+      <div
+        className={`w-full rounded-xl border bg-white py-3.5 text-sm ${isRTL ? "text-right pr-4" : "text-left pl-4"}`}
+        style={{ borderColor: getColor("border"), color: getColor("primaryText") }}
+      >
+        <DirhamAmount amount={amount} />
+      </div>
+    </div>
+  );
 }
 
 export default function SplitPaymentProcessStep({
@@ -357,10 +382,11 @@ export default function SplitPaymentProcessStep({
 
           {payment.method === "managers_check" && (
             <>
-              <Input
+              <ReadOnlyAmountField
                 label={t("private-deal.check_amount")}
-                value={formatAed(payment.amount)}
-                readOnly
+                amount={payment.amount}
+                isRTL={isRTL}
+                getColor={getColor}
               />
               <div
                 className="rounded-xl border p-4"
@@ -432,10 +458,11 @@ export default function SplitPaymentProcessStep({
 
           {payment.method === "cash" && (
             <>
-              <Input
+              <ReadOnlyAmountField
                 label={t("private-deal.amount")}
-                value={formatAed(payment.amount)}
-                readOnly
+                amount={payment.amount}
+                isRTL={isRTL}
+                getColor={getColor}
               />
               <div
                 className="rounded-xl border p-4"

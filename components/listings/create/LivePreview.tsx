@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
+import { DirhamAmount } from "@/components/ui";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 interface LivePreviewProps {
@@ -74,13 +75,9 @@ export default function LivePreview({
   const showCode =
     showCodeProp !== undefined ? showCodeProp : fetchedShowCode;
 
-  const formattedPrice = price
-    ? new Intl.NumberFormat(locale === "ar" ? "ar-AE" : "en-US", {
-        style: "currency",
-        currency: "AED",
-        minimumFractionDigits: 0,
-      }).format(Number(price.replace(/,/g, "")) || 0)
-    : "AED 0";
+  const priceAmount = price
+    ? Number(price.replace(/,/g, "")) || 0
+    : 0;
 
   return (
     <div
@@ -127,7 +124,7 @@ export default function LivePreview({
             className="text-2xl md:text-3xl font-bold"
             style={{ color: getColor("primaryText") }}
           >
-            {formattedPrice}
+            <DirhamAmount amount={priceAmount} weight="bold" />
           </span>
         </div>
         <p

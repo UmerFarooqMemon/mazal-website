@@ -46,7 +46,7 @@
   "select_code": "اختر الكود",
   "digits_only": "أرقام فقط",
   "live_preview": "معاينة مباشرة",
-  "agreed_price_aed": "السعر المتفق عليه (درهم)",
+  "agreed_price_aed": "السعر المتفق عليه ({dirham})",
   "error_code_required": "كود اللوحة مطلوب",
   "error_code_invalid": "كود غير صالح",
   "error_digits_required": "أرقام اللوحة مطلوبة",

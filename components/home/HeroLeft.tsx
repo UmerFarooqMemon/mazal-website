@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 
 export default function HeroLeft() {
   const { t, locale } = useLocale();
@@ -93,7 +93,16 @@ export default function HeroLeft() {
       >
         <div>
           <div className="text-2xl font-bold text-[#041443]">
-            {locale === "ar" ? "مليار 2.4" : "AED 2.4B"}
+            {locale === "ar" ? (
+              "مليار 2.4"
+            ) : (
+              <DirhamAmount
+                amount={2_400_000_000}
+                notation="compact"
+                decimals={1}
+                weight="bold"
+              />
+            )}
           </div>
           <div className="text-xs text-gray-500 mt-1">
             {t("home.hero_stats_plates")}

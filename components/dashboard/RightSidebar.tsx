@@ -1,30 +1,30 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 
 const clients = [
   {
     name: "Hamdan A.",
     deals: "4 deals · last Mar 2026",
-    amount: "AED 8,400,000",
+    amount: 8_400_000,
     tagKey: "dashboard.vip",
   },
   {
     name: "Reem S.",
     deals: "12 deals · last Jun 2026",
-    amount: "AED 22,100,000",
+    amount: 22_100_000,
     tagKey: "dashboard.trader_tag",
   },
   {
     name: "Khalid M.",
     deals: "2 deals · last Jan 2026",
-    amount: "AED 1,450,000",
+    amount: 1_450_000,
     tagKey: "dashboard.collector",
   },
   {
     name: "Yousef R.",
     deals: "7 deals · last May 2026",
-    amount: "AED 14,200,000",
+    amount: 14_200_000,
     tagKey: "dashboard.vip",
   },
 ];
@@ -78,7 +78,7 @@ export default function RightSidebar() {
               </div>
               <div className={`${isRTL ? "text-left" : "text-right"}`}>
                 <div className="text-sm font-bold text-[#041443]">
-                  {client.amount}
+                  <DirhamAmount amount={client.amount} weight="bold" />
                 </div>
                 <div className="text-[8px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded inline-block mt-0.5">
                   {t(client.tagKey)}

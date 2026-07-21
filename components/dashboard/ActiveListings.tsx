@@ -1,6 +1,6 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 
 const listings = [
   {
@@ -141,7 +141,10 @@ export default function ActiveListings() {
                 {t("dashboard.listed")}
               </div>
               <div className="font-bold text-sm text-[#041443]">
-                AED {item.price}
+                <DirhamAmount
+                  amount={Number(item.price.replace(/,/g, ""))}
+                  weight="bold"
+                />
               </div>
             </div>
 

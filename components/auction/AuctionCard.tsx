@@ -2,11 +2,7 @@
 import Link from "next/link";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { useLocale } from "@/context/LocaleContext";
-
-// Helper function to format numbers consistently
-function formatPrice(price: number): string {
-  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
+import { DirhamAmount } from "@/components/ui";
 
 export default function AuctionCard() {
   const { t, locale } = useLocale();
@@ -49,7 +45,7 @@ export default function AuctionCard() {
             {t("auctions.current_bid")}
           </div>
           <div className="text-3xl font-bold text-[#041443]">
-            AED {formatPrice(6200000)}
+            <DirhamAmount amount={6200000} weight="bold" />
           </div>
         </div>
         <div

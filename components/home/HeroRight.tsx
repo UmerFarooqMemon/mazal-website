@@ -2,26 +2,11 @@
 import Link from "next/link";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 
 export default function HeroRight() {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
-
-  // Formatter for the large price (AED only)
-  const priceFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "AED",
-    minimumFractionDigits: 0,
-  });
-
-  const formattedLargePriceParts = priceFormatter.format(12500000).split(" ");
-  const largeCurrencySymbol = formattedLargePriceParts[0];
-  const largeNumberPart = formattedLargePriceParts.slice(1).join(" ");
-
-  const formattedAuctionPriceParts = priceFormatter.format(6200000).split(" ");
-  const auctionCurrencySymbol = formattedAuctionPriceParts[0];
-  const auctionNumberPart = formattedAuctionPriceParts.slice(1).join(" ");
 
   const formattedViews = new Intl.NumberFormat("en-US").format(8421);
   const formattedBidders = new Intl.NumberFormat("en-US").format(23);
@@ -59,17 +44,7 @@ export default function HeroRight() {
               <div
                 className={`flex text-2xl font-bold text-[#041443] items-center gap-2 ${isRTL ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}
               >
-                {isRTL ? (
-                  <>
-                    <span>{largeNumberPart}</span>
-                    <span>{largeCurrencySymbol}</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{largeCurrencySymbol}</span>
-                    <span>{largeNumberPart}</span>
-                  </>
-                )}
+                <DirhamAmount amount={12500000} weight="bold" />
               </div>
             </div>
 
@@ -142,17 +117,7 @@ export default function HeroRight() {
             <div
               className={`flex text-base font-bold text-[#0A3B9E] items-center gap-2 ${isRTL ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}
             >
-              {isRTL ? (
-                <>
-                  <span>{auctionNumberPart}</span>
-                  <span>{auctionCurrencySymbol}</span>
-                </>
-              ) : (
-                <>
-                  <span>{auctionCurrencySymbol}</span>
-                  <span>{auctionNumberPart}</span>
-                </>
-              )}
+              <DirhamAmount amount={6200000} weight="bold" />
             </div>
           </div>
         </div>

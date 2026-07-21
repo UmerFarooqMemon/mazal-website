@@ -3,6 +3,7 @@
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
+import { DirhamAmount } from "@/components/ui";
 
 interface OfferDealSummaryProps {
   askingPrice: number;
@@ -12,10 +13,6 @@ interface OfferDealSummaryProps {
   plate_type?: string;
   plate_design?: string;
   hideCode?: boolean;
-}
-
-function formatAed(amount: number) {
-  return `AED ${amount.toLocaleString("en-AE")}`;
 }
 
 export default function OfferDealSummary({
@@ -38,18 +35,18 @@ export default function OfferDealSummary({
   const net = askingPrice - fees;
 
   const rows = [
-    { label: t("offer.asking_price_label"), value: formatAed(askingPrice) },
-    { label: t("offer.escrow_custody"), value: formatAed(escrow), muted: true },
-    { label: t("offer.platform_fee"), value: formatAed(platform), muted: true },
+    { label: t("offer.asking_price_label"), amount: askingPrice },
+    { label: t("offer.escrow_custody"), amount: escrow, muted: true },
+    { label: t("offer.platform_fee"), amount: platform, muted: true },
     {
       label: t("offer.service_transfer"),
-      value: formatAed(service),
+      amount: service,
       muted: true,
     },
-    { label: t("offer.total_fees"), value: formatAed(fees) },
+    { label: t("offer.total_fees"), amount: fees },
     {
       label: t("offer.you_receive_net"),
-      value: formatAed(net),
+      amount: net,
       bold: true,
     },
   ];
@@ -100,7 +97,7 @@ export default function OfferDealSummary({
               className={row.bold ? "font-bold" : ""}
               style={{ color: getColor("primaryText") }}
             >
-              {row.value}
+              <DirhamAmount amount={row.amount} weight={row.bold ? "bold" : "regular"} />
             </span>
           </div>
         ))}
@@ -120,7 +117,7 @@ export default function OfferDealSummary({
           className="text-2xl md:text-3xl font-serif font-bold"
           style={{ color: getColor("primaryText") }}
         >
-          {formatAed(askingPrice)}
+          <DirhamAmount amount={askingPrice} weight="bold" />
         </span>
       </div>
     </div>

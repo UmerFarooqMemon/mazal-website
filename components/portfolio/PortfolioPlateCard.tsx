@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
+import { DirhamAmount } from "@/components/ui";
 import { MoreVertical, Store } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -17,15 +18,6 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
   const isRTL = locale === "ar";
 
   const href = `/${locale}/portfolio/${plate.id}`;
-
-  const formattedValue = new Intl.NumberFormat(
-    locale === "ar" ? "ar-AE" : "en-US",
-    {
-      style: "currency",
-      currency: "AED",
-      minimumFractionDigits: 0,
-    },
-  ).format(plate.estValue);
 
   const formattedReturn = `+${plate.returnPct.toFixed(1)}%`;
 
@@ -107,7 +99,9 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
           </p>
         </div>
         <div className={`space-y-2.5 ${isRTL ? "text-left" : "text-right"}`}>
-          <p style={{ color: getColor("secondaryText") }}>{formattedValue}</p>
+          <p style={{ color: getColor("secondaryText") }}>
+            <DirhamAmount amount={plate.estValue} />
+          </p>
           <p className="text-[#3e9c0c]">{formattedReturn}</p>
         </div>
       </div>

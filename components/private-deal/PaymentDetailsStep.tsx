@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Copy, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
+import { Button, DirhamAmount, Input } from "@/components/ui";
 import type { PaymentMethod } from "./PaymentMethodStep";
 
 interface PaymentDetailsStepProps {
@@ -77,7 +77,7 @@ export default function PaymentDetailsStep({
         className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
         style={{ color: getColor("secondaryText") }}
       >
-        {t("private-deal.secure_online")} · AED {amount.toLocaleString("en-AE")}
+        {t("private-deal.secure_online")} · <DirhamAmount amount={amount} />
       </p>
 
       {method === "card" ? (

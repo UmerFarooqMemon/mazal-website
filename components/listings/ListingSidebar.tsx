@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 import type { MarketplaceListingDetail } from "@/services/marketplace";
 import {
   addToWatchlist,
@@ -28,14 +28,6 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
   const [watchlistLoading, setWatchlistLoading] = useState(false);
 
   const typeLabel = listing.listing_type_label || listing.listing_type;
-  const formattedPrice = new Intl.NumberFormat(
-    locale === "ar" ? "ar-AE" : "en-US",
-    {
-      style: "currency",
-      currency: "AED",
-      minimumFractionDigits: 0,
-    },
-  ).format(listing.asking_price);
 
   const plateCode = listing.code_hidden
     ? "•••"
@@ -118,7 +110,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           className="text-4xl md:text-5xl font-serif font-bold mb-2"
           style={{ color: getColor("primaryText") }}
         >
-          {formattedPrice}
+          <DirhamAmount amount={listing.asking_price} weight="bold" />
         </div>
         <div className="text-xs" style={{ color: getColor("mutedText") }}>
           {t("listings.fees_breakdown")}

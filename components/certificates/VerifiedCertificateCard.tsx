@@ -3,6 +3,7 @@
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
+import { DirhamAmount } from "@/components/ui";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export type { PlatePreviewConfig } from "@/lib/plate-preview";
@@ -18,7 +19,7 @@ export type CertificateDisplayData = {
   issuedAt?: string;
   expiresAt?: string;
   methodology?: string;
-  comparableSales?: { label: string; amount: string }[];
+  comparableSales?: { label: string; amount: number }[];
   signatory1Name?: string;
   signatory1Title?: string;
   signatory2Name?: string;
@@ -33,10 +34,6 @@ export type CertificateDisplayData = {
   /** Variant preview from /api/number-plates/options — drives PlateWithOverlay */
   platePreview?: PlatePreviewConfig | null;
 };
-
-function formatAed(value: number) {
-  return `AED ${value.toLocaleString("en-AE")}`;
-}
 
 function formatIssuedLabel(data: CertificateDisplayData, locale: string) {
   if (!data.issuedAt) return data.issuedLabel;
@@ -99,15 +96,15 @@ export default function VerifiedCertificateCard({
     [
       {
         label: t("certificates.sale_1") || "Dubai · similar pattern",
-        amount: "AED 582,800",
+        amount: 582_800,
       },
       {
         label: t("certificates.sale_2") || "Dubai · same digit count",
-        amount: "AED 657,200",
+        amount: 657_200,
       },
       {
         label: t("certificates.sale_3") || "Dubai · adjacent code",
-        amount: "AED 607,600",
+        amount: 607_600,
       },
     ];
 
@@ -249,7 +246,7 @@ export default function VerifiedCertificateCard({
               className="font-serif text-[8px] md:text-xl tracking-tight"
               style={{ color: getColor("primaryText") || "#081123" }}
             >
-              {formatAed(data.marketLow)}
+              <DirhamAmount amount={data.marketLow} weight="bold" />
             </div>
           </div>
           <div
@@ -269,7 +266,7 @@ export default function VerifiedCertificateCard({
               className="font-serif font-semibold text-[10px] md:text-2xl tracking-tight"
               style={{ color: getColor("primary") || "#0A2F94" }}
             >
-              {formatAed(data.assessedValue)}
+              <DirhamAmount amount={data.assessedValue} weight="bold" />
             </div>
           </div>
           <div
@@ -289,7 +286,7 @@ export default function VerifiedCertificateCard({
               className="font-serif text-[8px] md:text-xl tracking-tight"
               style={{ color: getColor("primaryText") || "#081123" }}
             >
-              {formatAed(data.marketHigh)}
+              <DirhamAmount amount={data.marketHigh} weight="bold" />
             </div>
           </div>
         </div>
@@ -329,7 +326,9 @@ export default function VerifiedCertificateCard({
                   style={{ color: "rgba(8,17,35,0.8)" }}
                 >
                   <span className="min-w-0 truncate">{sale.label}</span>
-                  <span className="shrink-0">{sale.amount}</span>
+                  <span className="shrink-0">
+                    <DirhamAmount amount={sale.amount} />
+                  </span>
                 </div>
               ))}
             </div>

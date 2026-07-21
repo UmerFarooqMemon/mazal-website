@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
+import { Button, DirhamAmount, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 
 export type PaymentMethod =
@@ -86,10 +86,6 @@ const BANKS = [
   { key: "mashreq", label: "Mashreq" },
   { key: "dubai_islamic", label: "Dubai Islamic Bank" },
 ];
-
-function formatAed(amount: number) {
-  return `AED ${amount.toLocaleString("en-AE")}`;
-}
 
 function parseAmount(value: string) {
   const n = Number(value.replace(/[^\d.]/g, ""));
@@ -466,7 +462,7 @@ export default function PaymentMethodStep({
                         className="text-sm font-semibold min-w-[96px]"
                         style={{ color: getColor("primaryText") }}
                       >
-                        {formatAed(payment.amount)}
+                        <DirhamAmount amount={payment.amount} weight="semibold" />
                       </span>
                       {payment.status !== "completed" && (
                         <button
@@ -617,7 +613,7 @@ export default function PaymentMethodStep({
                                   amount: e.target.value.replace(/[^\d.]/g, ""),
                                 })
                               }
-                              placeholder="AED 100,000"
+                              placeholder="100,000"
                             />
                             <Select
                               label={t("private-deal.select_bank")}
@@ -680,7 +676,7 @@ export default function PaymentMethodStep({
                                 amount: e.target.value.replace(/[^\d.]/g, ""),
                               })
                             }
-                            placeholder="AED 100,000"
+                            placeholder="100,000"
                           />
                           <div>
                             <label
@@ -752,7 +748,8 @@ export default function PaymentMethodStep({
               className={`text-xs mt-3 mb-1 ${isRTL ? "text-right" : "text-left"}`}
               style={{ color: getColor("mutedText") }}
             >
-              {t("private-deal.split_allocate_hint")} {formatAed(remaining)}
+              {t("private-deal.split_allocate_hint")}{" "}
+              <DirhamAmount amount={remaining} />
             </p>
           )}
 

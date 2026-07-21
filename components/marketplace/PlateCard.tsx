@@ -4,6 +4,7 @@ import { Eye, Star } from "lucide-react";
 import { useLocale } from "../../context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
+import { DirhamAmount } from "@/components/ui";
 
 interface PlateCardProps {
   id: string | number;
@@ -51,15 +52,6 @@ export default function PlateCard({
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
-
-  const formattedPrice = new Intl.NumberFormat(
-    locale === "ar" ? "ar-AE" : "en-US",
-    {
-      style: "currency",
-      currency: "AED",
-      minimumFractionDigits: 0,
-    },
-  ).format(price);
 
   const formattedViews = new Intl.NumberFormat(
     locale === "ar" ? "ar-AE" : "en-US",
@@ -138,7 +130,7 @@ export default function PlateCard({
           className="text-[22px] leading-8 font-serif font-bold tracking-tight"
           style={{ color: getColor("primaryText") }}
         >
-          {formattedPrice}
+          <DirhamAmount amount={price} weight="bold" />
         </div>
         <div
           className={`mt-1.5 flex items-center gap-2 text-xs ${isRTL ? "flex-row-reverse justify-end" : ""}`}

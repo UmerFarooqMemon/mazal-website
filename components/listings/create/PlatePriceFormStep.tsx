@@ -14,6 +14,7 @@ import {
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
+import DirhamText from "@/components/ui/DirhamText";
 import Select from "@/components/ui/Select";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 import LivePreview from "./LivePreview";
@@ -398,7 +399,7 @@ export default function PlatePriceFormStep({
           </div>
 
           <Input
-            label={t("listings.asking_price_aed")}
+            label={<DirhamText text={t("listings.asking_price_aed")} />}
             value={data.price}
             onChange={(e) =>
               onChange({

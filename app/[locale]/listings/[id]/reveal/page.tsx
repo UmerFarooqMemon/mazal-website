@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 import {
   confirmRevealPayment,
   getRevealStatus,
@@ -160,7 +160,11 @@ export default function RevealPage() {
                 {t("listings.reveal_fee") || "Reveal fee"}
               </p>
               <p className="text-2xl font-serif font-bold" style={{ color: getColor("primaryText") }}>
-                AED {feeAmount?.toLocaleString() ?? "—"}
+                {feeAmount != null ? (
+                  <DirhamAmount amount={feeAmount} weight="bold" />
+                ) : (
+                  "—"
+                )}
               </p>
               <p className="text-sm mt-2" style={{ color: getColor("mutedText") }}>
                 {codeHidden

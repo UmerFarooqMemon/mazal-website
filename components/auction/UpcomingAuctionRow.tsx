@@ -2,7 +2,7 @@
 import Link from "next/link";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 
 // Mock data for upcoming auctions
 const upcomingAuctions = [
@@ -124,7 +124,7 @@ export default function UpcomingAuctionRow() {
                   {t("auctions.opening_bid")}
                 </div>
                 <div className="text-base font-bold text-[#041443]">
-                  AED {formatPrice(auction.price)}
+                  <DirhamAmount amount={auction.price} weight="bold" />
                 </div>
               </div>
               <Link href={`/${locale}/auctions/${auction.id}/register`}>
@@ -184,7 +184,7 @@ export default function UpcomingAuctionRow() {
                   {t("auctions.opening_bid")}
                 </div>
                 <div className="text-lg font-bold text-[#041443] whitespace-nowrap">
-                  AED {formatPrice(auction.price)}
+                  <DirhamAmount amount={auction.price} weight="bold" />
                 </div>
               </div>
               <Link href={`/${locale}/auctions/${auction.id}/register`}>

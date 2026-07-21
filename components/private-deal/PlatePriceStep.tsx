@@ -12,6 +12,7 @@ import {
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
+import DirhamText from "@/components/ui/DirhamText";
 import Select from "@/components/ui/Select";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { DealData } from "./DealSummary";
@@ -488,7 +489,7 @@ export default function PlatePriceStep({
 
       <div className="w-full mb-6">
         <Input
-          label={t("private-deal.agreed_price_aed")}
+          label={<DirhamText text={t("private-deal.agreed_price_aed")} />}
           icon={<Wallet className="w-4 h-4" />}
           value={data.price ? data.price.toLocaleString("en-AE") : ""}
           onChange={(e) => {

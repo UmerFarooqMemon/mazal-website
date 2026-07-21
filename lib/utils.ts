@@ -1,10 +1,10 @@
-export function formatPrice(amount: number, currency: string = "AED") {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+import { formatDirham } from "dirham";
+
+export function formatPrice(amount: number, locale: string = "en-AE") {
+  return formatDirham(amount, {
+    locale,
+    decimals: 0,
+  });
 }
 
 export function formatDate(date: Date | string) {

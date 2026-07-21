@@ -46,7 +46,7 @@
   "select_code": "Select code...",
   "digits_only": "Digits only",
   "live_preview": "Live Preview",
-  "agreed_price_aed": "Agreed price (AED)",
+  "agreed_price_aed": "Agreed price ({dirham})",
   "error_code_required": "Plate code is required",
   "error_code_invalid": "Invalid code selected",
   "error_digits_required": "Plate digits are required",

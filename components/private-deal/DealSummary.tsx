@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay, {
   type PlateCropVariant,
 } from "@/components/ui/NumberPlateDisplay";
+import { DirhamAmount } from "@/components/ui";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export interface DealData {
@@ -32,10 +33,6 @@ interface DealSummaryProps {
   allocatedAmount?: number;
   showAllocation?: boolean;
   plateCrop?: PlateCropVariant;
-}
-
-function formatAed(amount: number) {
-  return `AED ${amount.toLocaleString("en-AE")}`;
 }
 
 export default function DealSummary({
@@ -133,27 +130,27 @@ export default function DealSummary({
         />
         <Row
           label={t("private-deal.agreed_price")}
-          value={formatAed(price)}
+          value={<DirhamAmount amount={price} />}
           isRTL={isRTL}
           getColor={getColor}
         />
         <Row
           label={t("private-deal.escrow_custody")}
-          value={formatAed(feeLine)}
+          value={<DirhamAmount amount={feeLine} />}
           isRTL={isRTL}
           muted
           getColor={getColor}
         />
         <Row
           label={t("private-deal.platform_fee")}
-          value={formatAed(Math.round(price * 0.04))}
+          value={<DirhamAmount amount={Math.round(price * 0.04)} />}
           isRTL={isRTL}
           muted
           getColor={getColor}
         />
         <Row
           label={t("private-deal.service_transfer")}
-          value={formatAed(Math.round(price * 0.03))}
+          value={<DirhamAmount amount={Math.round(price * 0.03)} />}
           isRTL={isRTL}
           muted
           getColor={getColor}
@@ -164,7 +161,7 @@ export default function DealSummary({
         >
           <Row
             label={t("private-deal.total_fees")}
-            value={formatAed(fees)}
+            value={<DirhamAmount amount={fees} />}
             isRTL={isRTL}
             getColor={getColor}
           />
@@ -178,7 +175,7 @@ export default function DealSummary({
               : t("private-deal.you_receive_net")}
           </span>
           <span style={{ color: getColor("primary") }}>
-            {formatAed(data.role === "buyer" ? price + fees : net)}
+            <DirhamAmount amount={data.role === "buyer" ? price + fees : net} weight="bold" />
           </span>
         </div>
       </div>
@@ -205,7 +202,7 @@ export default function DealSummary({
                 className="text-sm font-semibold"
                 style={{ color: getColor("primaryText") }}
               >
-                {formatAed(price)}
+                <DirhamAmount amount={price} />
               </div>
             </div>
             <div className={isRTL ? "text-right" : "text-left"}>
@@ -219,7 +216,7 @@ export default function DealSummary({
                 className="text-sm font-semibold"
                 style={{ color: getColor("primaryText") }}
               >
-                {formatAed(allocated)}
+                <DirhamAmount amount={allocated} />
               </div>
             </div>
             <div className={isRTL ? "text-right" : "text-left"}>
@@ -233,7 +230,7 @@ export default function DealSummary({
                 className="text-sm font-semibold"
                 style={{ color: getColor("primaryText") }}
               >
-                {formatAed(remaining)}
+                <DirhamAmount amount={remaining} />
               </div>
             </div>
           </div>
@@ -289,7 +286,7 @@ function Row({
   getColor,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   isRTL: boolean;
   muted?: boolean;
   getColor: (key: "mutedText" | "secondaryText" | "primaryText") => string;

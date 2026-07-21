@@ -1,3 +1,4 @@
+import { formatDirham } from "dirham";
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
 
@@ -83,11 +84,14 @@ export async function generateInvoice(transaction: any) {
   doc.text("Description", 18, startY + 6);
   doc.text("Amount", 180, startY + 6, { align: "right" });
 
+  const formatPdfAmount = (amount: number) =>
+    formatDirham(amount, { decimals: 0, locale: "en-AE" });
+
   const rows = [
-    ["Plate Price", `${transaction.price} AED`],
-    ["1% Escrow Fee", `${(transaction.price * 0.01).toFixed(0)} AED`],
-    ["4% Platform Fee", `${(transaction.price * 0.04).toFixed(0)} AED`],
-    ["3% Service Fee", `${(transaction.price * 0.03).toFixed(0)} AED`],
+    ["Plate Price", formatPdfAmount(transaction.price)],
+    ["1% Escrow Fee", formatPdfAmount(transaction.price * 0.01)],
+    ["4% Platform Fee", formatPdfAmount(transaction.price * 0.04)],
+    ["3% Service Fee", formatPdfAmount(transaction.price * 0.03)],
   ];
 
   rows.forEach((row, index) => {
@@ -104,7 +108,7 @@ export async function generateInvoice(transaction: any) {
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.text("Total", 18, totalY + 6);
-  doc.text(`${transaction.total} AED`, 180, totalY + 6, { align: "right" });
+  doc.text(formatPdfAmount(transaction.total), 180, totalY + 6, { align: "right" });
 
   doc.save(`Invoice-${transaction.id}.pdf`);
 }

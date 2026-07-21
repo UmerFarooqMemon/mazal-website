@@ -2,20 +2,13 @@
 
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { DirhamAmount } from "@/components/ui";
 import { portfolioStats } from "./data";
 
 export default function PortfolioStats() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat(locale === "ar" ? "ar-AE" : "en-US", {
-      style: "currency",
-      currency: "AED",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
 
   const stats = [
     {
@@ -25,12 +18,12 @@ export default function PortfolioStats() {
     },
     {
       label: t("portfolio.total_est_value"),
-      value: formatCurrency(portfolioStats.totalEstValue),
+      value: <DirhamAmount amount={portfolioStats.totalEstValue} weight="bold" />,
       color: "#0f6646",
     },
     {
       label: t("portfolio.total_gain_loss"),
-      value: formatCurrency(portfolioStats.totalGainLoss),
+      value: <DirhamAmount amount={portfolioStats.totalGainLoss} weight="bold" />,
       color: "#2ab520",
     },
     {

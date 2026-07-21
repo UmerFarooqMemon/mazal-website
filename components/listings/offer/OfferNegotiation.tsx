@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Handshake, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
+import DirhamText from "@/components/ui/DirhamText";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
@@ -205,7 +206,7 @@ export default function OfferNegotiation() {
                   className={`block text-xs font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
                   style={{ color: getColor("mutedText") }}
                 >
-                  {round.fieldLabel}
+                  <DirhamText text={round.fieldLabel} />
                 </label>
                 <input
                   type="text"

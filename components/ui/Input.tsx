@@ -7,7 +7,7 @@ import { useTheme } from "@/context/ThemeContext";
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  label?: string;
+  label?: React.ReactNode;
   error?: string;
   hint?: string;
 }

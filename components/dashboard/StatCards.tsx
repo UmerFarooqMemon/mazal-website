@@ -1,5 +1,6 @@
 "use client";
 import { useLocale } from "@/context/LocaleContext";
+import { DirhamAmount } from "@/components/ui";
 
 const stats = [
   {
@@ -9,13 +10,13 @@ const stats = [
   },
   {
     labelKey: "dashboard.invested",
-    value: "AED 41,200,000",
+    amount: 41_200_000,
     subKey: "dashboard.total_cost_basis",
   },
   {
     labelKey: "dashboard.unrealised_value",
-    value: "AED 56,800,000",
-    subKey: "+AED 15,600,000",
+    amount: 56_800_000,
+    subAmount: 15_600_000,
   },
   {
     labelKey: "dashboard.avg_hold_period",
@@ -39,9 +40,21 @@ export default function StatCards() {
             {t(stat.labelKey)}
           </div>
           <div className="text-2xl font-bold text-[#041443] mb-1">
-            {stat.value}
+            {"amount" in stat && stat.amount != null ? (
+              <DirhamAmount amount={stat.amount} weight="bold" />
+            ) : (
+              stat.value
+            )}
           </div>
-          <div className="text-xs text-[#0A3B9E]">{t(stat.subKey)}</div>
+          <div className="text-xs text-[#0A3B9E]">
+            {"subAmount" in stat && stat.subAmount != null ? (
+              <>
+                +<DirhamAmount amount={stat.subAmount} />
+              </>
+            ) : (
+              t(stat.subKey!)
+            )}
+          </div>
         </div>
       ))}
     </div>

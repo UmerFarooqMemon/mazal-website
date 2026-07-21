@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 import { generateCertificatePDF } from "@/lib/pdf-generator";
 
 export default function CertificatePreview() {
@@ -162,7 +162,7 @@ export default function CertificatePreview() {
                 className="text-lg md:text-xl font-bold"
                 style={{ color: getColor("primaryText") }}
               >
-                AED 545,600
+                <DirhamAmount amount={545_600} weight="bold" />
               </div>
             </div>
             <div
@@ -183,7 +183,7 @@ export default function CertificatePreview() {
                 className="text-lg md:text-2xl font-bold"
                 style={{ color: getColor("primary") }}
               >
-                AED 620,000
+                <DirhamAmount amount={620_000} weight="bold" />
               </div>
             </div>
             <div
@@ -200,7 +200,7 @@ export default function CertificatePreview() {
                 className="text-lg md:text-xl font-bold"
                 style={{ color: getColor("primaryText") }}
               >
-                AED 706,800
+                <DirhamAmount amount={706_800} weight="bold" />
               </div>
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function CertificatePreview() {
                   <span>
                     {t("certificates.sale_1") || "Dubai · similar pattern"}
                   </span>
-                  <span>AED 582,800</span>
+                  <span><DirhamAmount amount={582_800} /></span>
                 </div>
                 <div
                   className={`flex justify-between ${isRTL ? "flex-row-reverse" : ""}`}
@@ -250,7 +250,7 @@ export default function CertificatePreview() {
                   <span>
                     {t("certificates.sale_2") || "Dubai · same digit count"}
                   </span>
-                  <span>AED 657,200</span>
+                  <span><DirhamAmount amount={657_200} /></span>
                 </div>
                 <div
                   className={`flex justify-between ${isRTL ? "flex-row-reverse" : ""}`}
@@ -258,7 +258,7 @@ export default function CertificatePreview() {
                   <span>
                     {t("certificates.sale_3") || "Dubai · adjacent code"}
                   </span>
-                  <span>AED 607,800</span>
+                  <span><DirhamAmount amount={607_800} /></span>
                 </div>
               </div>
             </div>

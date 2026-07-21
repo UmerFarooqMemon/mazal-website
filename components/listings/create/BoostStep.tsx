@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, Check, Crown, Gem, Stars } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 import LivePreview from "./LivePreview";
 import type { BoostTier, CreateListingData } from "./CreateListingWizard";
 
@@ -151,7 +151,7 @@ export default function BoostStep({
                   className="text-lg font-bold mt-3 mb-4"
                   style={{ color: getColor("primaryText") }}
                 >
-                  AED {tier.price.toLocaleString()}
+                  <DirhamAmount amount={tier.price} weight="bold" />
                 </div>
                 <ul className="space-y-2.5 mb-5 min-h-[120px]">
                   {tier.features.map((feature) => (
@@ -244,10 +244,7 @@ export default function BoostStep({
             {[
               [t("listings.tier"), t(`listings.tier_${selected.key}`)],
               [t("listings.duration"), t("listings.days_30")],
-              [
-                t("listings.total"),
-                `AED ${selected.price.toLocaleString()}`,
-              ],
+              [t("listings.total"), selected.price] as const,
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -259,7 +256,11 @@ export default function BoostStep({
                   className="font-semibold uppercase"
                   style={{ color: getColor("primaryText") }}
                 >
-                  {value}
+                  {typeof value === "number" ? (
+                    <DirhamAmount amount={value} weight="semibold" />
+                  ) : (
+                    value
+                  )}
                 </span>
               </div>
             ))}
