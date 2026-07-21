@@ -485,15 +485,17 @@ export default function PlatePriceStep({
             {t("private-deal.live_preview")}
           </span>
         </div>
-        <NumberPlateDisplay
-          plate_code={showCodeField ? data.code : ""}
-          plate_digits={data.digit}
-          emirate={t("listings.emirate_dubai")}
-          preview={selectedVariant?.preview}
-          plateVariant={data.plateVariant}
-          crop="form"
-          showCode={showCodeField}
-        />
+        <div className="px-5">
+          <NumberPlateDisplay
+            plate_code={showCodeField ? data.code : ""}
+            plate_digits={data.digit}
+            emirate={t("listings.emirate_dubai")}
+            preview={selectedVariant?.preview}
+            plateVariant={data.plateVariant}
+            crop="private-deal"
+            showCode={showCodeField}
+          />
+        </div>
       </div>
 
       <div className="w-full mb-6">

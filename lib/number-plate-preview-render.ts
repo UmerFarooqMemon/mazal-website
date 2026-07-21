@@ -115,6 +115,101 @@ function abuDhabiClassicFontSize(rootWidth: number, digits: string): string {
   return `${Math.round(width * 0.092)}px`;
 }
 
+const PLATE_REFERENCE_WIDTH = 840;
+
+/** Extra bump for deal-summary sidebar plate (on top of width-based scaling). */
+export const DEAL_SUMMARY_FONT_SCALE = 1.7;
+
+function parseLengthToPx(value: string, basisWidth: number): number | null {
+  const trimmed = value.trim().toLowerCase();
+  const num = parseFloat(trimmed);
+  if (Number.isNaN(num)) return null;
+
+  if (trimmed.endsWith("px")) return num;
+  if (trimmed.endsWith("rem") || trimmed.endsWith("em")) return num * 16;
+  if (trimmed.endsWith("vw") || trimmed.endsWith("%")) {
+    return (basisWidth * num) / 100;
+  }
+
+  return null;
+}
+
+function shouldScaleFontSize(fontSize: string): boolean {
+  return /vw|clamp|rem|em/i.test(fontSize);
+}
+
+/** Scale API clamp/vw font sizes to the rendered plate width (not viewport). */
+function scaleFontSizeForPlateWidth(
+  fontSize: string | undefined,
+  rootWidth: number,
+  referenceWidth = PLATE_REFERENCE_WIDTH,
+  fontScaleMultiplier = 1,
+): string | undefined {
+  if (!fontSize?.trim()) return fontSize;
+
+  const width = Math.max(1, rootWidth || referenceWidth);
+  const scale = width / referenceWidth;
+
+  const clampMatch = fontSize.match(
+    /^clamp\(\s*([^,]+?)\s*,\s*([^,]+?)\s*,\s*([^)]+?)\s*\)$/i,
+  );
+
+  if (clampMatch) {
+    const [, minRaw, prefRaw, maxRaw] = clampMatch;
+    const prefUsesPlatePercent = /vw/i.test(prefRaw);
+
+    const minPx = parseLengthToPx(minRaw, referenceWidth);
+    const prefPx = parseLengthToPx(
+      prefRaw,
+      prefUsesPlatePercent ? width : referenceWidth,
+    );
+    const maxPx = parseLengthToPx(maxRaw, referenceWidth);
+
+    if (minPx == null || prefPx == null || maxPx == null) return fontSize;
+
+    const scaledMin = minPx * scale;
+    const scaledPref = prefUsesPlatePercent
+      ? (width * parseFloat(prefRaw)) / 100
+      : prefPx * scale;
+    const scaledMax = maxPx * scale;
+    const result = Math.min(Math.max(scaledPref, scaledMin), scaledMax);
+
+    return `${Math.max(8, Math.round(result * fontScaleMultiplier))}px`;
+  }
+
+  if (/vw/i.test(fontSize)) {
+    const px = (width * parseFloat(fontSize)) / 100;
+    return `${Math.max(8, Math.round(px * fontScaleMultiplier))}px`;
+  }
+
+  const px = parseLengthToPx(fontSize, referenceWidth);
+  if (px != null) {
+    return `${Math.max(8, Math.round(px * scale * fontScaleMultiplier))}px`;
+  }
+
+  return fontSize;
+}
+
+function withPlateWidthFontScale(
+  config: PlateOverlayConfig | null | undefined,
+  rootWidth: number,
+  fontScaleMultiplier = 1,
+): PlateOverlayConfig | null | undefined {
+  if (!config?.font_size || !shouldScaleFontSize(config.font_size)) {
+    return config ?? null;
+  }
+
+  return {
+    ...config,
+    font_size: scaleFontSizeForPlateWidth(
+      config.font_size,
+      rootWidth,
+      PLATE_REFERENCE_WIDTH,
+      fontScaleMultiplier,
+    ),
+  };
+}
+
 function withAbuDhabiClassicSizing(
   rootWidth: number,
   config: PlateOverlayConfig | null | undefined,
@@ -443,6 +538,8 @@ export function computePlateRenderState(
   code: string,
   digits: string,
   rootWidth = 420,
+  scaleFontToWidth = false,
+  fontScaleMultiplier = 1,
 ): PlateRenderState | null {
   if (!previewConfig) return null;
 
@@ -482,18 +579,20 @@ export function computePlateRenderState(
 
   const codeValue = codeForOverlay(code, overlays.plate_code || undefined);
 
-  const arConfig = scaledDigitsConfig(
-    overlays.plate_digits_ar,
-    digitValue,
-    layout,
-    code,
+  const scaleConfig = (
+    config: PlateOverlayConfig | null | undefined,
+  ): PlateOverlayConfig | null | undefined =>
+    scaleFontToWidth
+      ? withPlateWidthFontScale(config, rootWidth, fontScaleMultiplier)
+      : config;
+
+  const arConfig = scaleConfig(
+    scaledDigitsConfig(overlays.plate_digits_ar, digitValue, layout, code),
   );
-  const enConfig = scaledDigitsConfig(
-    overlays.plate_digits,
-    digitValue,
-    layout,
-    code,
+  const enConfig = scaleConfig(
+    scaledDigitsConfig(overlays.plate_digits, digitValue, layout, code),
   );
+  const codeConfig = scaleConfig(overlays.plate_code);
 
   const digitsAr =
     overlays.plate_digits_ar && digitValue
@@ -514,7 +613,7 @@ export function computePlateRenderState(
 
   return {
     rootStyle,
-    code: buildOverlayState(overlays.plate_code, codeValue),
+    code: buildOverlayState(codeConfig, codeValue),
     digitsAr,
     digits: digitsEn,
     needsAbuDhabiClassicResize:

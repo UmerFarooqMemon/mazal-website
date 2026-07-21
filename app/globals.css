@@ -186,6 +186,48 @@ body[dir="rtl"] {
   mix-blend-mode: normal;
 }
 
+/* Private deal page — tight PNG crop + 15px top/bottom padding on wrapper (30px total) */
+.plate-crop--private-deal {
+  margin-top: calc(-16% - 40px);
+  margin-bottom: calc(-16% - 60px);
+  padding: 0;
+  overflow: hidden;
+  mix-blend-mode: normal;
+}
+
+/* Deal summary sidebar — crop contained in frame so title isn't overlapped */
+.deal-summary-plate-frame {
+  overflow: hidden;
+  isolation: isolate;
+  position: relative;
+  z-index: 0;
+  padding-bottom: 2px;
+}
+
+.deal-summary-plate {
+  overflow: hidden;
+  padding-top: 6px;
+  padding-bottom: 2px;
+}
+
+.plate-crop--deal-summary {
+  margin-top: calc(-14% - 18px);
+  margin-bottom: calc(-13% - 37px);
+  padding: 0;
+  overflow: hidden;
+  mix-blend-mode: normal;
+}
+
+.deal-summary-plate .metal-plate-text,
+.deal-summary-plate .metal-plate-text-light,
+.deal-summary-plate .plate-preview .plate-overlay.metal-plate-text,
+.deal-summary-plate .plate-preview .plate-overlay .plate-digit-inner.metal-plate-text,
+.deal-summary-plate .plate-preview .plate-overlay.metal-plate-text-light,
+.deal-summary-plate .plate-preview .plate-overlay .plate-digit-inner.metal-plate-text-light {
+  text-shadow: none !important;
+  filter: none !important;
+}
+
 /* Listings live preview — mild vertical crop, no white PNG bleed */
 .plate-crop--live-preview {
   margin-top: calc(-16% - 25px);

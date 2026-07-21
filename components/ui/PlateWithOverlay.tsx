@@ -20,6 +20,10 @@ interface PlateWithOverlayProps {
   isRTL?: boolean;
   /** When true, blurs only the plate code letter — digits stay sharp in their API position */
   hideCode?: boolean;
+  /** When true, scale overlay font size to rendered plate width (deal summary). */
+  scaleFontToWidth?: boolean;
+  /** Extra multiplier applied with width-based font scaling (deal summary). */
+  fontScaleMultiplier?: number;
 }
 
 function OverlaySpan({
@@ -78,11 +82,20 @@ export default function PlateWithOverlay({
   className = "",
   preview,
   hideCode = false,
+  scaleFontToWidth = false,
+  fontScaleMultiplier = 1,
 }: PlateWithOverlayProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [renderState, setRenderState] = useState<PlateRenderState | null>(() =>
     preview
-      ? computePlateRenderState(preview, plate_code, plate_digits, 420)
+      ? computePlateRenderState(
+          preview,
+          plate_code,
+          plate_digits,
+          420,
+          scaleFontToWidth,
+          fontScaleMultiplier,
+        )
       : null,
   );
 
@@ -93,9 +106,11 @@ export default function PlateWithOverlay({
       plate_code,
       plate_digits,
       rootWidth,
+      scaleFontToWidth,
+      fontScaleMultiplier,
     );
     setRenderState(next);
-  }, [preview, plate_code, plate_digits]);
+  }, [preview, plate_code, plate_digits, scaleFontToWidth, fontScaleMultiplier]);
 
   useEffect(() => {
     updateRenderState();

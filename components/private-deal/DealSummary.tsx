@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
+import NumberPlateDisplay, {
+  type PlateCropVariant,
+} from "@/components/ui/NumberPlateDisplay";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export interface DealData {
@@ -29,6 +31,7 @@ interface DealSummaryProps {
   data: DealData;
   allocatedAmount?: number;
   showAllocation?: boolean;
+  plateCrop?: PlateCropVariant;
 }
 
 function formatAed(amount: number) {
@@ -39,6 +42,7 @@ export default function DealSummary({
   data,
   allocatedAmount = 0,
   showAllocation = false,
+  plateCrop = "form",
 }: DealSummaryProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -85,21 +89,32 @@ export default function DealSummary({
       }}
     >
       <div
-        className={`text-[10px] font-bold uppercase tracking-wider mb-4 ${isRTL ? "text-right" : "text-left"}`}
+        className={`relative z-10 text-[10px] font-bold uppercase tracking-wider ${plateCrop === "deal-summary" ? "mb-3" : "mb-4"} ${isRTL ? "text-right" : "text-left"}`}
         style={{ color: getColor("mutedText") }}
       >
         {t("private-deal.summary_title")}
       </div>
 
-      <div className="mb-5">
+      <div
+        className={
+          plateCrop === "deal-summary"
+            ? "deal-summary-plate-frame mb-1"
+            : "mb-5"
+        }
+      >
         <NumberPlateDisplay
           plate_code={showCodeField ? data.code : ""}
           plate_digits={data.digit}
           emirate={t("listings.emirate_dubai")}
           preview={selectedVariant?.preview}
           plateVariant={data.plateVariant}
-          crop="form"
+          crop={plateCrop}
           showCode={showCodeField}
+          wrapperClassName={
+            plateCrop === "deal-summary"
+              ? "deal-summary-plate w-full"
+              : "w-full overflow-hidden"
+          }
         />
       </div>
 

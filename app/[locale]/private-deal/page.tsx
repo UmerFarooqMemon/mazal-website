@@ -708,6 +708,7 @@ export default function PrivateDealPage() {
                 data={deal}
                 showAllocation={showSplitAllocation}
                 allocatedAmount={splitAllocated}
+                plateCrop="deal-summary"
               />
               <EscrowBenefits />
             </div>

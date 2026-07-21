@@ -7,6 +7,7 @@ import {
   resolvePreviewFromLookup,
   usePlatePreviewLookup,
 } from "@/hooks/usePlatePreviewLookup";
+import { DEAL_SUMMARY_FONT_SCALE } from "@/lib/number-plate-preview-render";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export type PlateCropVariant =
@@ -15,7 +16,9 @@ export type PlateCropVariant =
   | "card"
   | "certificate"
   | "hero"
-  | "compact";
+  | "compact"
+  | "private-deal"
+  | "deal-summary";
 
 const CROP_CLASS: Record<PlateCropVariant, string> = {
   form: "plate-crop--form",
@@ -24,6 +27,8 @@ const CROP_CLASS: Record<PlateCropVariant, string> = {
   certificate: "plate-crop--certificate",
   hero: "plate-crop--hero",
   compact: "plate-crop--compact",
+  "private-deal": "plate-crop--private-deal",
+  "deal-summary": "plate-crop--deal-summary",
 };
 
 interface NumberPlateDisplayProps {
@@ -40,6 +45,7 @@ interface NumberPlateDisplayProps {
   className?: string;
   wrapperClassName?: string;
   width?: number;
+  scaleFontToWidth?: boolean;
 }
 
 export default function NumberPlateDisplay({
@@ -56,6 +62,7 @@ export default function NumberPlateDisplay({
   className = "",
   wrapperClassName = "w-full overflow-hidden",
   width,
+  scaleFontToWidth = false,
 }: NumberPlateDisplayProps) {
   const { locale } = useLocale();
   const { lookup, variantsByKey } = usePlatePreviewLookup(locale);
@@ -87,6 +94,10 @@ export default function NumberPlateDisplay({
           hideCode={showCodeField && hideCode}
           width={width}
           className={className}
+          scaleFontToWidth={scaleFontToWidth || crop === "deal-summary"}
+          fontScaleMultiplier={
+            crop === "deal-summary" ? DEAL_SUMMARY_FONT_SCALE : 1
+          }
         />
       </div>
     </div>
