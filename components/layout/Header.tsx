@@ -18,7 +18,7 @@ import {
   LogOut,
   Home,
   LayoutDashboard,
-    // BadgeCheck,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function Header() {
@@ -148,8 +148,22 @@ export default function Header() {
               className={`hidden lg:flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               {/* COMMENTED OUT - Search & Notifications hidden */}
-              <div className="mx-1">
+              <div
+                className={`mx-1 flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+              >
                 <LanguageSwitcher />
+                <Link
+                  href={`/${locale}/kyc`}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border text-[11px] font-semibold tracking-wide transition-colors"
+                  style={{
+                    backgroundColor: getColor("surface"),
+                    borderColor: getColor("border"),
+                    color: getColor("primary"),
+                  }}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
+                  KYC
+                </Link>
               </div>
 
               {/* Auth Actions - Only show after mounted */}
@@ -247,6 +261,18 @@ export default function Header() {
               className={`flex items-center gap-2 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <LanguageSwitcher />
+              <Link
+                href={`/${locale}/kyc`}
+                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full border text-[11px] font-semibold tracking-wide transition-colors"
+                style={{
+                  backgroundColor: getColor("surface"),
+                  borderColor: getColor("border"),
+                  color: getColor("primary"),
+                }}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
+                KYC
+              </Link>
               {mounted && isAuthenticated ? (
                 <Link
                   href={`/${locale}/dashboard-certificates`}
