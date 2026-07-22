@@ -85,17 +85,20 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
-            className={`flex h-16 items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex h-16 items-center justify-between gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
           >
             {/* Logo */}
-            <Link href={`/${locale}`} className="flex items-center shrink-0">
+            <Link
+              href={`/${locale}`}
+              className="flex items-center shrink-0 min-w-0"
+            >
               {branding.logoUrl ? (
                 <Image
                   src={branding.logoUrl}
                   alt="Mazal"
                   width={100}
                   height={36}
-                  className="h-9 w-auto object-contain"
+                  className="h-8 sm:h-9 w-auto max-w-[100px] object-contain"
                   unoptimized
                 />
               ) : null}
@@ -258,25 +261,26 @@ export default function Header() {
 
             {/* Mobile Actions */}
             <div
-              className={`flex items-center gap-2 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex items-center gap-1 sm:gap-1.5 shrink-0 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <LanguageSwitcher />
               <Link
                 href={`/${locale}/kyc`}
-                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full border text-[11px] font-semibold tracking-wide transition-colors"
+                className="h-8 w-8 inline-flex items-center justify-center rounded-full border transition-colors"
                 style={{
                   backgroundColor: getColor("surface"),
                   borderColor: getColor("border"),
                   color: getColor("primary"),
                 }}
+                aria-label="KYC"
+                title="KYC"
               >
-                <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
-                KYC
+                <ShieldCheck className="w-4 h-4" strokeWidth={2} />
               </Link>
               {mounted && isAuthenticated ? (
                 <Link
                   href={`/${locale}/dashboard-certificates`}
-                  className="h-9 w-9 flex items-center justify-center rounded-lg transition-colors"
+                  className="h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
                 >
                   <div
                     className="h-7 w-7 rounded-full text-white flex items-center justify-center text-xs font-medium"
@@ -290,7 +294,7 @@ export default function Header() {
                   <Button
                     variant="primary"
                     size="sm"
-                    className="h-9 px-3 text-xs rounded-full"
+                    className="h-8 w-8 !px-0 text-xs rounded-full"
                   >
                     <User className="w-4 h-4" strokeWidth={2} />
                   </Button>
@@ -298,10 +302,11 @@ export default function Header() {
               )}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="h-9 w-9 flex items-center justify-center rounded-lg transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-lg transition-colors shrink-0"
                 style={{ color: getColor("primaryText") }}
+                aria-label="Open menu"
               >
-                <Menu className="w-5.5 h-5.5" strokeWidth={1.5} />
+                <Menu className="w-5 h-5" strokeWidth={1.5} />
               </button>
             </div>
           </div>
@@ -434,6 +439,35 @@ export default function Header() {
                     )}
                   </Link>
                 )}
+
+                <Link
+                  href={`/${locale}/kyc`}
+                  onClick={closeMenu}
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
+                    isActive("/kyc") ? "font-medium" : ""
+                  } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                  style={{
+                    backgroundColor: isActive("/kyc")
+                      ? `${getColor("primary")}10`
+                      : "transparent",
+                    color: isActive("/kyc")
+                      ? getColor("primary")
+                      : getColor("primaryText"),
+                  }}
+                >
+                  <span
+                    className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                  >
+                    <ShieldCheck className="w-5 h-5" strokeWidth={2} />
+                    KYC
+                  </span>
+                  {isActive("/kyc") && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: getColor("primary") }}
+                    />
+                  )}
+                </Link>
               </nav>
 
               {/* Divider */}
