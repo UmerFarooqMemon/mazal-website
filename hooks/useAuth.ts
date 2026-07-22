@@ -16,6 +16,10 @@ import {
   AuthUser,
   AuthResponse,
 } from "@/services/auth";
+import {
+  notifyNativeAuth,
+  resetNativeAuthNotifyState,
+} from "@/lib/native/notifyNativeAuth";
 
 interface User {
   id: number;
@@ -52,6 +56,19 @@ function persistSession(response: AuthResponse) {
 
   window.dispatchEvent(new Event("auth-changed"));
   return { token: response.data.access_token, user: normalized };
+}
+
+/** Notify Flutter WebView after a fresh login / register (no-op in normal browser). */
+function notifyNativeLogin(session: {
+  token: string;
+  user: User | null;
+}) {
+  if (!session.user?.id) return;
+  void notifyNativeAuth({
+    action: "login",
+    customerId: String(session.user.id),
+    authToken: session.token,
+  });
 }
 
 export function useAuth() {
@@ -107,6 +124,25 @@ export function useAuth() {
     };
   }, []);
 
+  // Cold start: restore existing session → notify Flutter once (action: session)
+  useEffect(() => {
+    const savedToken = localStorage.getItem("access_token");
+    const savedUserRaw = localStorage.getItem("user");
+    if (!savedToken || !savedUserRaw) return;
+
+    try {
+      const savedUser = JSON.parse(savedUserRaw) as User;
+      if (!savedUser?.id) return;
+      void notifyNativeAuth({
+        action: "session",
+        customerId: String(savedUser.id),
+        authToken: savedToken,
+      });
+    } catch {
+      // ignore malformed user JSON
+    }
+  }, []);
+
   // Background token validation
   useEffect(() => {
     if (!token) return;
@@ -121,6 +157,7 @@ export function useAuth() {
           localStorage.removeItem("user");
           setToken(null);
           setUser(null);
+          resetNativeAuthNotifyState();
           window.dispatchEvent(new Event("auth-changed"));
         }
       })
@@ -157,6 +194,7 @@ export function useAuth() {
       if (session) {
         setToken(session.token);
         if (session.user) setUser(session.user);
+        notifyNativeLogin(session);
       }
       return response;
     } catch (err: any) {
@@ -176,6 +214,7 @@ export function useAuth() {
       if (session) {
         setToken(session.token);
         if (session.user) setUser(session.user);
+        notifyNativeLogin(session);
       }
       return response;
     } catch (err: any) {
@@ -195,6 +234,7 @@ export function useAuth() {
       if (session) {
         setToken(session.token);
         if (session.user) setUser(session.user);
+        notifyNativeLogin(session);
       }
       return response;
     } catch (err: any) {
@@ -219,6 +259,7 @@ export function useAuth() {
       setUser(null);
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
+      resetNativeAuthNotifyState();
       setIsLoggingOut(false);
       window.dispatchEvent(new Event("auth-changed"));
     }
