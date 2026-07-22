@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
 import { MoreVertical, Store } from "lucide-react";
@@ -13,18 +15,50 @@ interface PortfolioPlateCardProps {
 }
 
 export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
+  const router = useRouter();
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const href = `/${locale}/portfolio/${plate.id}`;
+  const detailsHref = `/${locale}/portfolio/${plate.id}`;
+  const auctionHref = `/${locale}/portfolio/plate/active`;
+  const saleHref = `/${locale}/portfolio/list-for-sale`;
 
   const formattedReturn = `+${plate.returnPct.toFixed(1)}%`;
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  const menuItems = [
+    { key: "details", label: t("portfolio.view_details"), href: detailsHref },
+    ...(plate.isAuction
+      ? [
+          {
+            key: "auction",
+            label: t("portfolio.list_for_auction"),
+            href: auctionHref,
+          },
+        ]
+      : []),
+    { key: "sale", label: t("portfolio.list_for_sale"), href: saleHref },
+  ];
+
   return (
     <Link
-      href={href}
-      className="group block rounded-xl border p-5 transition-all duration-300 hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] hover:-translate-y-0.5"
+      href={detailsHref}
+      className="group relative block rounded-xl border p-5 transition-all duration-300 hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] hover:-translate-y-0.5"
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
@@ -63,18 +97,63 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={(event) => event.preventDefault()}
-          className="rounded-lg border p-2.5 transition-colors"
-          style={{
-            borderColor: "#e8ebf0",
-            color: getColor("secondaryText"),
-          }}
-          aria-label="More options"
-        >
-          <MoreVertical className="size-3.5" />
-        </button>
+
+        <div ref={menuRef} className="relative">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setMenuOpen((open) => !open);
+            }}
+            className="rounded-lg border p-2.5 transition-colors"
+            style={{
+              borderColor: "#e8ebf0",
+              color: getColor("secondaryText"),
+              backgroundColor: menuOpen
+                ? getColor("primaryLight")
+                : getColor("surface"),
+            }}
+            aria-label={t("portfolio.more_options")}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+          >
+            <MoreVertical className="size-3.5" />
+          </button>
+
+          {menuOpen && (
+            <div
+              role="menu"
+              className={`absolute top-full mt-1.5 z-50 min-w-[168px] rounded-xl border py-1.5 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.2)] ${
+                isRTL ? "left-0" : "right-0"
+              }`}
+              style={{
+                backgroundColor: getColor("surface"),
+                borderColor: getColor("border"),
+              }}
+            >
+              {menuItems.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="menuitem"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setMenuOpen(false);
+                    router.push(item.href);
+                  }}
+                  className={`block w-full px-3.5 py-2.5 text-sm transition-colors hover:bg-black/[0.03] ${
+                    isRTL ? "text-right" : "text-left"
+                  }`}
+                  style={{ color: getColor("primaryText") }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="mx-auto mb-4 w-full max-w-[356px]">

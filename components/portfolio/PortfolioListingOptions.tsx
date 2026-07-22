@@ -24,7 +24,7 @@ export default function PortfolioListingOptions() {
       title: t("portfolio.marketplace_option"),
       description: t("portfolio.marketplace_option_desc"),
       icon: Percent,
-      href: `/${locale}/portfolio/plate/active`,
+      href: `/${locale}/portfolio/list-for-sale`,
       highlighted: false,
     },
   ];

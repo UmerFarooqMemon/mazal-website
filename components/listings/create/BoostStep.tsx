@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Crown, Gem, Stars } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount } from "@/components/ui";
-import LivePreview from "./LivePreview";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { BoostTier, CreateListingData } from "./CreateListingWizard";
 
 interface BoostStepProps {
@@ -18,14 +19,16 @@ const TIERS: {
   key: BoostTier;
   icon: typeof Stars;
   price: number;
-  badge?: string;
+  badgeKey: string;
+  iconColor: string;
   features: string[];
 }[] = [
   {
     key: "silver",
     icon: Stars,
     price: 250,
-    badge: "DEFAULT",
+    badgeKey: "badge_default",
+    iconColor: "#6b7280",
     features: [
       "Priority above standard listings",
       "Silver badge on card",
@@ -36,7 +39,8 @@ const TIERS: {
     key: "gold",
     icon: Crown,
     price: 750,
-    badge: "PREFERRED",
+    badgeKey: "badge_preferred",
+    iconColor: "#c47a1a",
     features: [
       "Featured strip placement",
       "Boosted in search results",
@@ -48,7 +52,8 @@ const TIERS: {
     key: "diamond",
     icon: Gem,
     price: 1000,
-    badge: "Most impact",
+    badgeKey: "badge_most_impact",
+    iconColor: "#00664e",
     features: [
       "Top of marketplace",
       "Homepage hero rotation",
@@ -72,6 +77,7 @@ export default function BoostStep({
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
 
   const selected = TIERS.find((tier) => tier.key === data.boostTier) || TIERS[0];
+  const SelectedIcon = selected.icon;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-8 items-start">
@@ -106,7 +112,7 @@ export default function BoostStep({
                 onClick={() => onChange({ boostTier: tier.key })}
                 className={`relative text-left rounded-2xl border p-5 transition-all ${
                   isSelected
-                    ? "shadow-[0_8px_24px_-12px_rgba(10,59,158,0.35)]"
+                    ? "shadow-[0_8px_24px_-12px_rgba(0,102,78,0.28)]"
                     : ""
                 } ${isRTL ? "text-right" : ""}`}
                 style={{
@@ -118,22 +124,20 @@ export default function BoostStep({
                     : getColor("surface"),
                 }}
               >
-                {tier.badge && (
-                  <span
-                    className="absolute top-4 end-3 text-[9px] font-bold uppercase tracking-wider"
-                    style={{ color: getColor("mutedText") }}
-                  >
-                    {tier.badge}
-                  </span>
-                )}
+                <span
+                  className="absolute top-4 end-3 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: `${getColor("primary")}18`,
+                    color: getColor("primary"),
+                  }}
+                >
+                  {t(`listings.${tier.badgeKey}`)}
+                </span>
                 <div
                   className="size-9 rounded-xl flex items-center justify-center mb-4"
-                  style={{ backgroundColor: `${getColor("primary")}12` }}
+                  style={{ backgroundColor: `${tier.iconColor}14` }}
                 >
-                  <Icon
-                    className="w-5 h-5"
-                    style={{ color: getColor("primary") }}
-                  />
+                  <Icon className="w-5 h-5" style={{ color: tier.iconColor }} />
                 </div>
                 <div
                   className="text-lg font-serif font-bold"
@@ -172,11 +176,14 @@ export default function BoostStep({
                   ))}
                 </ul>
                 <div
-                  className="w-full h-7 rounded-lg text-[11px] font-semibold flex items-center justify-center"
+                  className="w-full h-8 rounded-lg text-[11px] font-semibold flex items-center justify-center border"
                   style={{
                     backgroundColor: isSelected
                       ? getColor("primary")
-                      : `${getColor("primary")}12`,
+                      : getColor("surface"),
+                    borderColor: isSelected
+                      ? getColor("primary")
+                      : getColor("border"),
                     color: isSelected ? "#fff" : getColor("primary"),
                   }}
                 >
@@ -213,33 +220,44 @@ export default function BoostStep({
         </div>
       </div>
 
-      <div className="lg:sticky lg:top-24 space-y-4">
-        <LivePreview
-          code={data.code}
-          digits={data.digits}
-          emirate={data.emirate}
-          plateVariant={data.plateVariant}
-          price={data.price}
-          hideCode={data.hideCode}
-          label={t("listings.preview")}
-        />
+      <div className="lg:sticky lg:top-24">
         <div
-          className="rounded-2xl border p-5"
+          className="rounded-2xl border shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-5"
           style={{
             backgroundColor: getColor("surface"),
             borderColor: getColor("border"),
           }}
         >
           <div
-            className="flex items-center justify-center gap-3 rounded-xl text-white py-4 px-4 mb-5"
-            style={{ backgroundColor: getColor("primaryText") }}
+            className={`text-[11px] font-bold tracking-[0.14em] uppercase mb-4 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("mutedText") }}
           >
-            <Gem className="w-5 h-5" style={{ color: getColor("accent") }} />
+            {t("listings.preview")}
+          </div>
+
+          <div className="mb-4">
+            <NumberPlateDisplay
+              plate_code={data.code || "AA"}
+              plate_digits={data.digits || "777"}
+              emirate={data.emirate || "dubai"}
+              plateVariant={data.plateVariant}
+              crop="live-preview"
+              hideCode={Boolean(data.code) && data.hideCode}
+              showCode
+            />
+          </div>
+
+          <div
+            className="flex items-center justify-center gap-2.5 rounded-xl text-white py-3.5 px-4 mb-5"
+            style={{ backgroundColor: getColor("primary") }}
+          >
+            <SelectedIcon className="w-4 h-4 shrink-0" />
             <span className="text-[11px] font-bold tracking-[0.1em] uppercase">
               {t(`listings.tier_${selected.key}`)} {t("listings.featured")} —{" "}
               {t("listings.days_30")}
             </span>
           </div>
+
           <div className="space-y-0">
             {[
               [t("listings.tier"), t(`listings.tier_${selected.key}`)],
@@ -265,12 +283,15 @@ export default function BoostStep({
               </div>
             ))}
           </div>
-          <p
-            className="text-xs mt-4 font-medium"
+
+          <Link
+            href={`/${locale}/marketplace`}
+            className={`inline-flex items-center gap-1 text-xs mt-4 font-medium underline underline-offset-2 ${isRTL ? "flex-row-reverse" : ""}`}
             style={{ color: getColor("primary") }}
           >
-            {t("listings.see_featured")} →
-          </p>
+            {t("listings.see_featured")}
+            <span aria-hidden>{isRTL ? "←" : "→"}</span>
+          </Link>
         </div>
       </div>
     </div>

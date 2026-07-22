@@ -49,14 +49,31 @@ const INITIAL: CreateListingData = {
 
 type Step = 1 | 2 | 3;
 
-export default function CreateListingWizard() {
+interface CreateListingWizardProps {
+  backHref?: string;
+  successHref?: string;
+  initialStep?: Step;
+  initialData?: Partial<CreateListingData>;
+}
+
+export default function CreateListingWizard({
+  backHref,
+  successHref,
+  initialStep = 1,
+  initialData,
+}: CreateListingWizardProps = {}) {
   const router = useRouter();
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
   const isRTL = locale === "ar";
-  const [step, setStep] = useState<Step>(1);
-  const [data, setData] = useState<CreateListingData>(INITIAL);
+  const [step, setStep] = useState<Step>(initialStep);
+  const [data, setData] = useState<CreateListingData>({
+    ...INITIAL,
+    ...initialData,
+  });
   const [loading, setLoading] = useState(false);
+  const cancelHref = backHref || `/${locale}/marketplace`;
+  const doneHref = successHref || `/${locale}/marketplace`;
 
   const onChange = (patch: Partial<CreateListingData>) => {
     setData((prev) => ({ ...prev, ...patch }));
@@ -122,7 +139,7 @@ export default function CreateListingWizard() {
 
       await createListing(payload, locale);
       toast.success(t("listings.publish_success"));
-      router.push(`/${locale}/marketplace`);
+      router.push(doneHref);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -158,7 +175,10 @@ export default function CreateListingWizard() {
         <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10 pb-8">
           <p
             className={`text-xs font-bold uppercase tracking-[0.14em] mb-3 ${isRTL ? "text-right" : "text-left"}`}
-            style={{ color: getColor("primary") }}
+            style={{
+              color:
+                step === 2 ? getColor("mutedText") : getColor("primary"),
+            }}
           >
             {eyebrow}
           </p>
@@ -183,7 +203,7 @@ export default function CreateListingWizard() {
           <PlatePriceFormStep
             data={data}
             onChange={onChange}
-            onBack={() => router.push(`/${locale}/marketplace`)}
+            onBack={() => router.push(cancelHref)}
             onContinue={() => setStep(2)}
           />
         )}
@@ -191,7 +211,11 @@ export default function CreateListingWizard() {
           <BoostStep
             data={data}
             onChange={onChange}
-            onBack={() => setStep(1)}
+            onBack={() =>
+              initialStep >= 2
+                ? router.push(cancelHref)
+                : setStep(1)
+            }
             onContinue={() => setStep(3)}
           />
         )}
