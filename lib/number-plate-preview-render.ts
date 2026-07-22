@@ -235,15 +235,18 @@ function scaledDigitsConfig(
   const len = (digits || "").length;
   const hasCode = Boolean(code && String(code).length > 0);
 
-  if (layout === "split_top") {
+  // Keep API/template font size for these layouts — do not shrink on longer digits.
+  if (
+    layout === "split_top" ||
+    layout === "classic_car_row" ||
+    layout === "abu_dhabi_classic_car"
+  ) {
     return config;
   }
   if (layout === "rak_private" && hasCode && len >= 5) {
     config.font_size = "clamp(1.2rem, 3.4vw, 2.1rem)";
   } else if (layout === "motorcycle" && len >= 5) {
     config.font_size = "clamp(1.15rem, 3.2vw, 2rem)";
-  } else if (layout === "abu_dhabi_classic_car") {
-    return config;
   } else if (len >= 5) {
     config.font_size = "clamp(1.25rem, 4vw, 2.2rem)";
   } else if (len >= 4) {
