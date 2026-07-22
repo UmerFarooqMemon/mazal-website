@@ -1,7 +1,7 @@
-import React from "react";
+"use client";
 
-const Page = () => {
-  return <div>This page is being created...</div>;
-};
+import KYCForm from "@/components/forms/KYCForm";
 
-export default Page;
+export default function KycPage() {
+  return <KYCForm />;
+}
