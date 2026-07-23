@@ -41,17 +41,17 @@ function parseUploadedDocuments(
   if (!documents) return [];
 
   if (Array.isArray(documents)) {
-    return documents
-      .map((doc) => {
-        const type = String(doc.type || doc.document_type || "");
-        if (!type) return null;
-        return {
-          id: typeof doc.id === "number" ? doc.id : undefined,
-          type,
-          name: typeof doc.name === "string" ? doc.name : undefined,
-        };
-      })
-      .filter((doc): doc is KycUploadedDocument => Boolean(doc));
+    const parsed: KycUploadedDocument[] = [];
+    for (const doc of documents) {
+      const type = String(doc.type || doc.document_type || "");
+      if (!type) continue;
+      parsed.push({
+        id: typeof doc.id === "number" ? doc.id : undefined,
+        type,
+        name: typeof doc.name === "string" ? doc.name : undefined,
+      });
+    }
+    return parsed;
   }
 
   return Object.entries(documents).map(([type, value]) => {
