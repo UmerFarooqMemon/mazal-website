@@ -7,7 +7,7 @@ import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
 import { useLocale } from "@/context/LocaleContext";
 
 export default function HomeV2Hero() {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
 
   return (
     <section className="overflow-hidden bg-[#f2faef]">
@@ -16,24 +16,20 @@ export default function HomeV2Hero() {
           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(10,47,148,0.2)] bg-[rgba(10,47,148,0.05)] px-3.5 py-1.5">
             <HomeV2Icon src="/home-v2/icon-shield.svg" size={14} />
             <span className="text-xs font-medium tracking-[0.6px] text-[#152e2b] uppercase">
-              Escrow-protected · Emirates ID verified
+              {t("home.hero_badge")}
             </span>
           </div>
 
           <h1 className="font-serif text-5xl leading-[1.02] font-semibold tracking-[-0.03em] text-[#152e2b] sm:text-6xl lg:text-[72px] lg:leading-[1.02]">
-            The UAE&apos;s most
-            <br />
-            distinctive plates,
+            {t("home.hero_title_1")}
             <br />
             <span className="bg-linear-to-r from-[#152e2b] to-[#00664e] bg-clip-text text-transparent">
-              with trust built in.
+              {t("home.hero_title_2")}
             </span>
           </h1>
 
           <p className="max-w-xl text-lg leading-7 text-[#545e6f]">
-            Buy, sell and auction the country&apos;s rarest plates. Every
-            transaction runs through Mazal escrow custody — plate first, payment
-            second.
+            {t("home.hero_subtitle")}
           </p>
 
           <div className="pt-2">
@@ -41,7 +37,7 @@ export default function HomeV2Hero() {
               href={`/${locale}/marketplace`}
               className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-[#152e2b] to-[#00664e] px-6 py-3 text-sm font-medium text-[#fbfaf6] shadow-[0_30px_60px_-25px_rgba(1,15,81,0.35)] transition-opacity hover:opacity-90"
             >
-              Browse marketplace
+              {t("home.hero_browse")}
               <HomeV2Icon src="/home-v2/icon-arrow.svg" size={16} />
             </Link>
           </div>
@@ -49,15 +45,19 @@ export default function HomeV2Hero() {
           <div className="flex max-w-lg gap-6 border-t border-[#d9dee6]/80 pt-6 sm:gap-10">
             <div>
               <div className="font-serif text-2xl font-semibold tracking-tight text-[#152e2b]">
-                AED 2.4B
+                {locale === "ar" ? "مليار 2.4" : "AED 2.4B"}
               </div>
-              <div className="mt-1 text-xs text-[#545e6f]">Plates transacted</div>
+              <div className="mt-1 text-xs text-[#545e6f]">
+                {t("home.hero_stats_plates")}
+              </div>
             </div>
             <div>
               <div className="font-serif text-2xl font-semibold tracking-tight text-[#152e2b]">
                 12,400+
               </div>
-              <div className="mt-1 text-xs text-[#545e6f]">Verified bidders</div>
+              <div className="mt-1 text-xs text-[#545e6f]">
+                {t("home.hero_stats_bidders")}
+              </div>
             </div>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function HomeV2Hero() {
         <div className="flex flex-col gap-5 lg:pl-4">
           <div className="rounded-2xl border border-[#d9dee6] bg-white/95 p-6 shadow-[0_30px_60px_rgba(21,46,43,0.2)] sm:p-8">
             <p className="mb-4 text-xs tracking-[0.6px] text-[#545e6f] uppercase">
-              most active · highest value plates
+              {t("home.v2_hero_card_label")}
             </p>
 
             <NumberPlateDisplay
@@ -78,7 +78,7 @@ export default function HomeV2Hero() {
 
             <div className="mt-5 flex items-end justify-between gap-4">
               <div>
-                <div className="text-xs text-[#545e6f]">Asking</div>
+                <div className="text-xs text-[#545e6f]">{t("home.hero_asking")}</div>
                 <div className="font-serif text-3xl font-semibold tracking-tight text-[#081123]">
                   <DirhamAmount amount={12_500_000} weight="bold" />
                 </div>
@@ -87,16 +87,16 @@ export default function HomeV2Hero() {
                 href={`/${locale}/marketplace`}
                 className="inline-flex items-center gap-1 rounded-full bg-[#152e2b] px-4 py-2 text-sm font-medium text-[#fbfaf6] transition-opacity hover:opacity-90"
               >
-                View
+                {t("home.hero_view")}
                 <HomeV2Icon src="/home-v2/icon-arrow.svg" size={16} />
               </Link>
             </div>
 
             <div className="mt-5 grid grid-cols-3 gap-3">
               {[
-                { value: "Single digit", label: "Pattern" },
-                { value: "8,421", label: "Views" },
-                { value: "4.9★", label: "Seller" },
+                { value: t("home.hero_single_digit"), label: t("home.hero_pattern") },
+                { value: "8,421", label: t("home.hero_views") },
+                { value: "4.9★", label: t("home.hero_seller") },
               ].map((stat) => (
                 <div
                   key={stat.label}
@@ -125,15 +125,15 @@ export default function HomeV2Hero() {
                 <span className="relative inline-flex size-2 rounded-full bg-[#d40c1a]" />
               </span>
               <span className="text-xs font-semibold tracking-[0.6px] text-[#2b1500] uppercase">
-                Live auction · 165 trades
+                {t("home.v2_hero_auction_label")}
               </span>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-serif text-lg font-semibold tracking-tight text-[#081123]">
-                Total Auctioning : 45 Plates
+                {t("home.v2_hero_auctioning")}
               </span>
               <span className="font-serif text-lg font-semibold tracking-tight text-[#152e2b]">
-                Total Value: AED 6,200,000
+                {t("home.v2_hero_auction_value")}
               </span>
             </div>
           </Link>

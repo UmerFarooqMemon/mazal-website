@@ -1,22 +1,18 @@
 import type { HomeV2Plate } from "@/components/home-v2/HomeV2PlateCard";
 
 export type HomeV2PlateDetail = HomeV2Plate & {
-  listingType: string;
-  description: string;
+  listingTypeKey: "direct" | "auction" | "spot";
   sellerDeals: number;
   watchers: number;
   activeOffers: number;
 };
 
-function buildDescription(plate: HomeV2Plate): string {
-  const emirate = plate.emirate ?? "Dubai";
-  return `An exceptional ${emirate} plate combining ${plate.code} with the digit pattern '${plate.digits}'. Held by a top-rated trader with a flawless transaction history. Available with full Mazal escrow protection.`;
-}
-
-function enrich(plate: HomeV2Plate, extras?: Partial<HomeV2PlateDetail>): HomeV2PlateDetail {
+function enrich(
+  plate: HomeV2Plate,
+  extras?: Partial<HomeV2PlateDetail>,
+): HomeV2PlateDetail {
   return {
-    listingType: "Direct",
-    description: buildDescription(plate),
+    listingTypeKey: "direct",
     sellerDeals: 32,
     watchers: Math.max(40, Math.round(plate.views * 0.025)),
     activeOffers: 8,

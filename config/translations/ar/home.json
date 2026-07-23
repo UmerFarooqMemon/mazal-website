@@ -62,5 +62,16 @@
   "hero_auction_label": "مزاد مباشر • ٢٣ مزايداً",
   "hero_closes": "ينتهي",
   "hero_dubai_t": "دبي T · 8",
-  "hero_single_digit": "رقم واحد"
+  "hero_single_digit": "رقم واحد",
+
+  "v2_hero_card_label": "الأكثر نشاطاً · أعلى اللوحات قيمة",
+  "v2_hero_auction_label": "مزاد مباشر · 165 صفقة",
+  "v2_hero_auctioning": "إجمالي المزادات: 45 لوحة",
+  "v2_hero_auction_value": "إجمالي القيمة: 6,200,000 درهم",
+  "v2_feature_onspot_title": "نقد فوري",
+  "v2_feature_onspot_desc": "خدمة حصرية جديدة قادمة قريباً. ترقّبوا!",
+  "v2_watching_badge": "لوحات ماسية",
+  "v2_watching_subtitle": "استكشف مجموعتنا المختارة من لوحات الأرقام المميزة التي تحظى بأكبر اهتمام.",
+  "v2_trending_plates_title": "اللوحات الرائجة",
+  "v2_partners": "الشركاء"
 }

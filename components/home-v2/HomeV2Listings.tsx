@@ -25,7 +25,7 @@ function PlateGridSection({
   plates: HomeV2Plate[];
   seeAll?: boolean;
 }) {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
 
   return (
     <section className="bg-[#f2faef]">
@@ -50,7 +50,7 @@ function PlateGridSection({
               href={`/${locale}/marketplace`}
               className="inline-flex items-center gap-1 text-sm font-medium text-[#152e2b] hover:underline"
             >
-              See all
+              {t("home.trending_see_all")}
               <span aria-hidden>→</span>
             </Link>
           ) : null}
@@ -67,23 +67,27 @@ function PlateGridSection({
 }
 
 export function HomeV2Watching() {
+  const { t } = useLocale();
+
   return (
     <PlateGridSection
-      badge="diamond Plates"
+      badge={t("home.v2_watching_badge")}
       badgeIcon="/home-v2/icon-trending.svg"
-      title="Plates the market is watching"
-      subtitle="Explore our handpicked collection of premium number plates attracting the most attention."
+      title={t("home.trending_title")}
+      subtitle={t("home.v2_watching_subtitle")}
       plates={WATCHING_PLATES}
     />
   );
 }
 
 export function HomeV2Trending() {
+  const { t } = useLocale();
+
   return (
     <PlateGridSection
-      badge="Trending now"
+      badge={t("home.trending_badge")}
       badgeIcon="/home-v2/icon-trending.svg"
-      title="Trending Plates"
+      title={t("home.v2_trending_plates_title")}
       plates={TRENDING_PLATES}
       seeAll
     />

@@ -22,32 +22,32 @@ export type HomeV2Plate = {
 
 const TIER_STYLES: Record<
   PlateTier,
-  { label: string; className: string; icon: string }
+  { labelKey: string; className: string; icon: string }
 > = {
   diamond: {
-    label: "DIAMOND",
+    labelKey: "listings.tier_diamond",
     className: "bg-linear-to-r from-[#152e2b] to-[#00664e]",
     icon: "/home-v2/icon-diamond.svg",
   },
   gold: {
-    label: "GOLD",
+    labelKey: "listings.tier_gold",
     className: "bg-linear-to-br from-[#e0ae57] to-[#a77927]",
     icon: "/home-v2/icon-crown.svg",
   },
   silver: {
-    label: "SILVER",
+    labelKey: "listings.tier_silver",
     className: "bg-linear-to-br from-[#cdcdcd] to-[#969696]",
     icon: "/home-v2/icon-stars.svg",
   },
   verified: {
-    label: "VERIFIED",
+    labelKey: "listings.tier_verified",
     className: "bg-linear-to-r from-[#152e2b] to-[#00664e]",
     icon: "/home-v2/icon-verified.svg",
   },
 };
 
 export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const tier = TIER_STYLES[plate.tier];
 
   return (
@@ -60,7 +60,7 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
           className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.3px] text-white uppercase ${tier.className}`}
         >
           <HomeV2Icon src={tier.icon} size={12} />
-          {tier.label}
+          {t(tier.labelKey)}
         </span>
         <div className="flex items-center gap-2.5">
           <span className="flex items-center gap-1 text-xs text-[#545e6f]">
@@ -86,7 +86,7 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
           <DirhamAmount amount={plate.price} weight="bold" />
         </div>
         <div className="flex items-center gap-2 text-xs text-[#545e6f]">
-          <span>Seller Rating</span>
+          <span>{t("marketplace.seller_rating")}</span>
           <span>·</span>
           <span className="flex items-center gap-0.5">
             <HomeV2Icon src="/home-v2/icon-star.svg" size={12} />

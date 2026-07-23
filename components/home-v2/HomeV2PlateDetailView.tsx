@@ -16,58 +16,83 @@ type HomeV2PlateDetailViewProps = {
   plate: HomeV2PlateDetail;
 };
 
+const LISTING_TYPE_KEYS = {
+  direct: "listings.type_direct",
+  auction: "listings.type_auction",
+  spot: "listings.type_spot",
+} as const;
+
 export default function HomeV2PlateDetailView({
   plate,
 }: HomeV2PlateDetailViewProps) {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const similar = getSimilarHomeV2Plates(plate);
-  const emirate = plate.emirate ?? "Dubai";
+  const emirateLabel = t("listings.emirate_dubai");
+  const emirateDisplay = plate.emirate ?? "Dubai";
   const digitCount = plate.digits.length;
+  const listingType = t(LISTING_TYPE_KEYS[plate.listingTypeKey]);
 
   const highlightCards = [
     {
-      title: "Escrow protected",
-      body: "Plate enters Mazal custody before payment.",
+      title: t("listings.escrow_protected_title"),
+      body: t("listings.escrow_protected_desc"),
       icon: "/home-v2/icon-shield-check.svg",
     },
     {
-      title: "72h decision window",
-      body: "Reveal fee credits toward purchase if you proceed.",
+      title: t("listings.window_title"),
+      body: t("listings.window_desc"),
       icon: "/home-v2/icon-clock.svg",
     },
     {
-      title: `Seller ${plate.rating.toFixed(1)}★`,
-      body: `${plate.sellerDeals} completed deals · Verified Emirates ID.`,
+      title: t("listings.seller_rating_title_dynamic").replace(
+        "{rating}",
+        plate.rating.toFixed(1),
+      ),
+      body: t("listings.seller_rating_desc_dynamic").replace(
+        "{deals}",
+        String(plate.sellerDeals),
+      ),
       icon: "/home-v2/icon-star.svg",
     },
     {
-      title: `${plate.views.toLocaleString("en-US")} views`,
-      body: `${plate.watchers.toLocaleString("en-US")} watchers · ${plate.activeOffers} active offers.`,
+      title: t("listings.views_title_dynamic").replace(
+        "{views}",
+        plate.views.toLocaleString("en-US"),
+      ),
+      body: t("listings.views_desc_dynamic")
+        .replace("{watchers}", plate.watchers.toLocaleString("en-US"))
+        .replace("{offers}", String(plate.activeOffers)),
       icon: "/home-v2/icon-eye.svg",
     },
   ];
 
+  const digitsValue = t("listings.digits_value")
+    .replace("{digits}", plate.digits)
+    .replace("{count}", String(digitCount));
+
   const specRows = [
-    { label: "Emirate", value: emirate },
-    { label: "Code", value: plate.code },
-    {
-      label: "Digits",
-      value: `${plate.digits} (${digitCount}-digit)`,
-    },
-    { label: "Type", value: plate.listingType },
+    { label: t("listings.emirate"), value: emirateLabel },
+    { label: t("listings.code"), value: plate.code },
+    { label: t("listings.digits"), value: digitsValue },
+    { label: t("listings.type"), value: listingType },
   ];
+
+  const description = t("listings.description_template")
+    .replace("{emirate}", emirateLabel)
+    .replace("{code}", plate.code)
+    .replace("{digits}", plate.digits);
 
   const handleShare = async () => {
     const url = window.location.href;
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${emirate} ${plate.code} ${plate.digits}`,
+          title: `${emirateDisplay} ${plate.code} ${plate.digits}`,
           url,
         });
       } else {
         await navigator.clipboard.writeText(url);
-        toast.success("Link copied.");
+        toast.success(t("listings.link_copied"));
       }
     } catch {
       // User cancelled share
@@ -75,7 +100,7 @@ export default function HomeV2PlateDetailView({
   };
 
   const handleWatchlist = () => {
-    toast.success("Added to watchlist.");
+    toast.success(t("listings.added_to_watchlist"));
   };
 
   return (
@@ -88,12 +113,12 @@ export default function HomeV2PlateDetailView({
           href={`/${locale}/marketplace`}
           className="transition-colors hover:text-[#152e2b]"
         >
-          Marketplace
+          {t("listings.breadcrumb_marketplace")}
         </Link>
         <span>/</span>
-        <span>{emirate}</span>
+        <span>{emirateLabel}</span>
         <span>/</span>
-        <span className="text-[#545e6f]">{plate.listingType}</span>
+        <span className="text-[#545e6f]">{listingType}</span>
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.85fr)] lg:items-start lg:gap-10">
@@ -102,7 +127,7 @@ export default function HomeV2PlateDetailView({
             <NumberPlateDisplay
               plate_code={plate.code}
               plate_digits={plate.digits}
-              emirate={emirate.toUpperCase()}
+              emirate={emirateDisplay.toUpperCase()}
               plateVariant="private_new_colorful"
               crop="hero"
               wrapperClassName="mx-auto w-full max-w-xl overflow-hidden"
@@ -131,13 +156,13 @@ export default function HomeV2PlateDetailView({
           <div className="rounded-2xl border border-[#e4e8ee] bg-white p-6 shadow-[0_8px_28px_-12px_rgba(1,15,81,0.18)]">
             <div className="mb-6">
               <p className="mb-1 text-[10px] font-semibold tracking-[1px] text-[#7a8494] uppercase">
-                Asking price
+                {t("listings.asking_price")}
               </p>
               <div className="font-serif text-4xl font-semibold tracking-tight text-[#081123] sm:text-[42px]">
                 <DirhamAmount amount={plate.price} weight="bold" />
               </div>
               <p className="mt-2 text-xs text-[#7a8494]">
-                + 1% escrow · 4% platform · 3% service
+                {t("listings.fees_breakdown")}
               </p>
             </div>
 
@@ -146,13 +171,13 @@ export default function HomeV2PlateDetailView({
                 href={`/${locale}/marketplace`}
                 className="inline-flex h-12 items-center justify-center rounded-lg bg-[#152e2b] px-4 text-sm font-medium text-white transition-opacity hover:opacity-90"
               >
-                Buy through escrow
+                {t("listings.buy_escrow")}
               </Link>
               <Link
                 href={`/${locale}/marketplace`}
                 className="inline-flex h-12 items-center justify-center rounded-lg border border-[#152e2b] bg-white px-4 text-sm font-medium text-[#081123] transition-colors hover:bg-[#f2faef]"
               >
-                Make an offer
+                {t("listings.make_offer")}
               </Link>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -161,7 +186,7 @@ export default function HomeV2PlateDetailView({
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[#d9dee6] bg-white text-sm font-medium text-[#081123] transition-colors hover:bg-[#f7f8fa]"
                 >
                   <HomeV2Icon src="/home-v2/icon-heart.svg" size={16} />
-                  Watchlist
+                  {t("listings.watchlist")}
                 </button>
                 <button
                   type="button"
@@ -169,7 +194,7 @@ export default function HomeV2PlateDetailView({
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[#d9dee6] bg-white text-sm font-medium text-[#081123] transition-colors hover:bg-[#f7f8fa]"
                 >
                   <HomeV2Icon src="/home-v2/icon-share.svg" size={16} />
-                  Share
+                  {t("listings.share")}
                 </button>
               </div>
             </div>
@@ -193,19 +218,19 @@ export default function HomeV2PlateDetailView({
 
       <section className="mt-10 max-w-3xl lg:mt-12">
         <h2 className="mb-3 font-serif text-2xl tracking-tight text-[#081123]">
-          Description
+          {t("listings.description_heading")}
         </h2>
-        <p className="text-sm leading-6 text-[#545e6f]">{plate.description}</p>
+        <p className="text-sm leading-6 text-[#545e6f]">{description}</p>
       </section>
 
       {similar.length > 0 ? (
         <section className="mt-12 lg:mt-14">
           <div className="mb-6">
             <h2 className="font-serif text-2xl tracking-tight text-[#081123]">
-              Similar plates
+              {t("listings.similar_title")}
             </h2>
             <p className="mt-1 text-sm text-[#545e6f]">
-              Same code or digit pattern.
+              {t("listings.similar_subtitle")}
             </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
