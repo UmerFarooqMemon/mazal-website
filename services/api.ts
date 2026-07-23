@@ -1,7 +1,5 @@
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
-
-// API Base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.mazal.cloud/api";
+import { getApiBaseUrl } from "@/lib/api-config";
 
 // ----- Response Types -----
 
@@ -180,7 +178,7 @@ export async function apiRequest<T>(
     requestHeaders["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const response = await fetch(`${getApiBaseUrl()}${endpoint}`, {
     method,
     headers: requestHeaders,
     body,

@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const ALLOWED_HOSTS = (process.env.NEXT_PUBLIC_API_BASE_URL
-  ? [new URL(process.env.NEXT_PUBLIC_API_BASE_URL).hostname]
-  : []
-).concat(["admin.mazal.cloud"]);
+import { getApiAllowedHosts } from "@/lib/api-config";
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get("url");
@@ -14,8 +10,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const parsed = new URL(url);
+    const allowedHosts = getApiAllowedHosts();
 
-    if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
+    if (!allowedHosts.includes(parsed.hostname)) {
       return NextResponse.json({ error: "Host not allowed" }, { status: 403 });
     }
 

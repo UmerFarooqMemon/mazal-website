@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.mazal.cloud/api";
+import { getApiBaseUrl } from "@/lib/api-config";
 
 function buildTargetUrl(
   request: NextRequest,
@@ -9,7 +7,7 @@ function buildTargetUrl(
 ): string {
   const suffix = path?.length ? `/${path.join("/")}` : "";
   const search = request.nextUrl.search || "";
-  return `${API_BASE_URL}/v1/private-deals${suffix}${search}`;
+  return `${getApiBaseUrl()}/v1/private-deals${suffix}${search}`;
 }
 
 async function proxyRequest(

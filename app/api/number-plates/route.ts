@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.mazal.cloud/api";
+import { getApiBaseUrl } from "@/lib/api-config";
 
 // GET - List all user's number plates
 export async function GET(request: NextRequest) {
@@ -10,7 +9,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await fetch(`${API_BASE_URL}/v1/number-plates`, {
+    const response = await fetch(`${getApiBaseUrl()}/v1/number-plates`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
@@ -61,7 +60,7 @@ export async function POST(request: NextRequest) {
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
 
-      const response = await fetch(`${API_BASE_URL}/v1/number-plates`, {
+      const response = await fetch(`${getApiBaseUrl()}/v1/number-plates`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(data);
     } else {
       const body = await request.json();
-      const response = await fetch(`${API_BASE_URL}/v1/number-plates`, {
+      const response = await fetch(`${getApiBaseUrl()}/v1/number-plates`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

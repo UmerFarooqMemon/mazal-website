@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.mazal.cloud/api";
+import { getApiBaseUrl } from "@/lib/api-config";
 
 export async function GET() {
   try {
-    const response = await fetch(`${API_BASE_URL}/v1/site-settings`, {
+    const response = await fetch(`${getApiBaseUrl()}/v1/site-settings`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });

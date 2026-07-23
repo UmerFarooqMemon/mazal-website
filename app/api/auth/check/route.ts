@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.mazal.cloud/api";
+import { getApiBaseUrl } from "@/lib/api-config";
 
 export async function GET(request: NextRequest) {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "");
@@ -14,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Verify token by calling a protected endpoint on the backend
-    const response = await fetch(`${API_BASE_URL}/v1/number-plates`, {
+    const response = await fetch(`${getApiBaseUrl()}/v1/number-plates`, {
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${token}`,
