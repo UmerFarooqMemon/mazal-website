@@ -9,6 +9,7 @@ import { siteConfig } from "@/config/site";
 type FooterLink = {
   href: string;
   labelKey: string;
+  badgeKey?: string;
 };
 
 type FooterColumn = {
@@ -24,6 +25,12 @@ const FOOTER_ICONS = {
   apple: { src: "/apple.png", width: 26, height: 25 },
 } as const;
 
+function resolveFooterCopy(value: string | null | undefined, fallback: string) {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed || trimmed === "-" || trimmed === "—") return fallback;
+  return trimmed;
+}
+
 function FooterColumnBlock({
   title,
   links,
@@ -31,7 +38,7 @@ function FooterColumnBlock({
   headingColor,
 }: {
   title: string;
-  links: { href: string; label: string }[];
+  links: { href: string; label: string; badge?: string }[];
   isRTL: boolean;
   headingColor: string;
 }) {
@@ -48,9 +55,14 @@ function FooterColumnBlock({
           <li key={link.href + link.label}>
             <Link
               href={link.href}
-              className="footer-link text-sm leading-snug transition-colors"
+              className={`footer-link inline-flex items-center gap-1.5 text-sm leading-none transition-colors whitespace-nowrap ${isRTL ? "flex-row-reverse" : ""}`}
             >
-              {link.label}
+              <span className="whitespace-nowrap">{link.label}</span>
+              {link.badge ? (
+                <span className="inline-flex shrink-0 items-center self-center rounded-full bg-white/10 px-2 py-[3px] text-[8px] font-medium uppercase tracking-[0.04em] text-white/55 leading-none">
+                  {link.badge}
+                </span>
+              ) : null}
             </Link>
           </li>
         ))}
@@ -61,7 +73,8 @@ function FooterColumnBlock({
 
 export default function Footer() {
   const { t, locale } = useLocale();
-  const { branding, getColor, footerColors } = useTheme();
+  const { branding, getColor, footerColors, social, footerContent } =
+    useTheme();
   const isRTL = locale === "ar";
 
   const primaryColor =
@@ -73,8 +86,19 @@ export default function Footer() {
       links: [
         { href: `/${locale}/marketplace`, labelKey: "footer_buy" },
         { href: `/${locale}/listings/create`, labelKey: "footer_sell" },
-        { href: `/${locale}/certificates/request`, labelKey: "footer_get_valuation" },
-        { href: `/${locale}/spot-cash`, labelKey: "spot_cash" },
+        {
+          href: `/${locale}/certificates/request`,
+          labelKey: "footer_get_valuation",
+        },
+        {
+          href: `/${locale}/verify`,
+          labelKey: "footer_verify_valuation",
+        },
+        {
+          href: `/${locale}/spot-cash`,
+          labelKey: "on_spot",
+          badgeKey: "upcoming_feature",
+        },
         { href: `/${locale}/about`, labelKey: "footer_how_it_works" },
       ],
     },
@@ -108,21 +132,30 @@ export default function Footer() {
 
   const socialLinks = [
     {
-      href: siteConfig.links.instagram,
+      href: social.instagram || siteConfig.links.instagram,
       label: "Instagram",
       icon: FOOTER_ICONS.instagram,
     },
     {
-      href: siteConfig.links.twitter,
+      href: social.twitter || siteConfig.links.twitter,
       label: "X",
       icon: FOOTER_ICONS.x,
     },
     {
-      href: siteConfig.links.linkedin,
+      href: social.linkedin || siteConfig.links.linkedin,
       label: "LinkedIn",
       icon: FOOTER_ICONS.linkedin,
     },
-  ];
+  ].filter((item) => Boolean(item.href));
+
+  const description = resolveFooterCopy(
+    footerContent.sentence,
+    t("common.footer_desc"),
+  );
+  const copyright = resolveFooterCopy(
+    footerContent.copyright,
+    t("common.copyright"),
+  );
 
   return (
     <footer
@@ -169,7 +202,7 @@ export default function Footer() {
               className="mt-5 max-w-[320px] text-sm leading-[1.6]"
               style={{ color: footerColors.text }}
             >
-              {t("common.footer_desc")}
+              {description}
             </p>
 
             <div
@@ -234,7 +267,7 @@ export default function Footer() {
               className="mt-10 text-xs leading-none opacity-70"
               style={{ color: footerColors.text }}
             >
-              {t("common.copyright")}
+              {copyright}
             </p>
           </div>
 
@@ -249,6 +282,9 @@ export default function Footer() {
                 links={column.links.map((link) => ({
                   href: link.href,
                   label: t(`common.${link.labelKey}`),
+                  badge: link.badgeKey
+                    ? t(`common.${link.badgeKey}`)
+                    : undefined,
                 }))}
                 isRTL={isRTL}
                 headingColor={footerColors.heading}

@@ -114,10 +114,26 @@ export interface FooterColors {
   linkHover: string;
 }
 
+export interface SocialLinks {
+  facebook: string | null;
+  twitter: string | null;
+  linkedin: string | null;
+  instagram: string | null;
+  youtube: string | null;
+  whatsapp: string | null;
+}
+
+export interface FooterContent {
+  sentence: string | null;
+  copyright: string | null;
+}
+
 interface ThemeContextType {
   colors: ThemeColors;
   branding: Branding;
   footerColors: FooterColors;
+  social: SocialLinks;
+  footerContent: FooterContent;
   loading: boolean;
   getColor: (key: keyof ThemeColors) => string;
   getGradient: (key: keyof ThemeColors) => string;
@@ -157,10 +173,26 @@ const defaultFooterColors: FooterColors = {
   linkHover: "#ffffff",
 };
 
+const defaultSocial: SocialLinks = {
+  facebook: null,
+  twitter: null,
+  linkedin: null,
+  instagram: null,
+  youtube: null,
+  whatsapp: null,
+};
+
+const defaultFooterContent: FooterContent = {
+  sentence: null,
+  copyright: null,
+};
+
 const ThemeContext = createContext<ThemeContextType>({
   colors: defaultColors,
   branding: defaultBranding,
   footerColors: defaultFooterColors,
+  social: defaultSocial,
+  footerContent: defaultFooterContent,
   loading: true,
   getColor: () => "transparent",
   getGradient: () => "transparent",
@@ -171,6 +203,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [branding, setBranding] = useState<Branding>(defaultBranding);
   const [footerColors, setFooterColors] =
     useState<FooterColors>(defaultFooterColors);
+  const [social, setSocial] = useState<SocialLinks>(defaultSocial);
+  const [footerContent, setFooterContent] =
+    useState<FooterContent>(defaultFooterContent);
   const [loading, setLoading] = useState(true);
 
   // Get the primary (start) color from a gradient object
@@ -211,6 +246,31 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
               faviconLink.href = data.data.branding.favicon_url;
             }
           }
+        }
+
+        // Social links from site-settings
+        if (data?.data?.social) {
+          setSocial({
+            facebook: data.data.social.facebook || null,
+            twitter: data.data.social.twitter || null,
+            linkedin: data.data.social.linkedin || null,
+            instagram: data.data.social.instagram || null,
+            youtube: data.data.social.youtube || null,
+            whatsapp: data.data.social.whatsapp || null,
+          });
+        }
+
+        // Footer copy from site-settings (ignore empty / placeholder values)
+        if (data?.data?.footer) {
+          const clean = (value?: string | null) => {
+            const trimmed = value?.trim() ?? "";
+            if (!trimmed || trimmed === "-" || trimmed === "—") return null;
+            return trimmed;
+          };
+          setFooterContent({
+            sentence: clean(data.data.footer.sentence),
+            copyright: clean(data.data.footer.copyright),
+          });
         }
 
         // Merge colors (flat hex) with gradients (gradient objects)
@@ -319,6 +379,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         colors,
         branding,
         footerColors,
+        social,
+        footerContent,
         loading,
         getColor,
         getGradient,

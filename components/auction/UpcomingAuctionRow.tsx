@@ -53,13 +53,15 @@ function PlatePreview({
   plate_digits: string;
 }) {
   return (
-    <div className="w-27.5 sm:w-35 shrink-0">
+    <div className="w-27.5 sm:w-35 shrink-0 overflow-hidden">
       <NumberPlateDisplay
         plate_code={plate_code}
         plate_digits={plate_digits}
         emirate={emirate}
         plateVariant="private_new_colorful"
         crop="compact"
+        scaleFontToWidth
+        wrapperClassName="w-full overflow-hidden"
       />
     </div>
   );

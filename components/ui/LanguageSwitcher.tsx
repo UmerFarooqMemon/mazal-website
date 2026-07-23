@@ -1,4 +1,5 @@
 "use client";
+import { Globe } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter, usePathname } from "next/navigation";
@@ -27,40 +28,16 @@ export default function LanguageSwitcher() {
   return (
     <button
       onClick={toggleLanguage}
-      className="relative flex items-center h-8 px-0.5 rounded-full border transition-all duration-200"
+      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border text-[11px] font-semibold tracking-wide transition-colors"
       style={{
-        backgroundColor: getColor("primaryLight"),
+        backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
+        color: getColor("primary"),
       }}
       aria-label="Switch language"
     >
-      {/* EN Option */}
-      <span
-        className="flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold transition-all duration-200"
-        style={{
-          backgroundColor:
-            locale === "en" ? getColor("surface") : "transparent",
-          color: locale === "en" ? getColor("primary") : getColor("mutedText"),
-          boxShadow:
-            locale === "en" ? `0 1px 3px ${getColor("primary")}20` : "none",
-        }}
-      >
-        EN
-      </span>
-
-      {/* AR Option */}
-      <span
-        className="flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold transition-all duration-200"
-        style={{
-          backgroundColor:
-            locale === "ar" ? getColor("surface") : "transparent",
-          color: locale === "ar" ? getColor("primary") : getColor("mutedText"),
-          boxShadow:
-            locale === "ar" ? `0 1px 3px ${getColor("primary")}20` : "none",
-        }}
-      >
-        ع
-      </span>
+      <Globe className="w-3.5 h-3.5" strokeWidth={2} />
+      <span>{locale === "ar" ? "ع" : "EN"}</span>
     </button>
   );
 }

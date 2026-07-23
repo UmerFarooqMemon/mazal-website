@@ -132,7 +132,7 @@ export default function ProfileStep({
                 {profile.points.map((point) => (
                   <li
                     key={point}
-                    className={`flex items-center gap-1.5 ${isRTL ? "flex-row-reverse" : ""}`}
+                    className="flex items-center gap-1.5"
                   >
                     <span
                       className="flex items-center justify-center size-[18px] rounded-full shrink-0"
@@ -147,7 +147,7 @@ export default function ProfileStep({
                       />
                     </span>
                     <span
-                      className="text-sm"
+                      className={`text-sm ${isRTL ? "text-right" : "text-left"}`}
                       style={{ color: getColor("secondaryText") }}
                     >
                       {point}
