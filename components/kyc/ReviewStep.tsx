@@ -5,9 +5,11 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import type { KycFormState } from "@/components/kyc/types";
+import type { KycReviewSummary } from "@/services/kyc";
 
 interface ReviewStepProps {
   state: KycFormState;
+  review?: KycReviewSummary | null;
   submitting?: boolean;
   onSubmit: () => void;
   onBack: () => void;
@@ -15,6 +17,7 @@ interface ReviewStepProps {
 
 export default function ReviewStep({
   state,
+  review = null,
   submitting = false,
   onSubmit,
   onBack,
@@ -28,23 +31,30 @@ export default function ReviewStep({
   const rows = [
     {
       label: t("kyc.review_profile"),
-      value: isUae ? t("kyc.review_profile_uae") : t("kyc.review_profile_intl"),
+      value:
+        review?.profile ||
+        (isUae ? t("kyc.review_profile_uae") : t("kyc.review_profile_intl")),
     },
     {
       label: t("kyc.review_verification"),
-      value: isUae
-        ? t("kyc.review_verification_uae")
-        : t("kyc.review_verification_intl"),
+      value:
+        review?.verification ||
+        (isUae
+          ? t("kyc.review_verification_uae")
+          : t("kyc.review_verification_intl")),
     },
     {
       label: t("kyc.review_legal_name"),
-      value: state.identity.fullLegalName || "—",
+      value:
+        review?.legal_name || state.identity.fullLegalName || "—",
     },
     {
       label: t("kyc.review_custody"),
-      value: isUae
-        ? t("kyc.review_custody_uae")
-        : t("kyc.review_custody_intl"),
+      value:
+        review?.custody ||
+        (isUae
+          ? t("kyc.review_custody_uae")
+          : t("kyc.review_custody_intl")),
     },
   ];
 
@@ -131,9 +141,18 @@ export default function ReviewStep({
           size="md"
           onClick={onSubmit}
           loading={submitting}
+          disabled={
+            state.verified ||
+            state.status === "approved" ||
+            state.status === "pending_review"
+          }
           rightIcon={<ShieldCheck className="w-4 h-4" />}
         >
-          {t("kyc.submit")}
+          {state.verified || state.status === "approved"
+            ? t("kyc.submit_verified")
+            : state.status === "pending_review"
+              ? t("kyc.submit_pending")
+              : t("kyc.submit")}
         </Button>
       </div>
     </div>

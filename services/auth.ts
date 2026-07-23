@@ -40,6 +40,10 @@ export interface AuthUser {
   image_url?: string | null;
   emirates_id?: string | null;
   emirates_id_verified?: boolean;
+  kyc_verified?: boolean;
+  kyc_verified_at?: string | null;
+  kyc_profile_type?: "uae_resident" | "international" | null;
+  identity_verified?: boolean;
   is_active?: boolean;
 }
 

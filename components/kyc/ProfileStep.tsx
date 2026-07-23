@@ -11,8 +11,9 @@ import type { KycProfileType } from "@/components/kyc/types";
 interface ProfileStepProps {
   profileType: KycProfileType;
   setProfileType: (type: KycProfileType) => void;
-  onContinue: () => void;
+  onContinue: () => Promise<void> | void;
   onBack?: () => void;
+  loading?: boolean;
 }
 
 export default function ProfileStep({
@@ -20,6 +21,7 @@ export default function ProfileStep({
   setProfileType,
   onContinue,
   onBack,
+  loading = false,
 }: ProfileStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -27,12 +29,12 @@ export default function ProfileStep({
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!profileType) {
       toast.error(t("kyc.select_profile_error"));
       return;
     }
-    onContinue();
+    await onContinue();
   };
 
   const cardStyle = (selected: boolean) =>
@@ -92,6 +94,7 @@ export default function ProfileStep({
               key={profile.key}
               type="button"
               onClick={() => setProfileType(profile.key)}
+              disabled={loading}
               className={`text-start p-6 rounded-2xl border transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
               style={cardStyle(selected)}
             >
@@ -130,10 +133,7 @@ export default function ProfileStep({
 
               <ul className="space-y-1.5">
                 {profile.points.map((point) => (
-                  <li
-                    key={point}
-                    className="flex items-center gap-1.5"
-                  >
+                  <li key={point} className="flex items-center gap-1.5">
                     <span
                       className="flex items-center justify-center size-[18px] rounded-full shrink-0"
                       style={{
@@ -170,6 +170,7 @@ export default function ProfileStep({
           onClick={onBack}
           leftIcon={<BackIcon className="w-4 h-4" />}
           className="opacity-70"
+          disabled={loading}
         >
           {t("kyc.back")}
         </Button>
@@ -177,6 +178,7 @@ export default function ProfileStep({
           variant="primary"
           size="md"
           onClick={handleContinue}
+          loading={loading}
           rightIcon={<NextIcon className="w-4 h-4" />}
         >
           {t("kyc.continue")}

@@ -9,6 +9,7 @@ import { useTheme } from "@/context/ThemeContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
+import { featureFlags } from "@/config/featureFlags";
 import {
   User,
   Menu,
@@ -67,25 +68,25 @@ export default function Header() {
   const isActive = (path: string) => pathname.includes(path);
 
   const navLinks = [
-    {
+    featureFlags.marketplace && {
       href: `/${locale}/marketplace`,
       label: t("common.marketplace"),
       match: "/marketplace",
       icon: Store,
     },
-    {
+    featureFlags.privateDeal && {
       href: `/${locale}/private-deal`,
       label: t("common.private_deal"),
       match: "/private-deal",
       icon: Handshake,
     },
-    {
+    featureFlags.auctions && {
       href: `/${locale}/auctions`,
       label: t("common.auctions"),
       match: "/auctions",
       icon: Gavel,
     },
-    {
+    featureFlags.valuationCertificate && {
       href: `/${locale}/certificates/request`,
       label: t("common.valuation_certificate"),
       match: "/certificates",
@@ -97,7 +98,12 @@ export default function Header() {
       match: "/dashboard-certificates",
       icon: LayoutDashboard,
     },
-  ];
+  ].filter(Boolean) as {
+    href: string;
+    label: string;
+    match: string;
+    icon: typeof Store;
+  }[];
 
   const linkStyle = (active: boolean) => ({
     color: active ? getColor("primary") : getColor("secondaryText"),
@@ -163,18 +169,20 @@ export default function Header() {
               className={`hidden lg:flex items-center gap-2 shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <LanguageSwitcher />
-              <Link
-                href={`/${locale}/kyc`}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border text-[11px] font-semibold tracking-wide transition-colors"
-                style={{
-                  backgroundColor: getColor("surface"),
-                  borderColor: getColor("border"),
-                  color: getColor("primary"),
-                }}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
-                {t("common.kyc_short")}
-              </Link>
+              {featureFlags.kyc && (
+                <Link
+                  href={`/${locale}/kyc`}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border text-[11px] font-semibold tracking-wide transition-colors"
+                  style={{
+                    backgroundColor: getColor("surface"),
+                    borderColor: getColor("border"),
+                    color: getColor("primary"),
+                  }}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
+                  {t("common.kyc_short")}
+                </Link>
+              )}
 
               {mounted && isAuthenticated ? (
                 <div
@@ -251,19 +259,21 @@ export default function Header() {
               className={`flex items-center gap-1 sm:gap-1.5 shrink-0 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
             >
               <LanguageSwitcher />
-              <Link
-                href={`/${locale}/kyc`}
-                className="h-8 w-8 inline-flex items-center justify-center rounded-full border transition-colors"
-                style={{
-                  backgroundColor: getColor("surface"),
-                  borderColor: getColor("border"),
-                  color: getColor("primary"),
-                }}
-                aria-label={t("common.kyc_short")}
-                title={t("common.kyc_short")}
-              >
-                <ShieldCheck className="w-4 h-4" strokeWidth={2} />
-              </Link>
+              {featureFlags.kyc && (
+                <Link
+                  href={`/${locale}/kyc`}
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-full border transition-colors"
+                  style={{
+                    backgroundColor: getColor("surface"),
+                    borderColor: getColor("border"),
+                    color: getColor("primary"),
+                  }}
+                  aria-label={t("common.kyc_short")}
+                  title={t("common.kyc_short")}
+                >
+                  <ShieldCheck className="w-4 h-4" strokeWidth={2} />
+                </Link>
+              )}
               {mounted && isAuthenticated ? (
                 <Link
                   href={`/${locale}/dashboard-certificates`}
@@ -396,34 +406,36 @@ export default function Header() {
                   );
                 })}
 
-                <Link
-                  href={`/${locale}/kyc`}
-                  onClick={closeMenu}
-                  className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
-                    isActive("/kyc") ? "font-medium" : ""
-                  } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
-                  style={{
-                    backgroundColor: isActive("/kyc")
-                      ? `${getColor("primary")}10`
-                      : "transparent",
-                    color: isActive("/kyc")
-                      ? getColor("primary")
-                      : getColor("primaryText"),
-                  }}
-                >
-                  <span
-                    className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                {featureFlags.kyc && (
+                  <Link
+                    href={`/${locale}/kyc`}
+                    onClick={closeMenu}
+                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
+                      isActive("/kyc") ? "font-medium" : ""
+                    } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    style={{
+                      backgroundColor: isActive("/kyc")
+                        ? `${getColor("primary")}10`
+                        : "transparent",
+                      color: isActive("/kyc")
+                        ? getColor("primary")
+                        : getColor("primaryText"),
+                    }}
                   >
-                    <ShieldCheck className="w-5 h-5" strokeWidth={2} />
-                    {t("common.kyc_short")}
-                  </span>
-                  {isActive("/kyc") && (
                     <span
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: getColor("primary") }}
-                    />
-                  )}
-                </Link>
+                      className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                    >
+                      <ShieldCheck className="w-5 h-5" strokeWidth={2} />
+                      {t("common.kyc_short")}
+                    </span>
+                    {isActive("/kyc") && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: getColor("primary") }}
+                      />
+                    )}
+                  </Link>
+                )}
               </nav>
 
               <div className="relative my-6">
