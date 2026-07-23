@@ -4,9 +4,24 @@ import Image from "next/image";
 import { useLocale } from "@/context/LocaleContext";
 
 const PARTNERS = [
-  { src: "/home-v2/partner-1.png", alt: "Partner 1" },
-  { src: "/home-v2/partner-2.png", alt: "Partner 2" },
-  { src: "/home-v2/partner-3.png", alt: "Partner 3" },
+  {
+    src: "/home-v2/partner-1.png",
+    alt: "Shademont",
+    className: "h-24 w-44 sm:h-28 sm:w-52",
+    imageClassName: "object-contain scale-[1.55]",
+  },
+  {
+    src: "/home-v2/partner-2.png",
+    alt: "PIXL Global",
+    className: "h-16 w-40 sm:h-20 sm:w-48",
+    imageClassName: "object-contain",
+  },
+  {
+    src: "/home-v2/partner-3.png",
+    alt: "Transguard Group",
+    className: "h-16 w-40 sm:h-20 sm:w-48",
+    imageClassName: "object-contain",
+  },
 ];
 
 export default function HomeV2Partners() {
@@ -23,13 +38,13 @@ export default function HomeV2Partners() {
           {logos.map((partner, index) => (
             <div
               key={`${partner.src}-${index}`}
-              className="relative h-16 w-40 shrink-0 grayscale opacity-70 sm:h-20 sm:w-48"
+              className={`relative shrink-0 overflow-visible grayscale opacity-70 ${partner.className}`}
             >
               <Image
                 src={partner.src}
                 alt={partner.alt}
                 fill
-                className="object-contain"
+                className={partner.imageClassName}
               />
             </div>
           ))}

@@ -127,6 +127,7 @@ export default function Footer() {
         { href: `/${locale}/about`, labelKey: "footer_about" },
         { href: `/${locale}/about`, labelKey: "footer_blog" },
         { href: `/${locale}/about`, labelKey: "footer_newsroom" },
+        { href: `/${locale}/partners`, labelKey: "footer_partners" },
       ],
     },
     {
