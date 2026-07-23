@@ -15,6 +15,7 @@ import {
   formatEmiratesId,
   INITIAL_IDENTITY,
   INITIAL_KYC_STATE,
+  sanitizePhone,
   type KycDocumentKey,
   type KycFormState,
   type KycProfileType,
@@ -293,6 +294,10 @@ export default function KYCForm() {
     setSaving(true);
     setFieldErrors({});
     try {
+      const phone = sanitizePhone(
+        form.identity.phone,
+        form.identity.phoneCountryCode,
+      );
       const payload =
         activeProfileType === "uae_resident"
           ? {
@@ -301,7 +306,7 @@ export default function KYCForm() {
               emirates_id: form.identity.emiratesId,
               emirate_of_residence: form.identity.emirateOfResidence,
               phone_country_code: form.identity.phoneCountryCode,
-              phone: form.identity.phone,
+              phone,
               email: form.identity.email.trim(),
             }
           : {
@@ -310,7 +315,7 @@ export default function KYCForm() {
               passport_number: form.identity.passportNumber.trim(),
               country_of_residence: form.identity.countryOfResidence,
               phone_country_code: form.identity.phoneCountryCode,
-              phone: form.identity.phone,
+              phone,
               email: form.identity.email.trim(),
             };
 

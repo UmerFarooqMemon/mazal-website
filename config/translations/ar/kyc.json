@@ -44,7 +44,7 @@
   "email_placeholder": "you@domain.com",
   "fill_required": "يرجى تعبئة جميع الحقول المطلوبة",
   "invalid_email": "يرجى إدخال بريد إلكتروني صالح",
-  "invalid_phone": "يرجى إدخال رقم جوال صالح",
+  "invalid_phone": "أدخل رقم جوال صالح لرمز الدولة المحدد",
   "invalid_emirates_id": "يجب أن يكون رقم هوية الإمارات 15 رقماً ويبدأ بـ 784",
   "invalid_file_type": "يُسمح فقط بملفات JPG أو PNG أو WEBP أو PDF",
   "file_too_large": "يجب ألا يتجاوز حجم الملف {size} كيلوبايت",

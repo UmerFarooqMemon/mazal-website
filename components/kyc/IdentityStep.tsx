@@ -9,8 +9,11 @@ import { Button, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import {
   formatEmiratesId,
+  getPhoneLengthRule,
   isValidEmail,
   isValidEmiratesId,
+  isValidPhone,
+  sanitizePhone,
   type KycIdentityData,
   type KycProfileType,
 } from "@/components/kyc/types";
@@ -106,7 +109,9 @@ export default function IdentityStep({
     if (!identity.phoneCountryCode) {
       next.phoneCountryCode = t("kyc.fill_required");
     }
-    if (!identity.phone.trim() || identity.phone.replace(/\D/g, "").length < 7) {
+    if (!identity.phone.trim()) {
+      next.phone = t("kyc.fill_required");
+    } else if (!isValidPhone(identity.phone, identity.phoneCountryCode)) {
       next.phone = t("kyc.invalid_phone");
     }
     if (!identity.email.trim()) {
@@ -139,7 +144,10 @@ export default function IdentityStep({
 
   const handleContinue = async () => {
     if (!validate()) {
-      toast.error(t("kyc.fill_required"));
+      const phoneInvalid =
+        !!identity.phone.trim() &&
+        !isValidPhone(identity.phone, identity.phoneCountryCode);
+      toast.error(phoneInvalid ? t("kyc.invalid_phone") : t("kyc.fill_required"));
       return;
     }
     await onContinue();
@@ -244,17 +252,39 @@ export default function IdentityStep({
               <Select
                 options={COUNTRY_CODES}
                 value={identity.phoneCountryCode}
-                onChange={(value) => update("phoneCountryCode", value)}
+                onChange={(value) => {
+                  setIdentity({
+                    ...identity,
+                    phoneCountryCode: value,
+                    phone: sanitizePhone(identity.phone, value),
+                  });
+                  setErrors((prev) => {
+                    if (!prev.phone && !prev.phoneCountryCode) return prev;
+                    const next = { ...prev };
+                    delete next.phone;
+                    delete next.phoneCountryCode;
+                    return next;
+                  });
+                }}
                 error={getError("phoneCountryCode", ["phone_country_code"])}
               />
             </div>
             <Input
               value={identity.phone}
               onChange={(e) =>
-                update("phone", e.target.value.replace(/[^\d]/g, ""))
+                update(
+                  "phone",
+                  sanitizePhone(e.target.value, identity.phoneCountryCode),
+                )
               }
-              placeholder="501234567"
+              placeholder={
+                identity.phoneCountryCode === "+971" ||
+                identity.phoneCountryCode === "+966"
+                  ? "501234567"
+                  : "Phone number"
+              }
               inputMode="tel"
+              maxLength={getPhoneLengthRule(identity.phoneCountryCode).max}
               error={getError("phone", ["phone"])}
             />
           </div>

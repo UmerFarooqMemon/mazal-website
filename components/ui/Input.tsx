@@ -14,13 +14,24 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   (
-    { className = "", icon, rightIcon, label, error, hint, id, ...props },
+    {
+      className = "",
+      icon,
+      rightIcon,
+      label,
+      error,
+      hint,
+      id,
+      type,
+      ...props
+    },
     ref,
   ) => {
     const { locale } = useLocale();
     const isRTL = locale === "ar";
     const { getColor } = useTheme();
     const inputId = id || props.name || Math.random().toString(36).slice(2);
+    const isDateOrTime = type === "date" || type === "time";
 
     return (
       <div className="w-full">
@@ -51,13 +62,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
+            type={type}
             className={`w-full rounded-xl border bg-white py-3.5 text-sm placeholder:text-gray-400 transition-all duration-200 
               ${error ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" : "focus:ring-2"}
               focus:outline-none
               disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100
-              ${icon && isRTL ? "pr-10" : icon ? "pl-10" : ""}
-              ${rightIcon && isRTL ? "pl-10" : rightIcon ? "pr-10" : ""}
-              ${isRTL ? "text-right pr-4" : "text-left pl-4"}
+              ${icon ? (isRTL ? "pr-10" : "pl-10") : isRTL ? "pr-4" : "pl-4"}
+              ${rightIcon ? (isRTL ? "pl-10" : "pr-10") : isRTL ? "pl-4" : "pr-4"}
+              ${isRTL ? "text-right" : "text-left"}
+              ${isDateOrTime ? "[&::-webkit-calendar-picker-indicator]:me-0.5 [&::-webkit-calendar-picker-indicator]:cursor-pointer" : ""}
               ${className}`}
             style={{
               borderColor: error ? undefined : getColor("border"),
