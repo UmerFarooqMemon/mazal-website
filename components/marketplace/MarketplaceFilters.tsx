@@ -15,9 +15,8 @@ export default function MarketplaceFilters({
   selected,
   onChange,
 }: MarketplaceFiltersProps) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const filterSections: {
     key: FilterKey;
@@ -69,9 +68,7 @@ export default function MarketplaceFilters({
   ];
 
   return (
-    <div
-      className={`flex flex-col gap-8 ${isRTL ? "items-end text-right" : "items-start text-left"}`}
-    >
+    <div className="flex flex-col gap-8 items-start">
       {filterSections.map((section) => (
         <div key={section.key} className="w-full">
           <h4
@@ -80,9 +77,7 @@ export default function MarketplaceFilters({
           >
             {section.title}
           </h4>
-          <div
-            className={`flex flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
-          >
+          <div className="flex flex-wrap gap-2">
             {section.options.map((option) => {
               const isActive = selected[section.key] === option.value;
               return (

@@ -1,26 +1,19 @@
 "use client";
-import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
 import AuctionCard from "../../../components/auction/AuctionCard";
 import UpcomingAuctionRow from "../../../components/auction/UpcomingAuctionRow";
 
 export default function AuctionsPage() {
-  const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
+  const { t } = useLocale();
 
   return (
     <div className="bg-[#FAFAF8] min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* ---- Part One: Title & Badge ---- */}
-        <div
-          className={`flex flex-col mb-16 ${isRTL ? "items-end" : "items-start"}`}
-        >
-          {/* Container for proper alignment */}
-          <div className={`max-w-3xl ${isRTL ? "text-right" : "text-left"}`}>
+        <div className="flex flex-col items-start mb-16">
+          <div className="max-w-3xl w-full">
             {/* Badge */}
-            <div
-              className={`flex items-center gap-2 text-[#0A3B9E] text-xs font-bold uppercase tracking-wider mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+            <div className="flex items-center gap-2 text-[#0A3B9E] text-xs font-bold uppercase tracking-wider mb-3">
               <svg
                 width="16"
                 height="16"
@@ -53,12 +46,8 @@ export default function AuctionsPage() {
         </div>
 
         {/* ---- Part Two: Live Now ---- */}
-        <div
-          className={`flex flex-col mb-16 ${isRTL ? "items-end" : "items-start"}`}
-        >
-          <h2
-            className={`text-2xl font-serif font-bold text-[#041443] mb-6 ${isRTL ? "text-right w-full" : "text-left w-full"}`}
-          >
+        <div className="flex flex-col items-start mb-16 w-full">
+          <h2 className="text-2xl font-serif font-bold text-[#041443] mb-6 w-full">
             {t("auctions.live_now")}
           </h2>
           <AuctionCard />
@@ -66,9 +55,7 @@ export default function AuctionsPage() {
 
         {/* ---- Part Three: Upcoming (Full Width) ---- */}
         <div className="mb-8 w-full">
-          <h2
-            className={`text-2xl font-serif font-bold text-[#041443] mb-6 ${isRTL ? "text-right" : "text-left"}`}
-          >
+          <h2 className="text-2xl font-serif font-bold text-[#041443] mb-6">
             {t("auctions.upcoming")}
           </h2>
           <UpcomingAuctionRow />

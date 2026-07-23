@@ -119,9 +119,7 @@ export default function MarketplacePage() {
         }}
       >
         <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10 pb-8">
-          <div
-            className={`flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-3 ${isRTL ? "sm:flex-row-reverse" : ""}`}
-          >
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-3">
             <h1
               className="text-4xl md:text-[40px] font-serif font-bold leading-none"
               style={{ color: getColor("primaryText") }}
@@ -137,7 +135,7 @@ export default function MarketplacePage() {
             </Link>
           </div>
           <p
-            className={`text-base mb-6 max-w-md ${isRTL ? "text-right ml-auto" : "text-left"}`}
+            className={`text-base mb-6 max-w-md ${isRTL ? "me-auto" : ""}`}
             style={{ color: getColor("mutedText") }}
           >
             {t("marketplace.subtitle")}
@@ -156,7 +154,7 @@ export default function MarketplacePage() {
             className={`lg:col-span-1 ${isRTL ? "lg:col-start-4 lg:row-start-1" : ""}`}
           >
             <div
-              className={`flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
+              className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase mb-8"
               style={{ color: getColor("mutedText") }}
             >
               {t("marketplace.filters")}
@@ -168,7 +166,7 @@ export default function MarketplacePage() {
             className={`lg:col-span-3 ${isRTL ? "lg:col-start-1 lg:row-start-1" : ""}`}
           >
             <div
-              className={`flex justify-between items-center mb-6 text-sm ${isRTL ? "flex-row-reverse" : ""}`}
+              className="flex justify-between items-center mb-6 text-sm"
               style={{ color: getColor("mutedText") }}
             >
               <span>
@@ -178,10 +176,7 @@ export default function MarketplacePage() {
             </div>
 
             {error && (
-              <p
-                className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
-                style={{ color: "#DC2626" }}
-              >
+              <p className="text-sm mb-6" style={{ color: "#DC2626" }}>
                 {error}
               </p>
             )}

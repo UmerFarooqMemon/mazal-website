@@ -7,9 +7,10 @@ import { useTheme } from "@/context/ThemeContext";
 import { siteConfig } from "@/config/site";
 
 type FooterLink = {
-  href: string;
+  href?: string;
   labelKey: string;
   badgeKey?: string;
+  disabled?: boolean;
 };
 
 type FooterColumn = {
@@ -38,7 +39,7 @@ function FooterColumnBlock({
   headingColor,
 }: {
   title: string;
-  links: { href: string; label: string; badge?: string }[];
+  links: { href?: string; label: string; badge?: string; disabled?: boolean }[];
   isRTL: boolean;
   headingColor: string;
 }) {
@@ -51,21 +52,39 @@ function FooterColumnBlock({
         {title}
       </h4>
       <ul className="space-y-2.5">
-        {links.map((link) => (
-          <li key={link.href + link.label}>
-            <Link
-              href={link.href}
-              className={`footer-link inline-flex items-center gap-1.5 text-sm leading-none transition-colors whitespace-nowrap ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+        {links.map((link) => {
+          const content = (
+            <>
               <span className="whitespace-nowrap">{link.label}</span>
               {link.badge ? (
                 <span className="inline-flex shrink-0 items-center self-center rounded-full bg-white/10 px-2 py-[3px] text-[8px] font-medium uppercase tracking-[0.04em] text-white/55 leading-none">
                   {link.badge}
                 </span>
               ) : null}
-            </Link>
-          </li>
-        ))}
+            </>
+          );
+
+          return (
+            <li key={`${link.label}-${link.href ?? "disabled"}`}>
+              {link.disabled || !link.href ? (
+                <span
+                  className={`inline-flex cursor-default items-center gap-1.5 text-sm leading-none whitespace-nowrap ${isRTL ? "flex-row-reverse" : ""}`}
+                  style={{ color: "var(--footer-link)" }}
+                  aria-disabled="true"
+                >
+                  {content}
+                </span>
+              ) : (
+                <Link
+                  href={link.href}
+                  className={`footer-link inline-flex items-center gap-1.5 text-sm leading-none transition-colors whitespace-nowrap ${isRTL ? "flex-row-reverse" : ""}`}
+                >
+                  {content}
+                </Link>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -95,9 +114,9 @@ export default function Footer() {
           labelKey: "footer_verify_valuation",
         },
         {
-          href: `/${locale}/spot-cash`,
           labelKey: "on_spot",
           badgeKey: "upcoming_feature",
+          disabled: true,
         },
         { href: `/${locale}/about`, labelKey: "footer_how_it_works" },
       ],
@@ -285,6 +304,7 @@ export default function Footer() {
                   badge: link.badgeKey
                     ? t(`common.${link.badgeKey}`)
                     : undefined,
+                  disabled: link.disabled,
                 }))}
                 isRTL={isRTL}
                 headingColor={footerColors.heading}

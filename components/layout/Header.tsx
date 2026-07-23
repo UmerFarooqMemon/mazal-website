@@ -119,9 +119,7 @@ export default function Header() {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div
-            className={`flex h-16 items-center justify-between gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
-          >
+          <div className="flex h-16 items-center justify-between gap-4">
             {/* Logo */}
             <Link
               href={`/${locale}`}
@@ -147,9 +145,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav
-              className={`hidden lg:flex items-center gap-7 text-sm ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+            <nav className="hidden lg:flex items-center gap-7 text-sm">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -165,9 +161,7 @@ export default function Header() {
             </nav>
 
             {/* Desktop Actions */}
-            <div
-              className={`hidden lg:flex items-center gap-2 shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
               <LanguageSwitcher />
               {featureFlags.kyc && (
                 <Link
@@ -185,12 +179,10 @@ export default function Header() {
               )}
 
               {mounted && isAuthenticated ? (
-                <div
-                  className={`flex items-center gap-3 ml-1 ${isRTL ? "flex-row-reverse mr-1 ml-0" : ""}`}
-                >
+                <div className="flex items-center gap-3 ms-1">
                   <Link
                     href={`/${locale}/dashboard-certificates`}
-                    className={`flex items-center gap-3 group ${isRTL ? "flex-row-reverse" : ""}`}
+                    className="flex items-center gap-3 group"
                   >
                     <div className="relative shrink-0">
                       <div
@@ -248,16 +240,14 @@ export default function Header() {
                     className="h-9 px-4 text-xs rounded-full"
                   >
                     <User className="w-4 h-4" strokeWidth={2} />
-                    <span className="ml-1.5">{t("common.sign_in")}</span>
+                    <span className="ms-1.5">{t("common.sign_in")}</span>
                   </Button>
                 </Link>
               )}
             </div>
 
             {/* Mobile Actions */}
-            <div
-              className={`flex items-center gap-1 sm:gap-1.5 shrink-0 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 lg:hidden">
               <LanguageSwitcher />
               {featureFlags.kyc && (
                 <Link

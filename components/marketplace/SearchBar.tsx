@@ -16,9 +16,8 @@ export default function SearchBar({
   onChange,
   onSearch,
 }: SearchBarProps) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -28,15 +27,13 @@ export default function SearchBar({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`w-full border rounded-full h-[62px] px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+      className="w-full border rounded-full h-[62px] px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex items-center gap-2"
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
       }}
     >
-      <div
-        className={`grow flex items-center gap-3 px-3 ${isRTL ? "flex-row-reverse" : ""}`}
-      >
+      <div className="grow flex items-center gap-3 px-3">
         <Search
           className="w-4 h-4 shrink-0"
           strokeWidth={2}
@@ -47,8 +44,9 @@ export default function SearchBar({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={t("marketplace.search_placeholder")}
-          className={`w-full bg-transparent outline-none text-sm placeholder:opacity-60 ${isRTL ? "text-right" : "text-left"}`}
+          className="w-full bg-transparent outline-none text-sm placeholder:opacity-60"
           style={{ color: getColor("primaryText") }}
+          dir="auto"
         />
       </div>
 
@@ -56,7 +54,7 @@ export default function SearchBar({
         type="submit"
         variant="primary"
         size="md"
-        className={`!rounded-full px-5 h-10 flex items-center gap-2 justify-center whitespace-nowrap shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
+        className="!rounded-full px-5 h-10 flex items-center gap-2 justify-center whitespace-nowrap shrink-0"
       >
         <SlidersHorizontal className="w-4 h-4" strokeWidth={2.5} />
         <span>{t("marketplace.search_button")}</span>
