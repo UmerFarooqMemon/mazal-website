@@ -9,7 +9,7 @@ export function getApiBaseUrl(): string {
 
   if (!raw) {
     throw new Error(
-      "Missing API base URL. Set NEXT_PUBLIC_API_BASE_URL (or API_BASE_URL on the server).",
+      "Missing API base URL. Set NEXT_PUBLIC_API_BASE_URL=https://your-api-host/api (required for client). API_BASE_URL alone is not visible in the browser.",
     );
   }
 
