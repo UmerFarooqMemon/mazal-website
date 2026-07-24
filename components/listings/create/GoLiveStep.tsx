@@ -90,11 +90,9 @@ export default function GoLiveStep({
         >
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={onBack}
             leftIcon={<BackIcon className="w-4 h-4" />}
-            className="!rounded-lg"
-            style={{ color: getColor("secondaryText") }}
           >
             {t("listings.back")}
           </Button>

@@ -29,5 +29,8 @@
   "checkout_verification": "التحقق",
   "checkout_confirm": "تأكيد التفاصيل",
   "checkout_payment": "طريقة الدفع",
-  "checkout_escrow": "الضمان المباشر"
+  "checkout_escrow": "الضمان المباشر",
+  "invalid_amount": "أدخل مبلغ عرض صالح.",
+  "sent_success": "تم إرسال العرض بنجاح.",
+  "ended_success": "تم إنهاء التفاوض."
 }

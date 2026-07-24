@@ -17,7 +17,8 @@ export type PlateCropVariant =
   | "certificate"
   | "hero"
   | "compact"
-  | "deal-summary";
+  | "deal-summary"
+  | "auction-preview";
 
 const CROP_CLASS: Record<PlateCropVariant, string> = {
   form: "plate-crop--form",
@@ -27,6 +28,7 @@ const CROP_CLASS: Record<PlateCropVariant, string> = {
   hero: "plate-crop--hero",
   compact: "plate-crop--compact",
   "deal-summary": "plate-crop--deal-summary",
+  "auction-preview": "plate-crop--auction-preview",
 };
 
 interface NumberPlateDisplayProps {

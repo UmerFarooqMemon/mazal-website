@@ -4,21 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  Camera,
   ChevronDown,
-  EyeOff,
-  Info,
   Search,
   Upload,
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
-import DirhamText from "@/components/ui/DirhamText";
+import { Button, DirhamAmount, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
-import LivePreview from "./LivePreview";
-import type { CreateListingData } from "./CreateListingWizard";
+
+interface AddPlateFormProps {
+  onBack: () => void;
+  onContinue: () => void;
+}
 
 interface PlateCodeItem {
   code: string;
@@ -42,25 +42,21 @@ interface Variant {
   preview?: PlatePreviewConfig;
 }
 
-interface PlatePriceFormStepProps {
-  data: CreateListingData;
-  onChange: (patch: Partial<CreateListingData>) => void;
-  onBack: () => void;
-  onContinue: () => void;
-}
-
-export default function PlatePriceFormStep({
-  data,
-  onChange,
-  onBack,
-  onContinue,
-}: PlatePriceFormStepProps) {
+export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
 
+  const [form, setForm] = useState({
+    emirate: "dubai",
+    plateVariant: "private_new_colorful",
+    code: "",
+    digits: "",
+    notes: "",
+    price: 68000,
+  });
   const [variants, setVariants] = useState<Variant[]>([]);
   const [codeDropdownOpen, setCodeDropdownOpen] = useState(false);
   const [codeSearch, setCodeSearch] = useState("");
@@ -79,14 +75,14 @@ export default function PlatePriceFormStep({
 
         if (
           nextVariants.length > 0 &&
-          !nextVariants.some((v) => v.key === data.plateVariant)
+          !nextVariants.some((v) => v.key === form.plateVariant)
         ) {
           const first = nextVariants[0];
-          onChange({
+          setForm((prev) => ({
+            ...prev,
             plateVariant: first.key,
-            plateType: first.plate_type || data.plateType,
             emirate: "dubai",
-          });
+          }));
         }
       })
       .catch(console.error);
@@ -108,7 +104,7 @@ export default function PlatePriceFormStep({
   }, []);
 
   const selectedVariant =
-    variants.find((v) => v.key === data.plateVariant) || variants[0];
+    variants.find((v) => v.key === form.plateVariant) || variants[0];
   const variantFields = selectedVariant?.fields || [
     "plate_code",
     "plate_digits",
@@ -140,34 +136,33 @@ export default function PlatePriceFormStep({
   );
 
   const handleCodeSelect = (code: string) => {
-    onChange({ code });
+    setForm((prev) => ({ ...prev, code }));
     setCodeDropdownOpen(false);
     setCodeSearch("");
   };
 
   const canContinue =
-    Boolean(data.plateVariant) &&
-    Boolean(data.digits.trim()) &&
-    Boolean(data.price.trim()) &&
-    (!showCodeField || Boolean(data.code.trim()));
+    Boolean(form.plateVariant) &&
+    Boolean(form.digits.trim()) &&
+    (!showCodeField || Boolean(form.code.trim()));
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.9fr] gap-5 lg:gap-6 items-start">
       <div
-        className="rounded-2xl border shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-6 md:p-9"
+        className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(0,0,0,0.16)] p-6 md:p-8"
         style={{
           backgroundColor: getColor("surface"),
           borderColor: getColor("border"),
         }}
       >
         <h2
-          className={`text-2xl font-serif font-bold mb-6 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-2xl font-serif mb-6 ${isRTL ? "text-right" : "text-left"}`}
           style={{ color: getColor("primaryText") }}
         >
-          {t("listings.step_plate_price")}
+          {t("auctions.add_plate_title")}
         </h2>
 
-        <div className="space-y-5">
+        <div className="space-y-5 mb-4">
           <div>
             <label
               className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
@@ -190,24 +185,19 @@ export default function PlatePriceFormStep({
           <Select
             label={t("private-deal.plate_variant")}
             options={variants}
-            value={data.plateVariant}
+            value={form.plateVariant}
             onChange={(value) => {
               const newVariant = variants.find((v) => v.key === value);
               const newFields = newVariant?.fields || [
                 "plate_code",
                 "plate_digits",
               ];
-              onChange({
+              setForm((prev) => ({
+                ...prev,
                 plateVariant: value,
-                plateType: newVariant?.plate_type || data.plateType,
-                code: newFields.includes("plate_code") ? data.code : "",
+                code: newFields.includes("plate_code") ? prev.code : "",
                 digits: "",
-                hideCode:
-                  (newFields.includes("plate_code") &&
-                    (newVariant?.has_code ?? true))
-                    ? data.hideCode
-                    : false,
-              });
+              }));
             }}
             placeholder={t("common.select")}
           />
@@ -229,13 +219,13 @@ export default function PlatePriceFormStep({
                       className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
                       style={{
                         borderColor: getColor("border"),
-                        color: data.code
+                        color: form.code
                           ? getColor("primaryText")
                           : getColor("mutedText"),
                       }}
                     >
                       <span>
-                        {data.code || t("private-deal.select_code")}
+                        {form.code || t("private-deal.select_code")}
                       </span>
                       <ChevronDown
                         className={`w-4 h-4 transition-transform ${codeDropdownOpen ? "rotate-180" : ""}`}
@@ -278,11 +268,11 @@ export default function PlatePriceFormStep({
                                 className={`w-full px-4 py-2.5 text-sm transition-colors ${isRTL ? "text-right" : "text-left"}`}
                                 style={{
                                   color:
-                                    item.code === data.code
+                                    item.code === form.code
                                       ? getColor("primary")
                                       : getColor("primaryText"),
                                   backgroundColor:
-                                    item.code === data.code
+                                    item.code === form.code
                                       ? `${getColor("primary")}10`
                                       : "transparent",
                                 }}
@@ -309,9 +299,12 @@ export default function PlatePriceFormStep({
                   label={t("listings.code")}
                   type="text"
                   placeholder="M"
-                  value={data.code}
+                  value={form.code}
                   onChange={(e) =>
-                    onChange({ code: e.target.value.toUpperCase() })
+                    setForm((prev) => ({
+                      ...prev,
+                      code: e.target.value.toUpperCase(),
+                    }))
                   }
                 />
               )
@@ -346,173 +339,125 @@ export default function PlatePriceFormStep({
                   : "777"
               }
               maxLength={variantDigits?.max}
-              value={data.digits}
+              value={form.digits}
               onChange={(e) =>
-                onChange({ digits: e.target.value.replace(/\D/g, "") })
+                setForm((prev) => ({
+                  ...prev,
+                  digits: e.target.value.replace(/\D/g, ""),
+                }))
               }
             />
-          </div>
-
-          <div
-            className={`flex flex-col sm:flex-row sm:items-center gap-3 ${isRTL ? "sm:flex-row-reverse" : ""}`}
-          >
-            <button
-              type="button"
-              disabled={!showCodeField}
-              onClick={() => {
-                if (!showCodeField) return;
-                onChange({ hideCode: !data.hideCode });
-              }}
-              className={`inline-flex items-center gap-2 h-8 px-3 rounded-full border text-xs font-medium transition-colors ${isRTL ? "flex-row-reverse" : ""} ${!showCodeField ? "opacity-50 cursor-not-allowed" : ""}`}
-              style={
-                showCodeField && data.hideCode
-                  ? {
-                      backgroundColor: getColor("primary"),
-                      borderColor: getColor("primary"),
-                      color: "#fff",
-                    }
-                  : {
-                      backgroundColor: getColor("surface"),
-                      borderColor: getColor("border"),
-                      color: getColor("secondaryText"),
-                    }
-              }
-              title={
-                !showCodeField ? t("listings.hide_code_unavailable") : undefined
-              }
-            >
-              <EyeOff className="w-4 h-4" />
-              {t("listings.hide_code")}
-            </button>
-            <span
-              className={`flex items-center gap-1.5 text-xs ${isRTL ? "flex-row-reverse text-right" : ""}`}
-              style={{ color: getColor("secondaryText") }}
-            >
-              {showCodeField
-                ? t("listings.hide_code_hint")
-                : t("listings.hide_code_unavailable")}
-              <Info
-                className="w-3.5 h-3.5 shrink-0"
-                style={{ color: getColor("mutedText") }}
-              />
-            </span>
-          </div>
-
-          <Input
-            label={<DirhamText text={t("listings.asking_price_aed")} />}
-            value={data.price}
-            onChange={(e) =>
-              onChange({
-                price: e.target.value.replace(/[^\d,]/g, ""),
-              })
-            }
-            placeholder="68,000"
-          />
-
-          {/* <button
-            type="button"
-            className="w-full rounded-xl border border-dashed py-8 px-4 flex flex-col items-center justify-center gap-2 text-sm transition-colors"
-            style={{
-              backgroundColor: `${getColor("background")}80`,
-              borderColor: getColor("border"),
-              color: getColor("secondaryText"),
-            }}
-          >
-            <Camera className="w-6 h-6" />
-            <span>{t("listings.scan_plate")}</span>
-          </button> */}
-
-          <div>
-            <label
-              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
-              style={{ color: getColor("secondaryText") }}
-            >
-              {t("listings.seller_notes")}
-            </label>
-            <textarea
-              value={data.notes}
-              onChange={(e) => onChange({ notes: e.target.value })}
-              placeholder={t("listings.notes_placeholder")}
-              rows={3}
-              className={`w-full rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
-              style={{
-                borderColor: getColor("border"),
-                color: getColor("primaryText"),
-              }}
-            />
-          </div>
-
-          <div>
-            <label
-              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
-              style={{ color: getColor("secondaryText") }}
-            >
-              {t("listings.ownership_doc")}
-            </label>
-            <label
-              className={`flex items-center gap-3 w-full rounded-xl border bg-white px-4 py-3 cursor-pointer transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-              style={{ borderColor: getColor("border") }}
-            >
-              <span
-                className={`grow text-sm ${isRTL ? "text-right" : "text-left"}`}
-                style={{ color: getColor("mutedText") }}
-              >
-                {data.ownershipFileName || t("listings.upload_document")}
-              </span>
-              <Upload
-                className="w-[18px] h-[18px] shrink-0"
-                style={{ color: getColor("secondaryText") }}
-              />
-              <input
-                type="file"
-                className="hidden"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) =>
-                  onChange({
-                    ownershipFileName: e.target.files?.[0]?.name || "",
-                  })
-                }
-              />
-            </label>
           </div>
         </div>
 
+        <div className="mb-4">
+          <label
+            className={`block text-[11px] font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
+          >
+            {t("auctions.field_seller_notes")}
+          </label>
+          <textarea
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            placeholder={t("auctions.field_notes_short")}
+            rows={3}
+            className="w-full rounded-xl border bg-white py-3 px-4 text-sm resize-none outline-none"
+            style={{
+              borderColor: getColor("border"),
+              color: getColor("primaryText"),
+            }}
+          />
+        </div>
+
+        <div className="mb-8">
+          <label
+            className={`block text-[11px] font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("secondaryText") }}
+          >
+            {t("auctions.field_ownership")}
+          </label>
+          <label
+            className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 cursor-pointer ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{
+              borderColor: getColor("border"),
+              backgroundColor: getColor("surface"),
+              color: getColor("mutedText"),
+            }}
+          >
+            <span className="text-sm">{t("auctions.upload_document")}</span>
+            <Upload className="w-4 h-4" style={{ color: getColor("primary") }} />
+            <input type="file" className="hidden" accept="image/*,.pdf" />
+          </label>
+        </div>
+
         <div
-          className={`flex items-center justify-between border-t mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
           style={{ borderColor: getColor("border") }}
         >
           <Button
-            type="button"
             variant="outline"
+            size="md"
             onClick={onBack}
             leftIcon={<BackIcon className="w-4 h-4" />}
           >
-            {t("listings.back")}
+            {t("auctions.back")}
           </Button>
           <Button
-            type="button"
             variant="primary"
+            size="md"
             onClick={onContinue}
             disabled={!canContinue}
             rightIcon={<NextIcon className="w-4 h-4" />}
-            className="!rounded-lg px-5"
           >
-            {t("listings.continue")}
+            {t("auctions.continue")}
           </Button>
         </div>
       </div>
 
-      <div className="lg:sticky lg:top-24">
-        <LivePreview
-          code={data.code}
-          digits={data.digits}
-          emirate={t("listings.emirate_dubai")}
-          plateVariant={data.plateVariant}
-          preview={selectedVariant?.preview}
-          showCode={showCodeField}
-          price={data.price}
-          hideCode={showCodeField && data.hideCode}
-        />
+      <div
+        className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(0,0,0,0.16)] p-6 md:p-8 lg:sticky lg:top-24"
+        style={{
+          backgroundColor: getColor("surface"),
+          borderColor: getColor("border"),
+        }}
+      >
+        <div
+          className={`text-[10px] font-bold uppercase tracking-[0.12em] mb-4 ${isRTL ? "text-right" : "text-left"}`}
+          style={{ color: getColor("mutedText") }}
+        >
+          {t("auctions.live_preview")}
+        </div>
+
+        <div className="mb-5 px-1">
+          <NumberPlateDisplay
+            plate_code={showCodeField ? form.code || "AA" : ""}
+            plate_digits={form.digits || "777"}
+            emirate={t("listings.emirate_dubai")}
+            plateVariant={form.plateVariant}
+            preview={selectedVariant?.preview}
+            crop="auction-preview"
+            wrapperClassName="w-full overflow-hidden rounded-lg"
+          />
+        </div>
+
+        <div
+          className={`flex items-end justify-between gap-3 border-t pt-5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+          style={{ borderColor: getColor("border") }}
+        >
+          <span
+            className="font-serif text-[18px]"
+            style={{ color: getColor("primaryText") }}
+          >
+            {t("auctions.total_amount")}
+          </span>
+          <span
+            className="font-serif text-[28px] font-bold"
+            style={{ color: getColor("primary") }}
+          >
+            <DirhamAmount amount={form.price} weight="bold" />
+          </span>
+        </div>
       </div>
     </div>
   );

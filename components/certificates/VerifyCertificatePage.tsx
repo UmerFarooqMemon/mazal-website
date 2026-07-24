@@ -3,10 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button } from "@/components/ui";
+import { Button, BackButton } from "@/components/ui";
 import VerifiedCertificateCard, {
   SAMPLE_CERTIFICATE,
   type CertificateDisplayData,
@@ -328,26 +327,6 @@ export default function VerifyCertificatePage() {
     return <VerifyCertificateSkeleton />;
   }
 
-  const BackButton = ({ onClick }: { onClick: () => void }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 border rounded-full px-3 py-2.5 text-[10px] md:text-sm transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-      style={{
-        borderColor: getColor("border") || "#D9DEE6",
-        color: getColor("primaryText") || "#081123",
-        backgroundColor: "#fff",
-      }}
-    >
-      {isRTL ? (
-        <ArrowRight className="size-3.5" />
-      ) : (
-        <ArrowLeft className="size-3.5" />
-      )}
-      {t("certificates.back") || "Back"}
-    </button>
-  );
-
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
@@ -417,7 +396,9 @@ export default function VerifyCertificatePage() {
             className="h-px w-full mb-7"
             style={{ backgroundColor: getColor("border") || "#D9DEE6" }}
           />
-          <BackButton onClick={() => router.back()} />
+          <BackButton onClick={() => router.back()}>
+            {t("certificates.back") || "Back"}
+          </BackButton>
         </div>
       </section>
 
@@ -443,7 +424,9 @@ export default function VerifyCertificatePage() {
             className="h-px w-full mb-7"
             style={{ backgroundColor: getColor("border") || "#D9DEE6" }}
           />
-          <BackButton onClick={() => setMobileView("form")} />
+          <BackButton onClick={() => setMobileView("form")}>
+            {t("certificates.back") || "Back"}
+          </BackButton>
         </div>
       </section>
 

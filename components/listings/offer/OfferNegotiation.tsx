@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Handshake, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
@@ -48,10 +48,11 @@ export default function OfferNegotiation() {
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
 
-  const askingPrice = 680000;
   const [submittingId, setSubmittingId] = useState<string | null>(null);
-  const [resolvedAskingPrice, setResolvedAskingPrice] = useState(askingPrice);
+  const [resolvedAskingPrice, setResolvedAskingPrice] = useState(680000);
   const [listing, setListing] = useState<MarketplaceListingDetail | null>(null);
+  const [visibleCount, setVisibleCount] = useState(1);
+  const [ended, setEnded] = useState(false);
 
   const [rounds, setRounds] = useState<OfferRound[]>([
     {
@@ -107,14 +108,40 @@ export default function OfferNegotiation() {
   useEffect(() => {
     getListingDetail(params.id, locale)
       .then((response) => {
+        const asking = response.data.listing.asking_price;
         setListing(response.data.listing);
-        setResolvedAskingPrice(response.data.listing.asking_price);
+        setResolvedAskingPrice(asking);
         setRounds((prev) =>
-          prev.map((round) =>
-            round.kind === "listing"
-              ? { ...round, amount: response.data.listing.asking_price }
-              : round,
-          ),
+          prev.map((round) => {
+            if (round.kind === "listing") {
+              return { ...round, amount: asking };
+            }
+            if (round.kind === "buyer_counter" && round.id === "c1") {
+              return {
+                ...round,
+                amount: Math.max(1, Math.round(asking * 0.95)),
+              };
+            }
+            if (round.kind === "seller_counter") {
+              return {
+                ...round,
+                amount: Math.max(1, Math.round(asking * 0.98)),
+              };
+            }
+            if (round.kind === "buyer_counter" && round.id === "c2") {
+              return {
+                ...round,
+                amount: Math.max(1, Math.round(asking * 0.96)),
+              };
+            }
+            if (round.kind === "seller_final") {
+              return {
+                ...round,
+                amount: Math.max(1, Math.round(asking * 0.97)),
+              };
+            }
+            return round;
+          }),
         );
       })
       .catch(() => {
@@ -122,13 +149,31 @@ export default function OfferNegotiation() {
       });
   }, [locale, params.id]);
 
+  const visibleRounds = useMemo(
+    () => rounds.slice(0, visibleCount),
+    [rounds, visibleCount],
+  );
+
   const updateAmount = (id: string, amount: number) => {
     setRounds((prev) =>
       prev.map((r) => (r.id === id ? { ...r, amount } : r)),
     );
   };
 
-  const handleSendOffer = async (round: OfferRound) => {
+  const handleNegotiate = (index: number) => {
+    if (ended) return;
+    if (index === visibleCount - 1 && visibleCount < rounds.length) {
+      setVisibleCount((count) => Math.min(rounds.length, count + 1));
+    }
+  };
+
+  const handleEndNegotiation = () => {
+    setEnded(true);
+    toast.success(t("offer.ended_success") || "Negotiation ended.");
+    router.push(`/${locale}/listings/${params.id}`);
+  };
+
+  const handleSendOffer = async (round: OfferRound, index: number) => {
     if (round.amount < 1) {
       toast.error(t("offer.invalid_amount") || "Enter a valid offer amount.");
       return;
@@ -142,6 +187,9 @@ export default function OfferNegotiation() {
         locale,
       );
       toast.success(t("offer.sent_success") || "Offer submitted successfully.");
+      if (index === visibleCount - 1 && visibleCount < rounds.length) {
+        setVisibleCount((count) => Math.min(rounds.length, count + 1));
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to submit offer.",
@@ -186,107 +234,118 @@ export default function OfferNegotiation() {
           <div
             className={`lg:col-span-3 space-y-4 ${isRTL ? "lg:col-start-3 lg:row-start-1" : ""}`}
           >
-            {rounds.map((round) => (
-              <div
-                key={round.id}
-                className="rounded-2xl border p-5 md:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
-                style={{
-                  backgroundColor: getColor("surface"),
-                  borderColor: getColor("border"),
-                }}
-              >
-                <h3
-                  className={`text-xl font-serif font-bold mb-4 ${isRTL ? "text-right" : "text-left"}`}
-                  style={{ color: getColor("primaryText") }}
-                >
-                  {round.title}
-                </h3>
-
-                <label
-                  className={`block text-xs font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
-                  style={{ color: getColor("mutedText") }}
-                >
-                  <DirhamText text={round.fieldLabel} />
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={formatInput(round.amount)}
-                  disabled={!round.editable}
-                  onChange={(e) =>
-                    updateAmount(round.id, parseAmount(e.target.value))
-                  }
-                  className={`w-full h-12 rounded-xl border px-4 text-sm outline-none mb-4 ${isRTL ? "text-right" : "text-left"}`}
+            {visibleRounds.map((round, index) => {
+              const isLatest = index === visibleRounds.length - 1 && !ended;
+              return (
+                <div
+                  key={round.id}
+                  className="rounded-2xl border p-5 md:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
                   style={{
-                    backgroundColor: round.editable
-                      ? getColor("surface")
-                      : getColor("primaryLight"),
+                    backgroundColor: getColor("surface"),
                     borderColor: getColor("border"),
-                    color: getColor("primaryText"),
+                    opacity: isLatest || ended ? 1 : 0.72,
                   }}
-                />
+                >
+                  <h3
+                    className={`text-xl font-serif font-bold mb-4 ${isRTL ? "text-right" : "text-left"}`}
+                    style={{ color: getColor("primaryText") }}
+                  >
+                    {round.title}
+                  </h3>
 
-                {round.primaryAction === "send" ? (
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    disabled={submittingId === round.id}
-                    onClick={() => handleSendOffer(round)}
+                  <label
+                    className={`block text-xs font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
+                    style={{ color: getColor("mutedText") }}
                   >
-                    {submittingId === round.id
-                      ? t("common.loading") || "Loading..."
-                      : t("offer.send_offer")}
-                  </Button>
-                ) : (
-                  <div
-                    className={`flex gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
-                  >
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="flex-1"
-                      onClick={() =>
-                        router.push(
-                          `/${locale}/listings/${params.id}/checkout?role=buyer&price=${round.amount}`,
-                        )
-                      }
-                    >
-                      {t("offer.accept")}
-                    </Button>
-                    {round.secondaryAction === "negotiate" && (
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className={`flex-1 ${isRTL ? "flex-row-reverse" : ""}`}
-                        style={{
-                          borderColor: getColor("primary"),
-                          color: getColor("primary"),
-                        }}
-                        leftIcon={
-                          <RefreshCw className="w-4 h-4" strokeWidth={2} />
-                        }
-                      >
-                        {t("offer.negotiate")}
-                      </Button>
-                    )}
-                    {round.secondaryAction === "end" && (
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="flex-1"
-                        style={{
-                          borderColor: getColor("border"),
-                          color: getColor("primaryText"),
-                        }}
-                      >
-                        {t("offer.end_negotiation")}
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                    <DirhamText text={round.fieldLabel} />
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={formatInput(round.amount)}
+                    disabled={!round.editable || !isLatest || ended}
+                    onChange={(e) =>
+                      updateAmount(round.id, parseAmount(e.target.value))
+                    }
+                    className={`w-full h-12 rounded-xl border px-4 text-sm outline-none mb-4 ${isRTL ? "text-right" : "text-left"}`}
+                    style={{
+                      backgroundColor:
+                        round.editable && isLatest
+                          ? getColor("surface")
+                          : getColor("primaryLight"),
+                      borderColor: getColor("border"),
+                      color: getColor("primaryText"),
+                    }}
+                  />
+
+                  {isLatest && !ended && (
+                    <>
+                      {round.primaryAction === "send" ? (
+                        <Button
+                          variant="primary"
+                          size="lg"
+                          fullWidth
+                          disabled={submittingId === round.id}
+                          onClick={() => handleSendOffer(round, index)}
+                        >
+                          {submittingId === round.id
+                            ? t("common.loading") || "Loading..."
+                            : t("offer.send_offer")}
+                        </Button>
+                      ) : (
+                        <div
+                          className={`flex gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                        >
+                          <Button
+                            variant="primary"
+                            size="lg"
+                            className="flex-1"
+                            onClick={() =>
+                              router.push(
+                                `/${locale}/listings/${params.id}/checkout?role=buyer&price=${round.amount}`,
+                              )
+                            }
+                          >
+                            {t("offer.accept")}
+                          </Button>
+                          {round.secondaryAction === "negotiate" && (
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              className={`flex-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                              style={{
+                                borderColor: getColor("primary"),
+                                color: getColor("primary"),
+                              }}
+                              leftIcon={
+                                <RefreshCw className="w-4 h-4" strokeWidth={2} />
+                              }
+                              onClick={() => handleNegotiate(index)}
+                            >
+                              {t("offer.negotiate")}
+                            </Button>
+                          )}
+                          {round.secondaryAction === "end" && (
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              className="flex-1"
+                              style={{
+                                borderColor: getColor("border"),
+                                color: getColor("primaryText"),
+                              }}
+                              onClick={handleEndNegotiation}
+                            >
+                              {t("offer.end_negotiation")}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div

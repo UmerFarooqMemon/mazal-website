@@ -1,8 +1,10 @@
 "use client";
+
+import { SlidersHorizontal } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 
-export type FilterKey = "emirate" | "digit_count" | "price_range" | "type";
+export type FilterKey = "emirate" | "digit_count" | "price_range" | "sort";
 
 export type MarketplaceFilterState = Record<FilterKey, string>;
 
@@ -26,14 +28,7 @@ export default function MarketplaceFilters({
     {
       key: "emirate",
       title: t("marketplace.emirate"),
-      options: [
-        { value: "All", label: t("marketplace.all") },
-        { value: "Dubai", label: "Dubai" },
-        { value: "Abu Dhabi", label: "Abu Dhabi" },
-        { value: "Sharjah", label: "Sharjah" },
-        { value: "Ajman", label: "Ajman" },
-        { value: "RAK", label: "RAK" },
-      ],
+      options: [{ value: "Dubai", label: "Dubai" }],
     },
     {
       key: "digit_count",
@@ -57,23 +52,38 @@ export default function MarketplaceFilters({
       ],
     },
     {
-      key: "type",
-      title: t("marketplace.type"),
+      key: "sort",
+      title: t("marketplace.sort"),
       options: [
-        { value: "Direct", label: t("marketplace.direct") },
-        { value: "Auction", label: t("marketplace.auction") },
-        { value: "Spot", label: t("marketplace.spot") },
+        { value: "az", label: t("marketplace.sort_az") },
+        { value: "za", label: t("marketplace.sort_za") },
       ],
     },
   ];
 
+  const handleSelect = (key: FilterKey, value: string) => {
+    if (selected[key] === value) {
+      onChange(key, key === "digit_count" ? "Any" : "");
+      return;
+    }
+    onChange(key, value);
+  };
+
   return (
-    <div className="flex flex-col gap-8 items-start">
+    <div className="flex flex-col gap-7 items-start w-full">
+      <div
+        className="flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] uppercase"
+        style={{ color: getColor("mutedText") }}
+      >
+        <SlidersHorizontal className="w-3.5 h-3.5" strokeWidth={2.25} />
+        {t("marketplace.filters")}
+      </div>
+
       {filterSections.map((section) => (
         <div key={section.key} className="w-full">
           <h4
             className="text-[11px] font-bold uppercase tracking-[0.12em] mb-3"
-            style={{ color: getColor("mutedText") }}
+            style={{ color: getColor("secondaryText") }}
           >
             {section.title}
           </h4>
@@ -84,38 +94,19 @@ export default function MarketplaceFilters({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() =>
-                    onChange(
-                      section.key,
-                      selected[section.key] === option.value ? "" : option.value,
-                    )
-                  }
-                  className="px-3 py-1.5 rounded-full text-xs font-medium border transition-opacity"
+                  onClick={() => handleSelect(section.key, option.value)}
+                  className="px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-colors"
                   style={
                     isActive
                       ? {
-                          backgroundColor: getColor("primary"),
+                          backgroundColor: getColor("primaryText"),
                           color: "#fff",
-                          borderColor: getColor("primary"),
                         }
                       : {
-                          backgroundColor: getColor("surface"),
-                          borderColor: getColor("border"),
+                          backgroundColor: "#EEF1F0",
                           color: getColor("secondaryText"),
                         }
                   }
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.borderColor = getColor("primary");
-                      e.currentTarget.style.color = getColor("primary");
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.borderColor = getColor("border");
-                      e.currentTarget.style.color = getColor("secondaryText");
-                    }
-                  }}
                 >
                   {option.label}
                 </button>

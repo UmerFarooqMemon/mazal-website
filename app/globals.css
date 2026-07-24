@@ -237,6 +237,15 @@ body[dir="rtl"] {
   mix-blend-mode: normal;
 }
 
+/* Auctions add sidebar — keep plate top/bottom borders visible */
+.plate-crop--auction-preview {
+  margin-top: calc(-10% - 4px);
+  margin-bottom: calc(-10% - 10px);
+  padding: 0;
+  overflow: hidden;
+  mix-blend-mode: normal;
+}
+
 .plate-crop--compact {
   margin-top: -22%;
   margin-bottom: -26%;

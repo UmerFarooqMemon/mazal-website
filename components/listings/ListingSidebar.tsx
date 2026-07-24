@@ -30,10 +30,10 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
   const typeLabel = listing.listing_type_label || listing.listing_type;
 
   const plateCode = listing.code_hidden
-    ? "•••"
+    ? "?"
     : listing.plate_code || "—";
   const plateDigits = listing.code_hidden
-    ? "•••"
+    ? "—"
     : listing.plate_digits || "—";
   const digitLabel = listing.digit_count
     ? `${listing.digit_count}-digit`
@@ -44,7 +44,13 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
     { label: t("listings.code"), value: plateCode },
     {
       label: t("listings.digits"),
-      value: digitLabel ? `${plateDigits} (${digitLabel})` : plateDigits,
+      value: listing.code_hidden
+        ? listing.plate_digits
+          ? `${listing.plate_digits}${digitLabel ? ` (${digitLabel})` : ""}`
+          : digitLabel || "—"
+        : digitLabel
+          ? `${plateDigits} (${digitLabel})`
+          : plateDigits,
     },
     { label: t("listings.type"), value: typeLabel },
   ];
@@ -160,7 +166,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
                 color: getColor("primary"),
               }}
             >
-              {t("listings.reveal_code") || "Reveal plate code"}
+              {t("listings.reveal_code")}
             </Button>
           </Link>
         )}

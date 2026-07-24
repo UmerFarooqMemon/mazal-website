@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
-import { ArrowLeft, FileBadge2 } from "lucide-react";
+import { FileBadge2 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { BackButton } from "@/components/ui";
 import type { PortfolioPlate } from "./data";
 
 interface PortfolioPlateHeroProps {
@@ -22,18 +23,9 @@ export default function PortfolioPlateHero({
 
   return (
     <div className="space-y-5">
-      <Link
-        href={backHref}
-        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-        style={{
-          backgroundColor: getColor("surface"),
-          borderColor: getColor("border"),
-          color: getColor("primaryText"),
-        }}
-      >
-        <ArrowLeft className={`size-3.5 ${isRTL ? "rotate-180" : ""}`} />
+      <BackButton href={backHref} size="sm">
         {t("portfolio.back_to_collection")}
-      </Link>
+      </BackButton>
 
       <div
         className="rounded-[20px] border py-6"

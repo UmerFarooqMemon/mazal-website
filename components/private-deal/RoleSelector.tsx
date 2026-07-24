@@ -142,7 +142,6 @@ export default function RoleSelector({
           size="md"
           onClick={onBack}
           leftIcon={<BackIcon className="w-4 h-4" />}
-          className="opacity-70"
         >
           {t("private-deal.back")}
         </Button>

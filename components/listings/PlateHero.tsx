@@ -27,16 +27,31 @@ export default function PlateHero({ listing }: PlateHeroProps) {
     },
     {
       icon: Star,
-      title: t("listings.seller_rating_title"),
+      title: listing?.seller
+        ? t("listings.seller_rating_title_dynamic").replace(
+            "{rating}",
+            listing.seller.rating.toFixed(1),
+          )
+        : t("listings.seller_rating_title"),
       desc: listing?.seller
-        ? `${listing.seller.rating.toFixed(1)} · ${listing.seller.completed_deals} deals`
+        ? t("listings.seller_rating_desc_dynamic").replace(
+            "{deals}",
+            String(listing.seller.completed_deals),
+          )
         : t("listings.seller_rating_desc"),
     },
     {
       icon: Eye,
-      title: t("listings.views_title"),
+      title: listing
+        ? t("listings.views_title_dynamic").replace(
+            "{views}",
+            listing.view_count.toLocaleString(),
+          )
+        : t("listings.views_title"),
       desc: listing
-        ? `${listing.view_count.toLocaleString()} views`
+        ? t("listings.views_desc_dynamic")
+            .replace("{watchers}", String(listing.watcher_count ?? 0))
+            .replace("{offers}", String(listing.offer_count ?? 0))
         : t("listings.views_desc"),
     },
   ];

@@ -25,6 +25,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       fullWidth = false,
       children,
       disabled,
+      style,
       ...props
     },
     ref,
@@ -33,11 +34,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const isRTL = locale === "ar";
     const { getColor, getGradient } = useTheme();
 
-    // Base button styles
+    const borderColor = getColor("border");
+    const outlineBorder =
+      !borderColor ||
+      borderColor === "transparent" ||
+      borderColor.startsWith("rgba(0, 0, 0, 0)")
+        ? "#D9DEE6"
+        : borderColor;
+
     const baseStyles =
       "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 rounded-full disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
 
-    // Spinner component
     const Spinner = () => (
       <svg
         className="animate-spin h-4 w-4"
@@ -61,7 +68,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       </svg>
     );
 
-    // Swap icons automatically for RTL
     const displayLeftIcon = isRTL ? rightIcon : leftIcon;
     const displayRightIcon = isRTL ? leftIcon : rightIcon;
 
@@ -70,7 +76,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         style={{
-          // Apply theme colors based on variant
           ...(variant === "primary" && {
             background: getGradient("primaryButton"),
             color: "#FFFFFF",
@@ -80,8 +85,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             color: "#FFFFFF",
           }),
           ...(variant === "outline" && {
-            borderColor: getColor("border"),
-            color: getColor("primaryText"),
+            backgroundColor: "#FFFFFF",
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: outlineBorder,
+            color: getColor("primaryText") || "#081123",
           }),
           ...(variant === "gold" && {
             backgroundColor: getColor("accent"),
@@ -91,9 +99,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             backgroundColor: getColor("error"),
             color: "#FFFFFF",
           }),
+          ...style,
         }}
         className={`
           ${baseStyles}
+          ${variant === "outline" ? "border border-solid bg-white" : ""}
           ${size === "sm" ? "px-4 py-1.5 text-xs" : ""}
           ${size === "md" ? "px-6 py-2.5 text-sm" : ""}
           ${size === "lg" ? "px-8 py-3.5 text-base" : ""}

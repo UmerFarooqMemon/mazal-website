@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { BackButton } from "@/components/ui";
 import VerifiedCertificateCard, {
   SAMPLE_CERTIFICATE,
   type CertificateDisplayData,
@@ -34,7 +33,6 @@ async function ensurePlatePreview(
 }
 
 export default function LivePreviewCertificatePage() {
-  const router = useRouter();
   const { t, locale, loading: localeLoading } = useLocale();
   const isRTL = locale === "ar";
   const { getColor, loading: themeLoading } = useTheme();
@@ -89,23 +87,9 @@ export default function LivePreviewCertificatePage() {
             className="h-px w-full mb-7"
             style={{ backgroundColor: getColor("border") || "#D9DEE6" }}
           />
-          <button
-            type="button"
-            onClick={() => router.push(`/${locale}/verify`)}
-            className={`inline-flex items-center gap-1.5 border rounded-full px-3 py-2.5 text-[10px] transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-            style={{
-              borderColor: getColor("border") || "#D9DEE6",
-              color: getColor("primaryText") || "#081123",
-              backgroundColor: "#fff",
-            }}
-          >
-            {isRTL ? (
-              <ArrowRight className="size-3.5" />
-            ) : (
-              <ArrowLeft className="size-3.5" />
-            )}
+          <BackButton href={`/${locale}/verify`} size="sm">
             {t("certificates.back") || "Back"}
-          </button>
+          </BackButton>
         </div>
       </section>
 
@@ -135,23 +119,9 @@ export default function LivePreviewCertificatePage() {
             className="max-w-[896px]"
           />
 
-          <button
-            type="button"
-            onClick={() => router.push(`/${locale}/verify`)}
-            className={`mt-10 inline-flex items-center gap-1.5 border rounded-full px-4 py-2.5 text-sm transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
-            style={{
-              borderColor: getColor("border") || "#D9DEE6",
-              color: getColor("primaryText") || "#081123",
-              backgroundColor: "#fff",
-            }}
-          >
-            {isRTL ? (
-              <ArrowRight className="size-4" />
-            ) : (
-              <ArrowLeft className="size-4" />
-            )}
+          <BackButton href={`/${locale}/verify`} className="mt-10">
             {t("certificates.back") || "Back"}
-          </button>
+          </BackButton>
         </div>
       </section>
     </div>

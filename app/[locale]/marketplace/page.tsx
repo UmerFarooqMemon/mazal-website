@@ -11,15 +11,14 @@ import PlateCard from "../../../components/marketplace/PlateCard";
 import {
   mapEmirateToApi,
   mapListingToPlateCard,
-  mapListingTypeToApi,
   searchListings,
 } from "@/services/marketplace";
 
 const INITIAL_FILTERS: MarketplaceFilterState = {
-  emirate: "",
-  digit_count: "",
+  emirate: "Dubai",
+  digit_count: "Any",
   price_range: "",
-  type: "",
+  sort: "",
 };
 
 export default function MarketplacePage() {
@@ -48,13 +47,18 @@ export default function MarketplacePage() {
         const response = await searchListings(
           {
             emirate: mapEmirateToApi(filters.emirate),
-            listing_type: mapListingTypeToApi(filters.type),
             digit_count:
               filters.digit_count && filters.digit_count !== "Any"
                 ? Number(filters.digit_count)
                 : undefined,
             price_range: filters.price_range || undefined,
             q: appliedQuery || undefined,
+            sort:
+              filters.sort === "az"
+                ? "code_asc"
+                : filters.sort === "za"
+                  ? "code_desc"
+                  : undefined,
             page: pageNum,
             per_page: 12,
           },
@@ -153,12 +157,6 @@ export default function MarketplacePage() {
           <aside
             className={`lg:col-span-1 ${isRTL ? "lg:col-start-4 lg:row-start-1" : ""}`}
           >
-            <div
-              className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase mb-8"
-              style={{ color: getColor("mutedText") }}
-            >
-              {t("marketplace.filters")}
-            </div>
             <MarketplaceFilters selected={filters} onChange={handleFilterChange} />
           </aside>
 
@@ -210,6 +208,11 @@ export default function MarketplacePage() {
                     previouslySold={plate.previouslySold}
                     isFavorite={plate.isFavorite}
                     imageUrl={plate.imageUrl}
+                    plate_code={plate.plate_code}
+                    plate_digits={plate.plate_digits}
+                    plate_type={plate.plate_type}
+                    plate_design={plate.plate_design}
+                    hideCode={plate.hideCode}
                   />
                 ))}
               </div>

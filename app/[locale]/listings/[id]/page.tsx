@@ -109,13 +109,20 @@ export default function ListingDetailPage() {
                 className="text-lg font-serif font-bold mb-2"
                 style={{ color: getColor("primaryText") }}
               >
-                {listing.title || t("listings.description_title")}
+                {t("listings.description_heading")}
               </h3>
               <p
                 className="text-sm leading-relaxed max-w-2xl"
                 style={{ color: getColor("mutedText") }}
               >
-                {listing.description || t("listings.description_text")}
+                {listing.description ||
+                  t("listings.description_template")
+                    .replace(
+                      "{emirate}",
+                      listing.emirate_label || listing.emirate || "",
+                    )
+                    .replace("{code}", listing.plate_code || "—")
+                    .replace("{digits}", listing.plate_digits || "—")}
               </p>
             </div>
           </div>

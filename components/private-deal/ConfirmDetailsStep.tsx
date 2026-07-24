@@ -16,6 +16,8 @@ export interface ConfirmDetailsData {
   identificationValue: string;
   secondaryMobile: string;
   licenseSource: string;
+  giftPlate?: boolean;
+  giftEmail?: string;
 }
 
 interface ConfirmDetailsStepProps {
@@ -67,6 +69,60 @@ export default function ConfirmDetailsStep({
         borderColor: getColor("border"),
       }}
     >
+      {variant === "buyer" && (
+        <div className="mb-6">
+          <p
+            className={`text-sm font-medium mb-3 ${isRTL ? "text-right" : "text-left"}`}
+            style={{ color: getColor("primaryText") }}
+          >
+            {t("private-deal.gift_plate_title")}
+          </p>
+          <div
+            className={`inline-flex rounded-full border p-1 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            style={{
+              borderColor: getColor("border"),
+              backgroundColor: getColor("primaryLight"),
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => onChange({ giftPlate: true })}
+              className="px-5 py-2 rounded-full text-sm font-medium transition-colors"
+              style={
+                data.giftPlate
+                  ? { backgroundColor: getColor("primary"), color: "#fff" }
+                  : { color: getColor("secondaryText") }
+              }
+            >
+              {t("private-deal.gift_yes")}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                onChange({ giftPlate: false, giftEmail: "" })
+              }
+              className="px-5 py-2 rounded-full text-sm font-medium transition-colors"
+              style={
+                !data.giftPlate
+                  ? { backgroundColor: getColor("primary"), color: "#fff" }
+                  : { color: getColor("secondaryText") }
+              }
+            >
+              {t("private-deal.gift_no")}
+            </button>
+          </div>
+          {data.giftPlate && (
+            <Input
+              label={t("private-deal.gift_email")}
+              type="email"
+              value={data.giftEmail || ""}
+              onChange={(e) => onChange({ giftEmail: e.target.value })}
+              placeholder={t("private-deal.gift_email_placeholder")}
+            />
+          )}
+        </div>
+      )}
+
       <h2
         className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
         style={{ color: getColor("primaryText") }}

@@ -29,5 +29,8 @@
   "checkout_verification": "VERIFICATION",
   "checkout_confirm": "CONFIRM DETAILS",
   "checkout_payment": "PAYMENT METHOD",
-  "checkout_escrow": "ESCROW LIVE"
+  "checkout_escrow": "ESCROW LIVE",
+  "invalid_amount": "Enter a valid offer amount.",
+  "sent_success": "Offer submitted successfully.",
+  "ended_success": "Negotiation ended."
 }

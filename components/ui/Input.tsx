@@ -1,6 +1,6 @@
 "use client";
 
-import { InputHTMLAttributes, forwardRef } from "react";
+import { InputHTMLAttributes, forwardRef, useId } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -30,7 +30,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const { locale } = useLocale();
     const isRTL = locale === "ar";
     const { getColor } = useTheme();
-    const inputId = id || props.name || Math.random().toString(36).slice(2);
+    const generatedId = useId();
+    const inputId = id || props.name || generatedId;
     const isDateOrTime = type === "date" || type === "time";
 
     return (

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
-import { FileText, Plus, ArrowLeft, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui";
+import { FileText, Plus, Sparkles } from "lucide-react";
+import { Button, BackButton } from "@/components/ui";
 import CertificateRequestCard from "@/components/dashboard/CertificateRequestCard";
 import DashboardCertificatesSkeleton from "@/components/skeletons/dashboard/valuation-certificates/DashboardCertificatesSkeleton";
 import DashboardCertificateRequestCardSkeleton from "@/components/skeletons/dashboard/valuation-certificates/DashboardCertificateRequestCardSkeleton";
@@ -271,20 +271,9 @@ export default function DashboardCertificatesPage() {
           </div>
         )}
 
-        {/* Back */}
-        <div className="mt-12">
-          <Link
-            href={`/${locale}`}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border text-sm font-medium transition-colors shadow-sm"
-            style={{
-              backgroundColor: getColor("surface"),
-              borderColor: getColor("border"),
-              color: getColor("secondaryText"),
-            }}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t("common.back")}
-          </Link>
+        {/* Back — Arabic (RTL): bottom-left; English (LTR): bottom-left */}
+        <div className={`mt-12 flex ${isRTL ? "justify-end" : "justify-start"}`}>
+          <BackButton href={`/${locale}`}>{t("common.back")}</BackButton>
         </div>
       </div>
     </div>

@@ -4,13 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LocaleProvider } from "@/context/LocaleContext";
 import { useLocale } from "@/context/LocaleContext";
-import { Button } from "@/components/ui";
+import { Button, BackButton } from "@/components/ui";
 import {
   FileText,
   Car,
   Settings,
   Users,
-  ArrowLeft,
 } from "lucide-react";
 
 function DashboardSidebar() {
@@ -46,13 +45,9 @@ function DashboardSidebar() {
       className={`w-64 bg-white border-r border-gray-200 min-h-screen p-6 ${isRTL ? "text-right" : "text-left"}`}
     >
       {/* Back to Home */}
-      <Link
-        href={`/${locale}`}
-        className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#041443] transition-colors mb-6"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span>{t("common.back") || "Back"}</span>
-      </Link>
+      <BackButton href={`/${locale}`} className="mb-6" size="sm">
+        {t("common.back") || "Back"}
+      </BackButton>
 
       {/* Dashboard Title */}
       <h2 className="text-lg font-bold text-[#041443] mb-6">

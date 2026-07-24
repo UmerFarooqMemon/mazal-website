@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
@@ -19,6 +19,10 @@ import PaymentMethodStep, {
 import PaymentDetailsStep from "@/components/private-deal/PaymentDetailsStep";
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
+import {
+  getListingDetail,
+  type MarketplaceListingDetail,
+} from "@/services/marketplace";
 
 interface MarketplaceCheckoutProps {
   listingId: string;
@@ -37,6 +41,8 @@ export default function MarketplaceCheckout({
   const isRTL = locale === "ar";
 
   const [step, setStep] = useState(0);
+  const [listing, setListing] = useState<MarketplaceListingDetail | null>(null);
+  const [resolvedPrice, setResolvedPrice] = useState(agreedPrice);
   const [details, setDetails] = useState<ConfirmDetailsData>({
     fullName: "",
     mobile: "",
@@ -47,6 +53,8 @@ export default function MarketplaceCheckout({
     identificationValue: "",
     secondaryMobile: "",
     licenseSource: "mbr",
+    giftPlate: false,
+    giftEmail: "",
   });
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank");
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("single");
@@ -56,14 +64,27 @@ export default function MarketplaceCheckout({
     null,
   );
 
+  useEffect(() => {
+    getListingDetail(listingId, locale)
+      .then((response) => {
+        setListing(response.data.listing);
+        if (!agreedPrice || agreedPrice <= 0) {
+          setResolvedPrice(response.data.listing.asking_price);
+        }
+      })
+      .catch(() => {
+        // Keep query/fallback price
+      });
+  }, [agreedPrice, listingId, locale]);
+
   const deal: DealData = {
     role: initialRole,
-    emirate: "dubai",
-    plateType: "private",
-    plateVariant: "private_new_colorful",
-    code: "AA",
-    digit: "7777",
-    price: agreedPrice,
+    emirate: listing?.emirate || "dubai",
+    plateType: listing?.plate_type || "private",
+    plateVariant: listing?.plate_design || "private_new_colorful",
+    code: listing?.plate_code || "AA",
+    digit: listing?.plate_digits || "7777",
+    price: resolvedPrice,
   };
 
   const steps: StepItem[] = useMemo(() => {
@@ -132,7 +153,7 @@ export default function MarketplaceCheckout({
         <PaymentMethodStep
           method={paymentMethod}
           mode={paymentMode}
-          totalAmount={agreedPrice}
+          totalAmount={resolvedPrice}
           splitPayments={splitPayments}
           onMethodChange={setPaymentMethod}
           onModeChange={(mode) => {
@@ -168,7 +189,7 @@ export default function MarketplaceCheckout({
       return (
         <PaymentDetailsStep
           method={paymentMethod}
-          amount={agreedPrice}
+          amount={resolvedPrice}
           onBack={() => setStep(1)}
           onContinue={() => setStep(3)}
         />

@@ -83,6 +83,8 @@ export default function PrivateDealPage() {
     identificationValue: "",
     secondaryMobile: "",
     licenseSource: "mbr",
+    giftPlate: false,
+    giftEmail: "",
   });
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank");
