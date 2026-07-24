@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, withPublicApiHeaders } from "@/lib/api-config";
 
 function buildTargetUrl(
   request: NextRequest,
@@ -21,9 +21,9 @@ async function proxyRequest(
     const authHeader = request.headers.get("authorization");
     const locale = request.headers.get("accept-language");
 
-    const headers: Record<string, string> = {
+    const headers: Record<string, string> = withPublicApiHeaders({
       Accept: "application/json",
-    };
+    });
 
     if (authHeader) {
       headers.Authorization = authHeader;

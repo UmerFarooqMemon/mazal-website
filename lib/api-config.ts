@@ -20,3 +20,20 @@ export function getApiBaseUrl(): string {
 export function getApiAllowedHosts(): string[] {
   return [new URL(getApiBaseUrl()).hostname];
 }
+
+/**
+ * Shared secret for Laravel `public.api` middleware (X-Api-Token header).
+ * Must match PUBLIC_API_TOKEN on the backend.
+ */
+export function getPublicApiToken(): string {
+  return process.env.NEXT_PUBLIC_API_TOKEN?.trim() || "";
+}
+
+/** Merge headers with X-Api-Token when NEXT_PUBLIC_API_TOKEN is set. */
+export function withPublicApiHeaders(
+  headers: Record<string, string> = {},
+): Record<string, string> {
+  const token = getPublicApiToken();
+  if (!token) return headers;
+  return { ...headers, "X-Api-Token": token };
+}

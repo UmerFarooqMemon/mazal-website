@@ -1,5 +1,5 @@
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, withPublicApiHeaders } from "@/lib/api-config";
 
 // ----- Response Types -----
 
@@ -164,10 +164,10 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { method = "GET", body, token, headers = {} } = options;
 
-  const requestHeaders: Record<string, string> = {
+  const requestHeaders: Record<string, string> = withPublicApiHeaders({
     Accept: "application/json",
     ...headers,
-  };
+  });
 
   // Only set Content-Type for JSON bodies, not FormData
   if (body && typeof body === "string") {

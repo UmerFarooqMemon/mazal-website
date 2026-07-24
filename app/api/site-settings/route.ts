@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, withPublicApiHeaders } from "@/lib/api-config";
 
 export async function GET() {
   try {
     const response = await fetch(`${getApiBaseUrl()}/v1/site-settings`, {
-      headers: { Accept: "application/json" },
+      headers: withPublicApiHeaders({ Accept: "application/json" }),
       cache: "no-store",
     });
     const data = await response.json();
