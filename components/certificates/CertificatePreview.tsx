@@ -301,7 +301,7 @@ export default function CertificatePreview() {
 
           {/* Footer */}
           <div
-            className={`rounded-b-2xl pt-5 md:pt-6 pb-5 md:pb-6 px-4 md:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs -mx-6 md:-mx-10 -mb-6 md:-mb-10 mt-6 md:mt-10 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+            className={`rounded-b-2xl pt-5 md:pt-6 pb-5 md:pb-6 px-4 md:px-6 flex flex-col sm:flex-row items-center gap-4 text-xs -mx-6 md:-mx-10 -mb-6 md:-mb-10 mt-6 md:mt-10 ${isRTL ? "sm:flex-row-reverse" : ""}`}
             style={{
               backgroundColor: getColor("primaryLight"),
               borderColor: getColor("border"),
@@ -333,14 +333,6 @@ export default function CertificatePreview() {
                 MZL-VAL-55K8-2026.
               </div>
             </div>
-            <div
-              className="w-10 h-10 rounded shrink-0"
-              style={{
-                backgroundColor: getColor("surface"),
-                borderColor: getColor("border"),
-                borderWidth: "1px",
-              }}
-            ></div>
           </div>
         </div>
       </div>

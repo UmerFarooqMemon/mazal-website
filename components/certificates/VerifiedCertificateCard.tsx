@@ -388,7 +388,7 @@ export default function VerifiedCertificateCard({
 
       {/* Footer */}
       <div
-        className={`flex items-center justify-between gap-3 px-4 py-3 md:px-10 md:py-4 border-t ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center gap-3 px-4 py-3 md:px-10 md:py-4 border-t ${isRTL ? "flex-row-reverse" : ""}`}
         style={{
           backgroundColor: "rgba(234,239,247,0.4)",
           borderColor: getColor("border") || "#D9DEE6",
@@ -415,14 +415,6 @@ export default function VerifiedCertificateCard({
             <span className="font-medium">{data.certificateNumber}</span>.
           </p>
         </div>
-        <div
-          className="size-7 md:size-12 rounded shrink-0 border"
-          style={{
-            borderColor: getColor("border") || "#D9DEE6",
-            backgroundColor: getColor("surface") || "#fff",
-          }}
-          aria-hidden
-        />
       </div>
         </div>
       </div>
