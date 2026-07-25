@@ -13,9 +13,8 @@ export default function AuctionDetailPage({
   params: Promise<{ auctionId: string }>;
 }) {
   const { auctionId } = use(params);
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
   const auction = getAuctionById(auctionId);
 
   return (
@@ -41,7 +40,7 @@ export default function AuctionDetailPage({
 
           <div>
             <h2
-              className={`text-[18px] sm:text-[20px] font-semibold mb-4 ${isRTL ? "text-right" : "text-left"}`}
+              className="text-[18px] sm:text-[20px] font-semibold mb-4"
               style={{ color: getColor("primaryText") }}
             >
               {t("auctions.plate_details_title")}
@@ -51,14 +50,11 @@ export default function AuctionDetailPage({
               style={{ borderColor: getColor("border") }}
             >
               <ul
-                className={`space-y-3 text-sm ${isRTL ? "text-right" : "text-left"}`}
+                className="space-y-3 text-sm"
                 style={{ color: getColor("secondaryText") }}
               >
                 {[1, 2, 3].map((n) => (
-                  <li
-                    key={n}
-                    className={`flex items-start gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}
-                  >
+                  <li key={n} className="flex items-start gap-2.5">
                     <span
                       className="mt-2 size-1.5 rounded-full shrink-0"
                       style={{ backgroundColor: getColor("primaryText") }}

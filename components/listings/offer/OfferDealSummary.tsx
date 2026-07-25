@@ -26,7 +26,6 @@ export default function OfferDealSummary({
 }: OfferDealSummaryProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const escrow = Math.round(askingPrice * 0.01);
   const platform = Math.round(askingPrice * 0.04);
@@ -60,7 +59,7 @@ export default function OfferDealSummary({
       }}
     >
       <div
-        className={`text-[10px] font-bold uppercase tracking-wider mb-4 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-[10px] font-bold uppercase tracking-wider mb-4 text-start`}
         style={{ color: getColor("mutedText") }}
       >
         {t("offer.summary_title")}
@@ -82,7 +81,7 @@ export default function OfferDealSummary({
         {rows.map((row) => (
           <div
             key={row.label}
-            className={`flex items-center justify-between gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-between gap-4`}
           >
             <span
               style={{
@@ -104,7 +103,7 @@ export default function OfferDealSummary({
       </div>
 
       <div
-        className={`flex justify-between items-end border-t pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex justify-between items-end border-t pt-5`}
         style={{ borderColor: getColor("border") }}
       >
         <span

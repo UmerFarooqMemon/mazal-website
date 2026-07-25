@@ -32,7 +32,6 @@ export default function CertificateRequestCard({
   preview,
 }: CertificateRequestCardProps) {
   const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
   const { getColor } = useTheme();
 
   const handleDownload = () => {
@@ -72,10 +71,10 @@ export default function CertificateRequestCard({
       }}
     >
       {/* Desktop: 3 columns */}
-      <div className={`hidden sm:flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}>
+      <div className={`hidden sm:flex items-center gap-4`}>
         {/* Column 1: Badge + Title + Date */}
         <div
-          className={`flex flex-col gap-1.5 shrink-0 ${isRTL ? "items-end text-right" : "items-start text-left"}`}
+          className={`flex flex-col gap-1.5 shrink-0 items-start text-start`}
           style={{ minWidth: "120px", maxWidth: "180px" }}
         >
           <span
@@ -149,7 +148,7 @@ export default function CertificateRequestCard({
           crop="card"
         />
         <div
-          className={`flex items-center justify-between mt-2 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center justify-between mt-2`}
           style={{ position: "relative", zIndex: 10 }}
         >
           <p

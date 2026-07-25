@@ -89,13 +89,13 @@ export default function BoostStep({
         }}
       >
         <h2
-          className={`text-2xl font-serif font-bold ${isRTL ? "text-right" : "text-left"}`}
+          className="text-2xl font-serif font-bold"
           style={{ color: getColor("primaryText") }}
         >
           {t("listings.choose_tier")}
         </h2>
         <p
-          className={`text-sm mt-1 mb-8 ${isRTL ? "text-right" : "text-left"}`}
+          className="text-sm mt-1 mb-8"
           style={{ color: getColor("secondaryText") }}
         >
           {t("listings.tier_subtitle")}
@@ -110,11 +110,11 @@ export default function BoostStep({
                 key={tier.key}
                 type="button"
                 onClick={() => onChange({ boostTier: tier.key })}
-                className={`relative text-left rounded-2xl border p-5 min-h-[354px] transition-all ${
+                className={`relative text-start rounded-2xl border p-5 min-h-[354px] transition-all ${
                   isSelected
                     ? "shadow-[0_8px_24px_-12px_rgba(0,102,78,0.28)]"
                     : ""
-                } ${isRTL ? "text-right" : ""}`}
+                }`}
                 style={{
                   borderColor: isSelected
                     ? getColor("primary")
@@ -161,7 +161,7 @@ export default function BoostStep({
                   {tier.features.map((feature) => (
                     <li
                       key={feature}
-                      className={`flex items-start gap-2 text-[11px] border-t pt-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                      className="flex items-start gap-2 text-[11px] border-t pt-2"
                       style={{
                         color: getColor("secondaryText"),
                         borderColor: getColor("border"),
@@ -195,7 +195,7 @@ export default function BoostStep({
         </div>
 
         <div
-          className={`flex items-center justify-between border-t mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          className="flex items-center justify-between border-t mt-8 pt-5"
           style={{ borderColor: getColor("border") }}
         >
           <Button
@@ -227,7 +227,7 @@ export default function BoostStep({
           }}
         >
           <div
-            className={`text-[11px] font-bold tracking-[0.14em] uppercase mb-4 ${isRTL ? "text-right" : "text-left"}`}
+            className="text-[11px] font-bold tracking-[0.14em] uppercase mb-4"
             style={{ color: getColor("mutedText") }}
           >
             {t("listings.preview")}
@@ -264,7 +264,7 @@ export default function BoostStep({
             ].map(([label, value]) => (
               <div
                 key={label}
-                className={`flex items-center justify-between py-3.5 border-b last:border-0 text-xs ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center justify-between py-3.5 border-b last:border-0 text-xs"
                 style={{ borderColor: getColor("border") }}
               >
                 <span style={{ color: getColor("secondaryText") }}>{label}</span>
@@ -284,7 +284,7 @@ export default function BoostStep({
 
           <Link
             href={`/${locale}/marketplace`}
-            className={`inline-flex items-center gap-1 text-xs mt-4 font-medium underline underline-offset-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            className="inline-flex items-center gap-1 text-xs mt-4 font-medium underline underline-offset-2"
             style={{ color: getColor("primary") }}
           >
             {t("listings.see_featured")}

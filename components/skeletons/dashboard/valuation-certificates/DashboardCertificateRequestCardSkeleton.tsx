@@ -12,11 +12,11 @@ export default function DashboardCertificateRequestCardSkeleton() {
   return (
     <div className="rounded-2xl p-4 bg-white border border-gray-200 animate-pulse">
       <div
-        className={`flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center gap-4`}
       >
         {/* Badge + Title + Date */}
         <div
-          className={`flex flex-col gap-1.5 shrink-0 ${isRTL ? "items-end" : "items-start"}`}
+          className={`flex flex-col gap-1.5 shrink-0 items-start`}
           style={{ minWidth: "120px", maxWidth: "180px" }}
         >
           <div className="w-16 h-5 bg-gray-200 rounded-full" />

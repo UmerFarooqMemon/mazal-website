@@ -1,7 +1,6 @@
 "use client";
 
 import { forwardRef, ButtonHTMLAttributes } from "react";
-import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -30,8 +29,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => {
-    const { locale } = useLocale();
-    const isRTL = locale === "ar";
     const { getColor, getGradient } = useTheme();
 
     const borderColor = getColor("border");
@@ -67,9 +64,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         />
       </svg>
     );
-
-    const displayLeftIcon = isRTL ? rightIcon : leftIcon;
-    const displayRightIcon = isRTL ? leftIcon : rightIcon;
 
     return (
       <button
@@ -109,14 +103,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           ${size === "lg" ? "px-8 py-3.5 text-base" : ""}
           ${size === "icon" ? "h-10 w-10 p-0" : ""}
           ${fullWidth ? "w-full" : ""}
-          ${isRTL ? "flex-row-reverse" : ""}
           ${className}
         `}
         {...props}
       >
-        {loading ? <Spinner /> : displayLeftIcon}
+        {loading ? <Spinner /> : leftIcon}
         {children}
-        {!loading && displayRightIcon}
+        {!loading && rightIcon}
       </button>
     );
   },

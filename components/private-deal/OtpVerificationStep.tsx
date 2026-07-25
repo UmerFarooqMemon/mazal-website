@@ -69,20 +69,20 @@ export default function OtpVerificationStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("private-deal.otp_title")}
       </h2>
       <p
-        className={`text-sm mb-8 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-8 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.otp_subtitle")}
       </p>
 
       <div
-        className={`flex items-center justify-center gap-2 sm:gap-3 mb-10 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-center gap-2 sm:gap-3 mb-10`}
         onPaste={onPaste}
       >
         {otp.map((digit, index) => (
@@ -108,7 +108,7 @@ export default function OtpVerificationStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

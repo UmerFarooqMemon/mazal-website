@@ -47,7 +47,7 @@ export default function BackButton({
       <Link
         href={href}
         onClick={onClick}
-        className={`inline-flex items-center justify-center gap-2 font-semibold rounded-full border border-solid bg-white transition-all duration-200 active:scale-[0.98] ${sizeClass} ${isRTL ? "flex-row-reverse" : ""} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 font-semibold rounded-full border border-solid bg-white transition-all duration-200 active:scale-[0.98] ${sizeClass} ${className}`}
         style={{
           backgroundColor: "#FFFFFF",
           borderColor: outlineBorder,

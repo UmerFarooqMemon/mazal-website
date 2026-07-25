@@ -65,7 +65,6 @@ const FALLBACK_LISTINGS = [
 
 export default function TraderDashboardPage() {
   const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
   const [listings, setListings] = useState(FALLBACK_LISTINGS);
 
   useEffect(() => {
@@ -156,10 +155,10 @@ export default function TraderDashboardPage() {
       <div className="max-w-7xl mx-auto">
         {/* ========== Page Header ========== */}
         <div
-          className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-gray-200 pb-6 ${isRTL ? "flex-row-reverse sm:flex-row-reverse" : ""}`}
+          className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-gray-200 pb-6`}
         >
           <div
-            className={`flex flex-col ${isRTL ? "items-end text-right" : "items-start text-left"}`}
+            className={`flex flex-col items-start text-start`}
           >
             <div className="text-[10px] font-bold text-[#0A3B9E] uppercase tracking-wider mb-1">
               {t("dashboard.trader_workspace")}
@@ -168,7 +167,7 @@ export default function TraderDashboardPage() {
               Al Marwan Plates
             </h1>
             <div
-              className={`text-sm text-gray-500 mt-1 flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`text-sm text-gray-500 mt-1 flex items-center gap-2`}
             >
               <span>32 {t("dashboard.deals_closed")}</span>
               <span className="w-1 h-1 rounded-full bg-gray-300"></span>
@@ -180,7 +179,7 @@ export default function TraderDashboardPage() {
             </div>
           </div>
           <div
-            className={`flex gap-3 w-full sm:w-auto ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex gap-3 w-full sm:w-auto`}
           >
             <Button
               variant="outline"
@@ -263,9 +262,9 @@ export default function TraderDashboardPage() {
             {/* 2. Active Lists Table */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <div
-                className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 ${isRTL ? "flex-row-reverse sm:flex-row-reverse" : ""}`}
+                className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4`}
               >
-                <div className={`${isRTL ? "text-right" : "text-left"}`}>
+                <div className={`text-start`}>
                   <h3 className="text-xl font-serif font-bold text-[#041443]">
                     {t("dashboard.active_listings")}
                   </h3>
@@ -294,7 +293,7 @@ export default function TraderDashboardPage() {
                 {listings.map((item) => (
                   <div
                     key={item.id}
-                    className={`flex flex-wrap lg:flex-nowrap items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0 ${isRTL ? "flex-row-reverse" : ""}`}
+                    className={`flex flex-wrap lg:flex-nowrap items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0`}
                   >
                     {/* Small card for the board */}
                     <div className="bg-[#F3F4F8] border border-gray-200 rounded-lg py-2 px-4 min-w-30 flex items-center justify-center gap-2">
@@ -329,7 +328,7 @@ export default function TraderDashboardPage() {
 
                     {/* Price and Margin */}
                     <div
-                      className={`min-w-25 ${isRTL ? "text-left" : "text-right"}`}
+                      className={`min-w-25 text-end`}
                     >
                       <div className="text-[10px] text-gray-500 font-medium">
                         {t("dashboard.listed")}
@@ -343,7 +342,7 @@ export default function TraderDashboardPage() {
                     </div>
 
                     <div
-                      className={`min-w-20 ${isRTL ? "text-left" : "text-right"}`}
+                      className={`min-w-20 text-end`}
                     >
                       <div className="text-[10px] text-gray-500 font-medium">
                         {t("dashboard.margin")}
@@ -410,7 +409,7 @@ export default function TraderDashboardPage() {
             {/* 4. CRM card */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <div
-                className={`flex justify-between items-center mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+                className={`flex justify-between items-center mb-4`}
               >
                 <div className="flex items-center gap-2 font-medium text-[#041443]">
                   <svg
@@ -436,9 +435,9 @@ export default function TraderDashboardPage() {
                 {clients.map((client, idx) => (
                   <div
                     key={idx}
-                    className={`flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0 ${isRTL ? "flex-row-reverse" : ""}`}
+                    className={`flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0`}
                   >
-                    <div className={`${isRTL ? "text-right" : "text-left"}`}>
+                    <div className={`text-start`}>
                       <div className="text-sm font-medium text-[#041443]">
                         {client.name}
                       </div>
@@ -446,7 +445,7 @@ export default function TraderDashboardPage() {
                         {client.deals}
                       </div>
                     </div>
-                    <div className={`${isRTL ? "text-left" : "text-right"}`}>
+                    <div className={`text-end`}>
                       <div className="text-sm font-bold text-[#041443]">
                         <DirhamAmount amount={client.amount} weight="bold" />
                       </div>

@@ -40,7 +40,7 @@ export default function PortfolioStats() {
 
   return (
     <div
-      className={`grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 ${isRTL ? "direction-rtl" : ""}`}
+      className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4"
     >
       {stats.map((stat) => (
         <div

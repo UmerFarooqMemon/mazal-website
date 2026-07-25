@@ -67,13 +67,13 @@ export default function ReviewStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif tracking-tight mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif tracking-tight mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("kyc.review_title")}
       </h2>
       <p
-        className={`text-sm mb-8 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-8 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("kyc.review_subtitle")}
@@ -83,7 +83,7 @@ export default function ReviewStep({
         {rows.map((row, index) => (
           <div
             key={row.label}
-            className={`flex items-center justify-between gap-4 py-4 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-between gap-4 py-4`}
             style={{
               borderBottom:
                 index < rows.length - 1
@@ -108,7 +108,7 @@ export default function ReviewStep({
       </div>
 
       <div
-        className={`flex items-start gap-3 rounded-2xl px-4 py-4 mb-8 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+        className={`flex items-start gap-3 rounded-2xl px-4 py-4 mb-8 text-start`}
         style={{
           backgroundColor: `${getColor("primary")}0D`,
         }}
@@ -123,7 +123,7 @@ export default function ReviewStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

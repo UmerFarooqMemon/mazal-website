@@ -62,14 +62,13 @@ const listings = [
 
 export default function ActiveListings() {
   const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
       <div
-        className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 ${isRTL ? "flex-row-reverse sm:flex-row-reverse" : ""}`}
+        className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4`}
       >
-        <div className={`${isRTL ? "text-right" : "text-left"}`}>
+        <div className={`text-start`}>
           <h3 className="text-xl font-serif font-bold text-[#041443]">
             {t("dashboard.active_listings")}
           </h3>
@@ -102,7 +101,7 @@ export default function ActiveListings() {
         {listings.map((item) => (
           <div
             key={item.id}
-            className={`flex flex-wrap lg:flex-nowrap items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex flex-wrap lg:flex-nowrap items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0`}
           >
             {/* Small card for the board */}
             <div className="bg-[#F3F4F8] border border-gray-200 rounded-lg py-2 px-4 min-w-32.5 flex items-center justify-center gap-2">
@@ -128,7 +127,7 @@ export default function ActiveListings() {
             </div>
 
             <div
-              className={`grow min-w-37.5 ${isRTL ? "text-right" : "text-left"}`}
+              className={`grow min-w-37.5 text-start`}
             >
               <div className="font-medium text-sm text-[#041443]">
                 {item.title}
@@ -136,7 +135,7 @@ export default function ActiveListings() {
               <div className="text-xs text-gray-400">{item.status}</div>
             </div>
 
-            <div className={`min-w-25 ${isRTL ? "text-left" : "text-right"}`}>
+            <div className={`min-w-25 text-end`}>
               <div className="text-[10px] text-gray-500 font-medium">
                 {t("dashboard.listed")}
               </div>
@@ -148,7 +147,7 @@ export default function ActiveListings() {
               </div>
             </div>
 
-            <div className={`min-w-20 ${isRTL ? "text-left" : "text-right"}`}>
+            <div className={`min-w-20 text-end`}>
               <div className="text-[10px] text-gray-500 font-medium">
                 {t("dashboard.margin")}
               </div>

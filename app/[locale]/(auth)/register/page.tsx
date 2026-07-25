@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -19,14 +18,16 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
+import SiteLogo from "@/components/layout/SiteLogo";
 
 export default function RegisterPage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const router = useRouter();
   const isRTL = locale === "ar";
-  const { getColor, branding, loading: themeLoading } = useTheme();
+  const { getColor, loading: themeLoading } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -126,31 +127,22 @@ export default function RegisterPage() {
         <div className="rounded-3xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-2">
           {/* Form Side */}
           <div
-            className={`flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
+            className="flex items-center justify-center p-6 sm:p-8 lg:p-12"
             style={{ backgroundColor: getColor("surface") }}
             dir={isRTL ? "rtl" : "ltr"}
           >
             <div className="w-full max-w-md">
-              {/* Logo - Only from API */}
-              {branding.logoUrl && (
-                <div className="flex justify-center mb-8 pt-4">
-                  <Image
-                    src={branding.logoUrl}
-                    alt="Mazal Logo"
-                    width={140}
-                    height={50}
-                    className="h-auto"
-                    unoptimized
-                  />
-                </div>
-              )}
+              {/* Logo from site-settings API */}
+              <div className="flex justify-center mb-8 pt-4">
+                <SiteLogo variant="auth" />
+              </div>
 
               {/* Card Header */}
               <div
-                className={`flex items-center justify-between mb-8 gap-3 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                className="flex items-center justify-between mb-8 gap-3"
               >
                 <div
-                  className={`flex items-center gap-2 text-xs font-semibold ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                  className="flex items-center gap-2 text-xs font-semibold"
                   style={{ color: getColor("primary") }}
                 >
                   <ShieldCheck size={16} />
@@ -172,13 +164,13 @@ export default function RegisterPage() {
               </div>
 
               <h2
-                className={`text-3xl font-serif font-bold mb-2 ${isRTL ? "text-right" : "text-left"}`}
+                className="text-3xl font-serif font-bold mb-2 text-start"
                 style={{ color: getColor("primaryText") }}
               >
                 {t("common.create_account_title")}
               </h2>
               <p
-                className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+                className="text-sm mb-6 text-start"
                 style={{ color: getColor("secondaryText") }}
               >
                 {t("common.create_account_subtitle")}
@@ -284,7 +276,7 @@ export default function RegisterPage() {
 
                 {/* Terms Agreement */}
                 <div
-                  className={`flex items-start gap-2 pt-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="flex items-start gap-2 pt-1"
                 >
                   <input
                     name="agree_terms"
@@ -300,7 +292,7 @@ export default function RegisterPage() {
                     }
                   />
                   <label
-                    className={`text-[11px] leading-relaxed cursor-pointer ${isRTL ? "text-right" : "text-left"}`}
+                    className="text-[11px] leading-relaxed cursor-pointer text-start"
                     style={{ color: getColor("secondaryText") }}
                   >
                     <span>{t("common.agree_terms_part1")}</span>
@@ -325,7 +317,7 @@ export default function RegisterPage() {
                 {/* Terms error */}
                 {fieldErrors.agree_terms && (
                   <p
-                    className={`text-[11px] -mt-3 ${isRTL ? "text-right" : "text-left"}`}
+                    className="text-[11px] -mt-3 text-start"
                     style={{ color: getColor("error") }}
                   >
                     {fieldErrors.agree_terms}
@@ -337,7 +329,13 @@ export default function RegisterPage() {
                   variant="primary"
                   size="lg"
                   fullWidth
-                  rightIcon={<ArrowRight size={20} strokeWidth={1.5} />}
+                  rightIcon={
+                    isRTL ? (
+                      <ArrowLeft size={20} strokeWidth={1.5} />
+                    ) : (
+                      <ArrowRight size={20} strokeWidth={1.5} />
+                    )
+                  }
                   disabled={loading}
                 >
                   {loading
@@ -364,7 +362,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Auth Hero - right for AR, left for EN */}
-          <div className={`${isRTL ? "lg:order-1" : "lg:order-2"}`}>
+          <div className="">
             <AuthHero
               titleKey="auth.register_hero_title"
               subtitleKey="auth.register_hero_subtitle"

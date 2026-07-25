@@ -53,13 +53,13 @@ export default function RoleSelector({
       }}
     >
       <h2
-        className={`text-2xl font-serif tracking-tight mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif tracking-tight mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("private-deal.card_title")}
       </h2>
       <p
-        className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-6 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.card_subtitle")}
@@ -69,11 +69,11 @@ export default function RoleSelector({
         <button
           type="button"
           onClick={() => setRole("seller")}
-          className={`text-start p-5 rounded-2xl border transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-start p-5 rounded-2xl border transition-all duration-200 text-start`}
           style={roleCardStyle(role === "seller")}
         >
           <div
-            className={`flex items-center gap-3 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-3 mb-3`}
           >
             <Building2
               className="w-5 h-5"
@@ -102,11 +102,11 @@ export default function RoleSelector({
         <button
           type="button"
           onClick={() => setRole("buyer")}
-          className={`text-start p-5 rounded-2xl border transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-start p-5 rounded-2xl border transition-all duration-200 text-start`}
           style={roleCardStyle(role === "buyer")}
         >
           <div
-            className={`flex items-center gap-3 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-3 mb-3`}
           >
             <User
               className="w-5 h-5"
@@ -134,7 +134,7 @@ export default function RoleSelector({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

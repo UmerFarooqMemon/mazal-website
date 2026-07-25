@@ -171,13 +171,13 @@ export default function DocumentsStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif tracking-tight mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif tracking-tight mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("kyc.documents_title")}
       </h2>
       <p
-        className={`text-sm mb-8 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-8 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("kyc.documents_subtitle")}
@@ -215,7 +215,7 @@ export default function DocumentsStep({
               setCustodyAgreed(!custodyAgreed);
               setCustodyError(null);
             }}
-            className={`w-full flex items-start gap-3 rounded-2xl border px-4 py-4 text-start transition-colors ${isRTL ? "flex-row-reverse text-right" : ""}`}
+            className={`w-full flex items-start gap-3 rounded-2xl border px-4 py-4 text-start transition-colors text-start`}
             style={{
               borderColor:
                 custodyError || fieldErrors.custody_agreement_accepted
@@ -248,7 +248,7 @@ export default function DocumentsStep({
           </button>
           {(custodyError || fieldErrors.custody_agreement_accepted) && (
             <p
-              className={`text-[10px] mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+              className={`text-[10px] mt-1.5 text-start`}
               style={{ color: getColor("error") }}
             >
               {custodyError || fieldErrors.custody_agreement_accepted}
@@ -258,7 +258,7 @@ export default function DocumentsStep({
       )}
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

@@ -255,13 +255,13 @@ export default function PlatePriceStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("private-deal.plate_title")}
       </h2>
       <p
-        className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-6 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.plate_subtitle")}
@@ -270,13 +270,13 @@ export default function PlatePriceStep({
       <div className="space-y-4 mb-4">
         <div>
           <label
-            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("private-deal.emirate")}
           </label>
           <div
-            className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+            className={`w-full rounded-xl border py-3 px-4 text-sm text-start`}
             style={{
               backgroundColor: `${getColor("background")}80`,
               borderColor: getColor("border"),
@@ -314,7 +314,7 @@ export default function PlatePriceStep({
             variantPlateCodes.length > 0 ? (
               <div ref={codeDropdownRef}>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`block text-[11px] font-medium mb-1.5 text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.code")}
@@ -323,7 +323,7 @@ export default function PlatePriceStep({
                   <button
                     type="button"
                     onClick={() => setCodeDropdownOpen(!codeDropdownOpen)}
-                    className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all text-start`}
                     style={{
                       borderColor:
                         touched.code && errors.code
@@ -353,7 +353,7 @@ export default function PlatePriceStep({
                       >
                         <div className="relative">
                           <Search
-                            className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isRTL ? "right-3" : "left-3"}`}
+                            className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 start-3`}
                             style={{ color: getColor("mutedText") }}
                           />
                           <input
@@ -361,7 +361,7 @@ export default function PlatePriceStep({
                             placeholder={t("common.search")}
                             value={codeSearch}
                             onChange={(e) => setCodeSearch(e.target.value)}
-                            className={`w-full py-2 text-sm bg-transparent focus:outline-none ${isRTL ? "pr-8 pl-3 text-right" : "pl-8 pr-3 text-left"}`}
+                            className={`w-full py-2 text-sm bg-transparent focus:outline-none ps-8 pe-3 text-start`}
                             style={{ color: getColor("primaryText") }}
                             onClick={(e) => e.stopPropagation()}
                           />
@@ -375,7 +375,7 @@ export default function PlatePriceStep({
                               key={item.code}
                               type="button"
                               onClick={() => handleCodeSelect(item.code)}
-                              className={`w-full px-4 py-2.5 text-sm transition-colors ${isRTL ? "text-right" : "text-left"}`}
+                              className={`w-full px-4 py-2.5 text-sm transition-colors text-start`}
                               style={{
                                 color:
                                   item.code === data.code
@@ -404,7 +404,7 @@ export default function PlatePriceStep({
                 </div>
                 {touched.code && errors.code && (
                   <div
-                    className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                    className={`flex items-center gap-1.5 mt-1.5 text-[11px]`}
                     style={{ color: getColor("error") }}
                   >
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -430,13 +430,13 @@ export default function PlatePriceStep({
           ) : (
             <div>
               <label
-                className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                className={`block text-[11px] font-medium mb-1.5 text-start`}
                 style={{ color: getColor("secondaryText") }}
               >
                 {t("private-deal.code")}
               </label>
               <div
-                className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+                className={`w-full rounded-xl border py-3 px-4 text-sm text-start`}
                 style={{
                   backgroundColor: `${getColor("background")}80`,
                   borderColor: getColor("border"),
@@ -471,7 +471,7 @@ export default function PlatePriceStep({
 
       <div className="mb-4">
         <label
-          className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          className={`block text-[11px] font-medium mb-1.5 text-start`}
           style={{ color: getColor("secondaryText") }}
         >
           {t("private-deal.live_preview")}
@@ -504,7 +504,7 @@ export default function PlatePriceStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

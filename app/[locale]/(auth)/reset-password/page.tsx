@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -11,12 +10,12 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { ShieldCheck, X } from "lucide-react";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
+import SiteLogo from "@/components/layout/SiteLogo";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const { t, locale, loading: localeLoading } = useLocale();
-  const isRTL = locale === "ar";
-  const { getColor, branding, loading: themeLoading } = useTheme();
+  const { getColor, loading: themeLoading } = useTheme();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -109,30 +108,21 @@ export default function ResetPasswordPage() {
           {/* Close / Back Button */}
           <Link
             href={`/${locale}/login`}
-            className={`absolute top-4 ${isRTL ? "left-4" : "right-4"} h-9 w-9 flex items-center justify-center rounded-lg transition-colors`}
+            className={`absolute top-4 end-4 h-9 w-9 flex items-center justify-center rounded-lg transition-colors`}
             style={{ color: getColor("mutedText") }}
             aria-label={t("common.back") || "Back"}
           >
             <X className="w-5 h-5" strokeWidth={1.5} />
           </Link>
 
-          {/* Logo - Only from API */}
-          {branding.logoUrl && (
-            <div className="flex justify-center mb-8 pt-4">
-              <Image
-                src={branding.logoUrl}
-                alt="Mazal Logo"
-                width={140}
-                height={50}
-                className="h-auto"
-                unoptimized
-              />
-            </div>
-          )}
+          {/* Logo from site-settings API */}
+          <div className="flex justify-center mb-8 pt-4">
+            <SiteLogo variant="auth" />
+          </div>
 
           {/* Badge */}
           <div
-            className={`flex items-center gap-2 text-xs font-semibold mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-2 text-xs font-semibold mb-4`}
             style={{ color: getColor("primary") }}
           >
             <ShieldCheck size={16} />
@@ -141,13 +131,13 @@ export default function ResetPasswordPage() {
 
           {/* Title */}
           <h1
-            className={`text-2xl sm:text-3xl font-serif font-bold mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-2xl sm:text-3xl font-serif font-bold mb-2 text-start`}
             style={{ color: getColor("primaryText") }}
           >
             {t("common.create_new_password")}
           </h1>
           <p
-            className={`text-sm mb-8 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-sm mb-8 leading-relaxed text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("common.reset_password_desc")}
@@ -178,7 +168,7 @@ export default function ResetPasswordPage() {
 
             {/* Password Requirements */}
             <div
-              className={`text-xs space-y-1 ${isRTL ? "text-right" : "text-left"}`}
+              className={`text-xs space-y-1 text-start`}
               style={{ color: getColor("mutedText") }}
             >
               {[
@@ -190,7 +180,7 @@ export default function ResetPasswordPage() {
               ].map((key) => (
                 <p
                   key={key}
-                  className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex items-center gap-2`}
                 >
                   <span>✓</span>
                   <span>{t(`common.${key}`)}</span>

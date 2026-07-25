@@ -5,9 +5,8 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function AuctionBenefitsCard() {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const bullets = [
     { key: "benefit_1", icon: Shield },
@@ -25,7 +24,7 @@ export default function AuctionBenefitsCard() {
       }}
     >
       <div
-        className={`flex items-center gap-2 font-medium mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+        className="flex items-center gap-2 font-medium mb-4"
         style={{ color: getColor("primaryText") }}
       >
         <Sparkles
@@ -40,10 +39,7 @@ export default function AuctionBenefitsCard() {
         {bullets.map((bullet) => {
           const Icon = bullet.icon;
           return (
-            <li
-              key={bullet.key}
-              className={`flex items-start gap-2.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
-            >
+            <li key={bullet.key} className="flex items-start gap-2.5">
               <Icon
                 className="w-4 h-4 mt-0.5 shrink-0"
                 strokeWidth={2}

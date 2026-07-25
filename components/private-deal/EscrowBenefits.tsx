@@ -7,7 +7,6 @@ import { useTheme } from "@/context/ThemeContext";
 export default function EscrowBenefits() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const bullets = [
     { key: "bullet_1", icon: Shield },
@@ -25,7 +24,7 @@ export default function EscrowBenefits() {
       }}
     >
       <div
-        className={`flex items-center gap-2 font-medium mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center gap-2 font-medium mb-3`}
         style={{ color: getColor("primaryText") }}
       >
         <Sparkles
@@ -45,7 +44,7 @@ export default function EscrowBenefits() {
           return (
             <li
               key={bullet.key}
-              className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+              className={`flex items-start gap-2 text-start`}
             >
               <Icon
                 className="w-4 h-4 mt-0.5 shrink-0"

@@ -58,12 +58,13 @@ export default function RevealPage() {
 
       if (isAuthenticated) {
         const revealResponse = await getRevealStatus(params.id, locale);
-        setFeeAmount(revealResponse.data.reveal_fee_amount);
+        setFeeAmount(Number(revealResponse.data.reveal_fee_amount));
         setCodeHidden(revealResponse.data.code_hidden);
         setReveal(revealResponse.data.reveal);
 
         if (
           revealResponse.data.reveal?.status === "revealed" ||
+          revealResponse.data.code_screen?.unlocked ||
           !revealResponse.data.code_hidden
         ) {
           setStep("done");
@@ -97,7 +98,7 @@ export default function RevealPage() {
       if (!reveal) {
         const response = await initiateReveal(params.id, locale);
         setReveal(response.data.reveal);
-        setFeeAmount(response.data.reveal_fee_amount);
+        setFeeAmount(Number(response.data.reveal_fee_amount));
       }
       setStep("card");
     } catch (err) {
@@ -115,7 +116,27 @@ export default function RevealPage() {
       const reference = `card-${cardForm.cardNumber.replace(/\D/g, "").slice(-4)}-${Date.now()}`;
       const response = await confirmRevealPayment(params.id, locale, reference);
       setReveal(response.data.reveal);
-      setListing(response.data.listing);
+      if (response.data.listing) {
+        setListing(response.data.listing);
+      } else if (response.data.code_screen?.unlocked) {
+        setListing((previous) =>
+          previous
+            ? {
+                ...previous,
+                plate_code:
+                  response.data.code_screen.plate_code ?? previous.plate_code,
+                plate_digits:
+                  response.data.code_screen.plate_digits ??
+                  previous.plate_digits,
+                display_plate:
+                  response.data.code_screen.display_plate ||
+                  previous.display_plate,
+                code_hidden: false,
+                hide_code: false,
+              }
+            : previous,
+        );
+      }
       setCodeHidden(false);
       setStep("done");
       toast.success(t("listings.reveal_confirmed"));
@@ -133,7 +154,10 @@ export default function RevealPage() {
     try {
       const response = await proceedAfterReveal(params.id, locale);
       setReveal(response.data.reveal);
-      toast.success(response.data.message);
+      toast.success(
+        response.data.message ||
+          "Reveal fee will be credited toward your final purchase price.",
+      );
       router.push(`/${locale}/listings/${params.id}/checkout?role=buyer`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to proceed.");
@@ -178,7 +202,7 @@ export default function RevealPage() {
     >
       <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10">
         <div
-          className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider mb-10 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider mb-10`}
           style={{ color: getColor("mutedText") }}
         >
           <Link
@@ -194,10 +218,10 @@ export default function RevealPage() {
         </div>
 
         <div
-          className={`grid grid-cols-1 lg:grid-cols-5 gap-10 ${isRTL ? "rtl-grid" : ""}`}
+          className="grid grid-cols-1 lg:grid-cols-5 gap-10"
         >
           <div
-            className={`lg:col-span-3 space-y-6 ${isRTL ? "lg:col-start-3 lg:row-start-1" : ""}`}
+            className="lg:col-span-3 space-y-6"
           >
             <div
               className="rounded-2xl border px-6 py-8 md:px-10 md:py-9 flex items-center justify-center shadow-sm min-h-[182px]"
@@ -260,7 +284,7 @@ export default function RevealPage() {
                   borderColor: getColor("border"),
                 }}
               >
-                <div className={isRTL ? "text-right" : "text-left"}>
+                <div className="text-start">
                   <p
                     className="text-xs uppercase tracking-wider mb-1"
                     style={{ color: getColor("mutedText") }}
@@ -314,7 +338,7 @@ export default function RevealPage() {
           </div>
 
           <div
-            className={`lg:col-span-2 ${isRTL ? "lg:col-start-1 lg:row-start-1" : ""}`}
+            className="lg:col-span-2"
           >
             <ListingSidebar
               listing={{

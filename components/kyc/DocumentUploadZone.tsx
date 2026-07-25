@@ -33,9 +33,8 @@ export default function DocumentUploadZone({
   error,
   onChange,
 }: DocumentUploadZoneProps) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
   const inputRef = useRef<HTMLInputElement>(null);
   const hasFile = Boolean(file || uploadedLabel);
 
@@ -71,7 +70,7 @@ export default function DocumentUploadZone({
           inputRef.current?.click();
         }
       }}
-      className={`relative flex flex-col items-center justify-center gap-2 min-h-[140px] rounded-2xl border border-dashed px-4 py-6 cursor-pointer transition-all duration-200 hover:opacity-90 ${isRTL ? "text-right" : "text-center"}`}
+      className="relative flex flex-col items-center justify-center gap-2 min-h-[140px] rounded-2xl border border-dashed px-4 py-6 cursor-pointer transition-all duration-200 hover:opacity-90 text-center"
       style={{
         borderColor: error
           ? getColor("error")

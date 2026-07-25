@@ -303,7 +303,7 @@ export default function PortfolioPlateForm({
       }}
     >
       {/* Header */}
-      <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
+      <div className={`mb-6 text-start`}>
         <div
           className="text-xs font-bold uppercase tracking-wider mb-2"
           style={{ color: getColor("primary") }}
@@ -322,13 +322,13 @@ export default function PortfolioPlateForm({
         {/* Emirate – fixed Dubai */}
         <div>
           <label
-            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("listings.emirate")}
           </label>
           <div
-            className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+            className={`w-full rounded-xl border py-3 px-4 text-sm text-start`}
             style={{
               backgroundColor: `${getColor("background")}80`,
               borderColor: getColor("border"),
@@ -370,7 +370,7 @@ export default function PortfolioPlateForm({
               /* Dropdown with search for plate codes */
               <div ref={codeDropdownRef}>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`block text-[11px] font-medium mb-1.5 text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("listings.code")}
@@ -379,7 +379,7 @@ export default function PortfolioPlateForm({
                   <button
                     type="button"
                     onClick={() => setCodeDropdownOpen(!codeDropdownOpen)}
-                    className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all text-start`}
                     style={{
                       borderColor:
                         touched.plate_code && errors.plate_code
@@ -410,7 +410,7 @@ export default function PortfolioPlateForm({
                       >
                         <div className="relative">
                           <Search
-                            className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isRTL ? "right-3" : "left-3"}`}
+                            className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 start-3`}
                             style={{ color: getColor("mutedText") }}
                           />
                           <input
@@ -418,7 +418,7 @@ export default function PortfolioPlateForm({
                             placeholder={t("common.search")}
                             value={codeSearch}
                             onChange={(e) => setCodeSearch(e.target.value)}
-                            className={`w-full py-2 text-sm bg-transparent focus:outline-none ${isRTL ? "pr-8 pl-3 text-right" : "pl-8 pr-3 text-left"}`}
+                            className={`w-full py-2 text-sm bg-transparent focus:outline-none ps-8 pe-3 text-start`}
                             style={{ color: getColor("primaryText") }}
                             onClick={(e) => e.stopPropagation()}
                           />
@@ -433,7 +433,7 @@ export default function PortfolioPlateForm({
                               key={item.code}
                               type="button"
                               onClick={() => handleCodeSelect(item.code)}
-                              className={`w-full px-4 py-2.5 text-sm transition-colors hover:bg-opacity-10 ${isRTL ? "text-right" : "text-left"}`}
+                              className={`w-full px-4 py-2.5 text-sm transition-colors hover:bg-opacity-10 text-start`}
                               style={{
                                 color:
                                   item.code === form.plate_code
@@ -473,7 +473,7 @@ export default function PortfolioPlateForm({
                 </div>
                 {touched.plate_code && errors.plate_code && (
                   <div
-                    className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                    className={`flex items-center gap-1.5 mt-1.5 text-[11px]`}
                     style={{ color: getColor("error") }}
                   >
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -499,13 +499,13 @@ export default function PortfolioPlateForm({
           ) : (
             <div>
               <label
-                className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                className={`block text-[11px] font-medium mb-1.5 text-start`}
                 style={{ color: getColor("secondaryText") }}
               >
                 {t("listings.code")}
               </label>
               <div
-                className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+                className={`w-full rounded-xl border py-3 px-4 text-sm text-start`}
                 style={{
                   backgroundColor: `${getColor("background")}80`,
                   borderColor: getColor("border"),
@@ -536,7 +536,7 @@ export default function PortfolioPlateForm({
         {/* Your Estimate */}
         <div>
           <label
-            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("portfolio.add_plate_your_estimate")}
@@ -544,7 +544,7 @@ export default function PortfolioPlateForm({
           <div className="relative">
             <input
               type="text"
-              className={`w-full rounded-xl border bg-white py-3 px-4 text-sm focus:outline-none focus:ring-2 transition-all ${isRTL ? "text-right" : "text-left"}`}
+              className={`w-full rounded-xl border bg-white py-3 px-4 text-sm focus:outline-none focus:ring-2 transition-all text-start`}
               style={{
                 borderColor:
                   touched.price && errors.price
@@ -559,7 +559,7 @@ export default function PortfolioPlateForm({
           </div>
           {touched.price && errors.price && (
             <div
-              className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              className={`flex items-center gap-1.5 mt-1.5 text-[11px]`}
               style={{ color: getColor("error") }}
             >
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -571,13 +571,13 @@ export default function PortfolioPlateForm({
         {/* Justification */}
         <div>
           <label
-            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("portfolio.add_plate_justification")}
           </label>
           <textarea
-            className={`w-full rounded-xl border bg-white py-3 px-4 text-sm resize-none focus:outline-none focus:ring-2 transition-all ${isRTL ? "text-right" : "text-left"}`}
+            className={`w-full rounded-xl border bg-white py-3 px-4 text-sm resize-none focus:outline-none focus:ring-2 transition-all text-start`}
             style={{
               borderColor:
                 touched.description && errors.description
@@ -593,7 +593,7 @@ export default function PortfolioPlateForm({
           />
           {touched.description && errors.description && (
             <div
-              className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              className={`flex items-center gap-1.5 mt-1.5 text-[11px]`}
               style={{ color: getColor("error") }}
             >
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -601,7 +601,7 @@ export default function PortfolioPlateForm({
             </div>
           )}
           <p
-            className={`text-[10px] mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-[10px] mt-1.5 text-start`}
             style={{ color: getColor("mutedText") }}
           >
             {form.description.length}/500
@@ -611,7 +611,7 @@ export default function PortfolioPlateForm({
         {/* Upload Document */}
         <div>
           <label
-            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("portfolio.add_plate_upload_document")}
@@ -626,7 +626,7 @@ export default function PortfolioPlateForm({
           />
           {selectedFile ? (
             <div
-              className={`flex items-center justify-between border rounded-xl px-4 py-3 text-sm ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex items-center justify-between border rounded-xl px-4 py-3 text-sm`}
               style={{
                 borderColor: getColor("success"),
                 backgroundColor: `${getColor("success")}15`,
@@ -649,7 +649,7 @@ export default function PortfolioPlateForm({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className={`w-full border rounded-xl px-4 py-3 text-sm flex items-center justify-between cursor-pointer transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`w-full border rounded-xl px-4 py-3 text-sm flex items-center justify-between cursor-pointer transition-colors`}
               style={{
                 borderColor: errors.mulkiya
                   ? getColor("error")
@@ -664,7 +664,7 @@ export default function PortfolioPlateForm({
           )}
           {errors.mulkiya && (
             <div
-              className={`flex items-center gap-1.5 mt-1.5 text-[11px] ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+              className={`flex items-center gap-1.5 mt-1.5 text-[11px]`}
               style={{ color: getColor("error") }}
             >
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -676,7 +676,7 @@ export default function PortfolioPlateForm({
         {/* Live Preview */}
         <div>
           <label
-            className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-1.5 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("portfolio.add_plate_live_preview")}
@@ -705,13 +705,13 @@ export default function PortfolioPlateForm({
             ? t("common.loading")
             : t("portfolio.add_plate_submit")}
           <ArrowRight
-            className={`w-5 h-5 ${isRTL ? "mr-2 rotate-180" : "ml-2"}`}
+            className={`w-5 h-5 ms-2 ${isRTL ? "rotate-180" : ""}`}
           />
         </Button>
 
         {/* Delivery Notice */}
         <p
-          className={`text-xs text-center mt-3 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-xs text-center mt-3 text-start`}
           style={{ color: getColor("mutedText") }}
         >
           {t("portfolio.add_plate_footer_notice")}

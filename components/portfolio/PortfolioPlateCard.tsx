@@ -18,7 +18,6 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
   const router = useRouter();
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -65,14 +64,14 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
       }}
     >
       <div
-        className={`flex items-center justify-between mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between mb-4`}
       >
         <div
-          className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-2`}
         >
           {plate.isListed && (
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px]`}
               style={{
                 borderColor: getColor("border"),
                 color: getColor("secondaryText"),
@@ -84,7 +83,7 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
           )}
           {plate.isAuction && (
             <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide`}
               style={{
                 backgroundColor: "#fffaf9",
                 borderColor: "#d40c1a",
@@ -124,9 +123,7 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
           {menuOpen && (
             <div
               role="menu"
-              className={`absolute top-full mt-1.5 z-50 min-w-[168px] rounded-xl border py-1.5 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.2)] ${
-                isRTL ? "left-0" : "right-0"
-              }`}
+              className="absolute top-full mt-1.5 z-50 min-w-[168px] rounded-xl border py-1.5 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.2)] end-0"
               style={{
                 backgroundColor: getColor("surface"),
                 borderColor: getColor("border"),
@@ -143,9 +140,7 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
                     setMenuOpen(false);
                     router.push(item.href);
                   }}
-                  className={`block w-full px-3.5 py-2.5 text-sm transition-colors hover:bg-black/[0.03] ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
+                  className={`block w-full px-3.5 py-2.5 text-sm transition-colors hover:bg-black/[0.03] ${ "text-start" }`}
                   style={{ color: getColor("primaryText") }}
                 >
                   {item.label}
@@ -167,9 +162,9 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
       </div>
 
       <div
-        className={`mx-auto flex max-w-[323px] justify-between text-xs font-medium ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`mx-auto flex max-w-[323px] justify-between text-xs font-medium`}
       >
-        <div className={`space-y-2.5 ${isRTL ? "text-right" : "text-left"}`}>
+        <div className={`space-y-2.5 text-start`}>
           <p style={{ color: getColor("secondaryText") }}>
             {t("portfolio.est_value")}
           </p>
@@ -177,7 +172,7 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
             {t("portfolio.return")}
           </p>
         </div>
-        <div className={`space-y-2.5 ${isRTL ? "text-left" : "text-right"}`}>
+        <div className={`space-y-2.5 text-end`}>
           <p style={{ color: getColor("secondaryText") }}>
             <DirhamAmount amount={plate.estValue} />
           </p>

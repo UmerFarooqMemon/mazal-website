@@ -62,7 +62,7 @@ export default function PaymentDetailsStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {method === "card"
@@ -74,7 +74,7 @@ export default function PaymentDetailsStep({
               : t("private-deal.cash_collection")}
       </h2>
       <p
-        className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-6 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.secure_online")} · <DirhamAmount amount={amount} />
@@ -126,7 +126,7 @@ export default function PaymentDetailsStep({
           {BANK_DETAILS.map((row) => (
             <div
               key={row.label}
-              className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+              className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 text-start`}
               style={{
                 borderColor: getColor("border"),
                 backgroundColor: getColor("primaryLight"),
@@ -171,7 +171,7 @@ export default function PaymentDetailsStep({
       )}
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

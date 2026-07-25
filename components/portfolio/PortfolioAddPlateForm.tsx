@@ -98,7 +98,7 @@ export default function PortfolioAddPlateForm({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
       <div
-        className={`hidden lg:flex flex-col justify-center ${isRTL ? "lg:order-2 items-end text-right" : "lg:order-1 items-start text-left"}`}
+        className="hidden lg:flex flex-col justify-center items-start text-start"
       >
         <span
           className="text-xs font-bold uppercase tracking-wider mb-3"
@@ -123,7 +123,7 @@ export default function PortfolioAddPlateForm({
           style={{ color: getColor("secondaryText") }}
         >
           <li
-            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className="flex items-center gap-3"
           >
             <FolderPlus
               className="w-5 h-5 shrink-0"
@@ -132,7 +132,7 @@ export default function PortfolioAddPlateForm({
             <span>{t("portfolio.add_plate_feature_1")}</span>
           </li>
           <li
-            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className="flex items-center gap-3"
           >
             <LineChart
               className="w-5 h-5 shrink-0"
@@ -141,7 +141,7 @@ export default function PortfolioAddPlateForm({
             <span>{t("portfolio.add_plate_feature_2")}</span>
           </li>
           <li
-            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className="flex items-center gap-3"
           >
             <Layers
               className="w-5 h-5 shrink-0"
@@ -150,7 +150,7 @@ export default function PortfolioAddPlateForm({
             <span>{t("portfolio.add_plate_feature_3")}</span>
           </li>
           <li
-            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className="flex items-center gap-3"
           >
             <ShieldCheck
               className="w-5 h-5 shrink-0"
@@ -161,7 +161,7 @@ export default function PortfolioAddPlateForm({
         </ul>
       </div>
 
-      <div className={`${isRTL ? "lg:order-1" : "lg:order-2"} lg:col-span-1`}>
+      <div className="lg:col-span-1">
         <PortfolioPlateForm
           emirates={options?.emirates || []}
           types={options?.plate_types || []}

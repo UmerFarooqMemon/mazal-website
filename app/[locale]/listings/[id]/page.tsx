@@ -80,7 +80,7 @@ export default function ListingDetailPage() {
     >
       <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10">
         <div
-          className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider mb-10 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider mb-10`}
           style={{ color: getColor("mutedText") }}
         >
           <Link
@@ -97,14 +97,14 @@ export default function ListingDetailPage() {
         </div>
 
         <div
-          className={`grid grid-cols-1 lg:grid-cols-5 gap-10 ${isRTL ? "rtl-grid" : ""}`}
+          className="grid grid-cols-1 lg:grid-cols-5 gap-10"
         >
           <div
-            className={`lg:col-span-3 space-y-8 ${isRTL ? "lg:col-start-3 lg:row-start-1" : "lg:col-start-1 lg:row-start-1"}`}
+            className="lg:col-span-3 space-y-8"
           >
             <PlateHero listing={listing} />
 
-            <div className={`pt-6 ${isRTL ? "text-right" : "text-left"}`}>
+            <div className="pt-6">
               <h3
                 className="text-2xl font-serif font-bold mb-3"
                 style={{ color: getColor("primaryText") }}
@@ -128,7 +128,7 @@ export default function ListingDetailPage() {
           </div>
 
           <div
-            className={`lg:col-span-2 ${isRTL ? "lg:col-start-1 lg:row-start-1" : "lg:col-start-4 lg:row-start-1"}`}
+            className="lg:col-span-2"
           >
             <ListingSidebar listing={listing} />
           </div>

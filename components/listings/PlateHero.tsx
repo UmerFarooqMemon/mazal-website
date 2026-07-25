@@ -12,7 +12,6 @@ interface PlateHeroProps {
 export default function PlateHero({ listing }: PlateHeroProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const cards = [
     {
@@ -92,14 +91,14 @@ export default function PlateHero({ listing }: PlateHeroProps) {
           return (
             <div
               key={card.title}
-              className={`rounded-xl border p-[21px] shadow-sm ${isRTL ? "text-right" : "text-left"}`}
+              className={`rounded-xl border p-[21px] shadow-sm text-start`}
               style={{
                 backgroundColor: getColor("surface"),
                 borderColor: getColor("border"),
               }}
             >
               <div
-                className={`flex items-center gap-2 mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                className={`flex items-center gap-2 mb-2`}
                 style={{ color: getColor("primary") }}
               >
                 <Icon className="w-5 h-5" strokeWidth={2} />

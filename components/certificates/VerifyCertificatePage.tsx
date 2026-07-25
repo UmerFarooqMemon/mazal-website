@@ -340,12 +340,10 @@ export default function VerifyCertificatePage() {
     >
       {/* Mobile: Form */}
       <section
-        className={`md:hidden flex-1 flex flex-col px-6 pt-6 pb-8 ${
-          mobileView === "form" ? "" : "hidden"
-        }`}
+        className={`md:hidden flex-1 flex flex-col px-6 pt-6 pb-8 ${ mobileView === "form" ? "" : "hidden" }`}
         style={{ backgroundColor: "#fff" }}
       >
-        <div className={isRTL ? "text-right" : "text-left"}>
+        <div className="text-start">
           <p
             className="text-xs uppercase tracking-[0.06em] mb-3"
             style={{ color: getColor("mutedText") || "#545E6F" }}
@@ -362,7 +360,7 @@ export default function VerifyCertificatePage() {
         </div>
 
         <label
-          className={`block text-xs mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          className={`block text-xs mb-1.5 text-start`}
           style={{ color: getColor("mutedText") || "#545E6F" }}
           htmlFor="verify-code-mobile"
         >
@@ -409,13 +407,11 @@ export default function VerifyCertificatePage() {
 
       {/* Mobile: Preview */}
       <section
-        className={`md:hidden flex-1 flex flex-col px-6 pt-6 pb-8 ${
-          mobileView === "preview" ? "" : "hidden"
-        }`}
+        className={`md:hidden flex-1 flex flex-col px-6 pt-6 pb-8 ${ mobileView === "preview" ? "" : "hidden" }`}
         style={{ backgroundColor: "#fff" }}
       >
         <h1
-          className={`font-serif text-[30px] leading-8 tracking-tight mb-6 ${isRTL ? "text-right" : "text-left"}`}
+          className={`font-serif text-[30px] leading-8 tracking-tight mb-6 text-start`}
           style={{ color: getColor("primaryText") || "#081123" }}
         >
           {t("certificates.live_preview_title") || "Live Preview"}
@@ -472,7 +468,7 @@ export default function VerifyCertificatePage() {
             </p>
 
             <form
-              className={`mx-auto flex max-w-[680px] items-center gap-3 rounded-full border bg-white pl-6 pr-2 py-2 ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`mx-auto flex max-w-[680px] items-center gap-3 rounded-full border bg-white pl-6 pr-2 py-2`}
               style={{ borderColor: getColor("border") || "#D9DEE6" }}
               onSubmit={(e) => {
                 e.preventDefault();

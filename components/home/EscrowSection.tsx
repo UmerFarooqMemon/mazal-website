@@ -35,17 +35,11 @@ export default function EscrowSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
           <div
-            className={`flex flex-col justify-center ${
-              isRTL
-                ? "lg:order-2 text-right items-end"
-                : "lg:order-1 text-left items-start"
-            }`}
+            className="flex flex-col justify-center items-start text-start"
           >
             {/* Badge */}
             <div
-              className={`inline-flex items-center gap-2 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider mb-6 ${
-                isRTL ? "flex-row-reverse" : ""
-              }`}
+              className="inline-flex items-center gap-2 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider mb-6"
             >
               <svg
                 width="16"
@@ -82,9 +76,7 @@ export default function EscrowSection() {
                 <Button
                   variant="gold"
                   size="lg"
-                  className={`inline-flex items-center gap-3 px-8 py-4 shadow-lg shadow-[#D4AF37]/20 ${
-                    isRTL ? "flex-row-reverse" : ""
-                  }`}
+                  className="inline-flex items-center gap-3 px-8 py-4 shadow-lg shadow-[#D4AF37]/20"
                 >
                   {t("home.escrow_button")}
                   <svg
@@ -96,7 +88,7 @@ export default function EscrowSection() {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className={`${isRTL ? "rotate-180" : ""}`}
+                    className={isRTL ? "rotate-180" : undefined}
                   >
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -106,9 +98,7 @@ export default function EscrowSection() {
           </div>
 
           <div
-            className={`flex flex-col gap-4 justify-center ${
-              isRTL ? "lg:order-1" : "lg:order-2"
-            }`}
+            className="flex flex-col gap-4 justify-center"
           >
             {steps.map((step, index) => (
               <div
@@ -118,7 +108,7 @@ export default function EscrowSection() {
                 <div className="text-3xl font-serif font-bold text-[#D4AF37] min-w-15 shrink-0">
                   {step.number}
                 </div>
-                <div className="flex flex-col gap-1 text-left">
+                <div className="flex flex-col gap-1 text-start">
                   <h4 className="text-white font-semibold text-base">
                     {t(step.titleKey)}
                   </h4>

@@ -100,7 +100,7 @@ export default function CertificateRequestPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start mb-16">
           {/* Features Section - Hidden on Mobile, Shown on Desktop */}
           <div
-            className={`hidden lg:flex flex-col justify-center ${isRTL ? "lg:order-2 items-end text-right" : "lg:order-1 items-start text-left"}`}
+            className="hidden lg:flex flex-col justify-center items-start text-start"
           >
             <span
               className="text-xs font-bold uppercase tracking-wider mb-3"
@@ -125,7 +125,7 @@ export default function CertificateRequestPage() {
               style={{ color: getColor("secondaryText") }}
             >
               <li
-                className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center gap-3"
               >
                 <BadgeCheck
                   className="w-5 h-5 shrink-0"
@@ -134,7 +134,7 @@ export default function CertificateRequestPage() {
                 <span>{t("certificates.feature_1")}</span>
               </li>
               <li
-                className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center gap-3"
               >
                 <ShieldCheck
                   className="w-5 h-5 shrink-0"
@@ -143,7 +143,7 @@ export default function CertificateRequestPage() {
                 <span>{t("certificates.feature_2")}</span>
               </li>
               <li
-                className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center gap-3"
               >
                 <Sparkles
                   className="w-5 h-5 shrink-0"
@@ -152,7 +152,7 @@ export default function CertificateRequestPage() {
                 <span>{t("certificates.feature_3")}</span>
               </li>
               <li
-                className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center gap-3"
               >
                 <Stamp
                   className="w-5 h-5 shrink-0"
@@ -165,7 +165,7 @@ export default function CertificateRequestPage() {
 
           {/* Form - Full width on mobile, half on desktop */}
           <div
-            className={`${isRTL ? "lg:order-1" : "lg:order-2"} lg:col-span-1`}
+            className="lg:col-span-1"
           >
             <CertificateForm
               emirates={options?.emirates || []}

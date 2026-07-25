@@ -111,22 +111,12 @@ export default function VerifiedCertificateCard({
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className={`relative w-full ${
-        data.showPreviewBadge
-          ? isRTL
-            ? "pt-3 pl-4 md:pt-3.5 md:pl-5"
-            : "pt-3 pr-4 md:pt-3.5 md:pr-5"
-          : ""
-      } ${className}`}
+      className={`relative w-full ${data.showPreviewBadge ? "pt-3 pe-4 md:pt-3.5 md:pe-5" : ""} ${className}`}
     >
       <div className="relative">
         {data.showPreviewBadge && (
           <div
-            className={`absolute z-20 pointer-events-none ${
-              isRTL
-                ? "-top-[8px] -left-[12px] md:-top-[10px] md:-left-[16px] -rotate-[10deg]"
-                : "-top-[8px] -right-[12px] md:-top-[10px] md:-right-[16px] rotate-[10deg]"
-            }`}
+            className="absolute z-20 pointer-events-none -top-[8px] -end-[12px] md:-top-[10px] md:-end-[16px] rtl:-rotate-[10deg] ltr:rotate-[10deg]"
           >
             <div
               className="px-2.5 py-0.5 md:px-3 md:py-1 rounded-[6px] text-[9px] md:text-[11px] font-semibold uppercase tracking-[0.08em] text-white"
@@ -149,11 +139,11 @@ export default function VerifiedCertificateCard({
         >
       {/* Header */}
       <div
-        className={`flex items-center justify-between gap-3 px-4 py-3 md:px-10 md:py-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between gap-3 px-4 py-3 md:px-10 md:py-6`}
         style={{ background: getGradient("primary") }}
       >
         <div
-          className={`flex items-center gap-2 md:gap-3 min-w-0 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-2 md:gap-3 min-w-0`}
         >
           <div
             className="shrink-0 size-[18px] md:size-11 rounded-[3px] md:rounded-md flex items-center justify-center font-serif font-bold text-[10px] md:text-2xl"
@@ -164,7 +154,7 @@ export default function VerifiedCertificateCard({
           >
             M
           </div>
-          <div className={`min-w-0 ${isRTL ? "text-right" : "text-left"}`}>
+          <div className={`min-w-0 text-start`}>
             <div className="font-serif text-[10px] md:text-2xl text-[#FBFAF6] leading-tight tracking-tight truncate">
               {t("certificates.platform_name") || "Mazal Platform"}
             </div>
@@ -174,7 +164,7 @@ export default function VerifiedCertificateCard({
           </div>
         </div>
         <div
-          className={`shrink-0 ${isRTL ? "text-left" : "text-right"}`}
+          className={`shrink-0 text-end`}
         >
           <div className="text-[5px] md:text-[11px] uppercase tracking-[0.18em] text-[#FBFAF6]/80">
             {t("certificates.certificate")}
@@ -293,7 +283,7 @@ export default function VerifiedCertificateCard({
 
         {/* Methodology + Sales */}
         <div
-          className={`grid grid-cols-2 gap-3 md:gap-8 ${isRTL ? "text-right" : "text-left"}`}
+          className={`grid grid-cols-2 gap-3 md:gap-8 text-start`}
         >
           <div>
             <div
@@ -322,7 +312,7 @@ export default function VerifiedCertificateCard({
               {sales.map((sale) => (
                 <div
                   key={sale.label}
-                  className={`flex justify-between gap-2 text-[6px] md:text-xs ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex justify-between gap-2 text-[6px] md:text-xs`}
                   style={{ color: "rgba(8,17,35,0.8)" }}
                 >
                   <span className="min-w-0 truncate">{sale.label}</span>
@@ -337,7 +327,7 @@ export default function VerifiedCertificateCard({
 
         {/* Signatures */}
         <div
-          className={`grid grid-cols-2 gap-4 md:gap-10 ${isRTL ? "text-right" : "text-left"}`}
+          className={`grid grid-cols-2 gap-4 md:gap-10 text-start`}
         >
           <div>
             <div
@@ -388,14 +378,14 @@ export default function VerifiedCertificateCard({
 
       {/* Footer */}
       <div
-        className={`flex items-center gap-3 px-4 py-3 md:px-10 md:py-4 border-t ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center gap-3 px-4 py-3 md:px-10 md:py-4 border-t`}
         style={{
           backgroundColor: "rgba(234,239,247,0.4)",
           borderColor: getColor("border") || "#D9DEE6",
         }}
       >
         <div
-          className={`flex items-center gap-2 md:gap-3 min-w-0 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+          className={`flex items-center gap-2 md:gap-3 min-w-0 text-start`}
         >
           <img
             src="/mazal-certified.png"

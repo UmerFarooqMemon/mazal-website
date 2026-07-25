@@ -16,7 +16,6 @@ interface AuctionDetailCardProps {
 export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   return (
     <div
@@ -26,9 +25,7 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
           "linear-gradient(160deg, #F7F1E4 0%, #F3EADA 45%, #EFE4D2 100%)",
       }}
     >
-      <div
-        className={`flex items-center justify-between gap-3 mb-6 ${isRTL ? "flex-row-reverse" : ""}`}
-      >
+      <div className="flex items-center justify-between gap-3 mb-6">
         <span className="bg-[#FEE2E2] text-[#DC2626] text-[11px] font-bold px-3 py-1.5 rounded-full inline-flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse" />
           {t("auctions.live_badge")}
@@ -51,13 +48,9 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
         />
       </div>
 
-      <div
-        className={`bg-white rounded-[18px] p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6 ${isRTL ? "lg:flex-row-reverse" : ""}`}
-      >
-        <div
-          className={`flex-1 flex flex-col sm:flex-row gap-4 sm:gap-8 ${isRTL ? "sm:flex-row-reverse" : ""}`}
-        >
-          <div className={`flex items-start gap-2.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}>
+      <div className="bg-white rounded-[18px] p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+        <div className="flex-1 flex flex-col sm:flex-row gap-4 sm:gap-8">
+          <div className="flex items-start gap-2.5">
             <span
               className="mt-0.5 shrink-0 inline-flex"
               style={{ color: getColor("primary") }}
@@ -80,7 +73,7 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
             </div>
           </div>
 
-          <div className={`flex items-start gap-2.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}>
+          <div className="flex items-start gap-2.5">
             <Clock
               className="w-5 h-5 mt-0.5 shrink-0"
               style={{ color: getColor("primary") }}
@@ -102,14 +95,14 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
           </div>
         </div>
 
-        <Link href={`/${locale}/auctions/${auction.id}/register`} className="shrink-0 w-full lg:w-auto">
+        <Link href={`/${locale}/auctions/${auction.id}/register`} className="shrink-0">
           <Button
             variant="primary"
-            size="lg"
-            className="w-full lg:w-auto rounded-xl px-6"
-            leftIcon={<Gavel className="w-4 h-4" />}
+            size="sm"
+            className="h-9 px-4 text-xs rounded-full"
           >
-            {t("auctions.add_deposit_cta")}
+            <Gavel className="w-4 h-4" strokeWidth={2} />
+            <span className="ms-1.5">{t("auctions.add_deposit_cta")}</span>
           </Button>
         </Link>
       </div>

@@ -74,13 +74,13 @@ export default function ProfileStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif tracking-tight mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif tracking-tight mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("kyc.profile_title")}
       </h2>
       <p
-        className={`text-sm mb-8 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-8 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("kyc.profile_subtitle")}
@@ -95,11 +95,11 @@ export default function ProfileStep({
               type="button"
               onClick={() => setProfileType(profile.key)}
               disabled={loading}
-              className={`text-start p-6 rounded-2xl border transition-all duration-200 ${isRTL ? "text-right" : "text-left"}`}
+              className="text-start p-6 rounded-2xl border transition-all duration-200"
               style={cardStyle(selected)}
             >
               <div
-                className={`flex items-start justify-between gap-3 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                className={`flex items-start justify-between gap-3 mb-3`}
               >
                 <Image
                   src="/kyc-building-icon.png"
@@ -147,7 +147,7 @@ export default function ProfileStep({
                       />
                     </span>
                     <span
-                      className={`text-sm ${isRTL ? "text-right" : "text-left"}`}
+                      className={`text-sm text-start`}
                       style={{ color: getColor("secondaryText") }}
                     >
                       {point}
@@ -161,7 +161,7 @@ export default function ProfileStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

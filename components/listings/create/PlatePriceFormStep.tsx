@@ -161,7 +161,7 @@ export default function PlatePriceFormStep({
         }}
       >
         <h2
-          className={`text-2xl font-serif font-bold mb-6 ${isRTL ? "text-right" : "text-left"}`}
+          className="text-2xl font-serif font-bold mb-6"
           style={{ color: getColor("primaryText") }}
         >
           {t("listings.step_plate_price")}
@@ -171,13 +171,13 @@ export default function PlatePriceFormStep({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label
-                className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                className="block text-[11px] font-medium mb-1.5"
                 style={{ color: getColor("secondaryText") }}
               >
                 {t("listings.emirate")}
               </label>
               <div
-                className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+                className="w-full rounded-xl border py-3 px-4 text-sm"
                 style={{
                   backgroundColor: `${getColor("background")}80`,
                   borderColor: getColor("border"),
@@ -229,7 +229,7 @@ export default function PlatePriceFormStep({
               variantPlateCodes.length > 0 ? (
                 <div ref={codeDropdownRef}>
                   <label
-                    className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                    className="block text-[11px] font-medium mb-1.5"
                     style={{ color: getColor("secondaryText") }}
                   >
                     {t("listings.code")}
@@ -238,7 +238,7 @@ export default function PlatePriceFormStep({
                     <button
                       type="button"
                       onClick={() => setCodeDropdownOpen(!codeDropdownOpen)}
-                      className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                      className="w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all text-start"
                       style={{
                         borderColor: getColor("border"),
                         color: data.code
@@ -265,7 +265,7 @@ export default function PlatePriceFormStep({
                         >
                           <div className="relative">
                             <Search
-                              className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isRTL ? "right-3" : "left-3"}`}
+                              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 start-3"
                               style={{ color: getColor("mutedText") }}
                             />
                             <input
@@ -273,7 +273,7 @@ export default function PlatePriceFormStep({
                               placeholder={t("common.search")}
                               value={codeSearch}
                               onChange={(e) => setCodeSearch(e.target.value)}
-                              className={`w-full py-2 text-sm bg-transparent focus:outline-none ${isRTL ? "pr-8 pl-3 text-right" : "pl-8 pr-3 text-left"}`}
+                              className="w-full py-2 text-sm bg-transparent focus:outline-none ps-8 pe-3"
                               style={{ color: getColor("primaryText") }}
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -287,7 +287,7 @@ export default function PlatePriceFormStep({
                                 key={item.code}
                                 type="button"
                                 onClick={() => handleCodeSelect(item.code)}
-                                className={`w-full px-4 py-2.5 text-sm transition-colors ${isRTL ? "text-right" : "text-left"}`}
+                                className="w-full px-4 py-2.5 text-sm transition-colors text-start"
                                 style={{
                                   color:
                                     item.code === data.code
@@ -330,13 +330,13 @@ export default function PlatePriceFormStep({
             ) : (
               <div>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  className="block text-[11px] font-medium mb-1.5"
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("listings.code")}
                 </label>
                 <div
-                  className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+                  className="w-full rounded-xl border py-3 px-4 text-sm"
                   style={{
                     backgroundColor: `${getColor("background")}80`,
                     borderColor: getColor("border"),
@@ -366,7 +366,7 @@ export default function PlatePriceFormStep({
           </div>
 
           <div
-            className={`flex flex-col sm:flex-row sm:items-center gap-3 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+            className="flex flex-col sm:flex-row sm:items-center gap-3"
           >
             <button
               type="button"
@@ -375,7 +375,7 @@ export default function PlatePriceFormStep({
                 if (!showCodeField) return;
                 onChange({ hideCode: !data.hideCode });
               }}
-              className={`inline-flex items-center gap-2 h-8 px-3 rounded-full border text-xs font-medium transition-colors ${isRTL ? "flex-row-reverse" : ""} ${!showCodeField ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`inline-flex items-center gap-2 h-8 px-3 rounded-full border text-xs font-medium transition-colors ${!showCodeField ? "opacity-50 cursor-not-allowed" : ""}`}
               style={
                 showCodeField && data.hideCode
                   ? {
@@ -397,7 +397,7 @@ export default function PlatePriceFormStep({
               {t("listings.hide_code")}
             </button>
             <span
-              className={`flex items-center gap-1.5 text-xs ${isRTL ? "flex-row-reverse text-right" : ""}`}
+              className="flex items-center gap-1.5 text-xs"
               style={{ color: getColor("secondaryText") }}
             >
               {showCodeField
@@ -436,7 +436,7 @@ export default function PlatePriceFormStep({
 
           <div>
             <label
-              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+              className="block text-[11px] font-medium mb-1.5"
               style={{ color: getColor("secondaryText") }}
             >
               {t("listings.seller_notes")}
@@ -446,7 +446,7 @@ export default function PlatePriceFormStep({
               onChange={(e) => onChange({ notes: e.target.value })}
               placeholder={t("listings.notes_placeholder")}
               rows={3}
-              className={`w-full rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+              className="w-full rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2"
               style={{
                 borderColor: getColor("border"),
                 color: getColor("primaryText"),
@@ -456,17 +456,17 @@ export default function PlatePriceFormStep({
 
           <div>
             <label
-              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+              className="block text-[11px] font-medium mb-1.5"
               style={{ color: getColor("secondaryText") }}
             >
               {t("listings.ownership_doc")}
             </label>
             <label
-              className={`flex items-center gap-3 w-full rounded-xl border bg-white px-4 py-3 cursor-pointer transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+              className="flex items-center gap-3 w-full rounded-xl border bg-white px-4 py-3 cursor-pointer transition-colors"
               style={{ borderColor: getColor("border") }}
             >
               <span
-                className={`grow text-sm ${isRTL ? "text-right" : "text-left"}`}
+                className="grow text-sm"
                 style={{ color: getColor("mutedText") }}
               >
                 {data.ownershipFileName || t("listings.upload_document")}
@@ -490,7 +490,7 @@ export default function PlatePriceFormStep({
         </div>
 
         <div
-          className={`flex items-center justify-between border-t mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          className="flex items-center justify-between border-t mt-8 pt-5"
           style={{ borderColor: getColor("border") }}
         >
           <Button

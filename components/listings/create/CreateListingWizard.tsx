@@ -67,7 +67,6 @@ export default function CreateListingWizard({
   const router = useRouter();
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
-  const isRTL = locale === "ar";
   const [step, setStep] = useState<Step>(initialStep);
   const [data, setData] = useState<CreateListingData>({
     ...INITIAL,
@@ -176,7 +175,7 @@ export default function CreateListingWizard({
       >
         <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10 pb-8">
           <p
-            className={`text-xs font-bold uppercase tracking-[0.14em] mb-3 ${isRTL ? "text-right" : "text-left"}`}
+            className="text-xs font-bold uppercase tracking-[0.14em] mb-3"
             style={{
               color:
                 step === 2 ? getColor("mutedText") : getColor("primary"),
@@ -185,13 +184,13 @@ export default function CreateListingWizard({
             {eyebrow}
           </p>
           <h1
-            className={`text-3xl md:text-4xl font-serif font-bold leading-tight max-w-xl ${isRTL ? "text-right ml-auto" : "text-left"}`}
+            className="text-3xl md:text-4xl font-serif font-bold leading-tight max-w-xl"
             style={{ color: getColor("primaryText") }}
           >
             {title}
           </h1>
           <p
-            className={`text-base mt-3 max-w-2xl leading-relaxed ${isRTL ? "text-right ml-auto" : "text-left"}`}
+            className="text-base mt-3 max-w-2xl leading-relaxed"
             style={{ color: getColor("secondaryText") }}
           >
             {description}

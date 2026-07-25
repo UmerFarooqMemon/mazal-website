@@ -251,9 +251,9 @@ export default function PaymentMethodStep({
       }}
     >
       <div
-        className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+        className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6`}
       >
-        <div className={isRTL ? "text-right" : "text-left"}>
+        <div className="text-start">
           <h2
             className="text-2xl font-serif mb-1"
             style={{ color: getColor("primaryText") }}
@@ -316,7 +316,7 @@ export default function PaymentMethodStep({
                   key={item.key}
                   type="button"
                   onClick={() => onMethodChange(item.key)}
-                  className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                  className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all text-start`}
                   style={methodCardStyle(selected)}
                 >
                   <div
@@ -370,7 +370,7 @@ export default function PaymentMethodStep({
           </div>
 
           <div
-            className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-between border-t pt-6`}
             style={{ borderColor: getColor("border") }}
           >
             <Button
@@ -408,10 +408,10 @@ export default function PaymentMethodStep({
                   }}
                 >
                   <div
-                    className={`flex flex-col sm:flex-row sm:items-center gap-4 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+                    className={`flex flex-col sm:flex-row sm:items-center gap-4`}
                   >
                     <div
-                      className={`flex items-start gap-3 flex-1 min-w-0 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+                      className={`flex items-start gap-3 flex-1 min-w-0 text-start`}
                     >
                       <div
                         className="size-10 rounded-xl flex items-center justify-center shrink-0"
@@ -456,7 +456,7 @@ export default function PaymentMethodStep({
                     </div>
 
                     <div
-                      className={`flex items-center gap-2 shrink-0 ${isRTL ? "flex-row-reverse" : ""}`}
+                      className={`flex items-center gap-2 shrink-0`}
                     >
                       <span
                         className="text-sm font-semibold min-w-[96px]"
@@ -518,7 +518,7 @@ export default function PaymentMethodStep({
           </button>
 
           <div
-            className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-between border-t pt-6`}
             style={{ borderColor: getColor("border") }}
           >
             <Button
@@ -544,7 +544,7 @@ export default function PaymentMethodStep({
                   style={{ borderColor: getColor("border") }}
                 >
                   <div
-                    className={`flex items-center gap-3 px-4 py-3.5 ${isRTL ? "flex-row-reverse" : ""}`}
+                    className={`flex items-center gap-3 px-4 py-3.5`}
                     style={{ backgroundColor: getColor("primaryLight") }}
                   >
                     <div
@@ -557,7 +557,7 @@ export default function PaymentMethodStep({
                       <Icon className="w-5 h-5" />
                     </div>
                     <div
-                      className={`flex-1 min-w-0 ${isRTL ? "text-right" : "text-left"}`}
+                      className={`flex-1 min-w-0 text-start`}
                     >
                       <div
                         className="font-medium"
@@ -645,7 +645,7 @@ export default function PaymentMethodStep({
                           />
                           <div>
                             <label
-                              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                              className={`block text-[11px] font-medium mb-1.5 text-start`}
                               style={{ color: getColor("secondaryText") }}
                             >
                               {t("private-deal.notes")}
@@ -657,7 +657,7 @@ export default function PaymentMethodStep({
                               }
                               placeholder={t("private-deal.notes_placeholder")}
                               rows={3}
-                              className={`w-full rounded-xl border py-3 px-4 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                              className={`w-full rounded-xl border py-3 px-4 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 text-start`}
                               style={{
                                 borderColor: getColor("border"),
                                 backgroundColor: getColor("surface"),
@@ -680,7 +680,7 @@ export default function PaymentMethodStep({
                           />
                           <div>
                             <label
-                              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                              className={`block text-[11px] font-medium mb-1.5 text-start`}
                               style={{ color: getColor("secondaryText") }}
                             >
                               {t("private-deal.notes")}
@@ -692,7 +692,7 @@ export default function PaymentMethodStep({
                               }
                               placeholder={t("private-deal.notes_placeholder")}
                               rows={3}
-                              className={`w-full rounded-xl border py-3 px-4 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                              className={`w-full rounded-xl border py-3 px-4 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 text-start`}
                               style={{
                                 borderColor: getColor("border"),
                                 backgroundColor: getColor("surface"),
@@ -709,7 +709,7 @@ export default function PaymentMethodStep({
             })}
           </div>
 
-          <div className={`mb-2 ${isRTL ? "text-right" : "text-left"}`}>
+          <div className={`mb-2 text-start`}>
             <div
               className="text-sm font-medium mb-2.5"
               style={{ color: getColor("primaryText") }}
@@ -724,7 +724,7 @@ export default function PaymentMethodStep({
                     key={item.key}
                     type="button"
                     onClick={() => addMethod(item.key)}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors`}
                     style={{
                       borderColor: getColor("border"),
                       backgroundColor: getColor("surface"),
@@ -745,7 +745,7 @@ export default function PaymentMethodStep({
 
           {!canSave && drafts.length > 0 && (
             <p
-              className={`text-xs mt-3 mb-1 ${isRTL ? "text-right" : "text-left"}`}
+              className={`text-xs mt-3 mb-1 text-start`}
               style={{ color: getColor("mutedText") }}
             >
               {t("private-deal.split_allocate_hint")}{" "}
@@ -768,7 +768,7 @@ export default function PaymentMethodStep({
           </Button>
 
           <div
-            className={`flex items-center border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center border-t pt-6`}
             style={{ borderColor: getColor("border") }}
           >
             <Button

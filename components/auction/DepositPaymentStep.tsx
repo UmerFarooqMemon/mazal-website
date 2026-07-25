@@ -107,10 +107,8 @@ export default function DepositPaymentStep({
         borderColor: getColor("border"),
       }}
     >
-      <div
-        className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 ${isRTL ? "sm:flex-row-reverse" : ""}`}
-      >
-        <div className={isRTL ? "text-right" : "text-left"}>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <div>
           <h2
             className="text-2xl font-serif mb-1"
             style={{ color: getColor("primaryText") }}
@@ -159,7 +157,7 @@ export default function DepositPaymentStep({
       </div>
 
       <div
-        className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 mb-6 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+        className="flex items-center gap-3 rounded-2xl border px-4 py-3.5 mb-6"
         style={{
           borderColor: getColor("border"),
           backgroundColor: getColor("primaryLight"),
@@ -219,7 +217,7 @@ export default function DepositPaymentStep({
           />
           <div>
             <label
-              className={`block text-[11px] font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
+              className="block text-[11px] font-medium mb-2"
               style={{ color: getColor("secondaryText") }}
             >
               {t("auctions.field_notes")}
@@ -239,7 +237,7 @@ export default function DepositPaymentStep({
             />
           </div>
           <label
-            className={`flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 cursor-pointer transition-colors ${isRTL ? "text-right" : "text-center"}`}
+            className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 cursor-pointer transition-colors text-center"
             style={{
               borderColor: getColor("border"),
               backgroundColor: getColor("primaryLight"),
@@ -329,7 +327,7 @@ export default function DepositPaymentStep({
           />
 
           <div
-            className={`flex items-start gap-3 rounded-xl px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+            className="flex items-start gap-3 rounded-xl px-4 py-3.5"
             style={{
               backgroundColor: getColor("primaryLight"),
               color: getColor("secondaryText"),
@@ -375,7 +373,7 @@ export default function DepositPaymentStep({
 
           <div>
             <label
-              className={`block text-[11px] font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
+              className="block text-[11px] font-medium mb-2"
               style={{ color: getColor("secondaryText") }}
             >
               {t("auctions.field_collection_address")}
@@ -433,7 +431,7 @@ export default function DepositPaymentStep({
       )}
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className="flex items-center justify-between border-t pt-6"
         style={{ borderColor: getColor("border") }}
       >
         <Button

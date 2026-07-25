@@ -1,17 +1,16 @@
 "use client";
 import { useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import Button from "@/components/ui/Button";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
+import SiteLogo from "@/components/layout/SiteLogo";
 
 export default function PasswordUpdatedPage() {
   const { t, locale, loading: localeLoading } = useLocale();
-  const isRTL = locale === "ar";
-  const { getColor, branding, loading: themeLoading } = useTheme();
+  const { getColor, loading: themeLoading } = useTheme();
 
   // Show success toast on page load
   useEffect(() => {
@@ -34,19 +33,10 @@ export default function PasswordUpdatedPage() {
             borderColor: getColor("border"),
           }}
         >
-          {/* Logo - Only from API */}
-          {branding.logoUrl && (
-            <div className="flex justify-center mb-8 pt-4">
-              <Image
-                src={branding.logoUrl}
-                alt="Mazal Logo"
-                width={140}
-                height={50}
-                className="h-auto"
-                unoptimized
-              />
-            </div>
-          )}
+          {/* Logo from site-settings API */}
+          <div className="flex justify-center mb-8 pt-4">
+            <SiteLogo variant="auth" />
+          </div>
 
           {/* Celebration Emoji */}
           <div className="flex justify-center mb-8">

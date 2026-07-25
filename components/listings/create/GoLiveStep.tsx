@@ -43,7 +43,7 @@ export default function GoLiveStep({
         }}
       >
         <h2
-          className={`text-2xl font-serif font-bold mb-6 ${isRTL ? "text-right" : "text-left"}`}
+          className="text-2xl font-serif font-bold mb-6"
           style={{ color: getColor("primaryText") }}
         >
           {t("listings.go_live_heading")}
@@ -85,7 +85,7 @@ export default function GoLiveStep({
         </div>
 
         <div
-          className={`flex items-center justify-between border-t mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          className="flex items-center justify-between border-t mt-8 pt-5"
           style={{ borderColor: getColor("border") }}
         >
           <Button

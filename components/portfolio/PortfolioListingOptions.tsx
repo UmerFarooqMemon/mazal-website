@@ -8,7 +8,6 @@ import { useTheme } from "@/context/ThemeContext";
 export default function PortfolioListingOptions() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const options = [
     {
@@ -49,7 +48,7 @@ export default function PortfolioListingOptions() {
           <Link
             key={option.key}
             href={option.href}
-            className={`flex items-center gap-4 rounded-[20px] border px-5 py-4 transition-colors hover:bg-black/[0.02] ${isRTL ? "flex-row-reverse text-right" : ""}`}
+            className={`flex items-center gap-4 rounded-[20px] border px-5 py-4 transition-colors hover:bg-black/[0.02] text-start`}
             style={{
               backgroundColor: getColor("surface"),
               borderColor: option.highlighted ? "#00664e" : getColor("border"),

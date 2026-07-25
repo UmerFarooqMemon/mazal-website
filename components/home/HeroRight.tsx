@@ -13,13 +13,11 @@ export default function HeroRight() {
 
   return (
     <div className="relative w-full max-w-lg mx-auto flex flex-col items-end">
-      <div
-        className={`w-full flex flex-col items-end ${isRTL ? "items-start" : "items-end"}`}
-      >
+      <div className="w-full flex flex-col items-end">
         {/* The Big Card */}
         <div className="w-full bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-6 border border-gray-100 z-10">
           <div
-            className={`text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-4 ${isRTL ? "text-right" : "text-left"}`}
+            className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-4 text-start"
           >
             {t("home.hero_featured_label")}
           </div>
@@ -35,14 +33,14 @@ export default function HeroRight() {
           </div>
 
           <div
-            className={`flex justify-between items-end mb-6 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex justify-between items-end mb-6`}
           >
-            <div className={isRTL ? "text-right" : "text-left"}>
+            <div className="text-start">
               <div className="text-xs text-gray-400 font-medium">
                 {t("home.hero_asking")}
               </div>
               <div
-                className={`flex text-2xl font-bold text-[#041443] items-center gap-2 ${isRTL ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}
+                className={`flex text-2xl font-bold text-[#041443] items-center gap-2 justify-start`}
               >
                 <DirhamAmount amount={12500000} weight="bold" />
               </div>
@@ -89,10 +87,10 @@ export default function HeroRight() {
         {/* The small card */}
         <div className="w-full bg-[#EBDCCB]/50 backdrop-blur-sm border border-[#D4AF37]/20 rounded-xl p-4 mt-4 z-0 shadow-sm">
           <div
-            className={`flex justify-between items-center mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex justify-between items-center mb-2`}
           >
             <div
-              className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex items-center gap-2`}
             >
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -107,15 +105,15 @@ export default function HeroRight() {
             </span>
           </div>
           <div
-            className={`flex justify-between items-end ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex justify-between items-end`}
           >
-            <div className={isRTL ? "text-right" : "text-left"}>
+            <div className="text-start">
               <div className="text-sm font-medium text-[#041443]">
                 {t("home.hero_dubai_t")}
               </div>
             </div>
             <div
-              className={`flex text-base font-bold text-[#0A3B9E] items-center gap-2 ${isRTL ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}
+              className={`flex text-base font-bold text-[#0A3B9E] items-center gap-2 justify-start`}
             >
               <DirhamAmount amount={6200000} weight="bold" />
             </div>

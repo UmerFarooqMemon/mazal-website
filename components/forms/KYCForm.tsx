@@ -115,7 +115,6 @@ export default function KYCForm() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const router = useRouter();
-  const isRTL = locale === "ar";
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -428,7 +427,7 @@ export default function KYCForm() {
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
           <div
-            className={`inline-flex items-center gap-2 text-[12px] tracking-[0.2em] uppercase px-3.5 py-1.5 rounded-full mb-4 border ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`inline-flex items-center gap-2 text-[12px] tracking-[0.2em] uppercase px-3.5 py-1.5 rounded-full mb-4 border`}
             style={{
               backgroundColor: `${getColor("primary")}0D`,
               borderColor: `${getColor("primary")}33`,
@@ -440,14 +439,14 @@ export default function KYCForm() {
           </div>
 
           <h1
-            className={`max-w-3xl font-serif text-4xl md:text-5xl tracking-tight leading-[1.15] mb-4 ${isRTL ? "text-right mr-0 ml-auto" : "text-left"}`}
+            className="max-w-3xl font-serif text-4xl md:text-5xl tracking-tight leading-[1.15] mb-4 text-start"
             style={{ color: getColor("primaryText") }}
           >
             {t("kyc.title")}
           </h1>
 
           <p
-            className={`max-w-2xl text-base leading-relaxed ${isRTL ? "text-right mr-0 ml-auto" : "text-left"}`}
+            className="max-w-2xl text-base leading-relaxed text-start"
             style={{ color: getColor("secondaryText") }}
           >
             {t("kyc.description")}
@@ -455,7 +454,7 @@ export default function KYCForm() {
 
           {(form.status === "pending_review" || form.verified) && (
             <p
-              className={`mt-4 text-sm font-medium ${isRTL ? "text-right" : "text-left"}`}
+              className={`mt-4 text-sm font-medium text-start`}
               style={{ color: getColor("primary") }}
             >
               {form.verified

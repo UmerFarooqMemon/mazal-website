@@ -18,7 +18,6 @@ export default function TransferProgressStep({
 }: TransferProgressStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -83,10 +82,10 @@ export default function TransferProgressStep({
         }}
       >
         <div
-          className={`flex flex-col lg:flex-row items-center justify-center gap-5 lg:gap-10 ${isRTL ? "lg:flex-row-reverse" : ""}`}
+          className={`flex flex-col lg:flex-row items-center justify-center gap-5 lg:gap-10`}
         >
           <p
-            className={`text-base max-w-sm ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-base max-w-sm text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("private-deal.share_otp_hint")}
@@ -103,7 +102,7 @@ export default function TransferProgressStep({
           <button
             type="button"
             onClick={handleCopy}
-            className={`flex items-center gap-3 rounded-[22px] border px-5 py-3.5 transition-colors ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-3 rounded-[22px] border px-5 py-3.5 transition-colors`}
             style={{
               borderColor: getColor("border"),
               backgroundColor: getColor("surface"),

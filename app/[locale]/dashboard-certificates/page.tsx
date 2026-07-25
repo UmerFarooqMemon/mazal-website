@@ -123,7 +123,7 @@ export default function DashboardCertificatesPage() {
     >
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
-        <div className={`mb-8 ${isRTL ? "text-right" : "text-left"}`}>
+        <div className="mb-8 text-start">
           <div
             className="text-xs font-bold uppercase tracking-wider mb-1"
             style={{ color: getColor("mutedText") }}
@@ -141,13 +141,13 @@ export default function DashboardCertificatesPage() {
         {/* Fancy New Request Button */}
         <Link href={`/${locale}/certificates/request`} className="block mb-8">
           <div
-            className={`rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg transition-shadow group ${isRTL ? "flex-row-reverse" : ""}`}
+            className="rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg transition-shadow group"
             style={{ background: getGradient("primaryButton") }}
           >
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div className={`flex-1 ${isRTL ? "text-right" : "text-left"}`}>
+            <div className="flex-1 text-start">
               <p className="text-white font-semibold text-sm">
                 {t("certificates.order_valuation")}
               </p>
@@ -167,7 +167,7 @@ export default function DashboardCertificatesPage() {
 
         {/* Smart Filter Tabs with Counts */}
         <div
-          className={`flex flex-wrap gap-2 mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
+          className="flex flex-wrap gap-2 mb-8"
         >
           {[
             { key: "All", count: requests.length },
@@ -277,7 +277,7 @@ export default function DashboardCertificatesPage() {
         )}
 
         {/* Back — Arabic (RTL): bottom-left; English (LTR): bottom-left */}
-        <div className={`mt-12 flex ${isRTL ? "justify-end" : "justify-start"}`}>
+        <div className="mt-12 flex justify-start">
           <BackButton href={`/${locale}`}>{t("common.back")}</BackButton>
         </div>
       </div>

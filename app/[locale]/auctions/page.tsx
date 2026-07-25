@@ -13,7 +13,6 @@ import { MOCK_AUCTIONS } from "@/components/auction/mockData";
 export default function AuctionsPage() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -44,10 +43,8 @@ export default function AuctionsPage() {
         }}
       >
         <div className="max-w-6xl mx-auto">
-          <div
-            className={`flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6 ${isRTL ? "sm:flex-row-reverse" : ""}`}
-          >
-            <div className={isRTL ? "text-right" : "text-left"}>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <div>
               <h2
                 className="font-serif text-[28px] sm:text-[32px] mb-1"
                 style={{ color: getColor("primaryText") }}
@@ -76,12 +73,10 @@ export default function AuctionsPage() {
 
           <form
             onSubmit={(e) => e.preventDefault()}
-            className={`flex items-center gap-2 bg-white rounded-2xl border p-2 mb-8 shadow-[0_8px_24px_rgba(0,0,0,0.04)] ${isRTL ? "flex-row-reverse" : ""}`}
+            className="flex items-center gap-2 bg-white rounded-2xl border p-2 mb-8 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
             style={{ borderColor: getColor("border") }}
           >
-            <div
-              className={`flex-1 flex items-center gap-2 px-3 ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+            <div className="flex-1 flex items-center gap-2 px-3">
               <Search
                 className="w-4 h-4 shrink-0"
                 style={{ color: getColor("mutedText") }}
@@ -90,7 +85,7 @@ export default function AuctionsPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t("auctions.search_placeholder")}
-                className={`w-full bg-transparent outline-none text-sm py-2 ${isRTL ? "text-right" : "text-left"}`}
+                className="w-full bg-transparent outline-none text-sm py-2"
                 style={{ color: getColor("primaryText") }}
               />
             </div>

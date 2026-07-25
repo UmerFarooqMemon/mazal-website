@@ -144,5 +144,6 @@
   "code_resent": "New code sent! Check your messages.",
   "password_reset_success": "Password reset successful! Redirecting...",
   "reset_failed": "Failed to reset password. Please try again.",
-  "session_expired": "Session expired. Please request a new code."
+  "session_expired": "Session expired. Please request a new code.",
+  "no_results": "No matching results found. Try adjusting your search or filters."
 }

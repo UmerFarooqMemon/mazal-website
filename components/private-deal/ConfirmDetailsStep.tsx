@@ -72,13 +72,13 @@ export default function ConfirmDetailsStep({
       {variant === "buyer" && (
         <div className="mb-6">
           <p
-            className={`text-sm font-medium mb-3 ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-sm font-medium mb-3 text-start`}
             style={{ color: getColor("primaryText") }}
           >
             {t("private-deal.gift_plate_title")}
           </p>
           <div
-            className={`inline-flex rounded-full border p-1 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`inline-flex rounded-full border p-1 mb-3`}
             style={{
               borderColor: getColor("border"),
               backgroundColor: getColor("primaryLight"),
@@ -124,13 +124,13 @@ export default function ConfirmDetailsStep({
       )}
 
       <h2
-        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("private-deal.confirm_title")}
       </h2>
       <p
-        className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-6 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.confirm_subtitle")}
@@ -209,7 +209,7 @@ export default function ConfirmDetailsStep({
       </div>
 
       <div
-        className={`flex gap-3 rounded-2xl border p-4 mb-6 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+        className={`flex gap-3 rounded-2xl border p-4 mb-6 text-start`}
         style={{
           borderColor: `${getColor("primary")}40`,
           backgroundColor: `${getColor("primary")}0D`,
@@ -234,7 +234,7 @@ export default function ConfirmDetailsStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

@@ -2,19 +2,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import Button from "@/components/ui/Button";
 import { ShieldCheck, X } from "lucide-react";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
+import SiteLogo from "@/components/layout/SiteLogo";
 
 export default function VerifyCodePage() {
   const router = useRouter();
   const { t, locale, loading: localeLoading } = useLocale();
-  const isRTL = locale === "ar";
-  const { getColor, branding, loading: themeLoading } = useTheme();
+  const { getColor, loading: themeLoading } = useTheme();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -102,31 +101,21 @@ export default function VerifyCodePage() {
           {/* Close / Back Button */}
           <Link
             href={`/${locale}/login`}
-            className={`absolute top-4 ${isRTL ? "left-4" : "right-4"} h-9 w-9 flex items-center justify-center rounded-lg transition-colors`}
+            className={`absolute top-4 end-4 h-9 w-9 flex items-center justify-center rounded-lg transition-colors`}
             style={{ color: getColor("mutedText") }}
             aria-label={t("common.back") || "Back"}
           >
             <X className="w-5 h-5" strokeWidth={1.5} />
           </Link>
 
-          {/* Logo */}
-          {/* Logo - Only from API */}
-          {branding.logoUrl && (
-            <div className="flex justify-center mb-8 pt-4">
-              <Image
-                src={branding.logoUrl}
-                alt="Mazal Logo"
-                width={140}
-                height={50}
-                className="h-auto"
-                unoptimized
-              />
-            </div>
-          )}
+          {/* Logo from site-settings API */}
+          <div className="flex justify-center mb-8 pt-4">
+            <SiteLogo variant="auth" />
+          </div>
 
           {/* Badge */}
           <div
-            className={`flex items-center justify-center gap-2 text-[10px] font-semibold mb-5 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-center gap-2 text-[10px] font-semibold mb-5`}
             style={{ color: getColor("primary") }}
           >
             <ShieldCheck size={16} />
@@ -150,7 +139,7 @@ export default function VerifyCodePage() {
           {/* Error */}
           {error && (
             <div
-              className={`mb-4 p-2.5 rounded-xl text-xs flex items-center gap-2 ${isRTL ? "flex-row-reverse text-right" : "flex-row text-left"}`}
+              className={`mb-4 p-2.5 rounded-xl text-xs flex items-center gap-2 flex-row text-start`}
               style={{
                 backgroundColor: `${getColor("error")}15`,
                 borderColor: getColor("error"),

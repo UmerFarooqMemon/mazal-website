@@ -44,7 +44,6 @@ export default function PlateCard({
 }: PlateCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const formattedViews = new Intl.NumberFormat(
     locale === "ar" ? "ar-AE" : "en-US",
@@ -84,7 +83,7 @@ export default function PlateCard({
       )}
 
       <div
-        className={`flex justify-between items-center mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex justify-between items-center mb-4`}
       >
         <span
           className="text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider"
@@ -96,7 +95,7 @@ export default function PlateCard({
           {badgeLabel}
         </span>
         <div
-          className={`flex items-center gap-1.5 text-xs ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-1.5 text-xs`}
           style={{ color: getColor("mutedText") }}
         >
           <Eye className="w-3.5 h-3.5" strokeWidth={2} />
@@ -116,7 +115,7 @@ export default function PlateCard({
         />
       </div>
 
-      <div className={`${isRTL ? "text-right" : "text-left"}`}>
+      <div className={`text-start`}>
         <div
           className="text-[22px] leading-8 font-serif font-bold tracking-tight"
           style={{ color: getColor("primaryText") }}
@@ -124,13 +123,13 @@ export default function PlateCard({
           <DirhamAmount amount={price} weight="bold" />
         </div>
         <div
-          className={`mt-1.5 flex items-center gap-2 text-xs ${isRTL ? "flex-row-reverse justify-end" : ""}`}
+          className={`mt-1.5 flex items-center gap-2 text-xs`}
           style={{ color: getColor("mutedText") }}
         >
           <span>{t("marketplace.seller_rating")}</span>
           <span style={{ color: getColor("border") }}>·</span>
           <span
-            className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-1`}
             style={{ color: getColor("secondaryText") }}
           >
             <Star

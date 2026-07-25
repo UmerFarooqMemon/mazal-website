@@ -4,7 +4,6 @@ import { useTheme } from "@/context/ThemeContext";
 
 export default function CertificateFAQ() {
   const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
   const { getColor } = useTheme();
 
   const faqs = [{ key: "independent" }, { key: "verified" }, { key: "valid" }];
@@ -22,7 +21,7 @@ export default function CertificateFAQ() {
           }}
         >
           <div
-            className={`flex items-center gap-2 mb-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-2 mb-3`}
           >
             <svg
               width="20"

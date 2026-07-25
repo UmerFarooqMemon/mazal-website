@@ -77,13 +77,13 @@ export default function TransferDetailsStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("private-deal.transfer_title")}
       </h2>
       <p
-        className={`text-sm mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-6 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {t("private-deal.transfer_subtitle")}
@@ -100,7 +100,7 @@ export default function TransferDetailsStep({
           return (
             <div
               key={field.key}
-              className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+              className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 text-start`}
               style={{
                 borderColor: getColor("border"),
                 backgroundColor: getColor("primaryLight"),
@@ -144,7 +144,7 @@ export default function TransferDetailsStep({
       </div>
 
       <label
-        className={`flex items-start gap-3 mb-6 cursor-pointer ${isRTL ? "flex-row-reverse text-right" : ""}`}
+        className={`flex items-start gap-3 mb-6 cursor-pointer text-start`}
       >
         <input
           type="checkbox"
@@ -162,7 +162,7 @@ export default function TransferDetailsStep({
       </label>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

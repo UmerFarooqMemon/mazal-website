@@ -27,7 +27,6 @@ const STATUS_STYLES: Record<
 export default function AuctionListingCard({ auction }: AuctionListingCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
   const statusStyle = STATUS_STYLES[auction.status];
   const isTimedStart =
     auction.status === "scheduled" ||
@@ -42,7 +41,7 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
       style={{ borderColor: getColor("border") }}
     >
       <div
-        className={`flex items-center justify-end gap-1.5 mb-3 text-[12px] ${isRTL ? "flex-row-reverse" : ""}`}
+        className="flex items-center justify-end gap-1.5 mb-3 text-[12px]"
         style={{ color: getColor("mutedText") }}
       >
         <Eye className="w-3.5 h-3.5" />
@@ -59,9 +58,7 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
         />
       </div>
 
-      <div
-        className={`flex flex-wrap items-center gap-2 mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
-      >
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         <span
           className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
           style={{
@@ -93,10 +90,8 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
         )}
       </div>
 
-      <div
-        className={`flex items-end justify-between gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
-      >
-        <div className={isRTL ? "text-right" : "text-left"}>
+      <div className="flex items-end justify-between gap-3">
+        <div>
           <div
             className="text-[10px] font-semibold uppercase tracking-wider mb-1"
             style={{ color: getColor("mutedText") }}
@@ -111,7 +106,7 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
           </div>
         </div>
 
-        <div className={isRTL ? "text-left" : "text-right"}>
+        <div className="text-end">
           <div
             className="text-[10px] font-semibold uppercase tracking-wider mb-1"
             style={{ color: getColor("mutedText") }}

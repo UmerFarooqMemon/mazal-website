@@ -32,14 +32,10 @@ export default function FeatureCard({
 
   return (
     <div
-      className={`w-full h-full rounded-2xl p-6 shadow-sm transition flex flex-col ${
-        isPrimary
-          ? "bg-linear-to-br from-[#EEF2F8] to-white border border-[#0A3B9E]/20"
-          : "bg-white border border-gray-200 hover:shadow-md"
-      } ${isRTL ? "text-right" : "text-left"}`}
+      className={`w-full h-full rounded-2xl p-6 shadow-sm transition flex flex-col ${ isPrimary ? "bg-linear-to-br from-[#EEF2F8] to-white border border-[#0A3B9E]/20" : "bg-white border border-gray-200 hover:shadow-md" } text-start`}
     >
       {/* Icon */}
-      <div className={`flex mb-2 ${isRTL ? "justify-end" : "justify-start"}`}>
+      <div className="flex mb-2 justify-start">
         <span className="text-[#0A3B9E]">{icon}</span>
       </div>
 
@@ -86,7 +82,7 @@ export default function FeatureCard({
           {features.map((feature, index) => (
             <li
               key={index}
-              className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+              className="flex items-center gap-2"
             >
               <span className="text-[#0A3B9E] shrink-0">✓</span>
               <span>{feature}</span>

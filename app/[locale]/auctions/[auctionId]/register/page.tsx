@@ -23,10 +23,9 @@ export default function AuctionRegisterPage({
   params: Promise<{ auctionId: string }>;
 }) {
   use(params);
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
   const router = useRouter();
-  const isRTL = locale === "ar";
 
   const [step, setStep] = useState(0);
   const [method, setMethod] = useState<DepositPaymentMethod>("bank");
@@ -104,9 +103,7 @@ export default function AuctionRegisterPage({
           </div>
 
           {showSidebar && (
-            <div
-              className={`space-y-4 ${isRTL ? "lg:order-first" : ""}`}
-            >
+            <div className="space-y-4">
               <AuctionSummaryCard
                 data={DEFAULT_AUCTION_SUMMARY}
                 showCheckAmount={step === 1 && method === "card"}

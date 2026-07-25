@@ -31,7 +31,7 @@ export default function RevealPaymentMethodStep({
         borderColor: getColor("border"),
       }}
     >
-      <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
+      <div className={`mb-6 text-start`}>
         <h2
           className="text-2xl font-serif font-bold mb-1"
           style={{ color: getColor("primaryText") }}
@@ -45,7 +45,7 @@ export default function RevealPaymentMethodStep({
 
       <button
         type="button"
-        className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 mb-8 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+        className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 mb-8 text-start`}
         style={{
           borderColor: getColor("primary"),
           backgroundColor: `${getColor("primary")}0D`,
@@ -83,7 +83,7 @@ export default function RevealPaymentMethodStep({
       </button>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

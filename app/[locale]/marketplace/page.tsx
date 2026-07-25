@@ -157,13 +157,13 @@ export default function MarketplacePage() {
       <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           <aside
-            className={`lg:col-span-1 ${isRTL ? "lg:col-start-4 lg:row-start-1" : ""}`}
+            className="lg:col-span-1"
           >
             <MarketplaceFilters selected={filters} onChange={handleFilterChange} />
           </aside>
 
           <div
-            className={`lg:col-span-3 ${isRTL ? "lg:col-start-1 lg:row-start-1" : ""}`}
+            className="lg:col-span-3"
           >
             <div
               className="flex justify-between items-center mb-6 text-sm"

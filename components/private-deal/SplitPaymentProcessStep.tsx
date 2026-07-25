@@ -52,24 +52,22 @@ const METHOD_META: Record<
 function ReadOnlyAmountField({
   label,
   amount,
-  isRTL,
   getColor,
 }: {
   label: string;
   amount: number;
-  isRTL: boolean;
   getColor: (key: "border" | "primaryText") => string;
 }) {
   return (
     <div className="w-full">
       <label
-        className={`block text-[11px] font-medium leading-none mb-2 ${isRTL ? "text-right" : "text-left"}`}
+        className={`block text-[11px] font-medium leading-none mb-2 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {label}
       </label>
       <div
-        className={`w-full rounded-xl border bg-white py-3.5 text-sm ${isRTL ? "text-right pr-4" : "text-left pl-4"}`}
+        className="w-full rounded-xl border bg-white py-3.5 text-sm text-start ps-4"
         style={{ borderColor: getColor("border"), color: getColor("primaryText") }}
       >
         <DirhamAmount amount={amount} />
@@ -181,7 +179,7 @@ export default function SplitPaymentProcessStep({
         style={{ borderColor: getColor("border") }}
       >
         <div
-          className={`flex items-center gap-3 px-4 py-3.5 border-b ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-3 px-4 py-3.5 border-b`}
           style={{
             backgroundColor: getColor("primaryLight"),
             borderColor: getColor("border"),
@@ -196,7 +194,7 @@ export default function SplitPaymentProcessStep({
           >
             <Icon className="w-5 h-5" />
           </div>
-          <div className={`min-w-0 ${isRTL ? "text-right" : "text-left"}`}>
+          <div className={`min-w-0 text-start`}>
             <div
               className="font-medium"
               style={{ color: getColor("primaryText") }}
@@ -215,7 +213,7 @@ export default function SplitPaymentProcessStep({
               {instructionRows.map(([key, value]) => (
                 <div
                   key={key}
-                  className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+                  className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 text-start`}
                   style={{
                     borderColor: getColor("border"),
                     backgroundColor: getColor("primaryLight"),
@@ -294,7 +292,7 @@ export default function SplitPaymentProcessStep({
               </div>
               <div>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`block text-[11px] font-medium mb-1.5 text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.upload_payment_proof")}
@@ -341,7 +339,7 @@ export default function SplitPaymentProcessStep({
               </div>
               <div>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`block text-[11px] font-medium mb-1.5 text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.notes")}
@@ -352,7 +350,7 @@ export default function SplitPaymentProcessStep({
                     setBankTransfer((prev) => ({ ...prev, notes: e.target.value }))
                   }
                   rows={3}
-                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 text-start`}
                   style={{
                     borderColor: getColor("border"),
                     backgroundColor: getColor("surface"),
@@ -372,7 +370,7 @@ export default function SplitPaymentProcessStep({
               }}
             >
               <p
-                className={`text-sm leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                className={`text-sm leading-relaxed text-start`}
                 style={{ color: getColor("secondaryText") }}
               >
                 {t("private-deal.card_redirect_notice")}
@@ -385,7 +383,6 @@ export default function SplitPaymentProcessStep({
               <ReadOnlyAmountField
                 label={t("private-deal.check_amount")}
                 amount={payment.amount}
-                isRTL={isRTL}
                 getColor={getColor}
               />
               <div
@@ -396,7 +393,7 @@ export default function SplitPaymentProcessStep({
                 }}
               >
                 <div
-                  className={`flex items-center gap-2 text-sm font-medium mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex items-center gap-2 text-sm font-medium mb-2`}
                   style={{ color: getColor("primaryText") }}
                 >
                   <Info
@@ -406,7 +403,7 @@ export default function SplitPaymentProcessStep({
                   {t("private-deal.instructions")}
                 </div>
                 <p
-                  className={`text-sm leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                  className={`text-sm leading-relaxed text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.managers_check_instructions")}
@@ -436,7 +433,7 @@ export default function SplitPaymentProcessStep({
               </div>
               <div>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`block text-[11px] font-medium mb-1.5 text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.notes")}
@@ -445,7 +442,7 @@ export default function SplitPaymentProcessStep({
                   value={check.notes}
                   onChange={(e) => setCheck({ ...check, notes: e.target.value })}
                   rows={3}
-                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 text-start`}
                   style={{
                     borderColor: getColor("border"),
                     backgroundColor: getColor("surface"),
@@ -461,7 +458,6 @@ export default function SplitPaymentProcessStep({
               <ReadOnlyAmountField
                 label={t("private-deal.amount")}
                 amount={payment.amount}
-                isRTL={isRTL}
                 getColor={getColor}
               />
               <div
@@ -472,7 +468,7 @@ export default function SplitPaymentProcessStep({
                 }}
               >
                 <div
-                  className={`flex items-center gap-2 text-sm font-medium mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex items-center gap-2 text-sm font-medium mb-2`}
                   style={{ color: getColor("primaryText") }}
                 >
                   <Info
@@ -482,7 +478,7 @@ export default function SplitPaymentProcessStep({
                   {t("private-deal.instructions")}
                 </div>
                 <p
-                  className={`text-sm leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
+                  className={`text-sm leading-relaxed text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.cash_collection_instructions")}
@@ -506,7 +502,7 @@ export default function SplitPaymentProcessStep({
               </div>
               <div>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`block text-[11px] font-medium mb-1.5 text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("private-deal.notes")}
@@ -515,7 +511,7 @@ export default function SplitPaymentProcessStep({
                   value={cash.notes}
                   onChange={(e) => setCash({ ...cash, notes: e.target.value })}
                   rows={3}
-                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 text-start`}
                   style={{
                     borderColor: getColor("border"),
                     backgroundColor: getColor("surface"),
@@ -540,7 +536,7 @@ export default function SplitPaymentProcessStep({
       </div>
 
       <div
-        className={`flex items-center border-t pt-6 mt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center border-t pt-6 mt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

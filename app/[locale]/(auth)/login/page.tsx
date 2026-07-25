@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -12,13 +11,14 @@ import Button from "@/components/ui/Button";
 import { Icons } from "@/components/ui/Icons";
 import { useAuth } from "@/hooks/useAuth";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
+import SiteLogo from "@/components/layout/SiteLogo";
 import { requestGoogleIdToken } from "@/lib/google-auth";
 
 export default function LoginPage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const router = useRouter();
   const isRTL = locale === "ar";
-  const { getColor, branding, loading: themeLoading } = useTheme();
+  const { getColor, loading: themeLoading } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -115,7 +115,7 @@ export default function LoginPage() {
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl">
         {/* AuthHero - right for AR, left for EN */}
         <div
-          className={`hidden lg:flex w-full lg:w-1/2 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
+          className="hidden lg:flex w-full lg:w-1/2"
         >
           <AuthHero
             titleKey="auth.hero_title"
@@ -127,37 +127,28 @@ export default function LoginPage() {
 
         {/* Form - left for AR, right for EN */}
           <div
-            className={`w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
+            className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12"
             style={{ backgroundColor: getColor("surface") }}
             dir={isRTL ? "rtl" : "ltr"}
           >
           <div className="w-full max-w-md">
-            {/* Logo - Only from API */}
-            {branding.logoUrl && (
-              <div className="flex justify-center mb-8 pt-4">
-                <Image
-                  src={branding.logoUrl}
-                  alt="Mazal Logo"
-                  width={140}
-                  height={50}
-                  className="h-auto"
-                  unoptimized
-                />
-              </div>
-            )}
+            {/* Logo from site-settings API */}
+            <div className="flex justify-center mb-8 pt-4">
+              <SiteLogo variant="auth" />
+            </div>
 
             <div
-              className={`flex items-center justify-between mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
+              className="flex items-center justify-between mb-8"
             >
               <div
-                className={`flex items-center gap-2 text-xs font-semibold ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center gap-2 text-xs font-semibold"
                 style={{ color: getColor("primary") }}
               >
                 <Icons.Shield size={14} />
                 <span>{t("common.secure_access")}</span>
               </div>
               <div
-                className={`flex rounded-full border p-0.5 text-xs font-medium ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex rounded-full border p-0.5 text-xs font-medium"
                 style={{ borderColor: getColor("border") }}
               >
                 <span
@@ -177,13 +168,13 @@ export default function LoginPage() {
             </div>
 
             <h2
-              className={`text-3xl font-serif font-bold mb-2 ${isRTL ? "text-right" : "text-left"}`}
+              className="text-3xl font-serif font-bold mb-2 text-start"
               style={{ color: getColor("primaryText") }}
             >
               {t("common.welcome_back")}
             </h2>
             <p
-              className={`text-sm mb-8 ${isRTL ? "text-right" : "text-left"}`}
+              className="text-sm mb-8 text-start"
               style={{ color: getColor("secondaryText") }}
             >
               {t("common.sign_in_subtitle")}
@@ -229,10 +220,10 @@ export default function LoginPage() {
               />
 
               <div
-                className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center justify-between"
               >
                 <label
-                  className={`flex items-center gap-2 cursor-pointer ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="flex items-center gap-2 cursor-pointer"
                 >
                   <input
                     name="remember_me"
@@ -268,7 +259,9 @@ export default function LoginPage() {
                 variant="primary"
                 size="lg"
                 fullWidth
-                rightIcon={<Icons.ArrowRight />}
+                rightIcon={
+                  isRTL ? <Icons.ArrowLeft /> : <Icons.ArrowRight />
+                }
                 disabled={loading}
               >
                 {loading ? t("common.loading") : t("common.sign_in")}

@@ -16,7 +16,7 @@ export default function VerifyPreviewSkeleton() {
       {/* Mobile */}
       <section className="md:hidden flex-1 flex flex-col px-6 pt-6 pb-8">
         <div
-          className={`mb-6 ${isRTL ? "flex justify-end" : "flex justify-start"}`}
+          className="mb-6 flex justify-start"
         >
           <div className="w-40 h-8 bg-gray-200 rounded-lg animate-pulse" />
         </div>
@@ -26,7 +26,7 @@ export default function VerifyPreviewSkeleton() {
         <div className="mt-10">
           <div className="h-px w-full mb-7 bg-gray-200" />
           <div
-            className={`w-20 h-9 bg-gray-200 rounded-full animate-pulse ${isRTL ? "ml-auto" : ""}`}
+            className="w-20 h-9 bg-gray-200 rounded-full animate-pulse"
           />
         </div>
       </section>

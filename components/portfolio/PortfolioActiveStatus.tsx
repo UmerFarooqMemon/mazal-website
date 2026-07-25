@@ -12,7 +12,6 @@ export default function PortfolioActiveStatus({
 }) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const formattedViews = new Intl.NumberFormat(
     locale === "ar" ? "ar-AE" : "en-US",
@@ -22,14 +21,14 @@ export default function PortfolioActiveStatus({
     <div className="space-y-3">
       {plate.isAuction && (
         <div
-          className={`flex items-center justify-between gap-4 rounded-[20px] border px-8 py-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center justify-between gap-4 rounded-[20px] border px-8 py-5`}
           style={{
             backgroundColor: "#fffafa",
             borderColor: "rgba(212,12,26,0.6)",
           }}
         >
           <div
-            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-3`}
           >
             <div
               className="flex size-12 shrink-0 items-center justify-center rounded-[10px] border"
@@ -49,7 +48,7 @@ export default function PortfolioActiveStatus({
             </p>
           </div>
           <div
-            className={`flex items-center gap-1 text-xs ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-1 text-xs`}
             style={{ color: getColor("secondaryText") }}
           >
             <Timer className="size-4" strokeWidth={1.75} />
@@ -62,14 +61,14 @@ export default function PortfolioActiveStatus({
 
       {plate.isListed && (
         <div
-          className={`flex items-center justify-between gap-4 rounded-[20px] border px-8 py-5 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center justify-between gap-4 rounded-[20px] border px-8 py-5`}
           style={{
             backgroundColor: getColor("surface"),
             borderColor: getColor("border"),
           }}
         >
           <div
-            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-3`}
           >
             <div
               className="flex size-12 shrink-0 items-center justify-center rounded-[10px] border"
@@ -89,7 +88,7 @@ export default function PortfolioActiveStatus({
             </p>
           </div>
           <div
-            className={`flex items-center gap-1 text-xs ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-1 text-xs`}
             style={{ color: getColor("secondaryText") }}
           >
             <Eye className="size-3.5" strokeWidth={1.75} />

@@ -663,7 +663,7 @@ export default function PrivateDealPage() {
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
           <div
-            className={`inline-flex items-center gap-2 text-[12px] tracking-[0.2em] uppercase px-3.5 py-1.5 rounded-full mb-4 border ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`inline-flex items-center gap-2 text-[12px] tracking-[0.2em] uppercase px-3.5 py-1.5 rounded-full mb-4 border`}
             style={{
               backgroundColor: `${getColor("primary")}0D`,
               borderColor: `${getColor("primary")}33`,
@@ -675,7 +675,7 @@ export default function PrivateDealPage() {
           </div>
 
           <h1
-            className={`max-w-3xl font-serif text-4xl md:text-5xl tracking-tight leading-[1.15] mb-4 ${isRTL ? "text-right mr-0 ml-auto" : "text-left"}`}
+            className="max-w-3xl font-serif text-4xl md:text-5xl tracking-tight leading-[1.15] mb-4 text-start"
             style={{ color: getColor("primaryText") }}
           >
             <span>{t("private-deal.title_line1")} </span>
@@ -685,7 +685,7 @@ export default function PrivateDealPage() {
           </h1>
 
           <p
-            className={`max-w-2xl text-base md:text-lg leading-relaxed ${isRTL ? "text-right mr-0 ml-auto" : "text-left"}`}
+            className="max-w-2xl text-base md:text-lg leading-relaxed text-start"
             style={{ color: getColor("secondaryText") }}
           >
             {t("private-deal.description")}
@@ -702,7 +702,7 @@ export default function PrivateDealPage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-20">
         {showSidebar ? (
           <div
-            className={`grid grid-cols-1 lg:grid-cols-3 gap-8 ${isRTL ? "direction-rtl" : ""}`}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
           >
             <div className="lg:col-span-2">{renderMain()}</div>
             <div className="lg:col-span-1 space-y-6">

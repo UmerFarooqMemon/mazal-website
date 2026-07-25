@@ -33,7 +33,7 @@ export default function PortfolioPage() {
         >
           <Link
             href={`/${locale}/portfolio/add`}
-            className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95`}
             style={{ background: getGradient("primaryButton") }}
           >
             <Plus className="size-4" />

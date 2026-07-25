@@ -15,7 +15,6 @@ import {
 function DashboardSidebar() {
   const { t, locale } = useLocale();
   const pathname = usePathname();
-  const isRTL = locale === "ar";
 
   const sidebarLinks = [
     {
@@ -42,7 +41,7 @@ function DashboardSidebar() {
 
   return (
     <div
-      className={`w-64 bg-white border-r border-gray-200 min-h-screen p-6 ${isRTL ? "text-right" : "text-left"}`}
+      className={`w-64 bg-white border-r border-gray-200 min-h-screen p-6 text-start`}
     >
       {/* Back to Home */}
       <BackButton href={`/${locale}`} className="mb-6" size="sm">
@@ -63,11 +62,7 @@ function DashboardSidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? "bg-[#0A3B9E]/10 text-[#0A3B9E] font-medium"
-                  : "text-gray-600 hover:bg-gray-50"
-              } ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${ isActive ? "bg-[#0A3B9E]/10 text-[#0A3B9E] font-medium" : "text-gray-600 hover:bg-gray-50" }`}
             >
               <Icon className="w-5 h-5" />
               <span>{link.label}</span>

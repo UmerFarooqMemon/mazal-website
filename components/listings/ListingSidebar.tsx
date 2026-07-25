@@ -95,7 +95,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
         borderColor: getColor("border"),
       }}
     >
-      <div className={`mb-5 ${isRTL ? "text-right" : "text-left"}`}>
+      <div className={`mb-5 text-start`}>
         <div
           className="text-[10px] font-bold uppercase tracking-wider mb-1"
           style={{ color: getColor("mutedText") }}
@@ -170,14 +170,14 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
       </div>
 
       <div
-        className={`grid grid-cols-2 gap-2 mb-6 ${isRTL ? "direction-rtl" : ""}`}
+        className="grid grid-cols-2 gap-2 mb-6"
       >
         <Button
           variant="outline"
           size="md"
           disabled={watchlistLoading}
           onClick={handleWatchlistToggle}
-          className={`!h-[38px] flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`!h-[38px] flex items-center justify-center gap-2`}
           style={{
             borderColor: getColor("border"),
             color: getColor("secondaryText"),
@@ -193,7 +193,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           variant="outline"
           size="md"
           onClick={handleShare}
-          className={`!h-[38px] flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`!h-[38px] flex items-center justify-center gap-2`}
           style={{
             borderColor: getColor("border"),
             color: getColor("secondaryText"),
@@ -205,13 +205,13 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
       </div>
 
       <div
-        className={`border-t pt-4 space-y-2 ${isRTL ? "text-right" : "text-left"}`}
+        className={`border-t pt-4 space-y-2 text-start`}
         style={{ borderColor: getColor("border") }}
       >
         {rows.map((row) => (
           <div
             key={row.label}
-            className={`flex justify-between text-sm py-1 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex justify-between text-sm py-1`}
           >
             <span style={{ color: getColor("mutedText") }}>{row.label}</span>
             <span

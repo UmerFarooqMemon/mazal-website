@@ -167,13 +167,13 @@ export default function IdentityStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif tracking-tight mb-1 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif tracking-tight mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("kyc.identity_title")}
       </h2>
       <p
-        className={`text-sm mb-8 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-sm mb-8 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
         {isUae ? t("kyc.identity_subtitle_uae") : t("kyc.identity_subtitle_intl")}
@@ -242,12 +242,12 @@ export default function IdentityStep({
 
         <div className="w-full">
           <label
-            className={`block text-[11px] font-medium leading-none mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium leading-none mb-2 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("kyc.mobile_number")}
           </label>
-          <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <div className={`flex gap-2`}>
             <div className="w-[110px] shrink-0">
               <Select
                 options={COUNTRY_CODES}
@@ -301,7 +301,7 @@ export default function IdentityStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t pt-6`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

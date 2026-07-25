@@ -31,14 +31,13 @@ const clients = [
 
 export default function RightSidebar() {
   const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
 
   return (
     <div className="flex flex-col gap-6">
       {/* CRM Card */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <div
-          className={`flex justify-between items-center mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex justify-between items-center mb-4`}
         >
           <div className="flex items-center gap-2 font-medium text-[#041443]">
             <svg
@@ -68,15 +67,15 @@ export default function RightSidebar() {
           {clients.map((client, idx) => (
             <div
               key={idx}
-              className={`flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0 ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0`}
             >
-              <div className={`${isRTL ? "text-right" : "text-left"}`}>
+              <div className={`text-start`}>
                 <div className="text-sm font-medium text-[#041443]">
                   {client.name}
                 </div>
                 <div className="text-[10px] text-gray-400">{client.deals}</div>
               </div>
-              <div className={`${isRTL ? "text-left" : "text-right"}`}>
+              <div className={`text-end`}>
                 <div className="text-sm font-bold text-[#041443]">
                   <DirhamAmount amount={client.amount} weight="bold" />
                 </div>

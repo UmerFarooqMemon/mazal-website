@@ -86,7 +86,7 @@ export default function DealSummary({
       }}
     >
       <div
-        className={`relative z-10 text-[10px] font-bold uppercase tracking-wider ${plateCrop === "deal-summary" ? "mb-3" : "mb-4"} ${isRTL ? "text-right" : "text-left"}`}
+        className={`relative z-10 text-[10px] font-bold uppercase tracking-wider ${plateCrop === "deal-summary" ? "mb-3" : "mb-4"} text-start`}
         style={{ color: getColor("mutedText") }}
       >
         {t("private-deal.summary_title")}
@@ -167,7 +167,7 @@ export default function DealSummary({
           />
         </div>
         <div
-          className={`flex justify-between items-center pt-1 text-base font-bold ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex justify-between items-center pt-1 text-base font-bold`}
         >
           <span style={{ color: getColor("primaryText") }}>
             {data.role === "buyer"
@@ -189,9 +189,9 @@ export default function DealSummary({
           }}
         >
           <div
-            className={`grid grid-cols-3 gap-2 mb-4 ${isRTL ? "direction-rtl" : ""}`}
+            className="grid grid-cols-3 gap-2 mb-4"
           >
-            <div className={isRTL ? "text-right" : "text-left"}>
+            <div className="text-start">
               <div
                 className="text-[11px] mb-1"
                 style={{ color: getColor("mutedText") }}
@@ -205,7 +205,7 @@ export default function DealSummary({
                 <DirhamAmount amount={price} />
               </div>
             </div>
-            <div className={isRTL ? "text-right" : "text-left"}>
+            <div className="text-start">
               <div
                 className="text-[11px] mb-1"
                 style={{ color: getColor("mutedText") }}
@@ -219,7 +219,7 @@ export default function DealSummary({
                 <DirhamAmount amount={allocated} />
               </div>
             </div>
-            <div className={isRTL ? "text-right" : "text-left"}>
+            <div className="text-start">
               <div
                 className="text-[11px] mb-1"
                 style={{ color: getColor("mutedText") }}
@@ -243,7 +243,7 @@ export default function DealSummary({
               {pct}%
             </div>
             <div
-              className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+              className={`flex items-center gap-2`}
             >
               <div
                 className="relative flex-1 h-2 rounded-full"
@@ -292,7 +292,7 @@ function Row({
   getColor: (key: "mutedText" | "secondaryText" | "primaryText") => string;
 }) {
   return (
-    <div className={`flex justify-between gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
+    <div className={`flex justify-between gap-3`}>
       <span
         style={{
           color: muted ? getColor("mutedText") : getColor("secondaryText"),

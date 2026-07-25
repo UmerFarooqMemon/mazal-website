@@ -10,7 +10,6 @@ import {
 
 export default function TrendingSection() {
   const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
   const [plates, setPlates] = useState<
     ReturnType<typeof mapListingToPlateCard>[]
   >([]);
@@ -40,11 +39,11 @@ export default function TrendingSection() {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 border-t border-gray-100">
       <div
-        className={`flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4 ${isRTL ? "flex-row-reverse sm:flex-row-reverse" : ""}`}
+        className={`flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4`}
       >
-        <div className={`${isRTL ? "text-right" : "text-left"}`}>
+        <div className={`text-start`}>
           <div
-            className={`flex items-center gap-2 text-[#0A3B9E] text-xs font-semibold uppercase tracking-wider mb-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-2 text-[#0A3B9E] text-xs font-semibold uppercase tracking-wider mb-2`}
           >
             <svg
               className="w-4 h-4"

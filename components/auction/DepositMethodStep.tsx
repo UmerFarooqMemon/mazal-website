@@ -51,7 +51,7 @@ export default function DepositMethodStep({
         borderColor: getColor("border"),
       }}
     >
-      <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
+      <div className="mb-6">
         <h2
           className="text-2xl font-serif mb-1"
           style={{ color: getColor("primaryText") }}
@@ -72,7 +72,7 @@ export default function DepositMethodStep({
               key={item.key}
               type="button"
               onClick={() => onMethodChange(item.key)}
-              className={`w-full flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+              className="w-full flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all text-start"
               style={
                 selected
                   ? {
@@ -136,7 +136,7 @@ export default function DepositMethodStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+        className="flex items-center justify-between border-t pt-6"
         style={{ borderColor: getColor("border") }}
       >
         <Button

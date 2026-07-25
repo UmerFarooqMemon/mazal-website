@@ -17,9 +17,8 @@ export default function PortfolioPlateHero({
   plate,
   backHref,
 }: PortfolioPlateHeroProps) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   return (
     <div className="space-y-5">
@@ -91,7 +90,6 @@ interface PortfolioDetailsCardProps {
 export function PortfolioDetailsCard({ addedDate }: PortfolioDetailsCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const formattedDate = new Date(addedDate).toLocaleDateString(
     locale === "ar" ? "ar-AE" : "en-GB",
@@ -113,10 +111,10 @@ export function PortfolioDetailsCard({ addedDate }: PortfolioDetailsCardProps) {
         {t("portfolio.details")}
       </p>
       <div
-        className={`flex flex-wrap items-center justify-between gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex flex-wrap items-center justify-between gap-4`}
       >
         <div
-          className={`flex items-center gap-3 text-sm ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-3 text-sm`}
           style={{ color: getColor("secondaryText") }}
         >
           <CalendarIcon />

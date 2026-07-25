@@ -7,7 +7,6 @@ import { generateCertificatePDF } from "@/lib/pdf-generator";
 
 export default function CertificatePreview() {
   const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
   const { getColor, getGradient } = useTheme();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -26,9 +25,9 @@ export default function CertificatePreview() {
     <div className="w-full">
       {/* Header */}
       <div
-        className={`flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+        className={`flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4`}
       >
-        <div className={isRTL ? "text-right" : "text-left"}>
+        <div className="text-start">
           <div
             className="text-xs font-bold uppercase tracking-wider mb-1"
             style={{ color: getColor("primary") }}
@@ -80,11 +79,11 @@ export default function CertificatePreview() {
       >
         {/* Header */}
         <div
-          className={`text-white px-6 md:px-8 py-5 md:py-6 flex flex-col sm:flex-row justify-between items-center gap-3 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+          className={`text-white px-6 md:px-8 py-5 md:py-6 flex flex-col sm:flex-row justify-between items-center gap-3`}
           style={{ background: getGradient("primary") }}
         >
           <div
-            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-3`}
           >
             <div
               className="font-bold text-lg w-10 h-10 rounded flex items-center justify-center"
@@ -95,7 +94,7 @@ export default function CertificatePreview() {
             >
               M
             </div>
-            <div className={isRTL ? "text-right" : "text-left"}>
+            <div className="text-start">
               <div className="font-bold text-base md:text-lg text-white">
                 {t("certificates.platform_name") || "Mazal Platform"}
               </div>
@@ -104,7 +103,7 @@ export default function CertificatePreview() {
               </div>
             </div>
           </div>
-          <div className={isRTL ? "text-left" : "text-right"}>
+          <div className="text-end">
             <div className="uppercase tracking-wider text-white/50 text-[10px]">
               {t("certificates.certificate")}
             </div>
@@ -207,7 +206,7 @@ export default function CertificatePreview() {
 
           {/* Info Columns */}
           <div
-            className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 border-t pt-6 md:pt-8 mb-6 md:mb-8 ${isRTL ? "text-right" : "text-left"}`}
+            className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 border-t pt-6 md:pt-8 mb-6 md:mb-8 text-start`}
             style={{ borderColor: getColor("border") }}
           >
             <div>
@@ -237,7 +236,7 @@ export default function CertificatePreview() {
                 style={{ color: getColor("secondaryText") }}
               >
                 <div
-                  className={`flex justify-between ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex justify-between`}
                 >
                   <span>
                     {t("certificates.sale_1") || "Dubai · similar pattern"}
@@ -245,7 +244,7 @@ export default function CertificatePreview() {
                   <span><DirhamAmount amount={582_800} /></span>
                 </div>
                 <div
-                  className={`flex justify-between ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex justify-between`}
                 >
                   <span>
                     {t("certificates.sale_2") || "Dubai · same digit count"}
@@ -253,7 +252,7 @@ export default function CertificatePreview() {
                   <span><DirhamAmount amount={657_200} /></span>
                 </div>
                 <div
-                  className={`flex justify-between ${isRTL ? "flex-row-reverse" : ""}`}
+                  className={`flex justify-between`}
                 >
                   <span>
                     {t("certificates.sale_3") || "Dubai · adjacent code"}
@@ -266,7 +265,7 @@ export default function CertificatePreview() {
 
           {/* Signatures */}
           <div
-            className={`grid grid-cols-1 sm:grid-cols-2 gap-6 border-t pt-6 mb-6 md:mb-8 ${isRTL ? "text-right" : "text-left"}`}
+            className={`grid grid-cols-1 sm:grid-cols-2 gap-6 border-t pt-6 mb-6 md:mb-8 text-start`}
             style={{ borderColor: getColor("border") }}
           >
             <div>
@@ -301,7 +300,7 @@ export default function CertificatePreview() {
 
           {/* Footer */}
           <div
-            className={`rounded-b-2xl pt-5 md:pt-6 pb-5 md:pb-6 px-4 md:px-6 flex flex-col sm:flex-row items-center gap-4 text-xs -mx-6 md:-mx-10 -mb-6 md:-mb-10 mt-6 md:mt-10 ${isRTL ? "sm:flex-row-reverse" : ""}`}
+            className={`rounded-b-2xl pt-5 md:pt-6 pb-5 md:pb-6 px-4 md:px-6 flex flex-col sm:flex-row items-center gap-4 text-xs -mx-6 md:-mx-10 -mb-6 md:-mb-10 mt-6 md:mt-10`}
             style={{
               backgroundColor: getColor("primaryLight"),
               borderColor: getColor("border"),
@@ -309,7 +308,7 @@ export default function CertificatePreview() {
             }}
           >
             <div
-              className={`flex flex-col sm:flex-row items-center gap-3 ${isRTL ? "sm:flex-row-reverse text-right" : "text-left"}`}
+              className={`flex flex-col sm:flex-row items-center gap-3 text-start`}
             >
               <img
                 src="/mazal-certified.png"

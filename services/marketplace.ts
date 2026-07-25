@@ -19,22 +19,102 @@ export interface MarketplaceListingPreview {
   style?: string;
 }
 
+export interface MarketplaceAuctionBidSummary {
+  id: number;
+  amount: number | string;
+  bidder?: { id: number | null; name: string };
+}
+
+export interface MarketplaceAuctionRegistration {
+  id: number;
+  listing_id: number;
+  status: string;
+  status_label?: string;
+  deposit_amount: number | string;
+  deposit_status: string;
+  deposit_status_label?: string;
+  deposit_held_at?: string | null;
+  deposit_released_at?: string | null;
+  no_show_penalty_amount?: number | string | null;
+  no_show_marked_at?: string | null;
+  registered_at?: string | null;
+  user?: { id: number; name: string };
+  listing?: MarketplaceListingCard | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface MarketplaceAuction {
   starts_at: string;
   ends_at: string;
-  reserve_price: number;
+  reserve_price: number | string;
+  starting_price?: number | string;
+  outcome?: string | null;
+  outcome_label?: string | null;
+  closed_at?: string | null;
+  is_registration_open?: boolean;
+  is_bidding_open?: boolean;
+  current_high_bid?: number | string | null;
+  bid_count?: number;
+  registration_count?: number;
+  min_next_bid?: number | string;
+  min_bid_increment?: number | string;
+  registration_deposit?: number | string;
+  no_show_penalty?: number | string;
+  viewer_registration?: MarketplaceAuctionRegistration | null;
+  winning_bid?: MarketplaceAuctionBidSummary | null;
 }
 
 export interface MarketplaceReveal {
   id: number;
   status: string;
-  fee_amount: number;
+  status_label?: string;
+  payment_status?: string;
+  fee_amount: number | string;
   revealed_at: string | null;
   decision_expires_at: string | null;
   decision_window_hours: number;
   seconds_remaining: number;
   is_active: boolean;
   credited_to_purchase: boolean;
+  can_confirm_payment?: boolean;
+  can_proceed?: boolean;
+}
+
+export interface MarketplaceRevealCodeScreen {
+  unlocked: boolean;
+  plate_code?: string | null;
+  plate_digits?: string | null;
+  display_plate?: string;
+  masked_hint?: string;
+  decision_expires_at?: string | null;
+  seconds_remaining?: number;
+  can_proceed?: boolean;
+}
+
+export interface MarketplaceRevealActions {
+  can_initiate: boolean;
+  can_confirm_payment: boolean;
+  can_proceed: boolean;
+  can_make_offer: boolean;
+}
+
+export interface MarketplaceRevealScreen {
+  listing_id: number;
+  title: string;
+  emirate: string;
+  emirate_label: string;
+  asking_price: number | string;
+  hide_code: boolean;
+  code_hidden: boolean;
+  reveal_fee_amount: number | string;
+  decision_window_hours: number;
+  reveal: MarketplaceReveal | null;
+  code_screen: MarketplaceRevealCodeScreen;
+  actions: MarketplaceRevealActions;
+  listing?: MarketplaceListingDetail;
+  credit_applied?: number;
+  message?: string;
 }
 
 export type MarketplaceBoostTier = "diamond" | "gold" | "silver";
@@ -75,6 +155,7 @@ export interface MarketplaceListingDetail extends MarketplaceListingCard {
   description?: string | null;
   auction?: MarketplaceAuction | null;
   reveal?: MarketplaceReveal | null;
+  reveal_screen_url?: string | null;
   can_make_offer?: boolean;
   is_owner?: boolean;
   sold_at?: string | null;
@@ -89,8 +170,148 @@ export interface MarketplaceOffer {
   message?: string | null;
   status: string;
   status_label: string;
+  decision_note?: string | null;
   buyer?: { id: number; name: string };
+  listing?: {
+    id: number;
+    title: string;
+    status: string;
+    display_plate: string;
+    asking_price: number | string;
+  };
+  responded_at?: string | null;
   created_at: string;
+  updated_at?: string;
+}
+
+export interface MarketplacePurchasePayment {
+  id: number;
+  amount: number | string;
+  method: string;
+  status: string;
+  status_label?: string;
+  payment_reference?: string | null;
+  custody_instructions?: string | null;
+  has_evidence?: boolean;
+}
+
+export interface MarketplacePurchaseAddons {
+  include_delivery: boolean;
+  include_fitting: boolean;
+  delivery_fee_amount: number | string;
+  fitting_fee_amount: number | string;
+  addons_total: number | string;
+  delivery_address?: string | null;
+  delivery_notes?: string | null;
+}
+
+export interface MarketplacePurchaseInvoice {
+  id: number;
+  purchase_id: number;
+  invoice_number: string;
+  currency: string;
+  subtotal: number | string;
+  reveal_credit_amount: number | string;
+  total_fees: number | string;
+  total_amount: number | string;
+  line_items?: unknown[];
+  issued_at: string;
+  download_url?: string;
+}
+
+export interface MarketplacePurchase {
+  id: number;
+  listing_id: number;
+  offer_id?: number | null;
+  status: string;
+  status_label?: string;
+  agreed_price: number | string;
+  reveal_credit_amount?: number | string;
+  fee_snapshot?: Record<string, unknown>;
+  total_fees?: number | string;
+  total_due: number | string;
+  seller_net?: number | string;
+  currency: string;
+  can_gift?: boolean;
+  gifted_to?: { id: number; name: string } | null;
+  addons?: MarketplacePurchaseAddons;
+  buyer?: { id: number; name: string };
+  seller?: { id: number; name: string };
+  listing?: {
+    id: number;
+    title: string;
+    status: string;
+    display_plate: string;
+    asking_price: number | string;
+  };
+  payments?: MarketplacePurchasePayment[];
+  invoice?: MarketplacePurchaseInvoice | null;
+  funded_at?: string | null;
+  transfer_started_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
+  cancel_reason?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface MarketplaceGift {
+  id: number;
+  purchase_id: number;
+  status: string;
+  status_label?: string;
+  recipient_name: string;
+  recipient_email?: string | null;
+  recipient_phone?: string | null;
+  message?: string | null;
+  invitation_code?: string;
+  expires_at?: string | null;
+  accepted_at?: string | null;
+  declined_at?: string | null;
+  cancelled_at?: string | null;
+  sender?: { id: number; name: string };
+  recipient?: { id: number; name: string } | null;
+  purchase?: {
+    id: number;
+    status: string;
+    listing_id: number;
+    display_plate: string;
+    agreed_price: number | string;
+  };
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface MarketplaceAuctionBid {
+  id: number;
+  listing_id: number;
+  amount: number | string;
+  is_winning?: boolean;
+  bidder?: { id: number | null; name: string };
+  created_at: string;
+}
+
+export interface MarketplacePurchaseAddonCatalogItem {
+  key: string;
+  label: string;
+  description: string;
+  amount: number | string;
+  requires_address: boolean;
+}
+
+export interface UpdatePurchaseAddonsPayload {
+  include_delivery: boolean;
+  include_fitting: boolean;
+  delivery_address?: string;
+  delivery_notes?: string;
+}
+
+export interface CreateGiftPayload {
+  recipient_name: string;
+  recipient_email?: string | null;
+  recipient_phone?: string | null;
+  recipient_user_id?: number | null;
+  message?: string;
 }
 
 export interface MarketplaceWatchlistItem {
@@ -223,7 +444,8 @@ async function marketplaceRequest<T>(
 
   headers["Accept-Language"] = options.locale === "ar" ? "ar" : "en";
 
-  if (options.contentType) {
+  // Let the browser set multipart boundary when body is FormData.
+  if (options.contentType && !(options.body instanceof FormData)) {
     headers["Content-Type"] = options.contentType;
   }
 
@@ -491,26 +713,24 @@ export function removeFromWatchlist(
   });
 }
 
-// 15. Get Reveal Status
+// 15. Get Reveal Screen
 export function getRevealStatus(listingId: string | number, locale: string) {
-  return marketplaceRequest<{
-    reveal_fee_amount: number;
-    reveal: MarketplaceReveal | null;
-    code_hidden: boolean;
-  }>(`/listings/${listingId}/reveal`, { locale, auth: "required" });
+  return marketplaceRequest<MarketplaceRevealScreen>(
+    `/listings/${listingId}/reveal`,
+    { locale, auth: "required" },
+  );
 }
 
 // 16. Initiate Reveal
 export function initiateReveal(listingId: string | number, locale: string) {
-  return marketplaceRequest<{
-    reveal: MarketplaceReveal;
-    reveal_fee_amount: number;
-    message: string;
-  }>(`/listings/${listingId}/reveal`, {
-    method: "POST",
-    locale,
-    auth: "required",
-  });
+  return marketplaceRequest<MarketplaceRevealScreen & { message?: string }>(
+    `/listings/${listingId}/reveal`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
 }
 
 // 17. Confirm Reveal Payment
@@ -519,27 +739,25 @@ export function confirmRevealPayment(
   locale: string,
   paymentReference?: string,
 ) {
-  return marketplaceRequest<{
-    reveal: MarketplaceReveal;
-    listing: MarketplaceListingDetail;
-  }>(`/listings/${listingId}/reveal/confirm`, {
-    method: "POST",
-    locale,
-    auth: "required",
-    contentType: "application/json",
-    body: JSON.stringify({
-      payment_reference: paymentReference,
-    }),
-  });
+  return marketplaceRequest<MarketplaceRevealScreen>(
+    `/listings/${listingId}/reveal/confirm`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify({
+        payment_reference: paymentReference,
+      }),
+    },
+  );
 }
 
 // 18. Proceed After Reveal
 export function proceedAfterReveal(listingId: string | number, locale: string) {
-  return marketplaceRequest<{
-    reveal: MarketplaceReveal;
-    credit_applied: number;
-    message: string;
-  }>(`/listings/${listingId}/reveal/proceed`, {
+  return marketplaceRequest<
+    MarketplaceRevealScreen & { credit_applied?: number; message?: string }
+  >(`/listings/${listingId}/reveal/proceed`, {
     method: "POST",
     locale,
     auth: "required",
@@ -580,7 +798,7 @@ export function getMyOffers(locale: string) {
   });
 }
 
-// 22. Get Notification Settings
+// 40. Get Notification Settings
 export function getNotificationSettings(locale: string) {
   return marketplaceRequest<MarketplaceNotificationSettings>(
     "/notification-settings",
@@ -588,7 +806,7 @@ export function getNotificationSettings(locale: string) {
   );
 }
 
-// 23. Update Notification Settings
+// 41. Update Notification Settings
 export function updateNotificationSettings(
   payload: Partial<MarketplaceNotificationSettings>,
   locale: string,
@@ -603,4 +821,343 @@ export function updateNotificationSettings(
       body: JSON.stringify(payload),
     },
   );
+}
+
+// 22. Accept Offer (Seller)
+export function acceptOffer(offerId: string | number, locale: string) {
+  return marketplaceRequest<{ offer: MarketplaceOffer }>(
+    `/offers/${offerId}/accept`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
+}
+
+// 23. Reject Offer (Seller)
+export function rejectOffer(
+  offerId: string | number,
+  locale: string,
+  reason?: string,
+) {
+  return marketplaceRequest<{ offer: MarketplaceOffer }>(
+    `/offers/${offerId}/reject`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify({ reason }),
+    },
+  );
+}
+
+// 24. Withdraw Offer (Buyer)
+export function withdrawOffer(offerId: string | number, locale: string) {
+  return marketplaceRequest<{ offer: MarketplaceOffer }>(
+    `/offers/${offerId}/withdraw`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
+}
+
+// 25. Start Purchase From Accepted Offer
+export function startPurchaseFromOffer(
+  offerId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
+    `/offers/${offerId}/purchase`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
+}
+
+// 26. Get Purchase
+export function getPurchase(purchaseId: string | number, locale: string) {
+  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
+    `/purchases/${purchaseId}`,
+    { locale, auth: "required" },
+  );
+}
+
+// 27. My Purchases / Sales
+export function getMyPurchases(
+  locale: string,
+  role: "buyer" | "seller" = "buyer",
+) {
+  return marketplaceRequest<{ purchases: MarketplacePurchase[] }>(
+    `/purchases${buildQuery({ role })}`,
+    { locale, auth: "required" },
+  );
+}
+
+// 28. Confirm Purchase Payment (Fake Local)
+export function confirmPurchasePayment(
+  purchaseId: string | number,
+  paymentId: string | number,
+  locale: string,
+  paymentReference?: string,
+) {
+  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
+    `/purchases/${purchaseId}/payments/${paymentId}/confirm`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify({
+        payment_reference: paymentReference,
+      }),
+    },
+  );
+}
+
+// 29. Submit Bank Transfer Evidence
+export function submitPurchasePaymentEvidence(
+  purchaseId: string | number,
+  paymentId: string | number,
+  locale: string,
+  payload: { payment_reference?: string; evidence?: File | Blob | null },
+) {
+  const formData = new FormData();
+  if (payload.payment_reference) {
+    formData.append("payment_reference", payload.payment_reference);
+  }
+  if (payload.evidence) {
+    formData.append("evidence", payload.evidence);
+  }
+
+  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
+    `/purchases/${purchaseId}/payments/${paymentId}/submission`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      body: formData,
+    },
+  );
+}
+
+// 30. Get Purchase Add-ons Catalog
+export function getPurchaseAddons(locale: string) {
+  return marketplaceRequest<{
+    currency: string;
+    addons: MarketplacePurchaseAddonCatalogItem[];
+  }>("/purchase-addons", { locale, auth: "required" });
+}
+
+// 31. Update Purchase Add-ons
+export function updatePurchaseAddons(
+  purchaseId: string | number,
+  payload: UpdatePurchaseAddonsPayload,
+  locale: string,
+) {
+  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
+    `/purchases/${purchaseId}/addons`,
+    {
+      method: "PATCH",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+// 32. Create Gift From Purchase
+export function createGiftFromPurchase(
+  purchaseId: string | number,
+  payload: CreateGiftPayload,
+  locale: string,
+) {
+  return marketplaceRequest<{ gift: MarketplaceGift }>(
+    `/purchases/${purchaseId}/gifts`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+// 33. My Gifts
+export function getMyGifts(
+  locale: string,
+  role: "sent" | "received" = "sent",
+) {
+  return marketplaceRequest<{ gifts: MarketplaceGift[] }>(
+    `/gifts${buildQuery({ role })}`,
+    { locale, auth: "required" },
+  );
+}
+
+// 34. Get Gift
+export function getGift(giftId: string | number, locale: string) {
+  return marketplaceRequest<{ gift: MarketplaceGift }>(`/gifts/${giftId}`, {
+    locale,
+    auth: "required",
+  });
+}
+
+// 35. Accept Gift
+export function acceptGift(invitationCode: string, locale: string) {
+  return marketplaceRequest<{ gift: MarketplaceGift }>("/gifts/accept", {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify({ invitation_code: invitationCode }),
+  });
+}
+
+// 36. Decline Gift
+export function declineGift(giftId: string | number, locale: string) {
+  return marketplaceRequest<{ gift: MarketplaceGift }>(
+    `/gifts/${giftId}/decline`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
+}
+
+// 37. Cancel Gift
+export function cancelGift(giftId: string | number, locale: string) {
+  return marketplaceRequest<{ gift: MarketplaceGift }>(
+    `/gifts/${giftId}/cancel`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
+}
+
+// 38. Get Purchase Invoice
+export function getPurchaseInvoice(
+  purchaseId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{ invoice: MarketplacePurchaseInvoice }>(
+    `/purchases/${purchaseId}/invoice`,
+    { locale, auth: "required" },
+  );
+}
+
+// 39. Download Purchase Invoice PDF
+export async function downloadPurchaseInvoice(
+  purchaseId: string | number,
+  locale: string,
+): Promise<Blob> {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Please login to continue.");
+  }
+
+  const response = await fetch(
+    `/api/marketplace/purchases/${purchaseId}/invoice/download`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Accept-Language": locale === "ar" ? "ar" : "en",
+      },
+    },
+  );
+
+  const responseType = response.headers.get("content-type") || "";
+  if (!response.ok) {
+    if (responseType.includes("application/json")) {
+      const payload = await response.json();
+      throw new Error(payload?.message || payload?.error || "Download failed.");
+    }
+    throw new Error("Failed to download invoice.");
+  }
+
+  return response.blob();
+}
+
+// 42. Get Auction State
+export function getAuctionState(listingId: string | number, locale: string) {
+  return marketplaceRequest<{
+    listing_id: number;
+    auction: MarketplaceAuction;
+  }>(`/listings/${listingId}/auction`, { locale });
+}
+
+// 43. List Auction Bids
+export function getAuctionBids(listingId: string | number, locale: string) {
+  return marketplaceRequest<{ bids: MarketplaceAuctionBid[] }>(
+    `/listings/${listingId}/auction/bids`,
+    { locale },
+  );
+}
+
+// 44. Register For Auction
+export function registerForAuction(listingId: string | number, locale: string) {
+  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
+    `/listings/${listingId}/auction/register`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
+}
+
+// 45. Confirm Auction Deposit (Fake Local)
+export function confirmAuctionDeposit(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+  paymentReference?: string,
+) {
+  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/confirm-deposit`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify({
+        payment_reference: paymentReference,
+      }),
+    },
+  );
+}
+
+// 46. Place Auction Bid
+export function placeAuctionBid(
+  listingId: string | number,
+  amount: number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    bid: MarketplaceAuctionBid;
+    auction: MarketplaceAuction;
+  }>(`/listings/${listingId}/auction/bids`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify({ amount }),
+  });
+}
+
+// 47. My Auction Registrations
+export function getMyAuctionRegistrations(locale: string) {
+  return marketplaceRequest<{
+    registrations: MarketplaceAuctionRegistration[];
+  }>("/my-auction-registrations", { locale, auth: "required" });
 }

@@ -32,7 +32,6 @@ export default function LivePreview({
 }: LivePreviewProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
   const [fetchedPreview, setFetchedPreview] = useState<PlatePreviewConfig>();
   const [fetchedShowCode, setFetchedShowCode] = useState(true);
 
@@ -88,7 +87,7 @@ export default function LivePreview({
       }}
     >
       <div
-        className={`text-[11px] font-bold tracking-[0.14em] uppercase mb-4 ${isRTL ? "text-right" : "text-left"}`}
+        className="text-[11px] font-bold tracking-[0.14em] uppercase mb-4"
         style={{ color: getColor("mutedText") }}
       >
         {label || t("listings.live_preview")}
@@ -112,7 +111,7 @@ export default function LivePreview({
         style={{ borderColor: getColor("border") }}
       >
         <div
-          className={`flex items-center justify-between gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
+          className="flex items-center justify-between gap-4"
         >
           <span
             className="text-xs font-medium uppercase tracking-wider"

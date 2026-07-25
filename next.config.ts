@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "admin.mazal.cloud",
+        pathname: "/uploads/**",
+      },
+    ],
+  },
   // Disable HMR in production to avoid WebSocket errors
   webpack: (config, { dev }) => {
     if (!dev) {

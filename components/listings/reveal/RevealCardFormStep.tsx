@@ -59,7 +59,7 @@ export default function RevealCardFormStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif font-bold mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className={`text-2xl font-serif font-bold mb-6 text-start`}
         style={{ color: getColor("primaryText") }}
       >
         {t("listings.reveal_card_form_title")}
@@ -105,7 +105,7 @@ export default function RevealCardFormStep({
       </div>
 
       <div
-        className={`flex items-center justify-between border-t mt-8 pt-5 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex items-center justify-between border-t mt-8 pt-5`}
         style={{ borderColor: getColor("border") }}
       >
         <Button

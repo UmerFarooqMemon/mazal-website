@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { ChevronDown } from "lucide-react";
 
@@ -24,8 +23,6 @@ export default function Select({
   onChange,
   placeholder,
 }: SelectProps) {
-  const { locale } = useLocale();
-  const isRTL = locale === "ar";
   const { getColor } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -49,7 +46,7 @@ export default function Select({
       {/* Label */}
       {label && (
         <label
-          className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          className={`block text-[11px] font-medium mb-1.5 text-start`}
           style={{ color: getColor("secondaryText") }}
         >
           {label}
@@ -62,9 +59,7 @@ export default function Select({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between cursor-pointer transition-all duration-200
-            ${error ? "border-red-300" : ""}
-            ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+          className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between cursor-pointer transition-all duration-200 ${error ? "border-red-300" : ""} text-start`}
           style={{
             borderColor: isOpen
               ? getColor("primary")
@@ -90,7 +85,7 @@ export default function Select({
         {/* Dropdown Menu */}
         {isOpen && (
           <div
-            className={`absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg overflow-hidden ${isRTL ? "right-0" : "left-0"}`}
+            className={`absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg overflow-hidden start-0`}
             style={{
               borderColor: getColor("border"),
               borderWidth: "1px",
@@ -105,9 +100,7 @@ export default function Select({
                     onChange?.(option.key);
                     setIsOpen(false);
                   }}
-                  className={`w-full px-4 py-2.5 text-sm transition-colors duration-100
-                    ${option.key === value ? "font-medium" : ""}
-                    ${isRTL ? "text-right" : "text-left"}`}
+                  className={`w-full px-4 py-2.5 text-sm transition-colors duration-100 ${option.key === value ? "font-medium" : ""} text-start`}
                   style={{
                     backgroundColor:
                       option.key === value
@@ -140,7 +133,7 @@ export default function Select({
       {/* Hint */}
       {hint && !error && (
         <p
-          className={`text-[10px] mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-[10px] mt-1.5 text-start`}
           style={{ color: getColor("mutedText") }}
         >
           {hint}
@@ -150,7 +143,7 @@ export default function Select({
       {/* Error */}
       {error && (
         <p
-          className={`text-[10px] mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-[10px] mt-1.5 text-start`}
           style={{ color: getColor("error") }}
         >
           {error}

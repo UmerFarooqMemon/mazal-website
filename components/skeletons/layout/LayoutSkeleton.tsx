@@ -29,24 +29,24 @@ export default function LayoutSkeleton({
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-xl border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
-          className={`flex h-16 items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex h-16 items-center justify-between`}
         >
           <div className="flex items-center shrink-0">
             <div className="w-24 h-9 bg-gray-200 rounded-lg animate-pulse" />
           </div>
           <div
-            className={`hidden lg:flex items-center gap-8 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`hidden lg:flex items-center gap-8`}
           >
             <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
           </div>
           <div
-            className={`hidden lg:flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`hidden lg:flex items-center gap-2`}
           >
             <div className="w-16 h-8 bg-gray-200 rounded-full animate-pulse" />
             <div className="w-20 h-9 bg-gray-200 rounded-full animate-pulse" />
           </div>
           <div
-            className={`flex items-center gap-2 lg:hidden ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center gap-2 lg:hidden`}
           >
             <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
             <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
@@ -61,12 +61,12 @@ export default function LayoutSkeleton({
     <footer className="bg-black">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-14 lg:py-16">
         <div
-          className={`grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,340px)_1fr] ${isRTL ? "text-right" : "text-left"}`}
+          className={`grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,340px)_1fr] text-start`}
         >
           <div className="space-y-5">
             <div className="w-32 h-10 bg-neutral-800 rounded animate-pulse" />
             <div className="w-full max-w-[320px] h-14 bg-neutral-800 rounded animate-pulse" />
-            <div className={`flex gap-3 ${isRTL ? "flex-row-reverse justify-end" : ""}`}>
+            <div className={`flex gap-3`}>
               <div className="size-9 bg-neutral-800 rounded-full animate-pulse" />
               <div className="size-9 bg-neutral-800 rounded-full animate-pulse" />
               <div className="size-9 bg-neutral-800 rounded-full animate-pulse" />

@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Button } from "@/components/ui";
+import SiteLogo from "@/components/layout/SiteLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { featureFlags } from "@/config/featureFlags";
 import {
@@ -28,7 +28,7 @@ export default function Header() {
   const router = useRouter();
   const { locale, t } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor, getGradient, branding } = useTheme();
+  const { getColor, getGradient } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -120,29 +120,8 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
-            {/* Logo */}
-            <Link
-              href={`/${locale}`}
-              className="flex items-center shrink-0 min-w-0"
-            >
-              {branding.logoUrl ? (
-                <Image
-                  src={branding.logoUrl}
-                  alt="Mazal"
-                  width={100}
-                  height={36}
-                  className="h-8 sm:h-9 w-auto max-w-[100px] object-contain"
-                  unoptimized
-                />
-              ) : (
-                <span
-                  className="text-lg font-bold tracking-[0.18em]"
-                  style={{ color: getColor("primaryText") }}
-                >
-                  MAZAL
-                </span>
-              )}
-            </Link>
+            {/* Logo from site-settings API */}
+            <SiteLogo variant="header" />
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-7 text-sm">
@@ -150,9 +129,7 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`transition-colors whitespace-nowrap ${
-                    isActive(link.match) ? "font-medium" : "hover:opacity-80"
-                  }`}
+                  className={`transition-colors whitespace-nowrap ${ isActive(link.match) ? "font-medium" : "hover:opacity-80" }`}
                   style={linkStyle(isActive(link.match))}
                 >
                   {link.label}
@@ -309,13 +286,11 @@ export default function Header() {
           />
 
           <div
-            className={`absolute top-0 h-full w-72 shadow-2xl overflow-y-auto transition-transform duration-300 ease-out
-              ${isRTL ? "right-0 rounded-l-2xl" : "left-0 rounded-r-2xl"}
-              ${isAnimating ? (isRTL ? "translate-x-full" : "-translate-x-full") : "translate-x-0"}`}
+            className={`absolute top-0 start-0 h-full w-72 shadow-2xl overflow-y-auto transition-transform duration-300 ease-out rounded-e-2xl ${isAnimating ? (isRTL ? "translate-x-full" : "-translate-x-full") : "translate-x-0"}`}
             style={{ backgroundColor: getColor("surface") }}
           >
             <div
-              className={`flex ${isRTL ? "justify-start" : "justify-end"} p-4`}
+              className="flex justify-end p-4"
             >
               <button
                 onClick={closeMenu}
@@ -333,7 +308,7 @@ export default function Header() {
                   style={{ backgroundColor: getColor("primaryLight") }}
                 >
                   <div
-                    className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    className={`flex items-center gap-3 text-start`}
                   >
                     <div
                       className="h-10 w-10 rounded-full text-white flex items-center justify-center text-sm font-medium"
@@ -368,9 +343,7 @@ export default function Header() {
                       key={link.href}
                       href={link.href}
                       onClick={closeMenu}
-                      className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
-                        active ? "font-medium" : ""
-                      } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                      className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ active ? "font-medium" : "" } text-start`}
                       style={{
                         backgroundColor: active
                           ? `${getColor("primary")}10`
@@ -381,7 +354,7 @@ export default function Header() {
                       }}
                     >
                       <span
-                        className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                        className={`flex items-center gap-3`}
                       >
                         <Icon className="w-5 h-5" strokeWidth={2} />
                         {link.label}
@@ -400,9 +373,7 @@ export default function Header() {
                   <Link
                     href={`/${locale}/kyc`}
                     onClick={closeMenu}
-                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
-                      isActive("/kyc") ? "font-medium" : ""
-                    } ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ isActive("/kyc") ? "font-medium" : "" } text-start`}
                     style={{
                       backgroundColor: isActive("/kyc")
                         ? `${getColor("primary")}10`
@@ -413,7 +384,7 @@ export default function Header() {
                     }}
                   >
                     <span
-                      className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                      className={`flex items-center gap-3`}
                     >
                       <ShieldCheck className="w-5 h-5" strokeWidth={2} />
                       {t("common.kyc_short")}
@@ -453,7 +424,7 @@ export default function Header() {
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all duration-150 hover:bg-red-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all duration-150 hover:bg-red-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-start`}
                     style={{ color: "#EF4444" }}
                   >
                     <LogOut className="w-5 h-5" />

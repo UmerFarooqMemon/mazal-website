@@ -10,14 +10,13 @@ interface DepositFlowHeaderProps {
 }
 
 export default function DepositFlowHeader({ steps }: DepositFlowHeaderProps) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   return (
     <div className="w-full max-w-5xl mx-auto">
       <div
-        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] mb-4 ${isRTL ? "flex-row-reverse" : ""}`}
+        className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] mb-4"
         style={{
           backgroundColor: getColor("primaryLight"),
           color: getColor("primary"),
@@ -28,22 +27,20 @@ export default function DepositFlowHeader({ steps }: DepositFlowHeaderProps) {
       </div>
 
       <h1
-        className={`font-serif text-[28px] sm:text-[36px] md:text-[42px] leading-[1.15] tracking-tight mb-3 max-w-3xl ${isRTL ? "text-right" : "text-left"}`}
+        className="font-serif text-[28px] sm:text-[36px] md:text-[42px] leading-[1.15] tracking-tight mb-3 max-w-3xl"
         style={{ color: getColor("primaryText") }}
       >
         {t("auctions.deposit_title")}
       </h1>
 
       <p
-        className={`text-[14px] sm:text-[15px] leading-relaxed max-w-2xl mb-6 ${isRTL ? "text-right" : "text-left"}`}
+        className="text-[14px] sm:text-[15px] leading-relaxed max-w-2xl mb-6"
         style={{ color: getColor("secondaryText") }}
       >
         {t("auctions.deposit_subtitle")}
       </p>
 
-      <div
-        className={`flex flex-wrap gap-3 w-full ${isRTL ? "flex-row-reverse" : ""}`}
-      >
+      <div className="flex flex-wrap gap-3 w-full">
         {steps.map((step, index) => {
           const isCompleted = step.status === "completed";
           const isCurrent = step.status === "current";
@@ -69,9 +66,7 @@ export default function DepositFlowHeader({ steps }: DepositFlowHeaderProps) {
                       }
               }
             >
-              <div
-                className={`flex items-center gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}
-              >
+              <div className="flex items-center gap-2.5">
                 <div
                   className="flex items-center justify-center size-[23px] rounded-full shrink-0"
                   style={{

@@ -5,7 +5,6 @@ import { Button, DirhamAmount } from "@/components/ui";
 
 export default function HeroLeft() {
   const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
 
   // Use proper locale-based formatter for Arabic statistics
   const formatStatNumber = (value: string | number): string => {
@@ -22,11 +21,11 @@ export default function HeroLeft() {
 
   return (
     <div
-      className={`flex flex-col justify-center ${isRTL ? "items-end text-right" : "items-start text-left"}`}
+      className={`flex flex-col justify-center items-start text-start`}
     >
       {/* Badge */}
       <div
-        className={`inline-flex items-center gap-2 bg-[#EEF2F8] text-[#0A3B9E] text-xs font-semibold px-4 py-1.5 rounded-full mb-6 w-fit border border-[#0A3B9E]/10 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`inline-flex items-center gap-2 bg-[#EEF2F8] text-[#0A3B9E] text-xs font-semibold px-4 py-1.5 rounded-full mb-6 w-fit border border-[#0A3B9E]/10`}
       >
         <svg
           width="14"
@@ -57,7 +56,7 @@ export default function HeroLeft() {
 
       {/* Buttons */}
       <div
-        className={`flex flex-wrap gap-4 mb-12 ${isRTL ? "flex-row-reverse" : ""}`}
+        className={`flex flex-wrap gap-4 mb-12`}
       >
         <Link href={`/${locale}/marketplace`}>
           <Button
@@ -89,7 +88,7 @@ export default function HeroLeft() {
 
       {/* Statistics - WITH CORRECT ARABIC FORMATTING */}
       <div
-        className={`grid grid-cols-3 gap-8 max-w-md border-t pt-8 border-gray-200 ${isRTL ? "text-right" : "text-left"}`}
+        className={`grid grid-cols-3 gap-8 max-w-md border-t pt-8 border-gray-200 text-start`}
       >
         <div>
           <div className="text-2xl font-bold text-[#041443]">

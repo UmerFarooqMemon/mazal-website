@@ -17,18 +17,18 @@ export default function VerifyCertificateSkeleton() {
       <section className="md:hidden flex-1 flex flex-col px-6 pt-6 pb-8 bg-white">
         <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
           <div
-            className={`w-40 h-3 bg-gray-200 rounded mb-3 animate-pulse ${isRTL ? "ml-auto" : ""}`}
+            className="w-40 h-3 bg-gray-200 rounded mb-3 animate-pulse"
           />
           <div
-            className={`w-full max-w-[300px] h-8 bg-gray-200 rounded-lg animate-pulse mb-2 ${isRTL ? "ml-auto" : ""}`}
+            className="w-full max-w-[300px] h-8 bg-gray-200 rounded-lg animate-pulse mb-2"
           />
           <div
-            className={`w-2/3 max-w-[220px] h-8 bg-gray-200 rounded-lg animate-pulse ${isRTL ? "ml-auto" : ""}`}
+            className="w-2/3 max-w-[220px] h-8 bg-gray-200 rounded-lg animate-pulse"
           />
         </div>
 
         <div
-          className={`w-10 h-3 bg-gray-200 rounded mb-1.5 animate-pulse ${isRTL ? "ml-auto" : ""}`}
+          className="w-10 h-3 bg-gray-200 rounded mb-1.5 animate-pulse"
         />
         <div className="w-full h-11 bg-gray-100 rounded-lg border border-gray-200 animate-pulse" />
         <div className="mt-5 w-full h-12 bg-gray-200 rounded-full animate-pulse" />
@@ -36,7 +36,7 @@ export default function VerifyCertificateSkeleton() {
         <div className="mt-auto pt-16">
           <div className="h-px w-full mb-7 bg-gray-200" />
           <div
-            className={`w-20 h-9 bg-gray-200 rounded-full animate-pulse ${isRTL ? "ml-auto" : ""}`}
+            className="w-20 h-9 bg-gray-200 rounded-full animate-pulse"
           />
         </div>
       </section>

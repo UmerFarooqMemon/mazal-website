@@ -1,7 +1,6 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 
 export type StepStatus = "completed" | "current" | "upcoming";
@@ -17,14 +16,10 @@ interface StepperProps {
 }
 
 export default function Stepper({ steps }: StepperProps) {
-  const { locale } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   return (
-    <div
-      className={`flex flex-wrap gap-3 w-full pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
-    >
+    <div className="flex flex-wrap gap-3 w-full pt-6">
       {steps.map((step) => {
         const isCompleted = step.status === "completed";
         const isCurrent = step.status === "current";
@@ -51,7 +46,7 @@ export default function Stepper({ steps }: StepperProps) {
             }
           >
             <div
-              className={`flex items-center gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}
+              className="flex items-center gap-2.5"
             >
               <div
                 className="flex items-center justify-center size-[23px] rounded-full shrink-0"

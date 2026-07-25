@@ -35,7 +35,7 @@ export default function AuthSkeleton({
         {/* Close button */}
         {type !== "password-updated" && (
           <div
-            className={`absolute top-4 ${isRTL ? "left-4" : "right-4"} h-9 w-9 bg-gray-200 rounded-lg`}
+            className="absolute top-4 end-4 h-9 w-9 bg-gray-200 rounded-lg"
           />
         )}
         {children}
@@ -53,7 +53,7 @@ export default function AuthSkeleton({
   // Badge skeleton
   const BadgeSkeleton = ({ center = false }: { center?: boolean }) => (
     <div
-      className={`flex items-center gap-2 mb-4 ${center ? "justify-center" : ""} ${isRTL ? "flex-row-reverse" : ""}`}
+      className={`flex items-center gap-2 mb-4 ${center ? "justify-center" : ""}`}
     >
       <div className="w-4 h-4 bg-gray-200 rounded" />
       <div className="w-24 h-3 bg-gray-200 rounded" />
@@ -69,7 +69,7 @@ export default function AuthSkeleton({
         /* Login Layout */
         <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl bg-white">
           <div
-            className={`hidden lg:flex w-full lg:w-1/2 bg-linear-to-br from-gray-200 to-gray-300 animate-pulse items-center justify-center p-12 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
+            className="hidden lg:flex w-full lg:w-1/2 bg-linear-to-br from-gray-200 to-gray-300 animate-pulse items-center justify-center p-12"
           >
             <div className="w-full max-w-sm space-y-6">
               <div className="w-32 h-6 bg-white/40 rounded-full" />
@@ -85,50 +85,50 @@ export default function AuthSkeleton({
             </div>
           </div>
           <div
-            className={`w-full lg:w-1/2 p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
+            className="w-full lg:w-1/2 p-6 sm:p-8 lg:p-12"
           >
             <div className="w-full max-w-md mx-auto animate-pulse">
               <LogoSkeleton />
               <div
-                className={`flex items-center justify-between mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center justify-between mb-8"
               >
                 <div
-                  className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="flex items-center gap-2"
                 >
                   <div className="w-4 h-4 bg-gray-200 rounded" />
                   <div className="w-24 h-3 bg-gray-200 rounded" />
                 </div>
                 <div
-                  className={`flex rounded-full border border-gray-200 p-0.5 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="flex rounded-full border border-gray-200 p-0.5"
                 >
                   <div className="w-16 h-7 bg-gray-200 rounded-full" />
                   <div className="w-16 h-7" />
                 </div>
               </div>
-              <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+              <div className="text-start mb-2">
                 <div className="w-48 h-8 bg-gray-200 rounded-lg inline-block" />
               </div>
-              <div className={`${isRTL ? "text-right" : "text-left"} mb-8`}>
+              <div className="text-start mb-8">
                 <div className="w-72 h-4 bg-gray-200 rounded inline-block" />
               </div>
               <div className="space-y-5">
                 <div>
-                  <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+                  <div className="text-start mb-2">
                     <div className="w-20 h-3 bg-gray-200 rounded inline-block" />
                   </div>
                   <div className="w-full h-12 bg-gray-100 rounded-xl" />
                 </div>
                 <div>
-                  <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+                  <div className="text-start mb-2">
                     <div className="w-16 h-3 bg-gray-200 rounded inline-block" />
                   </div>
                   <div className="w-full h-12 bg-gray-100 rounded-xl" />
                 </div>
                 <div
-                  className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="flex items-center justify-between"
                 >
                   <div
-                    className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                    className="flex items-center gap-2"
                   >
                     <div className="w-4 h-4 bg-gray-200 rounded" />
                     <div className="w-24 h-3 bg-gray-200 rounded" />
@@ -148,32 +148,32 @@ export default function AuthSkeleton({
         /* Register Layout */
         <div className="w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl bg-white grid grid-cols-1 lg:grid-cols-2">
           <div
-            className={`p-6 sm:p-8 lg:p-12 ${isRTL ? "lg:order-2" : "lg:order-1"}`}
+            className="p-6 sm:p-8 lg:p-12"
           >
             <div className="w-full max-w-md mx-auto animate-pulse">
               <LogoSkeleton />
               <div
-                className={`flex items-center justify-between mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
+                className="flex items-center justify-between mb-8"
               >
                 <div
-                  className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="flex items-center gap-2"
                 >
                   <div className="w-4 h-4 bg-gray-200 rounded" />
                   <div className="w-24 h-3 bg-gray-200 rounded" />
                 </div>
                 <div className="w-32 h-3 bg-gray-200 rounded" />
               </div>
-              <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+              <div className="text-start mb-2">
                 <div className="w-56 h-8 bg-gray-200 rounded-lg inline-block" />
               </div>
-              <div className={`${isRTL ? "text-right" : "text-left"} mb-8`}>
+              <div className="text-start mb-8">
                 <div className="w-80 h-4 bg-gray-200 rounded inline-block" />
               </div>
               <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div
-                      className={`${isRTL ? "text-right" : "text-left"} mb-2`}
+                      className="text-start mb-2"
                     >
                       <div className="w-16 h-3 bg-gray-200 rounded inline-block" />
                     </div>
@@ -181,7 +181,7 @@ export default function AuthSkeleton({
                   </div>
                   <div>
                     <div
-                      className={`${isRTL ? "text-right" : "text-left"} mb-2`}
+                      className="text-start mb-2"
                     >
                       <div className="w-16 h-3 bg-gray-200 rounded inline-block" />
                     </div>
@@ -189,25 +189,25 @@ export default function AuthSkeleton({
                   </div>
                 </div>
                 <div>
-                  <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+                  <div className="text-start mb-2">
                     <div className="w-20 h-3 bg-gray-200 rounded inline-block" />
                   </div>
                   <div className="w-full h-12 bg-gray-100 rounded-xl" />
                 </div>
                 <div>
-                  <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+                  <div className="text-start mb-2">
                     <div className="w-20 h-3 bg-gray-200 rounded inline-block" />
                   </div>
                   <div className="w-full h-12 bg-gray-100 rounded-xl" />
                 </div>
                 <div>
-                  <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+                  <div className="text-start mb-2">
                     <div className="w-16 h-3 bg-gray-200 rounded inline-block" />
                   </div>
                   <div className="w-full h-12 bg-gray-100 rounded-xl" />
                 </div>
                 <div
-                  className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="flex items-start gap-2"
                 >
                   <div className="w-4 h-4 bg-gray-200 rounded mt-0.5 shrink-0" />
                   <div className="w-3/4 h-8 bg-gray-200 rounded" />
@@ -221,7 +221,7 @@ export default function AuthSkeleton({
             </div>
           </div>
           <div
-            className={`hidden lg:flex bg-linear-to-br from-gray-200 to-gray-300 animate-pulse items-center justify-center p-12 ${isRTL ? "lg:order-1" : "lg:order-2"}`}
+            className="hidden lg:flex bg-linear-to-br from-gray-200 to-gray-300 animate-pulse items-center justify-center p-12"
           >
             <div className="w-full max-w-sm space-y-6">
               <div className="w-32 h-6 bg-white/40 rounded-full" />
@@ -286,21 +286,21 @@ export default function AuthSkeleton({
         <SimpleCardSkeleton>
           <LogoSkeleton />
           <BadgeSkeleton />
-          <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+          <div className="text-start mb-2">
             <div className="w-48 h-8 bg-gray-200 rounded-lg inline-block" />
           </div>
-          <div className={`${isRTL ? "text-right" : "text-left"} mb-8`}>
+          <div className="text-start mb-8">
             <div className="w-64 h-4 bg-gray-200 rounded inline-block" />
           </div>
           <div className="space-y-5">
             <div>
-              <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+              <div className="text-start mb-2">
                 <div className="w-24 h-3 bg-gray-200 rounded inline-block" />
               </div>
               <div className="w-full h-12 bg-gray-100 rounded-xl" />
             </div>
             <div>
-              <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+              <div className="text-start mb-2">
                 <div className="w-28 h-3 bg-gray-200 rounded inline-block" />
               </div>
               <div className="w-full h-12 bg-gray-100 rounded-xl" />
@@ -309,7 +309,7 @@ export default function AuthSkeleton({
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="flex items-center gap-2"
                 >
                   <div className="w-3 h-3 bg-gray-200 rounded" />
                   <div className="w-32 h-3 bg-gray-200 rounded" />
@@ -328,16 +328,16 @@ export default function AuthSkeleton({
         <SimpleCardSkeleton>
           <LogoSkeleton />
           <BadgeSkeleton />
-          <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+          <div className="text-start mb-2">
             <div className="w-48 h-8 bg-gray-200 rounded-lg inline-block" />
           </div>
-          <div className={`${isRTL ? "text-right" : "text-left"} mb-8`}>
+          <div className="text-start mb-8">
             <div className="w-full h-4 bg-gray-200 rounded mb-2" />
             <div className="w-3/4 h-4 bg-gray-200 rounded" />
           </div>
           <div className="space-y-5">
             <div>
-              <div className={`${isRTL ? "text-right" : "text-left"} mb-2`}>
+              <div className="text-start mb-2">
                 <div className="w-24 h-3 bg-gray-200 rounded inline-block" />
               </div>
               <div className="w-full h-12 bg-gray-100 rounded-xl" />

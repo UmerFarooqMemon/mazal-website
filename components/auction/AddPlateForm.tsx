@@ -156,7 +156,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
         }}
       >
         <h2
-          className={`text-2xl font-serif mb-6 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-2xl font-serif mb-6 text-start`}
           style={{ color: getColor("primaryText") }}
         >
           {t("auctions.add_plate_title")}
@@ -165,13 +165,13 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
         <div className="space-y-5 mb-4">
           <div>
             <label
-              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+              className={`block text-[11px] font-medium mb-1.5 text-start`}
               style={{ color: getColor("secondaryText") }}
             >
               {t("listings.emirate")}
             </label>
             <div
-              className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+              className={`w-full rounded-xl border py-3 px-4 text-sm text-start`}
               style={{
                 backgroundColor: `${getColor("background")}80`,
                 borderColor: getColor("border"),
@@ -207,7 +207,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
               variantPlateCodes.length > 0 ? (
                 <div ref={codeDropdownRef}>
                   <label
-                    className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                    className={`block text-[11px] font-medium mb-1.5 text-start`}
                     style={{ color: getColor("secondaryText") }}
                   >
                     {t("listings.code")}
@@ -216,7 +216,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
                     <button
                       type="button"
                       onClick={() => setCodeDropdownOpen(!codeDropdownOpen)}
-                      className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}
+                      className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all text-start`}
                       style={{
                         borderColor: getColor("border"),
                         color: form.code
@@ -243,7 +243,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
                         >
                           <div className="relative">
                             <Search
-                              className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isRTL ? "right-3" : "left-3"}`}
+                              className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 start-3`}
                               style={{ color: getColor("mutedText") }}
                             />
                             <input
@@ -251,7 +251,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
                               placeholder={t("common.search")}
                               value={codeSearch}
                               onChange={(e) => setCodeSearch(e.target.value)}
-                              className={`w-full py-2 text-sm bg-transparent focus:outline-none ${isRTL ? "pr-8 pl-3 text-right" : "pl-8 pr-3 text-left"}`}
+                              className={`w-full py-2 text-sm bg-transparent focus:outline-none ps-8 pe-3 text-start`}
                               style={{ color: getColor("primaryText") }}
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -265,7 +265,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
                                 key={item.code}
                                 type="button"
                                 onClick={() => handleCodeSelect(item.code)}
-                                className={`w-full px-4 py-2.5 text-sm transition-colors ${isRTL ? "text-right" : "text-left"}`}
+                                className={`w-full px-4 py-2.5 text-sm transition-colors text-start`}
                                 style={{
                                   color:
                                     item.code === form.code
@@ -311,13 +311,13 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
             ) : (
               <div>
                 <label
-                  className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                  className={`block text-[11px] font-medium mb-1.5 text-start`}
                   style={{ color: getColor("secondaryText") }}
                 >
                   {t("listings.code")}
                 </label>
                 <div
-                  className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+                  className={`w-full rounded-xl border py-3 px-4 text-sm text-start`}
                   style={{
                     backgroundColor: `${getColor("background")}80`,
                     borderColor: getColor("border"),
@@ -352,7 +352,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
 
         <div className="mb-4">
           <label
-            className={`block text-[11px] font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-2 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("auctions.field_seller_notes")}
@@ -372,13 +372,13 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
 
         <div className="mb-8">
           <label
-            className={`block text-[11px] font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
+            className={`block text-[11px] font-medium mb-2 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
             {t("auctions.field_ownership")}
           </label>
           <label
-            className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 cursor-pointer ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 cursor-pointer`}
             style={{
               borderColor: getColor("border"),
               backgroundColor: getColor("surface"),
@@ -392,7 +392,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
         </div>
 
         <div
-          className={`flex items-center justify-between border-t pt-6 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center justify-between border-t pt-6`}
           style={{ borderColor: getColor("border") }}
         >
           <Button
@@ -423,7 +423,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
         }}
       >
         <div
-          className={`text-[10px] font-bold uppercase tracking-[0.12em] mb-4 ${isRTL ? "text-right" : "text-left"}`}
+          className={`text-[10px] font-bold uppercase tracking-[0.12em] mb-4 text-start`}
           style={{ color: getColor("mutedText") }}
         >
           {t("auctions.live_preview")}
@@ -442,7 +442,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
         </div>
 
         <div
-          className={`flex items-end justify-between gap-3 border-t pt-5 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+          className={`flex items-end justify-between gap-3 border-t pt-5 text-start`}
           style={{ borderColor: getColor("border") }}
         >
           <span

@@ -205,7 +205,7 @@ export default function OfferNegotiation() {
       style={{ backgroundColor: getColor("background") }}
     >
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-        <div className={`mb-10 ${isRTL ? "text-right" : "text-left"}`}>
+        <div className={`mb-10 text-start`}>
           <span
             className="inline-flex items-center gap-1.5 text-[11px] font-semibold normal-case tracking-normal px-3 py-1 rounded-full mb-4"
             style={{
@@ -232,7 +232,7 @@ export default function OfferNegotiation() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
           <div
-            className={`lg:col-span-3 space-y-4 ${isRTL ? "lg:col-start-3 lg:row-start-1" : ""}`}
+            className="lg:col-span-3 space-y-4"
           >
             {visibleRounds.map((round, index) => {
               const isLatest = index === visibleRounds.length - 1 && !ended;
@@ -247,14 +247,14 @@ export default function OfferNegotiation() {
                   }}
                 >
                   <h3
-                    className={`text-xl font-serif font-bold mb-4 ${isRTL ? "text-right" : "text-left"}`}
+                    className={`text-xl font-serif font-bold mb-4 text-start`}
                     style={{ color: getColor("primaryText") }}
                   >
                     {round.title}
                   </h3>
 
                   <label
-                    className={`block text-xs font-medium mb-2 ${isRTL ? "text-right" : "text-left"}`}
+                    className={`block text-xs font-medium mb-2 text-start`}
                     style={{ color: getColor("mutedText") }}
                   >
                     <DirhamText text={round.fieldLabel} />
@@ -267,7 +267,7 @@ export default function OfferNegotiation() {
                     onChange={(e) =>
                       updateAmount(round.id, parseAmount(e.target.value))
                     }
-                    className={`w-full h-12 rounded-xl border px-4 text-sm outline-none mb-4 ${isRTL ? "text-right" : "text-left"}`}
+                    className={`w-full h-12 rounded-xl border px-4 text-sm outline-none mb-4 text-start`}
                     style={{
                       backgroundColor:
                         round.editable && isLatest
@@ -294,7 +294,7 @@ export default function OfferNegotiation() {
                         </Button>
                       ) : (
                         <div
-                          className={`flex gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
+                          className={`flex gap-3`}
                         >
                           <Button
                             variant="primary"
@@ -312,7 +312,7 @@ export default function OfferNegotiation() {
                             <Button
                               variant="outline"
                               size="lg"
-                              className={`flex-1 ${isRTL ? "flex-row-reverse" : ""}`}
+                              className={`flex-1`}
                               style={{
                                 borderColor: getColor("primary"),
                                 color: getColor("primary"),
@@ -349,7 +349,7 @@ export default function OfferNegotiation() {
           </div>
 
           <div
-            className={`lg:col-span-2 sticky top-24 ${isRTL ? "lg:col-start-1 lg:row-start-1" : ""}`}
+            className="lg:col-span-2 sticky top-24"
           >
             <OfferDealSummary
               askingPrice={resolvedAskingPrice}

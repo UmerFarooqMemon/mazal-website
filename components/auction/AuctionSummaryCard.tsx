@@ -15,9 +15,8 @@ export default function AuctionSummaryCard({
   data,
   showCheckAmount = false,
 }: AuctionSummaryCardProps) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const rows: { label: string; value: ReactNode; pill?: boolean }[] = [
     {
@@ -60,7 +59,7 @@ export default function AuctionSummaryCard({
       }}
     >
       <div
-        className={`text-[10px] font-bold uppercase tracking-[0.12em] mb-4 ${isRTL ? "text-right" : "text-left"}`}
+        className="text-[10px] font-bold uppercase tracking-[0.12em] mb-4"
         style={{ color: getColor("mutedText") }}
       >
         {t("auctions.summary_title")}
@@ -70,7 +69,7 @@ export default function AuctionSummaryCard({
         {rows.map((row) => (
           <div
             key={row.label}
-            className={`flex items-center justify-between gap-3 ${isRTL ? "flex-row-reverse text-right" : ""}`}
+            className="flex items-center justify-between gap-3"
           >
             <span
               className="text-[13px] shrink-0"
@@ -93,7 +92,7 @@ export default function AuctionSummaryCard({
 
         {showCheckAmount && data.checkAmount != null && (
           <div
-            className={`flex items-center justify-between gap-3 pt-3 border-t ${isRTL ? "flex-row-reverse text-right" : ""}`}
+            className="flex items-center justify-between gap-3 pt-3 border-t"
             style={{ borderColor: getColor("border") }}
           >
             <span

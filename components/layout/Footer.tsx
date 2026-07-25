@@ -35,23 +35,24 @@ function resolveFooterCopy(value: string | null | undefined, fallback: string) {
 function FooterColumnBlock({
   title,
   links,
-  isRTL,
   headingColor,
 }: {
   title: string;
   links: { href?: string; label: string; badge?: string; disabled?: boolean }[];
-  isRTL: boolean;
   headingColor: string;
 }) {
   return (
-    <div className={isRTL ? "text-right" : "text-left"}>
+    <div
+      className="flex flex-col items-start text-start"
+      style={{ unicodeBidi: "isolate" }}
+    >
       <h4
         className="mb-4 text-[15px] font-semibold leading-none"
         style={{ color: headingColor }}
       >
         {title}
       </h4>
-      <ul className="space-y-2.5">
+      <ul className="flex flex-col items-start gap-2.5">
         {links.map((link) => {
           const content = (
             <>
@@ -68,7 +69,7 @@ function FooterColumnBlock({
             <li key={`${link.label}-${link.href ?? "disabled"}`}>
               {link.disabled || !link.href ? (
                 <span
-                  className={`inline-flex cursor-default items-center gap-1.5 text-sm leading-none whitespace-nowrap ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="inline-flex cursor-default items-center gap-1.5 text-sm leading-none whitespace-nowrap"
                   style={{ color: "var(--footer-link)" }}
                   aria-disabled="true"
                 >
@@ -77,7 +78,7 @@ function FooterColumnBlock({
               ) : (
                 <Link
                   href={link.href}
-                  className={`footer-link inline-flex items-center gap-1.5 text-sm leading-none transition-colors whitespace-nowrap ${isRTL ? "flex-row-reverse" : ""}`}
+                  className="footer-link inline-flex items-center gap-1.5 text-sm leading-none transition-colors whitespace-nowrap"
                 >
                   {content}
                 </Link>
@@ -94,7 +95,6 @@ export default function Footer() {
   const { t, locale } = useLocale();
   const { branding, getColor, footerColors, social, footerContent } =
     useTheme();
-  const isRTL = locale === "ar";
 
   const primaryColor =
     getColor("primary") !== "transparent" ? getColor("primary") : "#0A3B9E";
@@ -188,17 +188,14 @@ export default function Footer() {
       }}
     >
       <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8 lg:py-16">
-        <div
-          className={`grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,360px)_1fr] lg:gap-x-20 lg:gap-y-0 ${isRTL ? "lg:grid-flow-col-dense" : ""}`}
-        >
-          {/* Brand */}
-          <div
-            className={`flex flex-col ${isRTL ? "items-end text-right lg:col-start-2" : "items-start text-left"}`}
-          >
-            <Link
-              href={`/${locale}`}
-              className={`inline-flex items-center ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+        {/*
+          No col-start / flex-row-reverse hacks — page dir (rtl/ltr) flips
+          brand ↔ menus and column order automatically.
+        */}
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,360px)_1fr] lg:gap-x-20 lg:gap-y-0">
+          {/* Brand: left in EN, right in AR */}
+          <div className="flex flex-col items-start text-start">
+            <Link href={`/${locale}`} className="inline-flex items-center">
               {branding.logoUrl ? (
                 <Image
                   src={branding.logoUrl}
@@ -225,9 +222,7 @@ export default function Footer() {
               {description}
             </p>
 
-            <div
-              className={`mt-5 flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+            <div className="mt-5 flex items-center gap-3">
               {socialLinks.map(({ href, label, icon }) => (
                 <a
                   key={label}
@@ -250,9 +245,7 @@ export default function Footer() {
               ))}
             </div>
 
-            <div
-              className={`mt-4 flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
-            >
+            <div className="mt-4 flex items-center gap-4">
               <a
                 href="#"
                 aria-label="Google Play"
@@ -291,10 +284,8 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Link columns */}
-          <div
-            className={`grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-2 md:grid-cols-4 lg:gap-x-10 ${isRTL ? "lg:col-start-1" : ""}`}
-          >
+          {/* Menus: right in EN, left in AR; column order follows dir */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-2 md:grid-cols-4 lg:gap-x-10">
             {columns.map((column) => (
               <FooterColumnBlock
                 key={column.titleKey}
@@ -307,7 +298,6 @@ export default function Footer() {
                     : undefined,
                   disabled: link.disabled,
                 }))}
-                isRTL={isRTL}
                 headingColor={footerColors.heading}
               />
             ))}

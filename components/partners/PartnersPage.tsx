@@ -32,7 +32,7 @@ export default function PartnersPage() {
   return (
     <div className="min-h-[70vh] bg-[#f2faef]">
       <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
-        <div className={`max-w-2xl ${isRTL ? "mr-auto text-right" : "text-left"}`}>
+        <div className="max-w-2xl">
           <h1 className="font-serif text-4xl tracking-tight text-[#081123] sm:text-5xl">
             {t("partners.title")}
           </h1>
