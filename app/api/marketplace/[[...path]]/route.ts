@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiBaseUrl, withPublicApiHeaders } from "@/lib/api-config";
+import {
+  getApiBaseUrl,
+  normalizeAcceptLanguage,
+  withPublicApiHeaders,
+} from "@/lib/api-config";
 
 function buildTargetUrl(
   request: NextRequest,
@@ -19,18 +23,17 @@ async function proxyRequest(
     const targetUrl = buildTargetUrl(request, path);
     const contentType = request.headers.get("content-type") || "";
     const authHeader = request.headers.get("authorization");
-    const locale = request.headers.get("accept-language");
+    const locale = normalizeAcceptLanguage(
+      request.headers.get("accept-language"),
+    );
 
     const headers: Record<string, string> = withPublicApiHeaders({
       Accept: "application/json",
+      "Accept-Language": locale,
     });
 
     if (authHeader) {
       headers.Authorization = authHeader;
-    }
-
-    if (locale) {
-      headers["Accept-Language"] = locale;
     }
 
     let body: BodyInit | undefined;

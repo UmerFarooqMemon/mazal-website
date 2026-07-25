@@ -54,7 +54,7 @@ export default function SearchBar({
         type="submit"
         variant="primary"
         size="md"
-        className="!rounded-full px-5 h-10 flex items-center gap-2 justify-center whitespace-nowrap shrink-0"
+        className="!rounded-full px-5 h-9 flex items-center gap-2 justify-center whitespace-nowrap shrink-0"
       >
         <SlidersHorizontal className="w-4 h-4" strokeWidth={2.5} />
         <span>{t("marketplace.search_button")}</span>

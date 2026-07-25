@@ -1,5 +1,9 @@
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
-import { getApiBaseUrl, withPublicApiHeaders } from "@/lib/api-config";
+import {
+  getApiBaseUrl,
+  withAcceptLanguage,
+  withPublicApiHeaders,
+} from "@/lib/api-config";
 
 // ----- Response Types -----
 
@@ -159,15 +163,21 @@ export async function apiRequest<T>(
     method?: string;
     body?: string;
     token?: string;
+    locale?: string;
     headers?: Record<string, string>;
   } = {},
 ): Promise<T> {
-  const { method = "GET", body, token, headers = {} } = options;
+  const { method = "GET", body, token, locale, headers = {} } = options;
 
-  const requestHeaders: Record<string, string> = withPublicApiHeaders({
-    Accept: "application/json",
-    ...headers,
-  });
+  const requestHeaders: Record<string, string> = withPublicApiHeaders(
+    withAcceptLanguage(
+      {
+        Accept: "application/json",
+        ...headers,
+      },
+      locale ?? headers["Accept-Language"],
+    ),
+  );
 
   // Only set Content-Type for JSON bodies, not FormData
   if (body && typeof body === "string") {

@@ -110,7 +110,7 @@ export default function BoostStep({
                 key={tier.key}
                 type="button"
                 onClick={() => onChange({ boostTier: tier.key })}
-                className={`relative text-left rounded-2xl border p-5 transition-all ${
+                className={`relative text-left rounded-2xl border p-5 min-h-[354px] transition-all ${
                   isSelected
                     ? "shadow-[0_8px_24px_-12px_rgba(0,102,78,0.28)]"
                     : ""

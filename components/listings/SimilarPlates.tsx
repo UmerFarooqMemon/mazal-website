@@ -47,9 +47,9 @@ export default function SimilarPlates({ listingId }: SimilarPlatesProps) {
   }
 
   return (
-    <div className={`mt-12 ${isRTL ? "text-right" : "text-left"}`}>
+    <div className={`mt-16 ${isRTL ? "text-right" : "text-left"}`}>
       <h2
-        className="text-2xl font-serif font-bold mb-1"
+        className="text-[36px] leading-9 font-serif font-bold mb-1"
         style={{ color: getColor("primaryText") }}
       >
         {t("listings.similar_title")}
@@ -71,11 +71,17 @@ export default function SimilarPlates({ listingId }: SimilarPlatesProps) {
               emirate={plate.emirate}
               code={plate.code}
               price={plate.price}
+              tier={plate.tier}
               type={plate.type}
               views={plate.views}
               rating={plate.rating}
               previouslySold={plate.previouslySold}
               imageUrl={plate.imageUrl}
+              plate_code={plate.plate_code}
+              plate_digits={plate.plate_digits}
+              plate_type={plate.plate_type}
+              plate_design={plate.plate_design}
+              hideCode={plate.hideCode}
             />
           ))}
         </div>

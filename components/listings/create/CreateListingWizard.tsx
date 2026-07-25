@@ -15,6 +15,7 @@ export type BoostTier = "silver" | "gold" | "diamond";
 
 export interface CreateListingData {
   emirate: string;
+  emirateId: string;
   plateType: string;
   plateVariant: string;
   code: string;
@@ -32,6 +33,7 @@ export interface CreateListingData {
 
 const INITIAL: CreateListingData = {
   emirate: "dubai",
+  emirateId: "",
   plateType: "private",
   plateVariant: "private_new_colorful",
   code: "",

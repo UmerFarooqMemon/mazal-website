@@ -143,9 +143,7 @@ async function kycRequest<T>(
     Accept: "application/json",
   };
 
-  if (options.locale) {
-    headers["Accept-Language"] = options.locale;
-  }
+  headers["Accept-Language"] = options.locale === "ar" ? "ar" : "en";
 
   if (options.contentType) {
     headers["Content-Type"] = options.contentType;
@@ -248,9 +246,7 @@ export async function downloadKycDocument(
     Accept: "*/*",
   };
 
-  if (locale) {
-    headers["Accept-Language"] = locale;
-  }
+  headers["Accept-Language"] = locale === "ar" ? "ar" : "en";
 
   const response = await fetch(`/api/kyc/documents/${documentId}`, {
     method: "GET",

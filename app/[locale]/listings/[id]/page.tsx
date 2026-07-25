@@ -78,9 +78,9 @@ export default function ListingDetailPage() {
       className="min-h-screen pb-20"
       style={{ backgroundColor: getColor("background") }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10">
         <div
-          className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider mb-10 ${isRTL ? "flex-row-reverse" : ""}`}
           style={{ color: getColor("mutedText") }}
         >
           <Link
@@ -104,9 +104,9 @@ export default function ListingDetailPage() {
           >
             <PlateHero listing={listing} />
 
-            <div className={isRTL ? "text-right" : "text-left"}>
+            <div className={`pt-6 ${isRTL ? "text-right" : "text-left"}`}>
               <h3
-                className="text-lg font-serif font-bold mb-2"
+                className="text-2xl font-serif font-bold mb-3"
                 style={{ color: getColor("primaryText") }}
               >
                 {t("listings.description_heading")}

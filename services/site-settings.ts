@@ -78,7 +78,9 @@ export interface SiteSettingsResponse {
   };
 }
 
-// Fetch site settings (public)
-export async function getSiteSettings(): Promise<SiteSettingsResponse> {
-  return apiRequest<SiteSettingsResponse>("/v1/site-settings");
+// Fetch site settings (public) — pass locale for Accept-Language (ar/en)
+export async function getSiteSettings(
+  locale?: string,
+): Promise<SiteSettingsResponse> {
+  return apiRequest<SiteSettingsResponse>("/v1/site-settings", { locale });
 }

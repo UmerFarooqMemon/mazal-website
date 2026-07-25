@@ -71,7 +71,10 @@ export default function PortfolioAddPlateForm({
 
       const response = await fetch("/api/number-plates", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": locale === "ar" ? "ar" : "en",
+        },
         body: formDataToSend,
       });
 

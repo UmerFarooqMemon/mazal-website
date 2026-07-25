@@ -25,10 +25,15 @@ export default function DashboardCertificatesPage() {
   useEffect(() => {
     const fetchAll = async () => {
       const [optionsRes, platesRes] = await Promise.allSettled([
-        fetch("/api/number-plates/options").then((r) => r.json()),
+        fetch(`/api/number-plates/options?locale=${locale}`).then((r) =>
+          r.json(),
+        ),
         token
           ? fetch("/api/number-plates", {
-              headers: { Authorization: `Bearer ${token}` },
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Accept-Language": locale === "ar" ? "ar" : "en",
+              },
             }).then((r) => r.json())
           : Promise.resolve(null),
       ]);
@@ -66,7 +71,7 @@ export default function DashboardCertificatesPage() {
       setLoading(false);
     };
     fetchAll();
-  }, [token]);
+  }, [token, locale]);
 
   const pendingCount = requests.filter((req: any) => {
     const s = req.status?.toLowerCase() || "";

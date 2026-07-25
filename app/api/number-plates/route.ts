@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiBaseUrl } from "@/lib/api-config";
+import {
+  getApiBaseUrl,
+  normalizeAcceptLanguage,
+  withAcceptLanguage,
+  withPublicApiHeaders,
+} from "@/lib/api-config";
+
+function getLocale(request: NextRequest) {
+  return normalizeAcceptLanguage(request.headers.get("accept-language"));
+}
 
 // GET - List all user's number plates
 export async function GET(request: NextRequest) {
@@ -10,10 +19,15 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await fetch(`${getApiBaseUrl()}/v1/number-plates`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
+      headers: withPublicApiHeaders(
+        withAcceptLanguage(
+          {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          getLocale(request),
+        ),
+      ),
     });
 
     const text = await response.text();
@@ -56,16 +70,22 @@ export async function POST(request: NextRequest) {
     }
 
     const contentType = request.headers.get("content-type") || "";
+    const locale = getLocale(request);
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
 
       const response = await fetch(`${getApiBaseUrl()}/v1/number-plates`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+        headers: withPublicApiHeaders(
+          withAcceptLanguage(
+            {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+            locale,
+          ),
+        ),
         body: formData,
       });
 
@@ -91,11 +111,16 @@ export async function POST(request: NextRequest) {
       const body = await request.json();
       const response = await fetch(`${getApiBaseUrl()}/v1/number-plates`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+        headers: withPublicApiHeaders(
+          withAcceptLanguage(
+            {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+            locale,
+          ),
+        ),
         body: JSON.stringify(body),
       });
 

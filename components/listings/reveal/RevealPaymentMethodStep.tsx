@@ -25,7 +25,7 @@ export default function RevealPaymentMethodStep({
 
   return (
     <div
-      className="rounded-2xl border shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-6 md:p-8"
+      className="rounded-2xl border shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-9 md:p-[37px]"
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),

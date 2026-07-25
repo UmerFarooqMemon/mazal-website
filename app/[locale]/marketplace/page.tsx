@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import SearchBar from "../../../components/marketplace/SearchBar";
@@ -132,14 +133,15 @@ export default function MarketplacePage() {
             </h1>
             <Link
               href={`/${locale}/listings/create`}
-              className="inline-flex items-center justify-center h-9 px-5 rounded-full text-white text-sm font-semibold transition-opacity hover:opacity-90 shrink-0"
+              className="inline-flex items-center justify-center gap-2 h-[38px] px-5 rounded-full text-white text-sm font-semibold transition-opacity hover:opacity-90 shrink-0"
               style={{ backgroundColor: getColor("primary") }}
             >
+              <Plus className="w-4 h-4" strokeWidth={2.5} />
               {t("marketplace.create_listing")}
             </Link>
           </div>
           <p
-            className={`text-base mb-6 max-w-md ${isRTL ? "me-auto" : ""}`}
+            className={`text-base mb-12 max-w-md ${isRTL ? "me-auto" : ""}`}
             style={{ color: getColor("mutedText") }}
           >
             {t("marketplace.subtitle")}
@@ -202,11 +204,11 @@ export default function MarketplacePage() {
                     emirate={plate.emirate}
                     code={plate.code}
                     price={plate.price}
+                    tier={plate.tier}
                     type={plate.type}
                     views={plate.views}
                     rating={plate.rating}
                     previouslySold={plate.previouslySold}
-                    isFavorite={plate.isFavorite}
                     imageUrl={plate.imageUrl}
                     plate_code={plate.plate_code}
                     plate_digits={plate.plate_digits}
@@ -237,6 +239,16 @@ export default function MarketplacePage() {
                 </button>
               </div>
             )}
+
+            <div className="flex justify-center mt-6">
+              <Link
+                href={`/${locale}/auctions`}
+                className="inline-flex items-center justify-center h-[42px] px-6 text-sm font-semibold transition-opacity hover:opacity-80"
+                style={{ color: getColor("primaryText") }}
+              >
+                {t("marketplace.browse_auctions")}
+              </Link>
+            </div>
           </div>
         </div>
       </div>

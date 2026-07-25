@@ -14,7 +14,7 @@ export async function getPlateOptions(
   locale?: string,
 ): Promise<PlateOptionsResponse> {
   return apiRequest<PlateOptionsResponse>("/v1/number-plates/options", {
-    headers: locale ? { "Accept-Language": locale } : {},
+    locale,
   });
 }
 
@@ -38,8 +38,12 @@ export async function listAllPreviews(): Promise<PreviewsListResponse> {
 // List user's plates
 export async function listMyNumberPlates(
   token: string,
+  locale?: string,
 ): Promise<NumberPlatesListResponse> {
-  return apiRequest<NumberPlatesListResponse>("/v1/number-plates", { token });
+  return apiRequest<NumberPlatesListResponse>("/v1/number-plates", {
+    token,
+    locale,
+  });
 }
 
 // Submit a plate (now accepts optional plate_variant)
@@ -69,17 +73,21 @@ export async function submitNumberPlate(
 export async function getNumberPlate(
   id: string,
   token: string,
+  locale?: string,
 ): Promise<NumberPlateDetailResponse> {
   return apiRequest<NumberPlateDetailResponse>(`/v1/number-plates/${id}`, {
     token,
+    locale,
   });
 }
 
 // NEW: Public certificate verification (no auth required)
 export async function verifyCertificate(
   certificateNumber: string,
+  locale?: string,
 ): Promise<CertificateVerifyResponse> {
   return apiRequest<CertificateVerifyResponse>(
     `/v1/certificates/verify/${certificateNumber}`,
+    { locale },
   );
 }

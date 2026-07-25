@@ -37,6 +37,8 @@ export interface MarketplaceReveal {
   credited_to_purchase: boolean;
 }
 
+export type MarketplaceBoostTier = "diamond" | "gold" | "silver";
+
 export interface MarketplaceListingCard {
   id: number;
   listing_type: string;
@@ -59,6 +61,10 @@ export interface MarketplaceListingCard {
   watcher_count: number;
   offer_count: number;
   previously_sold: boolean;
+  /** Boost / featured tier shown on marketplace cards (Figma: Diamond / Gold / Silver). */
+  boost_tier?: string | null;
+  featured_tier?: string | null;
+  tier?: string | null;
   seller: MarketplaceSeller;
   is_watchlisted?: boolean;
   preview?: MarketplaceListingPreview | null;
@@ -215,9 +221,7 @@ async function marketplaceRequest<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  if (options.locale) {
-    headers["Accept-Language"] = options.locale;
-  }
+  headers["Accept-Language"] = options.locale === "ar" ? "ar" : "en";
 
   if (options.contentType) {
     headers["Content-Type"] = options.contentType;
@@ -263,6 +267,15 @@ export function mapListingTypeToApi(value: string) {
   return LISTING_TYPE_UI_TO_API[value] || value.toLowerCase();
 }
 
+function normalizeBoostTier(
+  value?: string | null,
+): MarketplaceBoostTier | undefined {
+  if (!value) return undefined;
+  const key = value.trim().toLowerCase();
+  if (key === "diamond" || key === "gold" || key === "silver") return key;
+  return undefined;
+}
+
 export function mapListingToPlateCard(listing: MarketplaceListingCard) {
   let plateCode = listing.plate_code || "";
   let plateDigits = listing.plate_digits || "";
@@ -284,6 +297,13 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
       ? `${plateCode} | ${plateDigits}`
       : listing.display_plate;
 
+  // Figma marketplace cards show boost tier (Diamond / Gold / Silver), not listing type.
+  const tier =
+    normalizeBoostTier(listing.boost_tier) ||
+    normalizeBoostTier(listing.featured_tier) ||
+    normalizeBoostTier(listing.tier) ||
+    "diamond";
+
   return {
     id: listing.id,
     emirate: listing.emirate_label?.toUpperCase() || listing.emirate,
@@ -295,6 +315,7 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     plate_design: listing.plate_design || undefined,
     price: listing.asking_price,
     type: listing.listing_type_label?.toUpperCase() || listing.listing_type,
+    tier,
     views: listing.view_count,
     rating: listing.seller?.rating ?? 0,
     previouslySold: listing.previously_sold,

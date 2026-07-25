@@ -27,32 +27,22 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
   );
   const [watchlistLoading, setWatchlistLoading] = useState(false);
 
-  const typeLabel = listing.listing_type_label || listing.listing_type;
-
-  const plateCode = listing.code_hidden
-    ? "?"
-    : listing.plate_code || "—";
+  const plateCode = listing.code_hidden ? "?" : listing.plate_code || "—";
   const plateDigits = listing.code_hidden
-    ? "—"
-    : listing.plate_digits || "—";
-  const digitLabel = listing.digit_count
-    ? `${listing.digit_count}-digit`
-    : "";
+    ? listing.digit_count
+      ? t("listings.digits_count_label").replace(
+          "{count}",
+          String(listing.digit_count),
+        )
+      : "—"
+    : listing.digit_count
+      ? `${listing.plate_digits || "—"} (${listing.digit_count}-digit)`
+      : listing.plate_digits || "—";
 
   const rows = [
     { label: t("listings.emirate"), value: listing.emirate_label },
     { label: t("listings.code"), value: plateCode },
-    {
-      label: t("listings.digits"),
-      value: listing.code_hidden
-        ? listing.plate_digits
-          ? `${listing.plate_digits}${digitLabel ? ` (${digitLabel})` : ""}`
-          : digitLabel || "—"
-        : digitLabel
-          ? `${plateDigits} (${digitLabel})`
-          : plateDigits,
-    },
-    { label: t("listings.type"), value: typeLabel },
+    { label: t("listings.digits"), value: plateDigits },
   ];
 
   const handleWatchlistToggle = async () => {
@@ -99,13 +89,13 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
 
   return (
     <div
-      className="rounded-2xl border shadow-sm p-6 sticky top-24"
+      className="rounded-2xl border shadow-sm p-[29px] sticky top-24"
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
       }}
     >
-      <div className={`mb-6 ${isRTL ? "text-right" : "text-left"}`}>
+      <div className={`mb-5 ${isRTL ? "text-right" : "text-left"}`}>
         <div
           className="text-[10px] font-bold uppercase tracking-wider mb-1"
           style={{ color: getColor("mutedText") }}
@@ -113,7 +103,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           {t("listings.asking_price")}
         </div>
         <div
-          className="text-4xl md:text-5xl font-serif font-bold mb-2"
+          className="text-4xl md:text-[48px] leading-none font-serif font-bold mb-2"
           style={{ color: getColor("primaryText") }}
         >
           <DirhamAmount amount={listing.asking_price} weight="bold" />
@@ -123,12 +113,17 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 mb-6">
+      <div className="flex flex-col gap-3 mb-4">
         <Link
           href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
           className="block"
         >
-          <Button variant="primary" size="lg" fullWidth className="shadow-md">
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            className="shadow-md !h-11"
+          >
             {t("listings.buy_escrow")}
           </Button>
         </Link>
@@ -142,6 +137,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
               variant="outline"
               size="lg"
               fullWidth
+              className="!h-[46px]"
               style={{
                 borderColor: getColor("border"),
                 color: getColor("primaryText"),
@@ -161,6 +157,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
               variant="outline"
               size="lg"
               fullWidth
+              className="!h-[46px]"
               style={{
                 borderColor: getColor("primary"),
                 color: getColor("primary"),
@@ -173,14 +170,14 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
       </div>
 
       <div
-        className={`grid grid-cols-2 gap-3 mb-8 ${isRTL ? "direction-rtl" : ""}`}
+        className={`grid grid-cols-2 gap-2 mb-6 ${isRTL ? "direction-rtl" : ""}`}
       >
         <Button
           variant="outline"
           size="md"
           disabled={watchlistLoading}
           onClick={handleWatchlistToggle}
-          className={`flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`!h-[38px] flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
           style={{
             borderColor: getColor("border"),
             color: getColor("secondaryText"),
@@ -196,7 +193,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           variant="outline"
           size="md"
           onClick={handleShare}
-          className={`flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`!h-[38px] flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
           style={{
             borderColor: getColor("border"),
             color: getColor("secondaryText"),
@@ -208,13 +205,13 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
       </div>
 
       <div
-        className={`border-t pt-6 space-y-3 ${isRTL ? "text-right" : "text-left"}`}
+        className={`border-t pt-4 space-y-2 ${isRTL ? "text-right" : "text-left"}`}
         style={{ borderColor: getColor("border") }}
       >
         {rows.map((row) => (
           <div
             key={row.label}
-            className={`flex justify-between text-sm ${isRTL ? "flex-row-reverse" : ""}`}
+            className={`flex justify-between text-sm py-1 ${isRTL ? "flex-row-reverse" : ""}`}
           >
             <span style={{ color: getColor("mutedText") }}>{row.label}</span>
             <span

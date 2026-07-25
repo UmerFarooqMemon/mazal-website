@@ -121,18 +121,12 @@ export default function LivePreview({
             {t("listings.total_amount")}
           </span>
           <span
-            className="text-2xl md:text-3xl font-bold"
+            className="text-2xl md:text-3xl font-serif font-bold"
             style={{ color: getColor("primaryText") }}
           >
             <DirhamAmount amount={priceAmount} weight="bold" />
           </span>
         </div>
-        <p
-          className={`text-[11px] mt-2 ${isRTL ? "text-right" : "text-left"}`}
-          style={{ color: getColor("mutedText") }}
-        >
-          {emirate}
-        </p>
       </div>
     </div>
   );

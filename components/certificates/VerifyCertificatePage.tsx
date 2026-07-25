@@ -232,6 +232,11 @@ export default function VerifyCertificatePage() {
     try {
       const response = await fetch(
         `/api/certificates/verify/${encodeURIComponent(certificateCode)}`,
+        {
+          headers: {
+            "Accept-Language": locale === "ar" ? "ar" : "en",
+          },
+        },
       );
       const result = await response.json();
 

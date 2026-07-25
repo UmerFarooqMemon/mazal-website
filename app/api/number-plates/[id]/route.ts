@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getNumberPlate } from "@/services/number-plates";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 export async function GET(
   request: NextRequest,
@@ -12,9 +13,13 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const locale = normalizeAcceptLanguage(
+      request.headers.get("accept-language"),
+    );
+
     // Await params to get the actual id
     const { id } = await params;
-    const data = await getNumberPlate(id, token);
+    const data = await getNumberPlate(id, token, locale);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Failed to fetch number plate:", error);

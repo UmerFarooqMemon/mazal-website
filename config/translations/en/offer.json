@@ -1,5 +1,5 @@
 {
-  "badge": "Offer",
+  "badge": "offer",
   "title": "Make an Offer",
   "subtitle": "Start the negotiation by setting your asking price. Buyers can submit counter offers, and when you accept one, Mazal takes care of the payment, transfer, and payout process.",
   "listing_offer": "Listing Offer",
@@ -13,7 +13,7 @@
   "counter_offer": "Counter Offer",
   "seller_counter": "Seller Counter Offer",
   "seller_final": "Seller Final Offer",
-  "summary_title": "Deal Summary",
+  "summary_title": "Deal summary",
   "asking_price_label": "Asking price",
   "escrow_custody": "Escrow custody (1%)",
   "platform_fee": "Platform fee (4%)",

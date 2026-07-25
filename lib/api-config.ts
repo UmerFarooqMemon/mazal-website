@@ -37,3 +37,30 @@ export function withPublicApiHeaders(
   if (!token) return headers;
   return { ...headers, "X-Api-Token": token };
 }
+
+/**
+ * Normalize locale / Accept-Language values to the API contract:
+ * `ar` → Arabic, `en` → English.
+ */
+export function normalizeAcceptLanguage(
+  locale?: string | null,
+): "ar" | "en" {
+  if (!locale) return "en";
+  const primary = locale
+    .split(",")[0]
+    ?.trim()
+    .split("-")[0]
+    ?.toLowerCase();
+  return primary === "ar" ? "ar" : "en";
+}
+
+/** Attach Accept-Language so the backend returns localized content. */
+export function withAcceptLanguage(
+  headers: Record<string, string> = {},
+  locale?: string | null,
+): Record<string, string> {
+  return {
+    ...headers,
+    "Accept-Language": normalizeAcceptLanguage(locale),
+  };
+}

@@ -176,9 +176,9 @@ export default function RevealPage() {
       className="min-h-screen pb-20"
       style={{ backgroundColor: getColor("background") }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10">
         <div
-          className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider mb-8 ${isRTL ? "flex-row-reverse" : ""}`}
+          className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider mb-10 ${isRTL ? "flex-row-reverse" : ""}`}
           style={{ color: getColor("mutedText") }}
         >
           <Link
@@ -200,7 +200,7 @@ export default function RevealPage() {
             className={`lg:col-span-3 space-y-6 ${isRTL ? "lg:col-start-3 lg:row-start-1" : ""}`}
           >
             <div
-              className="rounded-2xl border p-8 md:p-12 flex items-center justify-center shadow-sm"
+              className="rounded-2xl border px-6 py-8 md:px-10 md:py-9 flex items-center justify-center shadow-sm min-h-[182px]"
               style={{
                 backgroundColor: getColor("surface"),
                 borderColor: getColor("border"),

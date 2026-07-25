@@ -68,7 +68,7 @@ export default function OfferNegotiation() {
     {
       id: "c1",
       kind: "buyer_counter",
-      title: `${t("offer.counter_offer")} #1`,
+      title: `${t("offer.counter_offer")} # 1`,
       fieldLabel: t("offer.your_offer"),
       amount: 650000,
       editable: true,
@@ -77,7 +77,7 @@ export default function OfferNegotiation() {
     {
       id: "s1",
       kind: "seller_counter",
-      title: `${t("offer.seller_counter")} #1`,
+      title: `${t("offer.seller_counter")} # 1`,
       fieldLabel: t("offer.asking_offer"),
       amount: 670000,
       editable: false,
@@ -87,7 +87,7 @@ export default function OfferNegotiation() {
     {
       id: "c2",
       kind: "buyer_counter",
-      title: `${t("offer.counter_offer")} #2`,
+      title: `${t("offer.counter_offer")} # 2`,
       fieldLabel: t("offer.your_offer"),
       amount: 655000,
       editable: true,
@@ -207,7 +207,7 @@ export default function OfferNegotiation() {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         <div className={`mb-10 ${isRTL ? "text-right" : "text-left"}`}>
           <span
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full mb-4"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold normal-case tracking-normal px-3 py-1 rounded-full mb-4"
             style={{
               backgroundColor: getColor("primaryLight"),
               color: getColor("secondaryText"),

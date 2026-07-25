@@ -6,6 +6,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { useLocale } from "@/context/LocaleContext";
 
 export interface ThemeColors {
   primary: {
@@ -199,6 +200,7 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const { locale } = useLocale();
   const [colors, setColors] = useState<ThemeColors>(defaultColors);
   const [branding, setBranding] = useState<Branding>(defaultBranding);
   const [footerColors, setFooterColors] =
@@ -222,11 +224,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return gradient?.start || "transparent";
   };
 
-  // Fetch theme colors and branding from dashboard API on mount
+  // Fetch theme colors and branding from dashboard API (localized via Accept-Language)
   useEffect(() => {
     const fetchThemeSettings = async () => {
       try {
-        const response = await fetch("/api/site-settings");
+        const response = await fetch("/api/site-settings", {
+          headers: {
+            "Accept-Language": locale === "ar" ? "ar" : "en",
+          },
+        });
         const data = await response.json();
 
         // Set branding (logo, small logo, favicon)
@@ -371,7 +377,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       }
     };
     fetchThemeSettings();
-  }, []);
+  }, [locale]);
 
   return (
     <ThemeContext.Provider

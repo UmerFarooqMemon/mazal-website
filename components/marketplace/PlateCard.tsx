@@ -27,19 +27,12 @@ interface PlateCardProps {
   hideCode?: boolean;
 }
 
-const TIER_LABELS = {
-  diamond: "Diamond",
-  gold: "Gold",
-  silver: "Silver",
-} as const;
-
 export default function PlateCard({
   id,
   emirate,
   code,
   price,
-  type,
-  tier,
+  tier = "diamond",
   views,
   rating,
   previouslySold,
@@ -57,9 +50,7 @@ export default function PlateCard({
     locale === "ar" ? "ar-AE" : "en-US",
   ).format(views);
 
-  const badgeLabel = tier
-    ? TIER_LABELS[tier]
-    : type || TIER_LABELS.diamond;
+  const badgeLabel = t(`listings.tier_${tier}`) || tier;
 
   const digits =
     plate_digits ||

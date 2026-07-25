@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPlateOptions } from "@/services/number-plates";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 export async function GET(request: NextRequest) {
   try {
-    const acceptLanguage = request.nextUrl.searchParams.get("locale") || "en";
+    const acceptLanguage = normalizeAcceptLanguage(
+      request.nextUrl.searchParams.get("locale") ||
+        request.headers.get("accept-language"),
+    );
 
     const data = await getPlateOptions(acceptLanguage);
     return NextResponse.json(data);

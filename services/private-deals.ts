@@ -125,9 +125,7 @@ async function privateDealsRequest<T>(
     Accept: "application/json",
   };
 
-  if (options.locale) {
-    headers["Accept-Language"] = options.locale;
-  }
+  headers["Accept-Language"] = options.locale === "ar" ? "ar" : "en";
 
   if (options.contentType) {
     headers["Content-Type"] = options.contentType;

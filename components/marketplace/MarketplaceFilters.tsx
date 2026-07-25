@@ -70,12 +70,12 @@ export default function MarketplaceFilters({
   };
 
   return (
-    <div className="flex flex-col gap-7 items-start w-full">
+    <div className="flex flex-col gap-8 items-start w-full">
       <div
         className="flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] uppercase"
         style={{ color: getColor("mutedText") }}
       >
-        <SlidersHorizontal className="w-3.5 h-3.5" strokeWidth={2.25} />
+        <SlidersHorizontal className="w-4 h-4" strokeWidth={2.25} />
         {t("marketplace.filters")}
       </div>
 
@@ -95,7 +95,7 @@ export default function MarketplaceFilters({
                   key={option.value}
                   type="button"
                   onClick={() => handleSelect(section.key, option.value)}
-                  className="px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-colors"
+                  className="inline-flex items-center justify-center h-[30px] px-[13px] rounded-full text-[12px] font-medium transition-colors"
                   style={
                     isActive
                       ? {

@@ -168,23 +168,35 @@ export default function PlatePriceFormStep({
         </h2>
 
         <div className="space-y-5">
-          <div>
-            <label
-              className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
-              style={{ color: getColor("secondaryText") }}
-            >
-              {t("listings.emirate")}
-            </label>
-            <div
-              className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
-              style={{
-                backgroundColor: `${getColor("background")}80`,
-                borderColor: getColor("border"),
-                color: getColor("primaryText"),
-              }}
-            >
-              {t("listings.emirate_dubai")}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                className={`block text-[11px] font-medium mb-1.5 ${isRTL ? "text-right" : "text-left"}`}
+                style={{ color: getColor("secondaryText") }}
+              >
+                {t("listings.emirate")}
+              </label>
+              <div
+                className={`w-full rounded-xl border py-3 px-4 text-sm ${isRTL ? "text-right" : "text-left"}`}
+                style={{
+                  backgroundColor: `${getColor("background")}80`,
+                  borderColor: getColor("border"),
+                  color: getColor("primaryText"),
+                }}
+              >
+                {t("listings.emirate_dubai")}
+              </div>
             </div>
+            <Input
+              name="emirateId"
+              label={t("listings.emirate_id")}
+              type="text"
+              placeholder="22525551"
+              value={data.emirateId}
+              onChange={(e) =>
+                onChange({ emirateId: e.target.value.replace(/\D/g, "") })
+              }
+            />
           </div>
 
           <Select
