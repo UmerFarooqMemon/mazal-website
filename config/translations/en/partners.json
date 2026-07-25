@@ -1,4 +1,7 @@
 {
   "title": "Partners",
-  "subtitle": "Trusted organizations working with Mazal across the UAE number plate ecosystem."
+  "subtitle": "Trusted organizations working with Mazal across the UAE number plate ecosystem.",
+  "loading": "Loading partners...",
+  "empty": "No partners available at the moment.",
+  "error": "Unable to load partners. Please try again."
 }

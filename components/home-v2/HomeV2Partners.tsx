@@ -1,32 +1,73 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
+import { fetchPartnersClient, type Partner } from "@/services/partners";
 
-const PARTNERS = [
-  {
-    src: "/home-v2/partner-1.png",
-    alt: "Shademont",
-    className: "h-24 w-44 sm:h-28 sm:w-52",
-    imageClassName: "object-contain scale-[1.55]",
-  },
-  {
-    src: "/home-v2/partner-2.png",
-    alt: "PIXL Global",
-    className: "h-16 w-40 sm:h-20 sm:w-48",
-    imageClassName: "object-contain",
-  },
-  {
-    src: "/home-v2/partner-3.png",
-    alt: "Transguard Group",
-    className: "h-16 w-40 sm:h-20 sm:w-48",
-    imageClassName: "object-contain",
-  },
-];
+function PartnerLogo({
+  partner,
+  className,
+}: {
+  partner: Partner;
+  className?: string;
+}) {
+  const image = (
+    <div
+      className={`relative h-20 w-44 shrink-0 overflow-visible sm:h-24 sm:w-52 ${className ?? ""}`}
+    >
+      <Image
+        src={partner.logo_url}
+        alt={partner.name}
+        fill
+        unoptimized
+        className="object-contain grayscale opacity-70"
+      />
+    </div>
+  );
+
+  if (!partner.website_url) return image;
+
+  return (
+    <a
+      href={partner.website_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex shrink-0"
+      aria-label={partner.name}
+    >
+      {image}
+    </a>
+  );
+}
 
 export default function HomeV2Partners() {
   const { t } = useLocale();
-  const logos = [...PARTNERS, ...PARTNERS, ...PARTNERS];
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    fetchPartnersClient()
+      .then((list) => {
+        if (active) setPartners(list);
+      })
+      .catch(() => {
+        if (active) setPartners([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (loading || partners.length === 0) return null;
+
+  const logos = [...partners, ...partners, ...partners];
 
   return (
     <section className="overflow-hidden bg-white py-16 lg:py-20">
@@ -36,17 +77,10 @@ export default function HomeV2Partners() {
       <div className="relative">
         <div className="home-v2-marquee flex items-center gap-16 whitespace-nowrap px-8">
           {logos.map((partner, index) => (
-            <div
-              key={`${partner.src}-${index}`}
-              className={`relative shrink-0 overflow-visible grayscale opacity-70 ${partner.className}`}
-            >
-              <Image
-                src={partner.src}
-                alt={partner.alt}
-                fill
-                className={partner.imageClassName}
-              />
-            </div>
+            <PartnerLogo
+              key={`${partner.id}-${index}`}
+              partner={partner}
+            />
           ))}
         </div>
       </div>

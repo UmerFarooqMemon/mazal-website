@@ -1,33 +1,78 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
+import { fetchPartnersClient, type Partner } from "@/services/partners";
 
-const PARTNERS = [
-  {
-    src: "/home-v2/partner-1.png",
-    alt: "Shademont",
-    // Square PNG has large white padding — enlarge so the mark matches others
-    className: "h-36 max-w-[280px] sm:h-44 sm:max-w-[320px]",
-    imageClassName: "object-contain scale-[1.55]",
-  },
-  {
-    src: "/home-v2/partner-2.png",
-    alt: "PIXL Global",
-    className: "h-24 max-w-[220px]",
-    imageClassName: "object-contain",
-  },
-  {
-    src: "/home-v2/partner-3.png",
-    alt: "Transguard Group",
-    className: "h-24 max-w-[240px]",
-    imageClassName: "object-contain",
-  },
-];
+function PartnerCard({ partner }: { partner: Partner }) {
+  const image = (
+    <div className="relative mx-auto h-28 w-full max-w-[260px] sm:h-32">
+      <Image
+        src={partner.logo_url}
+        alt={partner.name}
+        fill
+        unoptimized
+        className="object-contain"
+      />
+    </div>
+  );
+
+  if (!partner.website_url) {
+    return (
+      <div className="flex flex-col items-center gap-3">
+        {image}
+        <p className="text-center text-sm font-medium text-[#081123]">
+          {partner.name}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={partner.website_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex flex-col items-center gap-3 transition-opacity hover:opacity-80"
+      aria-label={partner.name}
+    >
+      {image}
+      <p className="text-center text-sm font-medium text-[#081123]">
+        {partner.name}
+      </p>
+    </a>
+  );
+}
 
 export default function PartnersPage() {
-  const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
+  const { t } = useLocale();
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    fetchPartnersClient()
+      .then((list) => {
+        if (!active) return;
+        setPartners(list);
+        setError(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setPartners([]);
+        setError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-[70vh] bg-[#f2faef]">
@@ -41,21 +86,19 @@ export default function PartnersPage() {
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 items-center gap-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16">
-          {PARTNERS.map((partner) => (
-            <div
-              key={partner.src}
-              className={`relative mx-auto w-full overflow-visible ${partner.className}`}
-            >
-              <Image
-                src={partner.src}
-                alt={partner.alt}
-                fill
-                className={partner.imageClassName}
-              />
-            </div>
-          ))}
-        </div>
+        {loading ? (
+          <p className="mt-16 text-[#545e6f]">{t("partners.loading")}</p>
+        ) : error ? (
+          <p className="mt-16 text-[#545e6f]">{t("partners.error")}</p>
+        ) : partners.length === 0 ? (
+          <p className="mt-16 text-[#545e6f]">{t("partners.empty")}</p>
+        ) : (
+          <div className="mt-16 grid grid-cols-1 items-center gap-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16">
+            {partners.map((partner) => (
+              <PartnerCard key={partner.id} partner={partner} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
