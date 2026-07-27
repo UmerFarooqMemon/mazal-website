@@ -102,16 +102,25 @@ export default function AuctionsPage() {
               </p>
             </div>
 
-            <Link href={`/${locale}/auctions/add`}>
-              <Button
-                variant="primary"
-                size="md"
-                leftIcon={<Plus className="w-4 h-4" />}
-                className="rounded-full"
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={`/${locale}/auctions/registrations`}
+                className="text-sm font-semibold hover:opacity-80"
+                style={{ color: getColor("primary") }}
               >
-                {t("auctions.add_plate")}
-              </Button>
-            </Link>
+                {t("auctions.my_registrations_title") || "My registrations"}
+              </Link>
+              <Link href={`/${locale}/auctions/add`}>
+                <Button
+                  variant="primary"
+                  size="md"
+                  leftIcon={<Plus className="w-4 h-4" />}
+                  className="rounded-full"
+                >
+                  {t("auctions.add_plate")}
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <form

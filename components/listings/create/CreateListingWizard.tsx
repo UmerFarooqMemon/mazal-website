@@ -9,9 +9,11 @@ import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import PlatePriceFormStep from "./PlatePriceFormStep";
 import BoostStep from "./BoostStep";
 import GoLiveStep from "./GoLiveStep";
-import { createListing } from "@/services/marketplace";
-
-export type BoostTier = "silver" | "gold" | "diamond";
+import {
+  createListing,
+  createListingPlanCheckout,
+  type MarketplaceListingPlan,
+} from "@/services/marketplace";
 
 export interface CreateListingData {
   emirate: string;
@@ -24,11 +26,13 @@ export interface CreateListingData {
   price: string;
   notes: string;
   ownershipFileName: string;
-  boostTier: BoostTier;
-  cardNumber: string;
-  cardExpiry: string;
-  cardCvc: string;
-  cardName: string;
+  ownershipFile: File | null;
+  listingPlanId: number | null;
+  listingPlanSlug: string;
+  listingPlanName: string;
+  listingPlanPrice: number;
+  listingPlanRequiresPayment: boolean;
+  listingPlanDurationDays: number | null;
 }
 
 const INITIAL: CreateListingData = {
@@ -42,11 +46,13 @@ const INITIAL: CreateListingData = {
   price: "68000",
   notes: "",
   ownershipFileName: "",
-  boostTier: "silver",
-  cardNumber: "",
-  cardExpiry: "",
-  cardCvc: "",
-  cardName: "",
+  ownershipFile: null,
+  listingPlanId: null,
+  listingPlanSlug: "free",
+  listingPlanName: "Free",
+  listingPlanPrice: 0,
+  listingPlanRequiresPayment: false,
+  listingPlanDurationDays: null,
 };
 
 type Step = 1 | 2 | 3;
@@ -78,6 +84,17 @@ export default function CreateListingWizard({
 
   const onChange = (patch: Partial<CreateListingData>) => {
     setData((prev) => ({ ...prev, ...patch }));
+  };
+
+  const selectPlan = (plan: MarketplaceListingPlan) => {
+    onChange({
+      listingPlanId: plan.id,
+      listingPlanSlug: plan.slug,
+      listingPlanName: plan.name,
+      listingPlanPrice: Number(plan.price) || 0,
+      listingPlanRequiresPayment: Boolean(plan.requires_payment),
+      listingPlanDurationDays: plan.duration_days ?? null,
+    });
   };
 
   const steps: StepItem[] = useMemo(
@@ -121,25 +138,59 @@ export default function CreateListingWizard({
     step === 2 ? t("listings.boost_desc") : t("listings.publish_desc");
 
   const handleProceed = async () => {
+    if (!data.ownershipFile) {
+      toast.error(
+        t("listings.ownership_required") ||
+          "Please upload the ownership document.",
+      );
+      setStep(1);
+      return;
+    }
+
     setLoading(true);
     try {
-      const title = `${data.emirate} ${data.code ? data.code + " " : ""}${data.digits}`.trim();
-      const payload = {
-        listing_type: "direct" as const,
-        title,
-        emirate: data.emirate,
-        plate_variant: data.plateVariant || undefined,
-        plate_type: data.plateType || undefined,
-        plate_code: data.code || undefined,
-        plate_digits: data.digits,
-        asking_price: Number(data.price.replace(/[^\d.]/g, "")) || 0,
-        description: data.notes || undefined,
-        hide_code: Boolean(data.code) && data.hideCode,
-        status: "pending_approval" as const,
-      };
+      const listingTitle =
+        `${data.emirate} ${data.code ? data.code + " " : ""}${data.digits}`.trim();
 
-      await createListing(payload, locale);
-      toast.success(t("listings.publish_success"));
+      const response = await createListing(
+        {
+          listing_type: "direct",
+          title: listingTitle,
+          emirate: data.emirate,
+          plate_variant: data.plateVariant || undefined,
+          plate_type: data.plateType || undefined,
+          plate_code: data.code || undefined,
+          plate_digits: data.digits,
+          asking_price: Number(data.price.replace(/[^\d.]/g, "")) || 0,
+          description: data.notes || undefined,
+          hide_code: Boolean(data.code) && data.hideCode,
+          listing_plan_id: data.listingPlanId,
+          ownership_document: data.ownershipFile,
+        },
+        locale,
+      );
+
+      const listing = response.data.listing;
+
+      if (listing.needs_plan_payment) {
+        const checkout = await createListingPlanCheckout(listing.id, locale);
+        const redirectUrl = checkout.data.redirect_url;
+        if (!redirectUrl) {
+          throw new Error("Missing PayTabs checkout URL.");
+        }
+        toast.success(
+          t("listings.redirecting_paytabs") ||
+            "Redirecting to secure payment…",
+        );
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      toast.success(
+        t("listings.publish_pending") ||
+          t("listings.publish_success") ||
+          "Listing submitted for approval.",
+      );
       router.push(doneHref);
     } catch (error) {
       toast.error(
@@ -147,7 +198,6 @@ export default function CreateListingWizard({
           ? error.message
           : t("common.error_submission") || "Something went wrong",
       );
-    } finally {
       setLoading(false);
     }
   };
@@ -211,11 +261,9 @@ export default function CreateListingWizard({
         {step === 2 && (
           <BoostStep
             data={data}
-            onChange={onChange}
+            onSelectPlan={selectPlan}
             onBack={() =>
-              initialStep >= 2
-                ? router.push(cancelHref)
-                : setStep(1)
+              initialStep >= 2 ? router.push(cancelHref) : setStep(1)
             }
             onContinue={() => setStep(3)}
           />
@@ -223,7 +271,6 @@ export default function CreateListingWizard({
         {step === 3 && (
           <GoLiveStep
             data={data}
-            onChange={onChange}
             onBack={() => setStep(2)}
             onProceed={handleProceed}
             loading={loading}

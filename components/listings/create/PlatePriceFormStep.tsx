@@ -150,6 +150,7 @@ export default function PlatePriceFormStep({
     Boolean(data.plateVariant) &&
     Boolean(data.digits.trim()) &&
     Boolean(data.price.trim()) &&
+    Boolean(data.ownershipFile) &&
     (!showCodeField || Boolean(data.code.trim()));
 
   return (
@@ -476,14 +477,23 @@ export default function PlatePriceFormStep({
               <input
                 type="file"
                 className="hidden"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) =>
+                accept="image/jpeg,image/jpg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
                   onChange({
-                    ownershipFileName: e.target.files?.[0]?.name || "",
-                  })
-                }
+                    ownershipFile: file,
+                    ownershipFileName: file?.name || "",
+                  });
+                }}
               />
             </label>
+            <p
+              className="text-[11px] mt-1.5"
+              style={{ color: getColor("mutedText") }}
+            >
+              {t("listings.ownership_hint") ||
+                "JPEG, PNG or WebP · max 5MB. Required to submit."}
+            </p>
           </div>
         </div>
 

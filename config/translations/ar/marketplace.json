@@ -26,5 +26,18 @@
   "sort_az": "أ-ي",
   "sort_za": "ي-أ",
   "search_placeholder": "الكود أو الأرقام مثال: M 7",
-  "search_button": "بحث"
+  "search_button": "بحث",
+  "watchlist_eyebrow": "قائمة المتابعة",
+  "watchlist_title": "اللوحات المحفوظة",
+  "watchlist_subtitle": "تابع اللوحات التي تراقبها ونظّمها في فئات.",
+  "watchlist_empty": "قائمة المتابعة فارغة. احفظ لوحات من السوق.",
+  "watchlist_empty_section": "لا توجد لوحات في هذه القائمة.",
+  "watchlist_load_error": "فشل تحميل قائمة المتابعة.",
+  "category_placeholder": "اسم الفئة الجديدة",
+  "create_category": "إنشاء فئة",
+  "category_created": "تم إنشاء الفئة.",
+  "category_deleted": "تم حذف الفئة.",
+  "delete_category": "حذف الفئة",
+  "uncategorized": "بدون فئة",
+  "browse_marketplace": "تصفح السوق"
 }

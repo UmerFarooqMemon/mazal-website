@@ -21,8 +21,10 @@ export default function PortfolioPlateCard({ plate }: PortfolioPlateCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const detailsHref = `/${locale}/portfolio/${plate.id}`;
-  const auctionHref = `/${locale}/portfolio/plate/active`;
+  const detailsHref = plate.isAuction
+    ? `/${locale}/auctions/${plate.id}`
+    : `/${locale}/portfolio/${plate.id}`;
+  const auctionHref = `/${locale}/auctions/${plate.id}`;
   const saleHref = `/${locale}/portfolio/list-for-sale`;
 
   const formattedReturn = `+${plate.returnPct.toFixed(1)}%`;

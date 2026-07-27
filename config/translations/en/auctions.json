@@ -106,5 +106,17 @@
   "field_ownership": "Number plate ownership",
   "upload_document": "Upload a document",
   "live_preview": "LIVE PREVIEW",
-  "total_amount": "Total Amount"
+  "total_amount": "Total Amount",
+  "create_success": "Auction listing submitted for approval.",
+  "ownership_too_large": "Ownership document must be 5MB or less.",
+  "paytabs_method_subtitle": "Auction deposits are paid securely online via PayTabs card checkout.",
+  "paytabs_checkout_desc": "You will be redirected to PayTabs to pay your refundable auction deposit securely.",
+  "pay_with_paytabs": "Pay with PayTabs",
+  "paytabs_failed": "Payment was not completed. Please try again.",
+  "deposit_pending_verification": "Payment received. Deposit verification is still processing — refresh shortly.",
+  "my_registrations_title": "My Auction Registrations",
+  "my_registrations_subtitle": "Track your auction deposits and bidding eligibility.",
+  "no_registrations": "You have not registered for any auctions yet.",
+  "browse_auctions": "Browse auctions",
+  "view_auction": "View auction"
 }

@@ -114,19 +114,37 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
       </div>
 
       <div className="flex flex-col gap-3 mb-4">
-        <Link
-          href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
-          className="block"
-        >
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            className="shadow-md !h-11"
+        {!listing.is_owner && (
+          <Link
+            href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
+            className="block"
           >
-            {t("listings.buy_escrow")}
-          </Button>
-        </Link>
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="shadow-md !h-11"
+            >
+              {t("listings.buy_escrow")}
+            </Button>
+          </Link>
+        )}
+
+        {listing.is_owner && (
+          <Link
+            href={`/${locale}/listings/${listing.id}/offer`}
+            className="block"
+          >
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="shadow-md !h-11"
+            >
+              {t("listings.manage_offers") || "Manage offers"}
+            </Button>
+          </Link>
+        )}
 
         {listing.can_make_offer !== false && !listing.is_owner && (
           <Link
@@ -148,7 +166,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           </Link>
         )}
 
-        {listing.code_hidden && (
+        {listing.code_hidden && !listing.is_owner && (
           <Link
             href={`/${locale}/listings/${listing.id}/reveal`}
             className="block"

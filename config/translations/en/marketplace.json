@@ -26,5 +26,18 @@
   "sort_az": "A-Z",
   "sort_za": "Z-A",
   "search_placeholder": "Code or digits e.g. M 7",
-  "search_button": "Search"
+  "search_button": "Search",
+  "watchlist_eyebrow": "Watchlist",
+  "watchlist_title": "Saved plates",
+  "watchlist_subtitle": "Track plates you’re watching and organise them into categories.",
+  "watchlist_empty": "Your watchlist is empty. Save plates from the marketplace.",
+  "watchlist_empty_section": "No plates in this list.",
+  "watchlist_load_error": "Failed to load watchlist.",
+  "category_placeholder": "New category name",
+  "create_category": "Create category",
+  "category_created": "Category created.",
+  "category_deleted": "Category deleted.",
+  "delete_category": "Delete category",
+  "uncategorized": "Uncategorized",
+  "browse_marketplace": "Browse marketplace"
 }

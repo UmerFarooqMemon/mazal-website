@@ -25,6 +25,18 @@ export interface MarketplaceAuctionBidSummary {
   bidder?: { id: number | null; name: string };
 }
 
+export interface MarketplaceAuctionProviderTransaction {
+  id: number;
+  provider: string;
+  status: string;
+  tran_ref?: string | null;
+  amount?: number | string;
+  currency?: string;
+  redirect_url?: string | null;
+  initiated_at?: string | null;
+  processed_at?: string | null;
+}
+
 export interface MarketplaceAuctionRegistration {
   id: number;
   listing_id: number;
@@ -38,8 +50,18 @@ export interface MarketplaceAuctionRegistration {
   no_show_penalty_amount?: number | string | null;
   no_show_marked_at?: string | null;
   registered_at?: string | null;
+  provider_transaction?: MarketplaceAuctionProviderTransaction | null;
+  paytabs_configured?: boolean;
   user?: { id: number; name: string };
-  listing?: MarketplaceListingCard | null;
+  listing?:
+    | MarketplaceListingCard
+    | {
+        id: number;
+        title?: string;
+        display_plate?: string;
+        auction_outcome?: string | null;
+      }
+    | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -151,6 +173,29 @@ export interface MarketplaceListingCard {
   published_at: string;
 }
 
+export interface MarketplaceListingPlan {
+  id: number | null;
+  name: string;
+  slug: string;
+  description?: string | null;
+  price: string;
+  currency: string;
+  duration_days?: number | null;
+  features: string[];
+  is_featured?: boolean;
+  is_free?: boolean;
+  requires_payment?: boolean;
+  sort_order?: number;
+}
+
+export interface MarketplaceListingPlanSummary {
+  id: number | null;
+  name: string;
+  price: string | null;
+  duration_days?: number | null;
+  is_free?: boolean;
+}
+
 export interface MarketplaceListingDetail extends MarketplaceListingCard {
   description?: string | null;
   auction?: MarketplaceAuction | null;
@@ -161,6 +206,15 @@ export interface MarketplaceListingDetail extends MarketplaceListingCard {
   sold_at?: string | null;
   created_at?: string;
   updated_at?: string;
+  listing_plan?: MarketplaceListingPlanSummary | null;
+  plan_payment_status?:
+    | "not_required"
+    | "pending"
+    | "paid"
+    | "failed"
+    | string;
+  needs_plan_payment?: boolean;
+  has_ownership_document?: boolean;
 }
 
 export interface MarketplaceOffer {
@@ -171,6 +225,9 @@ export interface MarketplaceOffer {
   status: string;
   status_label: string;
   decision_note?: string | null;
+  initiated_by?: "buyer" | "seller" | string;
+  parent_offer_id?: number | null;
+  is_seller_counter?: boolean;
   buyer?: { id: number; name: string };
   listing?: {
     id: number;
@@ -182,6 +239,20 @@ export interface MarketplaceOffer {
   responded_at?: string | null;
   created_at: string;
   updated_at?: string;
+}
+
+export interface MarketplaceListingPlanTransaction {
+  id: number;
+  listing_id: number;
+  listing_plan_id?: number | null;
+  provider: string;
+  status: string;
+  tran_ref?: string | null;
+  amount: string;
+  currency: string;
+  redirect_url?: string | null;
+  initiated_at?: string | null;
+  processed_at?: string | null;
 }
 
 export interface MarketplacePurchasePayment {
@@ -378,11 +449,13 @@ export interface CreateListingPayload {
   asking_price: number;
   description?: string;
   hide_code?: boolean;
-  status?: "draft" | "active" | "pending_approval";
+  status?: "draft" | "pending_approval" | "pending_plan_payment";
   auction_starts_at?: string | null;
   auction_ends_at?: string | null;
   auction_reserve_price?: number | null;
   previously_sold?: boolean;
+  listing_plan_id?: number | string | null;
+  ownership_document?: File | Blob | null;
 }
 
 export interface UpdateListingPayload {
@@ -597,13 +670,118 @@ export function getMyListings(locale: string) {
 
 // 6. Create Listing
 export function createListing(payload: CreateListingPayload, locale: string) {
+  if (payload.ownership_document) {
+    const formData = new FormData();
+    formData.append("listing_type", payload.listing_type);
+    formData.append("title", payload.title);
+    formData.append("emirate", payload.emirate);
+    formData.append("plate_digits", payload.plate_digits);
+    formData.append("asking_price", String(payload.asking_price));
+    if (payload.plate_variant) formData.append("plate_variant", payload.plate_variant);
+    if (payload.plate_type) formData.append("plate_type", payload.plate_type);
+    if (payload.plate_code) formData.append("plate_code", payload.plate_code);
+    if (payload.plate_design) formData.append("plate_design", payload.plate_design);
+    if (payload.description) formData.append("description", payload.description);
+    if (payload.hide_code != null) {
+      formData.append("hide_code", payload.hide_code ? "1" : "0");
+    }
+    if (payload.status) formData.append("status", payload.status);
+    if (payload.auction_starts_at) {
+      formData.append("auction_starts_at", payload.auction_starts_at);
+    }
+    if (payload.auction_ends_at) {
+      formData.append("auction_ends_at", payload.auction_ends_at);
+    }
+    if (payload.auction_reserve_price != null) {
+      formData.append(
+        "auction_reserve_price",
+        String(payload.auction_reserve_price),
+      );
+    }
+    if (
+      payload.listing_plan_id !== undefined &&
+      payload.listing_plan_id !== null &&
+      payload.listing_plan_id !== ""
+    ) {
+      formData.append("listing_plan_id", String(payload.listing_plan_id));
+    }
+    if (payload.previously_sold != null) {
+      formData.append("previously_sold", payload.previously_sold ? "1" : "0");
+    }
+    formData.append("ownership_document", payload.ownership_document);
+
+    return marketplaceRequest<{ listing: MarketplaceListingDetail }>(
+      "/listings",
+      {
+        method: "POST",
+        locale,
+        auth: "required",
+        body: formData,
+      },
+    );
+  }
+
+  const { ownership_document: _file, ...jsonPayload } = payload;
   return marketplaceRequest<{ listing: MarketplaceListingDetail }>("/listings", {
     method: "POST",
     locale,
     auth: "required",
     contentType: "application/json",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(jsonPayload),
   });
+}
+
+/** Public catalogue of listing plans (Free option when free_listings_enabled). */
+export function getListingPlans(locale: string) {
+  return marketplaceRequest<{
+    free_listings_enabled: boolean;
+    payment_required_for_paid_plans?: boolean;
+    checkout_hint?: string;
+    listing_plans: MarketplaceListingPlan[];
+  }>("/listing-plans", { locale });
+}
+
+/** PayTabs checkout for a listing waiting on plan payment. */
+export function createListingPlanCheckout(
+  listingId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    redirect_url: string;
+    transaction?: MarketplaceListingPlanTransaction;
+    listing?: MarketplaceListingDetail;
+  }>(`/listings/${listingId}/listing-plan/paytabs/checkout`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify({}),
+  });
+}
+
+/** Download ownership document (seller only) — returns blob URL helper via fetch. */
+export async function downloadOwnershipDocument(
+  listingId: string | number,
+  locale: string,
+) {
+  const token = getToken();
+  if (!token) throw new Error("Please login to continue.");
+
+  const response = await fetch(
+    `/api/marketplace/listings/${listingId}/ownership-document`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Accept-Language": locale === "ar" ? "ar" : "en",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to download ownership document.");
+  }
+
+  return response.blob();
 }
 
 // 7. Update Listing
@@ -865,6 +1043,24 @@ export function withdrawOffer(offerId: string | number, locale: string) {
   );
 }
 
+/** Seller counter-offer → creates a new pending offer initiated_by=seller. */
+export function counterOffer(
+  offerId: string | number,
+  payload: { amount: number; message?: string },
+  locale: string,
+) {
+  return marketplaceRequest<{ offer: MarketplaceOffer }>(
+    `/offers/${offerId}/counter`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
 // 25. Start Purchase From Accepted Offer
 export function startPurchaseFromOffer(
   offerId: string | number,
@@ -1116,7 +1312,7 @@ export function registerForAuction(listingId: string | number, locale: string) {
   );
 }
 
-// 45. Confirm Auction Deposit (Fake Local)
+// 45. Confirm Auction Deposit (Fake Local — requires MARKETPLACE_FAKE_AUCTION_DEPOSITS)
 export function confirmAuctionDeposit(
   listingId: string | number,
   registrationId: string | number,
@@ -1133,6 +1329,28 @@ export function confirmAuctionDeposit(
       body: JSON.stringify({
         payment_reference: paymentReference,
       }),
+    },
+  );
+}
+
+// 45b. PayTabs Auction Deposit Checkout (production)
+export function createAuctionDepositCheckout(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    redirect_url: string;
+    transaction?: MarketplaceAuctionProviderTransaction;
+    registration?: MarketplaceAuctionRegistration;
+  }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/paytabs/checkout`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify({}),
     },
   );
 }

@@ -1,72 +1,58 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, Crown, Gem, Stars } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Crown,
+  Gem,
+  Gift,
+  Stars,
+} from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount } from "@/components/ui";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
-import type { BoostTier, CreateListingData } from "./CreateListingWizard";
+import {
+  getListingPlans,
+  type MarketplaceListingPlan,
+} from "@/services/marketplace";
+import type { CreateListingData } from "./CreateListingWizard";
 
 interface BoostStepProps {
   data: CreateListingData;
-  onChange: (patch: Partial<CreateListingData>) => void;
+  onSelectPlan: (plan: MarketplaceListingPlan) => void;
   onBack: () => void;
   onContinue: () => void;
 }
 
-const TIERS: {
-  key: BoostTier;
-  icon: typeof Stars;
-  price: number;
-  badgeKey: string;
-  iconColor: string;
-  features: string[];
-}[] = [
-  {
-    key: "silver",
-    icon: Stars,
-    price: 250,
-    badgeKey: "badge_default",
-    iconColor: "#6b7280",
-    features: [
-      "Priority above standard listings",
-      "Silver badge on card",
-      "3× search visibility",
-    ],
-  },
-  {
-    key: "gold",
-    icon: Crown,
-    price: 750,
-    badgeKey: "badge_preferred",
-    iconColor: "#c47a1a",
-    features: [
-      "Featured strip placement",
-      "Boosted in search results",
-      "Gold badge on card",
-      "Weekly newsletter mention",
-    ],
-  },
-  {
-    key: "diamond",
-    icon: Gem,
-    price: 1000,
-    badgeKey: "badge_most_impact",
-    iconColor: "#00664e",
-    features: [
-      "Top of marketplace",
-      "Homepage hero rotation",
-      "Dedicated concierge",
-      "Priority auction placement",
-      "Social media feature",
-    ],
-  },
-];
+function planIcon(slug: string) {
+  const key = slug.toLowerCase();
+  if (key.includes("premium") || key.includes("diamond")) return Gem;
+  if (key.includes("featured") || key.includes("gold")) return Crown;
+  if (key.includes("free")) return Gift;
+  return Stars;
+}
+
+function planIconColor(slug: string) {
+  const key = slug.toLowerCase();
+  if (key.includes("premium") || key.includes("diamond")) return "#00664e";
+  if (key.includes("featured") || key.includes("gold")) return "#c47a1a";
+  if (key.includes("free")) return "#0f766e";
+  return "#6b7280";
+}
+
+function planBadgeKey(plan: MarketplaceListingPlan) {
+  if (plan.is_free) return "badge_default";
+  if (plan.is_featured) return "badge_most_impact";
+  return "badge_preferred";
+}
 
 export default function BoostStep({
   data,
-  onChange,
+  onSelectPlan,
   onBack,
   onContinue,
 }: BoostStepProps) {
@@ -76,8 +62,61 @@ export default function BoostStep({
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
 
-  const selected = TIERS.find((tier) => tier.key === data.boostTier) || TIERS[0];
-  const SelectedIcon = selected.icon;
+  const [plans, setPlans] = useState<MarketplaceListingPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    getListingPlans(locale)
+      .then((response) => {
+        if (!active) return;
+        const nextPlans = response.data.listing_plans || [];
+        setPlans(nextPlans);
+        setError(null);
+
+        const selected =
+          nextPlans.find(
+            (plan) =>
+              (plan.id == null && data.listingPlanId == null) ||
+              (plan.id != null && plan.id === data.listingPlanId),
+          ) || nextPlans[0];
+
+        if (selected) onSelectPlan(selected);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(
+          err instanceof Error
+            ? err.message
+            : t("listings.plans_load_error") || "Failed to load listing plans.",
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
+
+  const selected =
+    plans.find(
+      (plan) =>
+        (plan.id == null && data.listingPlanId == null) ||
+        (plan.id != null && plan.id === data.listingPlanId),
+    ) || plans[0];
+  const SelectedIcon = selected
+    ? planIcon(selected.slug)
+    : planIcon(data.listingPlanSlug);
+
+  const durationLabel = selected?.duration_days
+    ? t("listings.days_n").replace("{days}", String(selected.duration_days)) ||
+      `${selected.duration_days} DAYS`
+    : t("listings.days_30");
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-8 items-start">
@@ -101,98 +140,130 @@ export default function BoostStep({
           {t("listings.tier_subtitle")}
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {TIERS.map((tier) => {
-            const Icon = tier.icon;
-            const isSelected = data.boostTier === tier.key;
-            return (
-              <button
-                key={tier.key}
-                type="button"
-                onClick={() => onChange({ boostTier: tier.key })}
-                className={`relative text-start rounded-2xl border p-5 min-h-[354px] transition-all ${
-                  isSelected
-                    ? "shadow-[0_8px_24px_-12px_rgba(0,102,78,0.28)]"
-                    : ""
-                }`}
-                style={{
-                  borderColor: isSelected
-                    ? getColor("primary")
-                    : getColor("border"),
-                  backgroundColor: isSelected
-                    ? getColor("primaryLight")
-                    : getColor("surface"),
-                }}
-              >
-                <span
-                  className="absolute top-4 end-3 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+        {loading ? (
+          <p className="text-sm py-8" style={{ color: getColor("mutedText") }}>
+            {t("common.loading") || "Loading..."}
+          </p>
+        ) : error ? (
+          <p className="text-sm py-8" style={{ color: "#DC2626" }}>
+            {error}
+          </p>
+        ) : (
+          <div
+            className={`grid grid-cols-1 gap-4 ${
+              plans.length >= 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"
+            }`}
+          >
+            {plans.map((plan) => {
+              const Icon = planIcon(plan.slug);
+              const iconColor = planIconColor(plan.slug);
+              const isSelected =
+                (plan.id == null && data.listingPlanId == null) ||
+                (plan.id != null && plan.id === data.listingPlanId);
+              const price = Number(plan.price) || 0;
+              const planDays = plan.duration_days
+                ? t("listings.days_n").replace(
+                    "{days}",
+                    String(plan.duration_days),
+                  ) || `${plan.duration_days} DAYS`
+                : t("listings.days_30");
+
+              return (
+                <button
+                  key={`${plan.slug}-${plan.id ?? "free"}`}
+                  type="button"
+                  onClick={() => onSelectPlan(plan)}
+                  className={`relative text-start rounded-2xl border p-5 min-h-[320px] transition-all ${
+                    isSelected
+                      ? "shadow-[0_8px_24px_-12px_rgba(0,102,78,0.28)]"
+                      : ""
+                  }`}
                   style={{
-                    backgroundColor: `${getColor("primary")}18`,
-                    color: getColor("primary"),
-                  }}
-                >
-                  {t(`listings.${tier.badgeKey}`)}
-                </span>
-                <div
-                  className="size-9 rounded-xl flex items-center justify-center mb-4"
-                  style={{ backgroundColor: `${tier.iconColor}14` }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: tier.iconColor }} />
-                </div>
-                <div
-                  className="text-lg font-serif font-bold"
-                  style={{ color: getColor("primaryText") }}
-                >
-                  {t(`listings.tier_${tier.key}`)}
-                </div>
-                <div
-                  className="text-[10px] font-bold tracking-[0.12em] uppercase mt-1"
-                  style={{ color: getColor("mutedText") }}
-                >
-                  {t("listings.days_30")}
-                </div>
-                <div
-                  className="text-lg font-bold mt-3 mb-4"
-                  style={{ color: getColor("primaryText") }}
-                >
-                  <DirhamAmount amount={tier.price} weight="bold" />
-                </div>
-                <ul className="space-y-2.5 mb-5 min-h-[120px]">
-                  {tier.features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-start gap-2 text-[11px] border-t pt-2"
-                      style={{
-                        color: getColor("secondaryText"),
-                        borderColor: getColor("border"),
-                      }}
-                    >
-                      <Check
-                        className="w-3 h-3 mt-0.5 shrink-0"
-                        style={{ color: getColor("primary") }}
-                      />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div
-                  className="w-full h-8 rounded-lg text-[11px] font-semibold flex items-center justify-center border"
-                  style={{
-                    backgroundColor: isSelected
-                      ? getColor("primary")
-                      : getColor("surface"),
                     borderColor: isSelected
                       ? getColor("primary")
                       : getColor("border"),
-                    color: isSelected ? "#fff" : getColor("primary"),
+                    backgroundColor: isSelected
+                      ? getColor("primaryLight")
+                      : getColor("surface"),
                   }}
                 >
-                  {isSelected ? t("listings.selected") : t("listings.choose")}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  <span
+                    className="absolute top-4 end-3 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                    style={{
+                      backgroundColor: `${getColor("primary")}18`,
+                      color: getColor("primary"),
+                    }}
+                  >
+                    {t(`listings.${planBadgeKey(plan)}`)}
+                  </span>
+                  <div
+                    className="size-9 rounded-xl flex items-center justify-center mb-4"
+                    style={{ backgroundColor: `${iconColor}14` }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: iconColor }} />
+                  </div>
+                  <div
+                    className="text-lg font-serif font-bold"
+                    style={{ color: getColor("primaryText") }}
+                  >
+                    {plan.name}
+                  </div>
+                  <div
+                    className="text-[10px] font-bold tracking-[0.12em] uppercase mt-1"
+                    style={{ color: getColor("mutedText") }}
+                  >
+                    {planDays}
+                  </div>
+                  <div
+                    className="text-lg font-bold mt-3 mb-4"
+                    style={{ color: getColor("primaryText") }}
+                  >
+                    {price > 0 ? (
+                      <DirhamAmount amount={price} weight="bold" />
+                    ) : (
+                      t("listings.plan_free") || "Free"
+                    )}
+                  </div>
+                  <ul className="space-y-2.5 mb-5 min-h-[100px]">
+                    {(plan.features?.length
+                      ? plan.features
+                      : [plan.description || plan.name]
+                    ).map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex items-start gap-2 text-[11px] border-t pt-2"
+                        style={{
+                          color: getColor("secondaryText"),
+                          borderColor: getColor("border"),
+                        }}
+                      >
+                        <Check
+                          className="w-3 h-3 mt-0.5 shrink-0"
+                          style={{ color: getColor("primary") }}
+                        />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div
+                    className="w-full h-8 rounded-lg text-[11px] font-semibold flex items-center justify-center border"
+                    style={{
+                      backgroundColor: isSelected
+                        ? getColor("primary")
+                        : getColor("surface"),
+                      borderColor: isSelected
+                        ? getColor("primary")
+                        : getColor("border"),
+                      color: isSelected ? "#fff" : getColor("primary"),
+                    }}
+                  >
+                    {isSelected ? t("listings.selected") : t("listings.choose")}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <div
           className="flex items-center justify-between border-t mt-8 pt-5"
@@ -210,6 +281,7 @@ export default function BoostStep({
             type="button"
             variant="primary"
             onClick={onContinue}
+            disabled={!selected || loading}
             rightIcon={<NextIcon className="w-4 h-4" />}
             className="!rounded-lg px-5"
           >
@@ -251,19 +323,22 @@ export default function BoostStep({
           >
             <SelectedIcon className="w-4 h-4 shrink-0" />
             <span className="text-[11px] font-bold tracking-[0.1em] uppercase">
-              {t(`listings.tier_${selected.key}`)} {t("listings.featured")} —{" "}
-              {t("listings.days_30")}
+              {data.listingPlanName}{" "}
+              {data.listingPlanRequiresPayment
+                ? t("listings.featured")
+                : t("listings.plan_free") || "Free"}{" "}
+              — {durationLabel}
             </span>
           </div>
 
           <div className="space-y-0">
             {[
-              [t("listings.tier"), t(`listings.tier_${selected.key}`)],
-              [t("listings.duration"), t("listings.days_30")],
-              [t("listings.total"), selected.price] as const,
+              [t("listings.tier"), data.listingPlanName],
+              [t("listings.duration"), durationLabel],
+              [t("listings.total"), data.listingPlanPrice] as const,
             ].map(([label, value]) => (
               <div
-                key={label}
+                key={String(label)}
                 className="flex items-center justify-between py-3.5 border-b last:border-0 text-xs"
                 style={{ borderColor: getColor("border") }}
               >
@@ -273,7 +348,11 @@ export default function BoostStep({
                   style={{ color: getColor("primaryText") }}
                 >
                   {typeof value === "number" ? (
-                    <DirhamAmount amount={value} weight="semibold" />
+                    value > 0 ? (
+                      <DirhamAmount amount={value} weight="semibold" />
+                    ) : (
+                      t("listings.plan_free") || "Free"
+                    )
                   ) : (
                     value
                   )}

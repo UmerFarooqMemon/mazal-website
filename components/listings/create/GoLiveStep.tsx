@@ -1,15 +1,13 @@
 "use client";
 
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
-import { formatCardExpiry, formatCardNumber } from "@/lib/card-input";
+import { Button, DirhamAmount } from "@/components/ui";
 import type { CreateListingData } from "./CreateListingWizard";
 
 interface GoLiveStepProps {
   data: CreateListingData;
-  onChange: (patch: Partial<CreateListingData>) => void;
   onBack: () => void;
   onProceed: () => void;
   loading?: boolean;
@@ -17,7 +15,6 @@ interface GoLiveStepProps {
 
 export default function GoLiveStep({
   data,
-  onChange,
   onBack,
   onProceed,
   loading = false,
@@ -28,11 +25,13 @@ export default function GoLiveStep({
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
 
-  const canProceed =
-    data.cardNumber.replace(/\D/g, "").length >= 12 &&
-    data.cardExpiry.replace(/\D/g, "").length >= 4 &&
-    Boolean(data.cardCvc.trim()) &&
-    Boolean(data.cardName.trim());
+  const isPaid = data.listingPlanRequiresPayment && data.listingPlanPrice > 0;
+  const durationLabel = data.listingPlanDurationDays
+    ? t("listings.days_n").replace(
+        "{days}",
+        String(data.listingPlanDurationDays),
+      ) || `${data.listingPlanDurationDays} DAYS`
+    : t("listings.days_30");
 
   return (
     <div className="max-w-[944px] mx-auto">
@@ -44,56 +43,85 @@ export default function GoLiveStep({
         }}
       >
         <h2
-          className="text-2xl font-serif font-bold mb-6"
+          className="text-2xl font-serif font-bold mb-2"
           style={{ color: getColor("primaryText") }}
         >
           {t("listings.go_live_heading")}
         </h2>
-
-        <div className="space-y-5">
-          <Input
-            label={t("listings.card_number")}
-            value={data.cardNumber}
-            onChange={(e) =>
-              onChange({ cardNumber: formatCardNumber(e.target.value, " * ") })
-            }
-            placeholder="2026 * 0000 * 0000 * 0000"
-            inputMode="numeric"
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label={t("listings.expiration_date")}
-              value={data.cardExpiry}
-              onChange={(e) =>
-                onChange({ cardExpiry: formatCardExpiry(e.target.value) })
-              }
-              placeholder="MM / YY"
-              inputMode="numeric"
-            />
-            <Input
-              label={t("listings.security_code")}
-              value={data.cardCvc}
-              onChange={(e) =>
-                onChange({
-                  cardCvc: e.target.value.replace(/\D/g, "").slice(0, 4),
-                })
-              }
-              placeholder="CVC"
-              inputMode="numeric"
-            />
-          </div>
-
-          <Input
-            label={t("listings.cardholder_name")}
-            value={data.cardName}
-            onChange={(e) => onChange({ cardName: e.target.value })}
-            placeholder={t("listings.cardholder_placeholder")}
-          />
-        </div>
+        <p
+          className="text-sm mb-8 leading-relaxed"
+          style={{ color: getColor("secondaryText") }}
+        >
+          {isPaid
+            ? t("listings.go_live_paytabs_desc") ||
+              "Your listing will be created, then you'll complete the listing plan payment securely via PayTabs."
+            : t("listings.go_live_free_desc") ||
+              "Submit your listing for admin approval. No listing fee is required for this plan."}
+        </p>
 
         <div
-          className="flex items-center justify-between border-t mt-8 pt-5"
+          className="rounded-2xl border p-5 mb-6 space-y-3"
+          style={{
+            backgroundColor: getColor("primaryLight"),
+            borderColor: getColor("border"),
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <ShieldCheck
+              className="w-4 h-4"
+              style={{ color: getColor("primary") }}
+            />
+            <span
+              className="text-[11px] font-bold uppercase tracking-[0.12em]"
+              style={{ color: getColor("primary") }}
+            >
+              {t("listings.plan_summary") || "Plan summary"}
+            </span>
+          </div>
+          {[
+            [t("listings.tier"), data.listingPlanName],
+            [t("listings.duration"), durationLabel],
+            [
+              t("listings.ownership_doc"),
+              data.ownershipFileName || t("listings.upload_document"),
+            ],
+            [t("listings.total"), data.listingPlanPrice] as const,
+          ].map(([label, value]) => (
+            <div
+              key={String(label)}
+              className="flex items-center justify-between text-sm"
+            >
+              <span style={{ color: getColor("secondaryText") }}>{label}</span>
+              <span
+                className="font-semibold text-end max-w-[60%] truncate"
+                style={{ color: getColor("primaryText") }}
+              >
+                {typeof value === "number" ? (
+                  value > 0 ? (
+                    <DirhamAmount amount={value} weight="semibold" />
+                  ) : (
+                    t("listings.plan_free") || "Free"
+                  )
+                ) : (
+                  value
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {isPaid && (
+          <p
+            className="text-xs mb-6 leading-relaxed"
+            style={{ color: getColor("mutedText") }}
+          >
+            {t("listings.paytabs_hint") ||
+              "You will be redirected to PayTabs. After payment, your listing moves to admin approval automatically."}
+          </p>
+        )}
+
+        <div
+          className="flex items-center justify-between border-t pt-5"
           style={{ borderColor: getColor("border") }}
         >
           <Button
@@ -108,12 +136,13 @@ export default function GoLiveStep({
             type="button"
             variant="primary"
             onClick={onProceed}
-            disabled={!canProceed}
             loading={loading}
             rightIcon={<NextIcon className="w-4 h-4" />}
             className="!rounded-lg px-5"
           >
-            {t("listings.proceed")}
+            {isPaid
+              ? t("listings.pay_with_paytabs") || "Pay with PayTabs"
+              : t("listings.proceed")}
           </Button>
         </div>
       </div>

@@ -5,20 +5,36 @@ import { useTheme } from "@/context/ThemeContext";
 import { DirhamAmount } from "@/components/ui";
 import { portfolioStats } from "./data";
 
-export default function PortfolioStats() {
-  const { t, locale } = useLocale();
+interface PortfolioStatsProps {
+  plateCount?: number;
+  auctionOverride?: number;
+  listedOverride?: number;
+  totalEstValue?: number;
+}
+
+export default function PortfolioStats({
+  plateCount,
+  auctionOverride,
+  listedOverride,
+  totalEstValue,
+}: PortfolioStatsProps = {}) {
+  const { t } = useLocale();
   const { getColor } = useTheme();
-  const isRTL = locale === "ar";
 
   const stats = [
     {
       label: t("portfolio.plates"),
-      value: String(portfolioStats.plates),
+      value: String(plateCount ?? portfolioStats.plates),
       color: getColor("primaryText"),
     },
     {
       label: t("portfolio.total_est_value"),
-      value: <DirhamAmount amount={portfolioStats.totalEstValue} weight="bold" />,
+      value: (
+        <DirhamAmount
+          amount={totalEstValue ?? portfolioStats.totalEstValue}
+          weight="bold"
+        />
+      ),
       color: "#0f6646",
     },
     {
@@ -28,20 +44,18 @@ export default function PortfolioStats() {
     },
     {
       label: t("portfolio.listed"),
-      value: String(portfolioStats.listed),
+      value: String(listedOverride ?? portfolioStats.listed),
       color: getColor("primaryText"),
     },
     {
       label: t("portfolio.auction"),
-      value: String(portfolioStats.auction),
+      value: String(auctionOverride ?? portfolioStats.auction),
       color: getColor("primaryText"),
     },
   ];
 
   return (
-    <div
-      className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4"
-    >
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
       {stats.map((stat) => (
         <div
           key={stat.label}
@@ -51,10 +65,7 @@ export default function PortfolioStats() {
             borderColor: getColor("border"),
           }}
         >
-          <p
-            className="text-xs mb-1"
-            style={{ color: getColor("mutedText") }}
-          >
+          <p className="text-xs mb-1" style={{ color: getColor("mutedText") }}>
             {stat.label}
           </p>
           <p

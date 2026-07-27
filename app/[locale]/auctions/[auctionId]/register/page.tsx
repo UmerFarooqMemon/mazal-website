@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { use, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import type { StepItem } from "@/components/private-deal/Stepper";
@@ -18,11 +18,23 @@ import type {
   DepositPaymentMode,
 } from "@/components/auction/types";
 import {
-  confirmAuctionDeposit,
+  createAuctionDepositCheckout,
   getAuctionState,
   registerForAuction,
   type MarketplaceAuctionRegistration,
 } from "@/services/marketplace";
+
+function isDepositHeld(registration?: MarketplaceAuctionRegistration | null) {
+  if (!registration) return false;
+  const deposit = registration.deposit_status?.toLowerCase() || "";
+  const status = registration.status?.toLowerCase() || "";
+  return (
+    deposit.includes("held") ||
+    deposit.includes("confirm") ||
+    deposit.includes("verified") ||
+    status === "registered"
+  );
+}
 
 export default function AuctionRegisterPage({
   params,
@@ -33,9 +45,10 @@ export default function AuctionRegisterPage({
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [step, setStep] = useState(0);
-  const [method, setMethod] = useState<DepositPaymentMethod>("bank");
+  const [method, setMethod] = useState<DepositPaymentMethod>("card");
   const [mode, setMode] = useState<DepositPaymentMode>("single");
   const [summary, setSummary] = useState<AuctionSummaryData | null>(null);
   const [registration, setRegistration] =
@@ -43,19 +56,30 @@ export default function AuctionRegisterPage({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pollingReturn, setPollingReturn] = useState(false);
+
+  const refreshAuction = useCallback(async () => {
+    const response = await getAuctionState(auctionId, locale);
+    const auction = response.data.auction;
+    const viewerRegistration = auction.viewer_registration ?? null;
+    setRegistration(viewerRegistration);
+    setSummary(mapToAuctionSummary(auction, viewerRegistration));
+    return viewerRegistration;
+  }, [auctionId, locale]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError(null);
 
-    getAuctionState(auctionId, locale)
-      .then((response) => {
+    refreshAuction()
+      .then((viewerRegistration) => {
         if (!active) return;
-        const auction = response.data.auction;
-        const viewerRegistration = auction.viewer_registration ?? null;
-        setRegistration(viewerRegistration);
-        setSummary(mapToAuctionSummary(auction, viewerRegistration));
+        if (isDepositHeld(viewerRegistration)) {
+          setStep(2);
+        } else if (viewerRegistration) {
+          setStep(1);
+        }
       })
       .catch((err) => {
         if (!active) return;
@@ -70,7 +94,64 @@ export default function AuctionRegisterPage({
     return () => {
       active = false;
     };
-  }, [auctionId, locale]);
+  }, [refreshAuction]);
+
+  // PayTabs browser return: poll until webhook marks deposit held.
+  useEffect(() => {
+    const isReturn = searchParams.get("auction_deposit_return") === "1";
+    if (!isReturn) return;
+
+    const failed = searchParams.get("paytabs_failed") === "1";
+    if (failed) {
+      setError(
+        t("auctions.paytabs_failed") ||
+          "Payment was not completed. Please try again.",
+      );
+      setStep(1);
+      return;
+    }
+
+    let cancelled = false;
+    let attempts = 0;
+    setPollingReturn(true);
+    setStep(2);
+
+    const poll = async () => {
+      try {
+        const viewerRegistration = await refreshAuction();
+        if (cancelled) return;
+        if (isDepositHeld(viewerRegistration)) {
+          setPollingReturn(false);
+          setStep(2);
+          return;
+        }
+      } catch {
+        // keep polling
+      }
+
+      attempts += 1;
+      if (attempts >= 20) {
+        if (!cancelled) {
+          setPollingReturn(false);
+          setError(
+            t("auctions.deposit_pending_verification") ||
+              "Payment received. Deposit verification is still processing — refresh shortly.",
+          );
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        window.setTimeout(poll, 2000);
+      }
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshAuction, searchParams, t]);
 
   const steps: StepItem[] = useMemo(() => {
     const labels = [
@@ -95,13 +176,7 @@ export default function AuctionRegisterPage({
       const response = await registerForAuction(auctionId, locale);
       const nextRegistration = response.data.registration;
       setRegistration(nextRegistration);
-      const auctionResponse = await getAuctionState(auctionId, locale);
-      setSummary(
-        mapToAuctionSummary(
-          auctionResponse.data.auction,
-          nextRegistration,
-        ),
-      );
+      await refreshAuction();
       setStep(1);
     } catch (err) {
       setError(
@@ -112,37 +187,31 @@ export default function AuctionRegisterPage({
     }
   };
 
-  const handleConfirmDeposit = async () => {
+  const handlePaytabsCheckout = async () => {
     if (!registration) {
-      setError("Registration is required before confirming deposit.");
+      setError("Registration is required before paying the deposit.");
       return;
     }
 
     setSubmitting(true);
     setError(null);
     try {
-      const paymentReference = `${method}-${Date.now()}`;
-      const response = await confirmAuctionDeposit(
+      const response = await createAuctionDepositCheckout(
         auctionId,
         registration.id,
         locale,
-        paymentReference,
       );
-      const nextRegistration = response.data.registration;
-      setRegistration(nextRegistration);
-      const auctionResponse = await getAuctionState(auctionId, locale);
-      setSummary(
-        mapToAuctionSummary(
-          auctionResponse.data.auction,
-          nextRegistration,
-        ),
-      );
-      setStep(2);
+      const redirectUrl = response.data.redirect_url;
+      if (!redirectUrl) {
+        throw new Error("Missing PayTabs checkout URL.");
+      }
+      window.location.href = redirectUrl;
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to confirm deposit.",
+        err instanceof Error
+          ? err.message
+          : "Failed to start PayTabs checkout.",
       );
-    } finally {
       setSubmitting(false);
     }
   };
@@ -155,6 +224,8 @@ export default function AuctionRegisterPage({
       />
     );
   }
+
+  const depositHeld = isDepositHeld(registration);
 
   return (
     <div
@@ -201,7 +272,8 @@ export default function AuctionRegisterPage({
                 mode={mode}
                 onModeChange={setMode}
                 onBack={() => setStep(0)}
-                onContinue={handleConfirmDeposit}
+                onContinue={handlePaytabsCheckout}
+                paytabsOnly
               />
             )}
 
@@ -209,9 +281,7 @@ export default function AuctionRegisterPage({
               <DepositStatusStep
                 method={method}
                 variant={
-                  method === "managers_check" || method === "cash"
-                    ? "awaiting"
-                    : "success"
+                  pollingReturn || !depositHeld ? "awaiting" : "success"
                 }
               />
             )}
@@ -230,7 +300,7 @@ export default function AuctionRegisterPage({
             <div className="space-y-4">
               <AuctionSummaryCard
                 data={summary}
-                showCheckAmount={step === 1 && method === "card"}
+                showCheckAmount={false}
               />
               <AuctionBenefitsCard />
             </div>

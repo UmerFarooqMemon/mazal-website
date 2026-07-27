@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import PlateHero from "../../../../components/listings/PlateHero";
@@ -16,14 +16,26 @@ export default function ListingDetailPage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const listingId = (params?.id as string) || "1";
-  const isRTL = locale === "ar";
 
   const [listing, setListing] = useState<MarketplaceListingDetail | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // PayTabs returns to /marketplace/{id}?auction_deposit_return=1 — send user to auction register flow.
+  useEffect(() => {
+    const isReturn = searchParams.get("auction_deposit_return") === "1";
+    if (!isReturn) return;
+
+    const failed = searchParams.get("paytabs_failed");
+    const qs = new URLSearchParams({ auction_deposit_return: "1" });
+    if (failed) qs.set("paytabs_failed", failed);
+    router.replace(`/${locale}/auctions/${listingId}/register?${qs.toString()}`);
+  }, [listingId, locale, router, searchParams]);
 
   useEffect(() => {
     let active = true;
@@ -96,12 +108,8 @@ export default function ListingDetailPage() {
           <span style={{ color: getColor("secondaryText") }}>{typeLabel}</span>
         </div>
 
-        <div
-          className="grid grid-cols-1 lg:grid-cols-5 gap-10"
-        >
-          <div
-            className="lg:col-span-3 space-y-8"
-          >
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+          <div className="lg:col-span-3 space-y-8">
             <PlateHero listing={listing} />
 
             <div className="pt-6">
@@ -127,9 +135,7 @@ export default function ListingDetailPage() {
             </div>
           </div>
 
-          <div
-            className="lg:col-span-2"
-          >
+          <div className="lg:col-span-2">
             <ListingSidebar listing={listing} />
           </div>
         </div>

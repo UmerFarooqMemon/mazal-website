@@ -17,7 +17,6 @@ export default function PortfolioListForSalePage() {
         code: "AA",
         digits: "777",
         price: "68000",
-        boostTier: "silver",
       }}
     />
   );

@@ -8,12 +8,14 @@ import {
   Search,
   Upload,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
+import { createListing } from "@/services/marketplace";
 
 interface AddPlateFormProps {
   onBack: () => void;
@@ -57,9 +59,12 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
     notes: "",
     price: 68000,
   });
+  const [ownershipFile, setOwnershipFile] = useState<File | null>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [codeDropdownOpen, setCodeDropdownOpen] = useState(false);
   const [codeSearch, setCodeSearch] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const codeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -144,7 +149,55 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
   const canContinue =
     Boolean(form.plateVariant) &&
     Boolean(form.digits.trim()) &&
-    (!showCodeField || Boolean(form.code.trim()));
+    (!showCodeField || Boolean(form.code.trim())) &&
+    Boolean(ownershipFile) &&
+    form.price > 0;
+
+  const handleSubmit = async () => {
+    if (!canContinue || !ownershipFile) return;
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const title =
+        `${form.emirate} ${form.code ? `${form.code} ` : ""}${form.digits}`.trim();
+      const plateType = selectedVariant?.plate_type;
+      const plateDesign = selectedVariant?.plate_design;
+
+      await createListing(
+        {
+          listing_type: "auction",
+          title,
+          emirate: form.emirate,
+          plate_variant: form.plateVariant || undefined,
+          plate_type: plateType || undefined,
+          plate_design: plateDesign || undefined,
+          plate_code: showCodeField ? form.code || undefined : undefined,
+          plate_digits: form.digits,
+          asking_price: form.price,
+          description: form.notes || undefined,
+          status: "pending_approval",
+          ownership_document: ownershipFile,
+        },
+        locale,
+      );
+
+      toast.success(
+        t("auctions.create_success") ||
+          "Auction listing submitted for approval.",
+      );
+      onContinue();
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : t("common.error_submission") || "Something went wrong";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.9fr] gap-5 lg:gap-6 items-start">
@@ -348,6 +401,20 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
               }
             />
           </div>
+
+          <Input
+            name="price"
+            label={t("auctions.field_amount")}
+            type="number"
+            min={1}
+            value={String(form.price)}
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                price: Number(e.target.value) || 0,
+              }))
+            }
+          />
         </div>
 
         <div className="mb-4">
@@ -385,11 +452,36 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
               color: getColor("mutedText"),
             }}
           >
-            <span className="text-sm">{t("auctions.upload_document")}</span>
-            <Upload className="w-4 h-4" style={{ color: getColor("primary") }} />
-            <input type="file" className="hidden" accept="image/*,.pdf" />
+            <span className="text-sm truncate">
+              {ownershipFile?.name || t("auctions.upload_document")}
+            </span>
+            <Upload className="w-4 h-4 shrink-0" style={{ color: getColor("primary") }} />
+            <input
+              type="file"
+              className="hidden"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                if (file && file.size > 5 * 1024 * 1024) {
+                  setError(
+                    t("auctions.ownership_too_large") ||
+                      "Ownership document must be 5MB or less.",
+                  );
+                  setOwnershipFile(null);
+                  return;
+                }
+                setError(null);
+                setOwnershipFile(file);
+              }}
+            />
           </label>
         </div>
+
+        {error && (
+          <p className="text-sm mb-4" style={{ color: "#DC2626" }}>
+            {error}
+          </p>
+        )}
 
         <div
           className={`flex items-center justify-between border-t pt-6`}
@@ -400,17 +492,20 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
             size="md"
             onClick={onBack}
             leftIcon={<BackIcon className="w-4 h-4" />}
+            disabled={submitting}
           >
             {t("auctions.back")}
           </Button>
           <Button
             variant="primary"
             size="md"
-            onClick={onContinue}
-            disabled={!canContinue}
+            onClick={handleSubmit}
+            disabled={!canContinue || submitting}
             rightIcon={<NextIcon className="w-4 h-4" />}
           >
-            {t("auctions.continue")}
+            {submitting
+              ? t("common.loading") || "Loading..."
+              : t("auctions.continue")}
           </Button>
         </div>
       </div>

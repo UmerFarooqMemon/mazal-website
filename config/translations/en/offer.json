@@ -32,5 +32,19 @@
   "checkout_escrow": "ESCROW LIVE",
   "invalid_amount": "Enter a valid offer amount.",
   "sent_success": "Offer submitted successfully.",
-  "ended_success": "Negotiation ended."
+  "ended_success": "Negotiation ended.",
+  "reject": "Reject",
+  "counter_sent": "Counter offer sent successfully.",
+  "accepted_success": "Offer accepted.",
+  "rejected_success": "Offer rejected.",
+  "withdrawn_success": "Offer withdrawn.",
+  "continue_checkout": "Continue to checkout",
+  "no_offers": "No offers yet on this listing.",
+  "seller_title": "Manage Offers",
+  "seller_subtitle": "Review buyer offers, send a counter, or accept to move into escrow checkout.",
+  "my_offers_title": "My offers",
+  "my_offers_subtitle": "Track every offer you’ve sent and continue negotiations.",
+  "no_my_offers": "You haven’t sent any offers yet.",
+  "view_negotiation": "View negotiation",
+  "load_error": "Failed to load offers."
 }

@@ -27,6 +27,8 @@ interface DepositPaymentStepProps {
   onModeChange: (mode: DepositPaymentMode) => void;
   onBack: () => void;
   onContinue: () => void;
+  /** Auction deposits use hosted PayTabs — skip local card fields. */
+  paytabsOnly?: boolean;
 }
 
 const METHOD_META: Record<
@@ -51,6 +53,7 @@ export default function DepositPaymentStep({
   onModeChange,
   onBack,
   onContinue,
+  paytabsOnly = false,
 }: DepositPaymentStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -91,7 +94,78 @@ export default function DepositPaymentStep({
     time: "",
   });
 
-  const showModeToggle = method !== "card";
+  const showModeToggle = !paytabsOnly && method !== "card";
+
+  if (paytabsOnly) {
+    return (
+      <div
+        className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(0,0,0,0.18)] p-6 md:p-8"
+        style={{
+          backgroundColor: getColor("surface"),
+          borderColor: getColor("border"),
+        }}
+      >
+        <div className="mb-6">
+          <h2
+            className="text-2xl font-serif mb-1"
+            style={{ color: getColor("primaryText") }}
+          >
+            {t("auctions.payment_title")}
+          </h2>
+          <p className="text-sm" style={{ color: getColor("secondaryText") }}>
+            {t("auctions.paytabs_checkout_desc") ||
+              "You will be redirected to PayTabs to pay your refundable auction deposit securely. Do not treat the browser return alone as payment proof — we confirm via webhook."}
+          </p>
+        </div>
+
+        <div
+          className="flex items-center gap-3 rounded-2xl border px-4 py-3.5 mb-8"
+          style={{
+            borderColor: getColor("border"),
+            backgroundColor: getColor("primaryLight"),
+          }}
+        >
+          <CreditCard
+            className="w-5 h-5 shrink-0"
+            style={{ color: getColor("primary") }}
+          />
+          <div>
+            <div
+              className="font-medium text-sm"
+              style={{ color: getColor("primaryText") }}
+            >
+              {t("auctions.method_card")}
+            </div>
+            <div className="text-xs" style={{ color: getColor("mutedText") }}>
+              {t("auctions.secure_online")}
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="flex items-center justify-between border-t pt-6"
+          style={{ borderColor: getColor("border") }}
+        >
+          <Button
+            variant="outline"
+            size="md"
+            onClick={onBack}
+            leftIcon={<BackIcon className="w-4 h-4" />}
+          >
+            {t("auctions.back")}
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={onContinue}
+            rightIcon={<NextIcon className="w-4 h-4" />}
+          >
+            {t("auctions.pay_with_paytabs") || "Pay with PayTabs"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

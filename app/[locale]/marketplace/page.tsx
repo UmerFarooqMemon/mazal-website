@@ -132,7 +132,7 @@ export default function MarketplacePage() {
               {t("marketplace.title")}
             </h1>
             <Link
-              href={`/${locale}/listings/create`}
+              href={`/${locale}/marketplace/sell`}
               className="inline-flex items-center justify-center gap-2 h-[38px] px-5 rounded-full text-white text-sm font-semibold transition-opacity hover:opacity-90 shrink-0"
               style={{ backgroundColor: getColor("primary") }}
             >

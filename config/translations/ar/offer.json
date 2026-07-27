@@ -32,5 +32,19 @@
   "checkout_escrow": "الضمان المباشر",
   "invalid_amount": "أدخل مبلغ عرض صالح.",
   "sent_success": "تم إرسال العرض بنجاح.",
-  "ended_success": "تم إنهاء التفاوض."
+  "ended_success": "تم إنهاء التفاوض.",
+  "reject": "رفض",
+  "counter_sent": "تم إرسال العرض المضاد بنجاح.",
+  "accepted_success": "تم قبول العرض.",
+  "rejected_success": "تم رفض العرض.",
+  "withdrawn_success": "تم سحب العرض.",
+  "continue_checkout": "متابعة إلى الدفع",
+  "no_offers": "لا توجد عروض على هذه القائمة بعد.",
+  "seller_title": "إدارة العروض",
+  "seller_subtitle": "راجع عروض المشترين، أرسل عرضاً مضاداً، أو اقبل للانتقال إلى الضمان.",
+  "my_offers_title": "عروضي",
+  "my_offers_subtitle": "تابع كل عرض أرسلته واستكمل التفاوض.",
+  "no_my_offers": "لم ترسل أي عروض بعد.",
+  "view_negotiation": "عرض التفاوض",
+  "load_error": "فشل تحميل العروض."
 }

@@ -106,5 +106,17 @@
   "field_ownership": "ملكية لوحة الأرقام",
   "upload_document": "رفع مستند",
   "live_preview": "معاينة مباشرة",
-  "total_amount": "المبلغ الإجمالي"
+  "total_amount": "المبلغ الإجمالي",
+  "create_success": "تم إرسال قائمة المزاد للموافقة.",
+  "ownership_too_large": "يجب ألا يتجاوز مستند الملكية 5 ميجابايت.",
+  "paytabs_method_subtitle": "يتم دفع تأمين المزاد بأمان عبر بطاقة PayTabs.",
+  "paytabs_checkout_desc": "سيتم توجيهك إلى PayTabs لدفع تأمين المزاد القابل للاسترداد بأمان.",
+  "pay_with_paytabs": "الدفع عبر PayTabs",
+  "paytabs_failed": "لم يكتمل الدفع. يرجى المحاولة مرة أخرى.",
+  "deposit_pending_verification": "تم استلام الدفع. جاري التحقق من التأمين — حدّث الصفحة قريباً.",
+  "my_registrations_title": "تسجيلات المزاد الخاصة بي",
+  "my_registrations_subtitle": "تتبع تأمين المزاد وأهليتك للمزايدة.",
+  "no_registrations": "لم تسجل في أي مزاد بعد.",
+  "browse_auctions": "تصفح المزادات",
+  "view_auction": "عرض المزاد"
 }
