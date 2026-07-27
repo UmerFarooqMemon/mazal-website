@@ -46,5 +46,7 @@
   "my_offers_subtitle": "تابع كل عرض أرسلته واستكمل التفاوض.",
   "no_my_offers": "لم ترسل أي عروض بعد.",
   "view_negotiation": "عرض التفاوض",
-  "load_error": "فشل تحميل العروض."
+  "load_error": "فشل تحميل العروض.",
+  "counter_limit_reached": "لقد وصلت إلى الحد الأقصى البالغ {limit} عروض مضادة لهذه القائمة.",
+  "counter_limit_remaining": "متبقٍ {remaining} عرض/عروض مضادة."
 }

@@ -135,6 +135,7 @@ interface ThemeContextType {
   footerColors: FooterColors;
   social: SocialLinks;
   footerContent: FooterContent;
+  counterOfferLimit: number;
   loading: boolean;
   getColor: (key: keyof ThemeColors) => string;
   getGradient: (key: keyof ThemeColors) => string;
@@ -188,12 +189,15 @@ const defaultFooterContent: FooterContent = {
   copyright: null,
 };
 
+const DEFAULT_COUNTER_OFFER_LIMIT = 5;
+
 const ThemeContext = createContext<ThemeContextType>({
   colors: defaultColors,
   branding: defaultBranding,
   footerColors: defaultFooterColors,
   social: defaultSocial,
   footerContent: defaultFooterContent,
+  counterOfferLimit: DEFAULT_COUNTER_OFFER_LIMIT,
   loading: true,
   getColor: () => "transparent",
   getGradient: () => "transparent",
@@ -208,6 +212,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [social, setSocial] = useState<SocialLinks>(defaultSocial);
   const [footerContent, setFooterContent] =
     useState<FooterContent>(defaultFooterContent);
+  const [counterOfferLimit, setCounterOfferLimit] = useState(
+    DEFAULT_COUNTER_OFFER_LIMIT,
+  );
   const [loading, setLoading] = useState(true);
 
   // Get the primary (start) color from a gradient object
@@ -265,6 +272,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             whatsapp: data.data.social.whatsapp || null,
           });
         }
+
+        const resolveCounterOfferLimit = () => {
+          const direct = data?.data?.counter_offer_limit;
+          if (typeof direct === "number" && Number.isFinite(direct) && direct > 0) {
+            return direct;
+          }
+          const setting = data?.data?.platform_settings?.find(
+            (item: { slug?: string }) => item.slug === "counter_offer_limit",
+          );
+          const parsed = Number(setting?.value);
+          if (Number.isFinite(parsed) && parsed > 0) {
+            return parsed;
+          }
+          return DEFAULT_COUNTER_OFFER_LIMIT;
+        };
+        setCounterOfferLimit(resolveCounterOfferLimit());
 
         // Footer copy from site-settings (ignore empty / placeholder values)
         if (data?.data?.footer) {
@@ -387,6 +410,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         footerColors,
         social,
         footerContent,
+        counterOfferLimit,
         loading,
         getColor,
         getGradient,

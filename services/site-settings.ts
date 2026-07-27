@@ -59,10 +59,11 @@ export interface SiteSettingsResponse {
     platform_settings?: Array<{
       slug: string;
       label: string;
-      value: string;
+      value: string | number | boolean;
       unit_type: string;
     }>;
     reveal_fee_amount?: string;
+    counter_offer_limit?: number;
     enabled_emirates?: Array<{ key: string; label: string }>;
     emirates?: Array<{
       key: string;

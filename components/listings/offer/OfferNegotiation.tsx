@@ -40,7 +40,7 @@ export default function OfferNegotiation() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const { t, locale } = useLocale();
-  const { getColor } = useTheme();
+  const { getColor, counterOfferLimit } = useTheme();
 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -109,11 +109,30 @@ export default function OfferNegotiation() {
     [sortedOffers],
   );
 
-  const canBuyerCompose =
+  const canBuyerStartNegotiation =
     !isOwner &&
     listing?.can_make_offer !== false &&
     !latestPending &&
     !acceptedOffer;
+
+  const counterOffersUsed = sortedOffers.length;
+  const hasReachedCounterLimit = counterOffersUsed >= counterOfferLimit;
+  const counterOffersRemaining = Math.max(0, counterOfferLimit - counterOffersUsed);
+
+  const counterLimitMessage = t("offer.counter_limit_reached").replace(
+    "{limit}",
+    String(counterOfferLimit),
+  );
+
+  const assertCanCounter = () => {
+    if (hasReachedCounterLimit) {
+      toast.error(counterLimitMessage);
+      return false;
+    }
+    return true;
+  };
+
+  const canBuyerCompose = canBuyerStartNegotiation && !hasReachedCounterLimit;
 
   const canSellerActOn =
     isOwner &&
@@ -184,6 +203,7 @@ export default function OfferNegotiation() {
   };
 
   const handleSendBuyerOffer = async () => {
+    if (!assertCanCounter()) return;
     if (draftAmount < 1) {
       toast.error(t("offer.invalid_amount") || "Enter a valid offer amount.");
       return;
@@ -209,6 +229,7 @@ export default function OfferNegotiation() {
 
   const handleSellerCounter = async () => {
     if (!latestPending) return;
+    if (!assertCanCounter()) return;
     if (counterAmount < 1) {
       toast.error(t("offer.invalid_amount") || "Enter a valid offer amount.");
       return;
@@ -348,29 +369,48 @@ export default function OfferNegotiation() {
                   color: getColor("primaryText"),
                 }}
               />
-              {!isOwner && canBuyerCompose && !composeOpen && (
-                <div className="flex gap-3">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="flex-1"
-                    onClick={handleAcceptAsking}
-                  >
-                    {t("offer.accept")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="flex-1"
-                    style={{
-                      borderColor: getColor("primary"),
-                      color: getColor("primary"),
-                    }}
-                    leftIcon={<RefreshCw className="w-4 h-4" strokeWidth={2} />}
-                    onClick={() => setComposeOpen(true)}
-                  >
-                    {t("offer.negotiate")}
-                  </Button>
+              {!isOwner && canBuyerStartNegotiation && !composeOpen && (
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="flex-1"
+                      onClick={handleAcceptAsking}
+                    >
+                      {t("offer.accept")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="flex-1"
+                      style={{
+                        borderColor: getColor("primary"),
+                        color: getColor("primary"),
+                      }}
+                      leftIcon={<RefreshCw className="w-4 h-4" strokeWidth={2} />}
+                      disabled={hasReachedCounterLimit || actionLoading}
+                      onClick={() => {
+                        if (!assertCanCounter()) return;
+                        setComposeOpen(true);
+                      }}
+                    >
+                      {t("offer.negotiate")}
+                    </Button>
+                  </div>
+                  {hasReachedCounterLimit && (
+                    <p className="text-xs text-start" style={{ color: getColor("error") }}>
+                      {counterLimitMessage}
+                    </p>
+                  )}
+                  {!hasReachedCounterLimit && counterOffersUsed > 0 && (
+                    <p className="text-xs text-start" style={{ color: getColor("mutedText") }}>
+                      {t("offer.counter_limit_remaining").replace(
+                        "{remaining}",
+                        String(counterOffersRemaining),
+                      )}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -434,45 +474,57 @@ export default function OfferNegotiation() {
                   />
 
                   {isLatestPending && canSellerActOn && !showCounterForm && (
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        className="flex-1"
-                        loading={actionLoading}
-                        onClick={() => handleSellerAccept(offer)}
-                      >
-                        {t("offer.accept")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="flex-1"
-                        style={{
-                          borderColor: getColor("primary"),
-                          color: getColor("primary"),
-                        }}
-                        leftIcon={
-                          <RefreshCw className="w-4 h-4" strokeWidth={2} />
-                        }
-                        onClick={() => {
-                          setCounterAmount(
-                            Math.max(1, Math.round(offerAmount(offer) * 1.02)),
-                          );
-                          setShowCounterForm(true);
-                        }}
-                      >
-                        {t("offer.negotiate")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="flex-1"
-                        disabled={actionLoading}
-                        onClick={() => handleReject(offer)}
-                      >
-                        {t("offer.reject") || "Reject"}
-                      </Button>
+                    <div className="space-y-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          variant="primary"
+                          size="lg"
+                          className="flex-1"
+                          loading={actionLoading}
+                          onClick={() => handleSellerAccept(offer)}
+                        >
+                          {t("offer.accept")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="flex-1"
+                          style={{
+                            borderColor: getColor("primary"),
+                            color: getColor("primary"),
+                          }}
+                          leftIcon={
+                            <RefreshCw className="w-4 h-4" strokeWidth={2} />
+                          }
+                          disabled={hasReachedCounterLimit || actionLoading}
+                          onClick={() => {
+                            if (!assertCanCounter()) return;
+                            setCounterAmount(
+                              Math.max(1, Math.round(offerAmount(offer) * 1.02)),
+                            );
+                            setShowCounterForm(true);
+                          }}
+                        >
+                          {t("offer.negotiate")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="flex-1"
+                          disabled={actionLoading}
+                          onClick={() => handleReject(offer)}
+                        >
+                          {t("offer.reject") || "Reject"}
+                        </Button>
+                      </div>
+                      {hasReachedCounterLimit && (
+                        <p
+                          className="text-xs text-start"
+                          style={{ color: getColor("error") }}
+                        >
+                          {counterLimitMessage}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -574,6 +626,7 @@ export default function OfferNegotiation() {
                     size="lg"
                     className="flex-1"
                     loading={actionLoading}
+                    disabled={hasReachedCounterLimit}
                     onClick={handleSendBuyerOffer}
                   >
                     {t("offer.send_offer")}
@@ -631,6 +684,7 @@ export default function OfferNegotiation() {
                     size="lg"
                     className="flex-1"
                     loading={actionLoading}
+                    disabled={hasReachedCounterLimit}
                     onClick={handleSellerCounter}
                   >
                     {t("offer.send_offer")}

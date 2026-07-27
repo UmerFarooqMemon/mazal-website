@@ -46,5 +46,7 @@
   "my_offers_subtitle": "Track every offer you’ve sent and continue negotiations.",
   "no_my_offers": "You haven’t sent any offers yet.",
   "view_negotiation": "View negotiation",
-  "load_error": "Failed to load offers."
+  "load_error": "Failed to load offers.",
+  "counter_limit_reached": "You have reached the maximum of {limit} counter offers for this listing.",
+  "counter_limit_remaining": "{remaining} counter offer(s) remaining."
 }
