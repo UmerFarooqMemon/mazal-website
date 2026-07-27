@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
+import { Button, EmiratesIdInput, Input } from "@/components/ui";
 import { formatPriceInput } from "@/lib/card-input";
 import DirhamText from "@/components/ui/DirhamText";
 import Select from "@/components/ui/Select";
@@ -188,16 +188,11 @@ export default function PlatePriceFormStep({
                 {t("listings.emirate_dubai")}
               </div>
             </div>
-            <Input
+            <EmiratesIdInput
               name="emirateId"
               label={t("listings.emirate_id")}
-              type="text"
-              placeholder="22525551"
               value={data.emirateId}
-              onChange={(e) =>
-                onChange({ emirateId: e.target.value.replace(/\D/g, "") })
-              }
-              inputMode="numeric"
+              onChange={(value) => onChange({ emirateId: value })}
             />
           </div>
 
