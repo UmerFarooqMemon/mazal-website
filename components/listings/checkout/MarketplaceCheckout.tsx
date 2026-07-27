@@ -259,11 +259,14 @@ export default function MarketplaceCheckout({
           >
             <div className="lg:col-span-2">{renderMain()}</div>
             <div className="lg:col-span-1 space-y-6">
-              <DealSummary
-                data={deal}
-                showAllocation={showAllocation}
-                allocatedAmount={splitAllocated}
-              />
+              <div className="marketplace-checkout-summary">
+                <DealSummary
+                  data={deal}
+                  showAllocation={showAllocation}
+                  allocatedAmount={splitAllocated}
+                  plateCrop="deal-summary"
+                />
+              </div>
               <EscrowBenefits />
             </div>
           </div>

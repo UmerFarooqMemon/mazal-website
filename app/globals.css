@@ -210,6 +210,25 @@ body[dir="rtl"] {
   mix-blend-mode: normal;
 }
 
+/* Marketplace listing checkout only — tighten deal summary plate spacing */
+.marketplace-checkout-summary .deal-summary-plate-frame {
+  padding: 0;
+  margin-bottom: 0.75rem;
+}
+
+.marketplace-checkout-summary .deal-summary-plate {
+  padding: 0;
+}
+
+.marketplace-checkout-summary .plate-crop--deal-summary {
+  margin-top: calc(-13% - 14px);
+  margin-bottom: calc(-12% - 22px);
+}
+
+.marketplace-checkout-summary > div > div:first-child {
+  margin-bottom: 0.5rem;
+}
+
 .deal-summary-plate .metal-plate-text,
 .deal-summary-plate .metal-plate-text-light,
 .deal-summary-plate .plate-preview .plate-overlay.metal-plate-text,
