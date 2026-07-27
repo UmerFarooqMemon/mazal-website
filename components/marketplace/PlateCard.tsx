@@ -25,6 +25,8 @@ interface PlateCardProps {
   plate_type?: string;
   plate_design?: string;
   hideCode?: boolean;
+  /** Marketplace grid only: scale overlay font to card width instead of viewport. */
+  fitPlateFont?: boolean;
 }
 
 export default function PlateCard({
@@ -41,6 +43,7 @@ export default function PlateCard({
   plate_type,
   plate_design,
   hideCode = false,
+  fitPlateFont = false,
 }: PlateCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -112,6 +115,8 @@ export default function PlateCard({
           plateDesign={plate_design}
           crop="card"
           hideCode={hideCode}
+          scaleFontToWidth={fitPlateFont}
+          fontScaleMultiplier={fitPlateFont ? 2.5 : undefined}
         />
       </div>
 

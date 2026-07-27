@@ -200,6 +200,7 @@ export default function MarketplacePage() {
                 {listings.map((plate) => (
                   <PlateCard
                     key={plate.id}
+                    fitPlateFont
                     id={plate.id}
                     emirate={plate.emirate}
                     code={plate.code}

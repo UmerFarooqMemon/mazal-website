@@ -46,6 +46,7 @@ interface NumberPlateDisplayProps {
   wrapperClassName?: string;
   width?: number;
   scaleFontToWidth?: boolean;
+  fontScaleMultiplier?: number;
 }
 
 export default function NumberPlateDisplay({
@@ -63,6 +64,7 @@ export default function NumberPlateDisplay({
   wrapperClassName = "w-full overflow-hidden",
   width,
   scaleFontToWidth = false,
+  fontScaleMultiplier: fontScaleMultiplierProp,
 }: NumberPlateDisplayProps) {
   const { locale } = useLocale();
   const { lookup, variantsByKey } = usePlatePreviewLookup(locale);
@@ -84,6 +86,9 @@ export default function NumberPlateDisplay({
         (variantMeta?.has_code ?? Boolean(plate_code));
 
   const usesPlateWidthFont = crop === "deal-summary";
+  const fontScaleMultiplier =
+    fontScaleMultiplierProp ??
+    (crop === "deal-summary" ? DEAL_SUMMARY_FONT_SCALE : 1);
 
   return (
     <div dir="ltr" lang="en" className={wrapperClassName}>
@@ -97,9 +102,7 @@ export default function NumberPlateDisplay({
           width={width}
           className={className}
           scaleFontToWidth={scaleFontToWidth || usesPlateWidthFont}
-          fontScaleMultiplier={
-            crop === "deal-summary" ? DEAL_SUMMARY_FONT_SCALE : 1
-          }
+          fontScaleMultiplier={fontScaleMultiplier}
         />
       </div>
     </div>
