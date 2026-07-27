@@ -70,6 +70,8 @@
   "field_amount": "المبلغ",
   "field_amount_placeholder": "المبلغ",
   "field_select_bank": "اختر البنك",
+  "field_other_bank": "اسم البنك",
+  "field_other_bank_placeholder": "أدخل اسم البنك",
   "field_account_number": "رقم الحساب",
   "field_iban": "رقم الآيبان",
   "field_notes": "ملاحظات",

@@ -70,6 +70,8 @@
   "field_amount": "Amount",
   "field_amount_placeholder": "Amount",
   "field_select_bank": "Select Bank",
+  "field_other_bank": "Bank name",
+  "field_other_bank_placeholder": "Enter bank name",
   "field_account_number": "Account Number",
   "field_iban": "IBAN",
   "field_notes": "Notes",

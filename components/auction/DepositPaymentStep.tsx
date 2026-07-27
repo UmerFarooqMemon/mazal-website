@@ -17,6 +17,7 @@ import {
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
+import BankSelect from "@/components/ui/BankSelect";
 import Select from "@/components/ui/Select";
 import type { DepositPaymentMethod, DepositPaymentMode } from "./types";
 
@@ -37,14 +38,6 @@ const METHOD_META: Record<
   managers_check: { titleKey: "method_managers_check", icon: FileCheck },
   cash: { titleKey: "method_cash", icon: Banknote },
 };
-
-const BANKS = [
-  { key: "emirates_nbd", label: "Emirates NBD" },
-  { key: "fab", label: "First Abu Dhabi Bank" },
-  { key: "adcb", label: "ADCB" },
-  { key: "mashreq", label: "Mashreq" },
-  { key: "dubai_islamic", label: "Dubai Islamic Bank" },
-];
 
 const CARD_TYPES = [
   { key: "visa", label: "Visa" },
@@ -69,7 +62,8 @@ export default function DepositPaymentStep({
 
   const [bankForm, setBankForm] = useState({
     amount: "100000",
-    bank: "emirates_nbd",
+    bank: "fab",
+    bankOther: "",
     accountNumber: "",
     iban: "",
     notes: "",
@@ -195,11 +189,14 @@ export default function DepositPaymentStep({
             }
             placeholder="AED 100,000"
           />
-          <Select
+          <BankSelect
             label={t("auctions.field_select_bank")}
-            options={BANKS}
             value={bankForm.bank}
+            otherValue={bankForm.bankOther}
             onChange={(v) => setBankForm({ ...bankForm, bank: v })}
+            onOtherChange={(v) => setBankForm({ ...bankForm, bankOther: v })}
+            otherLabel={t("auctions.field_other_bank")}
+            otherPlaceholder={t("auctions.field_other_bank_placeholder")}
           />
           <Input
             label={t("auctions.field_account_number")}

@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
+import { resolveBankLabel } from "@/lib/uae-banks";
 import type { PaymentMethod, SplitPaymentEntry } from "./PaymentMethodStep";
 
 interface SplitPaymentProcessStepProps {
@@ -96,7 +97,10 @@ export default function SplitPaymentProcessStep({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [bankTransfer, setBankTransfer] = useState({
     paymentReference: "",
-    senderBankName: payment.bank || "",
+    senderBankName: resolveBankLabel(
+      payment.bank || "",
+      payment.bankOther,
+    ),
     senderAccountLast4: payment.accountNumber?.slice(-4) || "",
     notes: payment.notes || "",
   });

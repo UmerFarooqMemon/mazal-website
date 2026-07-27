@@ -116,6 +116,8 @@
   "footer_desc": "The UAE's trust-first marketplace for distinctive vehicle plates. Escrow custody, blind negotiation, live auctions.",
   "amount": "Amount",
   "select_bank": "Select Bank",
+  "other_bank_name": "Bank name",
+  "other_bank_placeholder": "Enter bank name",
   "account_number": "Account Number",
   "iban": "IBAN",
   "notes": "Notes",

@@ -17,7 +17,7 @@ import {
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
-import Select from "@/components/ui/Select";
+import BankSelect from "@/components/ui/BankSelect";
 
 export type PaymentMethod =
   | "bank"
@@ -35,6 +35,7 @@ export interface SplitPaymentEntry {
   amount: number;
   notes: string;
   bank?: string;
+  bankOther?: string;
   accountNumber?: string;
   iban?: string;
   backendPaymentId?: number;
@@ -48,6 +49,7 @@ interface DraftSplit {
   amount: string;
   notes: string;
   bank: string;
+  bankOther: string;
   accountNumber: string;
   iban: string;
   expanded: boolean;
@@ -79,14 +81,6 @@ const METHODS: {
   { key: "cash", titleKey: "cash_collection", icon: Banknote },
 ];
 
-const BANKS = [
-  { key: "emirates_nbd", label: "Emirates NBD" },
-  { key: "fab", label: "First Abu Dhabi Bank" },
-  { key: "adcb", label: "ADCB" },
-  { key: "mashreq", label: "Mashreq" },
-  { key: "dubai_islamic", label: "Dubai Islamic Bank" },
-];
-
 function parseAmount(value: string) {
   const n = Number(value.replace(/[^\d.]/g, ""));
   return Number.isFinite(n) ? n : 0;
@@ -98,7 +92,8 @@ function createDraft(method: PaymentMethod, remaining: number): DraftSplit {
     method,
     amount: remaining > 0 ? String(remaining) : "",
     notes: "",
-    bank: "emirates_nbd",
+    bank: "fab",
+    bankOther: "",
     accountNumber: "",
     iban: "",
     expanded: true,
@@ -187,6 +182,7 @@ export default function PaymentMethodStep({
       amount: parseAmount(d.amount),
       notes: d.notes,
       bank: d.bank,
+      bankOther: d.bankOther,
       accountNumber: d.accountNumber,
       iban: d.iban,
       status: "awaiting",
@@ -504,7 +500,8 @@ export default function PaymentMethodStep({
                   method: p.method,
                   amount: String(p.amount),
                   notes: p.notes,
-                  bank: p.bank || "emirates_nbd",
+                  bank: p.bank || "fab",
+                  bankOther: p.bankOther || "",
                   accountNumber: p.accountNumber || "",
                   iban: p.iban || "",
                   expanded: false,
@@ -615,12 +612,15 @@ export default function PaymentMethodStep({
                               }
                               placeholder="100,000"
                             />
-                            <Select
+                            <BankSelect
                               label={t("private-deal.select_bank")}
-                              options={BANKS}
                               value={draft.bank}
+                              otherValue={draft.bankOther}
                               onChange={(v) =>
                                 patchDraft(draft.id, { bank: v })
+                              }
+                              onOtherChange={(v) =>
+                                patchDraft(draft.id, { bankOther: v })
                               }
                               placeholder={t("private-deal.select_bank")}
                             />
