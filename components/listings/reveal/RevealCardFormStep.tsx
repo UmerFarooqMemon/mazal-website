@@ -4,6 +4,10 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
+import {
+  formatCardExpiry,
+  formatCardNumber,
+} from "@/lib/card-input";
 
 export interface RevealCardFormData {
   cardNumber: string;
@@ -18,17 +22,6 @@ interface RevealCardFormStepProps {
   onBack: () => void;
   onProceed: () => void;
   loading?: boolean;
-}
-
-function formatCardNumber(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 16);
-  return digits.replace(/(\d{4})(?=\d)/g, "$1 • ");
-}
-
-function formatExpiry(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 4);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)} / ${digits.slice(2)}`;
 }
 
 export default function RevealCardFormStep({
@@ -46,7 +39,7 @@ export default function RevealCardFormStep({
 
   const canProceed =
     data.cardNumber.replace(/\D/g, "").length >= 12 &&
-    Boolean(data.cardExpiry.replace(/\D/g, "").length >= 4) &&
+    data.cardExpiry.replace(/\D/g, "").length >= 4 &&
     Boolean(data.cardCvc.trim()) &&
     Boolean(data.cardName.trim());
 
@@ -73,6 +66,7 @@ export default function RevealCardFormStep({
             onChange({ cardNumber: formatCardNumber(e.target.value) })
           }
           placeholder="2026 • 0000 • 0000 • 0000"
+          inputMode="numeric"
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -80,9 +74,10 @@ export default function RevealCardFormStep({
             label={t("listings.expiration_date")}
             value={data.cardExpiry}
             onChange={(e) =>
-              onChange({ cardExpiry: formatExpiry(e.target.value) })
+              onChange({ cardExpiry: formatCardExpiry(e.target.value) })
             }
             placeholder="MM / YY"
+            inputMode="numeric"
           />
           <Input
             label={t("listings.security_code")}
@@ -93,6 +88,7 @@ export default function RevealCardFormStep({
               })
             }
             placeholder="CVC"
+            inputMode="numeric"
           />
         </div>
 

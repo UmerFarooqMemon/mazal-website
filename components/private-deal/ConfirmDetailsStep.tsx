@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
+import { Button, EmiratesIdInput, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 
 export interface ConfirmDetailsData {
@@ -156,11 +156,10 @@ export default function ConfirmDetailsStep({
           onChange={(e) => onChange({ email: e.target.value })}
           placeholder={t("private-deal.email_placeholder")}
         />
-        <Input
+        <EmiratesIdInput
           label={t("private-deal.emirates_id")}
           value={data.emiratesId}
-          onChange={(e) => onChange({ emiratesId: e.target.value })}
-          placeholder={t("private-deal.emirates_id_placeholder")}
+          onChange={(value) => onChange({ emiratesId: value })}
         />
 
         {variant === "buyer" && (
@@ -177,12 +176,24 @@ export default function ConfirmDetailsStep({
               value={data.identification}
               onChange={(v) => onChange({ identification: v })}
             />
-            <Input
-              label={idValueLabel}
-              value={data.identificationValue}
-              onChange={(e) => onChange({ identificationValue: e.target.value })}
-              placeholder="88454"
-            />
+            {data.identification === "emirates_id" ? (
+              <EmiratesIdInput
+                label={idValueLabel}
+                value={data.identificationValue}
+                onChange={(value) =>
+                  onChange({ identificationValue: value })
+                }
+              />
+            ) : (
+              <Input
+                label={idValueLabel}
+                value={data.identificationValue}
+                onChange={(e) =>
+                  onChange({ identificationValue: e.target.value })
+                }
+                placeholder="88454"
+              />
+            )}
             <Input
               label={t("private-deal.mobile_number")}
               value={data.secondaryMobile}

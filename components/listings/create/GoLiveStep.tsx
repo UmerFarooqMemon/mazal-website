@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
+import { formatCardExpiry, formatCardNumber } from "@/lib/card-input";
 import type { CreateListingData } from "./CreateListingWizard";
 
 interface GoLiveStepProps {
@@ -28,8 +29,8 @@ export default function GoLiveStep({
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
 
   const canProceed =
-    data.cardNumber.replace(/\s/g, "").length >= 12 &&
-    Boolean(data.cardExpiry.trim()) &&
+    data.cardNumber.replace(/\D/g, "").length >= 12 &&
+    data.cardExpiry.replace(/\D/g, "").length >= 4 &&
     Boolean(data.cardCvc.trim()) &&
     Boolean(data.cardName.trim());
 
@@ -53,16 +54,22 @@ export default function GoLiveStep({
           <Input
             label={t("listings.card_number")}
             value={data.cardNumber}
-            onChange={(e) => onChange({ cardNumber: e.target.value })}
+            onChange={(e) =>
+              onChange({ cardNumber: formatCardNumber(e.target.value, " * ") })
+            }
             placeholder="2026 * 0000 * 0000 * 0000"
+            inputMode="numeric"
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={t("listings.expiration_date")}
               value={data.cardExpiry}
-              onChange={(e) => onChange({ cardExpiry: e.target.value })}
+              onChange={(e) =>
+                onChange({ cardExpiry: formatCardExpiry(e.target.value) })
+              }
               placeholder="MM / YY"
+              inputMode="numeric"
             />
             <Input
               label={t("listings.security_code")}
@@ -73,6 +80,7 @@ export default function GoLiveStep({
                 })
               }
               placeholder="CVC"
+              inputMode="numeric"
             />
           </div>
 

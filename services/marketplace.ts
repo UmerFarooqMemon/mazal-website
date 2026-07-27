@@ -378,7 +378,7 @@ export interface CreateListingPayload {
   asking_price: number;
   description?: string;
   hide_code?: boolean;
-  status?: "draft" | "active";
+  status?: "draft" | "active" | "pending_approval";
   auction_starts_at?: string | null;
   auction_ends_at?: string | null;
   auction_reserve_price?: number | null;

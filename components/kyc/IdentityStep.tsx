@@ -5,10 +5,9 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
+import { Button, EmiratesIdInput, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import {
-  formatEmiratesId,
   getPhoneLengthRule,
   isValidEmail,
   isValidEmiratesId,
@@ -201,14 +200,10 @@ export default function IdentityStep({
 
         {isUae ? (
           <>
-            <Input
+            <EmiratesIdInput
               label={t("kyc.emirates_id_number")}
               value={identity.emiratesId}
-              onChange={(e) =>
-                update("emiratesId", formatEmiratesId(e.target.value))
-              }
-              placeholder={t("kyc.emirates_id_placeholder")}
-              inputMode="numeric"
+              onChange={(value) => update("emiratesId", value)}
               error={getError("emiratesId", ["emirates_id"])}
             />
             <Select

@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import AuthHero from "@/components/auth/AuthHero";
+import { EmiratesIdInput } from "@/components/ui";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -219,16 +220,12 @@ export default function RegisterPage() {
                   error={fieldErrors.email}
                 />
 
-                <Input
+                <EmiratesIdInput
                   name="emirates_id"
                   label={t("common.emirates_id")}
                   icon={<Lock size={20} strokeWidth={1.5} />}
-                  type="text"
-                  placeholder={t("common.id_placeholder")}
                   value={formData.emirates_id}
-                  onChange={(e) =>
-                    handleFieldChange("emirates_id", e.target.value)
-                  }
+                  onChange={(value) => handleFieldChange("emirates_id", value)}
                   hint={t("common.id_skip_note")}
                 />
 

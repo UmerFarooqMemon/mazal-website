@@ -3,6 +3,7 @@ export { default as BackButton } from "./BackButton";
 export { default as Card } from "./Card";
 export { default as Badge } from "./Badge";
 export { default as Input } from "./Input";
+export { default as EmiratesIdInput } from "./EmiratesIdInput";
 export { default as Modal } from "./Modal";
 export { default as CountdownTimer } from "./CountdownTimer";
 export { default as DirhamAmount } from "./DirhamAmount";

@@ -14,6 +14,7 @@ import {
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, Input } from "@/components/ui";
+import { formatPriceInput } from "@/lib/card-input";
 import DirhamText from "@/components/ui/DirhamText";
 import Select from "@/components/ui/Select";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
@@ -196,6 +197,7 @@ export default function PlatePriceFormStep({
               onChange={(e) =>
                 onChange({ emirateId: e.target.value.replace(/\D/g, "") })
               }
+              inputMode="numeric"
             />
           </div>
 
@@ -415,10 +417,11 @@ export default function PlatePriceFormStep({
             value={data.price}
             onChange={(e) =>
               onChange({
-                price: e.target.value.replace(/[^\d,]/g, ""),
+                price: formatPriceInput(e.target.value),
               })
             }
             placeholder="68,000"
+            inputMode="numeric"
           />
 
           {/* <button
