@@ -1,8 +1,11 @@
 "use client";
 
 import { InputHTMLAttributes, forwardRef } from "react";
-import { useLocale } from "@/context/LocaleContext";
-import { formatEmiratesId } from "@/components/kyc/types";
+import {
+  EMIRATES_ID_MAX_LENGTH,
+  EMIRATES_ID_PLACEHOLDER,
+  formatEmiratesId,
+} from "@/components/kyc/types";
 import Input from "./Input";
 
 interface EmiratesIdInputProps
@@ -17,18 +20,18 @@ interface EmiratesIdInputProps
 }
 
 const EmiratesIdInput = forwardRef<HTMLInputElement, EmiratesIdInputProps>(
-  ({ value, onChange, placeholder, ...props }, ref) => {
-    const { t } = useLocale();
-
+  ({ value, onChange, placeholder, maxLength, ...props }, ref) => {
     return (
       <Input
         ref={ref}
         {...props}
         type="text"
         inputMode="numeric"
+        autoComplete="off"
         value={value}
+        maxLength={maxLength ?? EMIRATES_ID_MAX_LENGTH}
         onChange={(e) => onChange(formatEmiratesId(e.target.value))}
-        placeholder={placeholder ?? t("common.emirates_id_placeholder")}
+        placeholder={placeholder ?? EMIRATES_ID_PLACEHOLDER}
       />
     );
   },

@@ -69,7 +69,7 @@
   "email": "Email",
   "email_placeholder": "counterparty@gmail.com",
   "emirates_id": "Emirates ID",
-  "emirates_id_placeholder": "784 XXXXX XXXX",
+  "emirates_id_placeholder": "--- - ---- - ------- -",
   "type": "Type",
   "type_individual": "Individual",
   "type_organization": "Organization / Company",

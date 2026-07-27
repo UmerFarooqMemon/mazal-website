@@ -32,7 +32,7 @@
   "full_legal_name_placeholder_intl": "كما في جواز السفر",
   "date_of_birth": "تاريخ الميلاد",
   "emirates_id_number": "رقم هوية الإمارات",
-  "emirates_id_placeholder": "784 XXXXX XXXX",
+  "emirates_id_placeholder": "--- - ---- - ------- -",
   "emirate_of_residence": "إمارة الإقامة",
   "select_emirate": "اختر الإمارة",
   "passport_number": "رقم جواز السفر",

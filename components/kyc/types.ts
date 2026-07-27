@@ -91,6 +91,10 @@ export const INITIAL_KYC_STATE: KycFormState = {
   verified: false,
 };
 
+/** Visual mask: 3-4-7-1 digit groups (784-XXXX-XXXXXXX-X) */
+export const EMIRATES_ID_PLACEHOLDER = "--- - ---- - ------- -";
+export const EMIRATES_ID_MAX_LENGTH = 18;
+
 /** Digits only; Emirates ID must be 15 digits starting with 784 */
 export function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
@@ -98,17 +102,19 @@ export function digitsOnly(value: string) {
 
 export function formatEmiratesId(value: string) {
   const digits = digitsOnly(value).slice(0, 15);
-  const parts = [
-    digits.slice(0, 3),
-    digits.slice(3, 7),
-    digits.slice(7, 14),
-    digits.slice(14, 15),
-  ].filter(Boolean);
+  if (!digits) return "";
 
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 7) return `${parts[0]}-${parts[1]}`;
-  if (digits.length <= 14) return `${parts[0]}-${parts[1]}-${parts[2]}`;
-  return `${parts[0]}-${parts[1]}-${parts[2]}-${parts[3]}`;
+  const seg1 = digits.slice(0, 3);
+  const seg2 = digits.slice(3, 7);
+  const seg3 = digits.slice(7, 14);
+  const seg4 = digits.slice(14, 15);
+
+  let formatted = seg1;
+  if (seg2) formatted += `-${seg2}`;
+  if (seg3) formatted += `-${seg3}`;
+  if (seg4) formatted += `-${seg4}`;
+
+  return formatted;
 }
 
 export function isValidEmiratesId(value: string) {
