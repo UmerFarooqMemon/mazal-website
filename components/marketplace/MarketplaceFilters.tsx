@@ -55,8 +55,12 @@ export default function MarketplaceFilters({
       key: "sort",
       title: t("marketplace.sort"),
       options: [
-        { value: "az", label: t("marketplace.sort_az") },
-        { value: "za", label: t("marketplace.sort_za") },
+        { value: "trending", label: t("marketplace.sort_trending") },
+        { value: "price_asc", label: t("marketplace.sort_price_asc") },
+        { value: "price_desc", label: t("marketplace.sort_price_desc") },
+        { value: "newest", label: t("marketplace.sort_newest") },
+        { value: "oldest", label: t("marketplace.sort_oldest") },
+        { value: "relevance", label: t("marketplace.sort_relevance") },
       ],
     },
   ];

@@ -22,6 +22,15 @@ const INITIAL_FILTERS: MarketplaceFilterState = {
   sort: "",
 };
 
+const SORT_LABEL_KEYS: Record<string, string> = {
+  trending: "marketplace.sort_trending",
+  price_asc: "marketplace.sort_price_asc",
+  price_desc: "marketplace.sort_price_desc",
+  newest: "marketplace.sort_newest",
+  oldest: "marketplace.sort_oldest",
+  relevance: "marketplace.sort_relevance",
+};
+
 export default function MarketplacePage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
@@ -54,12 +63,7 @@ export default function MarketplacePage() {
                 : undefined,
             price_range: filters.price_range || undefined,
             q: appliedQuery || undefined,
-            sort:
-              filters.sort === "az"
-                ? "code_asc"
-                : filters.sort === "za"
-                  ? "code_desc"
-                  : undefined,
+            sort: filters.sort || undefined,
             page: pageNum,
             per_page: 12,
           },
@@ -172,7 +176,12 @@ export default function MarketplacePage() {
               <span>
                 {totalCount} {t("marketplace.results_count")}
               </span>
-              <span>{t("marketplace.sorted_by")}</span>
+              <span>
+                {t("marketplace.sorted_by")}{" "}
+                {filters.sort && SORT_LABEL_KEYS[filters.sort]
+                  ? t(SORT_LABEL_KEYS[filters.sort])
+                  : t("marketplace.sort_relevance")}
+              </span>
             </div>
 
             {error && (
