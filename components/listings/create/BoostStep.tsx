@@ -235,13 +235,13 @@ export default function BoostStep({
 
           <div className="mb-4">
             <NumberPlateDisplay
-              plate_code={data.code || "AA"}
-              plate_digits={data.digits || "777"}
+              plate_code={data.code}
+              plate_digits={data.digits}
               emirate={data.emirate || "dubai"}
               plateVariant={data.plateVariant}
               crop="live-preview"
               hideCode={Boolean(data.code) && data.hideCode}
-              showCode
+              showCode={Boolean(data.code.trim())}
             />
           </div>
 

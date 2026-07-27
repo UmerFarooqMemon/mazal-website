@@ -336,7 +336,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
               placeholder={
                 variantDigits?.min
                   ? `${variantDigits.min}-${variantDigits.max || ""} digits`
-                  : "777"
+                  : "1234"
               }
               maxLength={variantDigits?.max}
               value={form.digits}
@@ -431,13 +431,14 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
 
         <div className="mb-5 px-1">
           <NumberPlateDisplay
-            plate_code={showCodeField ? form.code || "AA" : ""}
-            plate_digits={form.digits || "777"}
+            plate_code={showCodeField ? form.code : ""}
+            plate_digits={form.digits}
             emirate={t("listings.emirate_dubai")}
             plateVariant={form.plateVariant}
             preview={selectedVariant?.preview}
             crop="auction-preview"
             wrapperClassName="w-full overflow-hidden rounded-lg"
+            showCode={showCodeField}
           />
         </div>
 
