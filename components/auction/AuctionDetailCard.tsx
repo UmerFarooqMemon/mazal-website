@@ -26,9 +26,19 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
       }}
     >
       <div className="flex items-center justify-between gap-3 mb-6">
-        <span className="bg-[#FEE2E2] text-[#DC2626] text-[11px] font-bold px-3 py-1.5 rounded-full inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse" />
-          {t("auctions.live_badge")}
+        <span
+          className={`text-[11px] font-bold px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 ${
+            auction.status === "live"
+              ? "bg-[#FEE2E2] text-[#DC2626]"
+              : "bg-[#F3F4F6] text-[#6B7280]"
+          }`}
+        >
+          {auction.status === "live" && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse" />
+          )}
+          {auction.status === "live"
+            ? t("auctions.live_badge")
+            : t(`auctions.status_${auction.status}`)}
         </span>
         <span
           className="text-[13px] font-medium"

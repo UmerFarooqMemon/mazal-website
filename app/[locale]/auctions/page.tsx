@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Filter, Plus, Search } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
@@ -8,21 +8,64 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import AuctionPageHero from "@/components/auction/AuctionPageHero";
 import AuctionListingCard from "@/components/auction/AuctionListingCard";
-import { MOCK_AUCTIONS } from "@/components/auction/mockData";
+import { mapListingToAuctionListing } from "@/components/auction/mappers";
+import type { AuctionListing } from "@/components/auction/types";
+import { searchListings } from "@/services/marketplace";
 
 export default function AuctionsPage() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
+  const [auctions, setAuctions] = useState<AuctionListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAuctions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await searchListings(
+        {
+          listing_type: "auction",
+          q: appliedQuery || undefined,
+          per_page: 24,
+          page: 1,
+        },
+        locale,
+      );
+
+      const mapped = (response.data.listings || []).map((listing) =>
+        mapListingToAuctionListing(listing),
+      );
+      setAuctions(mapped);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load auctions.",
+      );
+      setAuctions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [appliedQuery, locale]);
+
+  useEffect(() => {
+    fetchAuctions();
+  }, [fetchAuctions]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return MOCK_AUCTIONS;
-    return MOCK_AUCTIONS.filter((a) => {
+    if (!q) return auctions;
+    return auctions.filter((a) => {
       const hay = `${a.code} ${a.digits} ${a.emirate}`.toLowerCase();
       return hay.includes(q.replace(/\s+/g, " "));
     });
-  }, [query]);
+  }, [auctions, query]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAppliedQuery(query.trim());
+  };
 
   return (
     <div
@@ -72,7 +115,7 @@ export default function AuctionsPage() {
           </div>
 
           <form
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleSearch}
             className="flex items-center gap-2 bg-white rounded-2xl border p-2 mb-8 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
             style={{ borderColor: getColor("border") }}
           >
@@ -100,11 +143,33 @@ export default function AuctionsPage() {
             </Button>
           </form>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((auction) => (
-              <AuctionListingCard key={auction.id} auction={auction} />
-            ))}
-          </div>
+          {error && (
+            <p className="text-sm mb-6" style={{ color: "#DC2626" }}>
+              {error}
+            </p>
+          )}
+
+          {loading ? (
+            <div
+              className="text-sm py-12 text-center"
+              style={{ color: getColor("mutedText") }}
+            >
+              {t("common.loading") || "Loading..."}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div
+              className="text-sm py-12 text-center"
+              style={{ color: getColor("mutedText") }}
+            >
+              {t("common.no_results") || "No auctions found."}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filtered.map((auction) => (
+                <AuctionListingCard key={auction.id} auction={auction} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -1,11 +1,21 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import AuctionPageHero from "@/components/auction/AuctionPageHero";
 import AuctionDetailCard from "@/components/auction/AuctionDetailCard";
-import { getAuctionById } from "@/components/auction/mockData";
+import LiveBidRoom from "@/components/auction/LiveBidRoom";
+import {
+  mapDetailToAuctionListing,
+  mapToAuctionSummary,
+} from "@/components/auction/mappers";
+import type { AuctionListing } from "@/components/auction/types";
+import {
+  getAuctionState,
+  getListingDetail,
+  type MarketplaceAuction,
+} from "@/services/marketplace";
 
 export default function AuctionDetailPage({
   params,
@@ -13,9 +23,74 @@ export default function AuctionDetailPage({
   params: Promise<{ auctionId: string }>;
 }) {
   const { auctionId } = use(params);
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const auction = getAuctionById(auctionId);
+  const [auction, setAuction] = useState<AuctionListing | null>(null);
+  const [auctionState, setAuctionState] = useState<MarketplaceAuction | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      getListingDetail(auctionId, locale),
+      getAuctionState(auctionId, locale).catch(() => null),
+    ])
+      .then(([listingResponse, auctionResponse]) => {
+        if (!active) return;
+
+        const listing = listingResponse.data.listing;
+        const apiAuction =
+          auctionResponse?.data.auction ?? listing.auction ?? null;
+
+        setAuctionState(apiAuction);
+        setAuction(mapDetailToAuctionListing(listing));
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(
+          err instanceof Error ? err.message : "Failed to load auction.",
+        );
+        setAuction(null);
+        setAuctionState(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [auctionId, locale]);
+
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen"
+        style={{ backgroundColor: getColor("background") }}
+      />
+    );
+  }
+
+  if (error || !auction) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ backgroundColor: getColor("background") }}
+      >
+        <p style={{ color: getColor("mutedText") }}>
+          {error || t("common.not_found") || "Auction not found."}
+        </p>
+      </div>
+    );
+  }
+
+  const isBiddingOpen = auctionState?.is_bidding_open === true;
 
   return (
     <div
@@ -36,7 +111,18 @@ export default function AuctionDetailPage({
         }}
       >
         <div className="max-w-5xl mx-auto space-y-8">
-          {auction && <AuctionDetailCard auction={auction} />}
+          <AuctionDetailCard auction={auction} />
+
+          {isBiddingOpen && auctionState && (
+            <LiveBidRoom
+              listingId={auctionId}
+              auction={auctionState}
+              summary={mapToAuctionSummary(
+                auctionState,
+                auctionState.viewer_registration,
+              )}
+            />
+          )}
 
           <div>
             <h2

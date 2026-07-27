@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -11,25 +11,66 @@ import DepositPaymentStep from "@/components/auction/DepositPaymentStep";
 import DepositStatusStep from "@/components/auction/DepositStatusStep";
 import AuctionSummaryCard from "@/components/auction/AuctionSummaryCard";
 import AuctionBenefitsCard from "@/components/auction/AuctionBenefitsCard";
-import { DEFAULT_AUCTION_SUMMARY } from "@/components/auction/mockData";
+import { mapToAuctionSummary } from "@/components/auction/mappers";
 import type {
+  AuctionSummaryData,
   DepositPaymentMethod,
   DepositPaymentMode,
 } from "@/components/auction/types";
+import {
+  confirmAuctionDeposit,
+  getAuctionState,
+  registerForAuction,
+  type MarketplaceAuctionRegistration,
+} from "@/services/marketplace";
 
 export default function AuctionRegisterPage({
   params,
 }: {
   params: Promise<{ auctionId: string }>;
 }) {
-  use(params);
-  const { t } = useLocale();
+  const { auctionId } = use(params);
+  const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const router = useRouter();
 
   const [step, setStep] = useState(0);
   const [method, setMethod] = useState<DepositPaymentMethod>("bank");
   const [mode, setMode] = useState<DepositPaymentMode>("single");
+  const [summary, setSummary] = useState<AuctionSummaryData | null>(null);
+  const [registration, setRegistration] =
+    useState<MarketplaceAuctionRegistration | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    getAuctionState(auctionId, locale)
+      .then((response) => {
+        if (!active) return;
+        const auction = response.data.auction;
+        const viewerRegistration = auction.viewer_registration ?? null;
+        setRegistration(viewerRegistration);
+        setSummary(mapToAuctionSummary(auction, viewerRegistration));
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(
+          err instanceof Error ? err.message : "Failed to load auction.",
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [auctionId, locale]);
 
   const steps: StepItem[] = useMemo(() => {
     const labels = [
@@ -46,6 +87,74 @@ export default function AuctionRegisterPage({
   }, [step, t]);
 
   const showSidebar = step < 2;
+
+  const handleRegister = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const response = await registerForAuction(auctionId, locale);
+      const nextRegistration = response.data.registration;
+      setRegistration(nextRegistration);
+      const auctionResponse = await getAuctionState(auctionId, locale);
+      setSummary(
+        mapToAuctionSummary(
+          auctionResponse.data.auction,
+          nextRegistration,
+        ),
+      );
+      setStep(1);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to register for auction.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConfirmDeposit = async () => {
+    if (!registration) {
+      setError("Registration is required before confirming deposit.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const paymentReference = `${method}-${Date.now()}`;
+      const response = await confirmAuctionDeposit(
+        auctionId,
+        registration.id,
+        locale,
+        paymentReference,
+      );
+      const nextRegistration = response.data.registration;
+      setRegistration(nextRegistration);
+      const auctionResponse = await getAuctionState(auctionId, locale);
+      setSummary(
+        mapToAuctionSummary(
+          auctionResponse.data.auction,
+          nextRegistration,
+        ),
+      );
+      setStep(2);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to confirm deposit.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen"
+        style={{ backgroundColor: getColor("background") }}
+      />
+    );
+  }
 
   return (
     <div
@@ -71,12 +180,18 @@ export default function AuctionRegisterPage({
           }`}
         >
           <div>
+            {error && (
+              <p className="text-sm mb-4" style={{ color: "#DC2626" }}>
+                {error}
+              </p>
+            )}
+
             {step === 0 && (
               <DepositMethodStep
                 method={method}
                 onMethodChange={setMethod}
                 onBack={() => router.back()}
-                onContinue={() => setStep(1)}
+                onContinue={handleRegister}
               />
             )}
 
@@ -86,7 +201,7 @@ export default function AuctionRegisterPage({
                 mode={mode}
                 onModeChange={setMode}
                 onBack={() => setStep(0)}
-                onContinue={() => setStep(2)}
+                onContinue={handleConfirmDeposit}
               />
             )}
 
@@ -100,12 +215,21 @@ export default function AuctionRegisterPage({
                 }
               />
             )}
+
+            {submitting && step < 2 && (
+              <p
+                className="text-sm mt-3"
+                style={{ color: getColor("mutedText") }}
+              >
+                {t("common.loading") || "Loading..."}
+              </p>
+            )}
           </div>
 
-          {showSidebar && (
+          {showSidebar && summary && (
             <div className="space-y-4">
               <AuctionSummaryCard
-                data={DEFAULT_AUCTION_SUMMARY}
+                data={summary}
                 showCheckAmount={step === 1 && method === "card"}
               />
               <AuctionBenefitsCard />
