@@ -52,28 +52,29 @@ export default function OfferDealSummary({
 
   return (
     <div
-      className="rounded-2xl border shadow-[0_8px_30px_rgba(0,0,0,0.06)] p-6"
+      className="marketplace-checkout-summary rounded-2xl border shadow-[0_8px_30px_rgba(0,0,0,0.06)] p-6"
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
       }}
     >
       <div
-        className={`text-[10px] font-bold uppercase tracking-wider mb-4 text-start`}
+        className="relative z-10 text-[10px] font-bold uppercase tracking-wider mb-3 text-start"
         style={{ color: getColor("mutedText") }}
       >
         {t("offer.summary_title")}
       </div>
 
-      <div className="mb-5">
+      <div className="deal-summary-plate-frame mb-1">
         <NumberPlateDisplay
           plate_code={plate_code}
           plate_digits={plate_digits}
           emirate={emirate}
           plateType={plate_type}
           plateDesign={plate_design}
-          crop="form"
+          crop="deal-summary"
           hideCode={hideCode}
+          wrapperClassName="deal-summary-plate w-full"
         />
       </div>
 

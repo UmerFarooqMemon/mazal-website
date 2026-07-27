@@ -15,6 +15,8 @@ export interface DealData {
   emirate: string;
   plateType: string;
   plateVariant: string;
+  /** Design key (e.g. new_colorful) — used when plateVariant is missing or not a full variant key. */
+  plateDesign?: string;
   code: string;
   digit: string;
   price: number;
@@ -59,23 +61,28 @@ export default function DealSummary({
       .then((r) => r.json())
       .then((res) => {
         const emirates = res?.data?.emirates || [];
-        const dubai = emirates.find(
-          (e: { key: string }) => e.key === "dubai",
+        const allVariants = emirates.flatMap(
+          (e: { variants?: Variant[] }) => e.variants || [],
         );
-        setVariants(dubai?.variants || []);
+        setVariants(allVariants);
       })
       .catch(console.error);
   }, [locale]);
 
-  const selectedVariant =
-    variants.find((v) => v.key === data.plateVariant) || variants[0];
+  // Exact match only — never fall back to variants[0] (wrong plate style).
+  const selectedVariant = variants.find((v) => v.key === data.plateVariant);
   const variantFields = selectedVariant?.fields || [
     "plate_code",
     "plate_digits",
   ];
   const showCodeField =
     variantFields.includes("plate_code") &&
-    (selectedVariant?.has_code ?? true);
+    (selectedVariant?.has_code ?? Boolean(data.code));
+
+  const emirateLabel =
+    data.emirate?.toLowerCase() === "dubai"
+      ? t("listings.emirate_dubai")
+      : data.emirate?.toUpperCase() || t("listings.emirate_dubai");
 
   return (
     <div
@@ -102,9 +109,11 @@ export default function DealSummary({
         <NumberPlateDisplay
           plate_code={showCodeField ? data.code : ""}
           plate_digits={data.digit}
-          emirate={t("listings.emirate_dubai")}
+          emirate={emirateLabel}
           preview={selectedVariant?.preview}
           plateVariant={data.plateVariant}
+          plateType={data.plateType}
+          plateDesign={data.plateDesign}
           crop={plateCrop}
           showCode={showCodeField}
           wrapperClassName={

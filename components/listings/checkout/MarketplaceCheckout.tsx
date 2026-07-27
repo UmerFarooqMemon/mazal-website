@@ -77,13 +77,20 @@ export default function MarketplaceCheckout({
       });
   }, [agreedPrice, listingId, locale]);
 
+  const plateType = listing?.plate_type || "private";
+  const plateDesign = listing?.plate_design || "new_colorful";
+  // Variant keys are `${plate_type}_${plate_design}` (e.g. private_new_colorful).
+  // Listing APIs expose type + design separately — never treat design alone as the variant key.
+  const plateVariant = `${plateType}_${plateDesign}`;
+
   const deal: DealData = {
     role: initialRole,
-    emirate: listing?.emirate || "dubai",
-    plateType: listing?.plate_type || "private",
-    plateVariant: listing?.plate_design || "private_new_colorful",
-    code: listing?.plate_code || "AA",
-    digit: listing?.plate_digits || "7777",
+    emirate: listing?.emirate_label || listing?.emirate || "dubai",
+    plateType,
+    plateVariant,
+    plateDesign,
+    code: listing?.plate_code || "",
+    digit: listing?.plate_digits || "",
     price: resolvedPrice,
   };
 
