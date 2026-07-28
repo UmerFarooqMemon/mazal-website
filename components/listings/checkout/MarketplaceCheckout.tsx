@@ -70,7 +70,7 @@ export default function MarketplaceCheckout({
       .then((response) => {
         setListing(response.data.listing);
         if (!agreedPrice || agreedPrice <= 0) {
-          setResolvedPrice(response.data.listing.asking_price);
+          setResolvedPrice(Number(response.data.listing.asking_price) || 0);
         }
       })
       .catch(() => {

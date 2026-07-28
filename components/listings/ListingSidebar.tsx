@@ -106,7 +106,10 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           className="text-4xl md:text-[48px] leading-none font-serif font-bold mb-2"
           style={{ color: getColor("primaryText") }}
         >
-          <DirhamAmount amount={listing.asking_price} weight="bold" />
+          <DirhamAmount
+            amount={Number(listing.asking_price) || 0}
+            weight="bold"
+          />
         </div>
         <div className="text-xs" style={{ color: getColor("mutedText") }}>
           {t("listings.fees_breakdown")}
