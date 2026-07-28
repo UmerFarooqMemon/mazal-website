@@ -13,6 +13,7 @@ interface OfferDealSummaryProps {
   plate_type?: string;
   plate_design?: string;
   hideCode?: boolean;
+  digitCount?: number;
 }
 
 export default function OfferDealSummary({
@@ -23,6 +24,7 @@ export default function OfferDealSummary({
   plate_type,
   plate_design,
   hideCode = false,
+  digitCount,
 }: OfferDealSummaryProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -74,6 +76,7 @@ export default function OfferDealSummary({
           plateDesign={plate_design}
           crop="deal-summary"
           hideCode={hideCode}
+          digitCount={digitCount}
           wrapperClassName="deal-summary-plate w-full"
         />
       </div>

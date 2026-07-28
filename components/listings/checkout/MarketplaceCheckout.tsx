@@ -21,6 +21,7 @@ import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 import {
   getListingDetail,
+  isHiddenPlateCode,
   type MarketplaceListingDetail,
 } from "@/services/marketplace";
 
@@ -82,6 +83,12 @@ export default function MarketplaceCheckout({
   // Variant keys are `${plate_type}_${plate_design}` (e.g. private_new_colorful).
   // Listing APIs expose type + design separately — never treat design alone as the variant key.
   const plateVariant = `${plateType}_${plateDesign}`;
+  const hideCode = isHiddenPlateCode(listing);
+  const plateDigits =
+    listing?.plate_digits &&
+    (!hideCode || /^\d+$/.test(listing.plate_digits.trim()))
+      ? listing.plate_digits
+      : "";
 
   const deal: DealData = {
     role: initialRole,
@@ -90,8 +97,10 @@ export default function MarketplaceCheckout({
     plateVariant,
     plateDesign,
     code: listing?.plate_code || "",
-    digit: listing?.plate_digits || "",
+    digit: plateDigits,
     price: resolvedPrice,
+    hideCode,
+    digitCount: listing?.digit_count,
   };
 
   const steps: StepItem[] = useMemo(() => {

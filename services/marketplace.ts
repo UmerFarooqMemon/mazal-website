@@ -599,6 +599,15 @@ export function resolveListingAskingPrice(
   );
 }
 
+export function isHiddenPlateCode(
+  listing: Pick<MarketplaceListingCard, "hide_code" | "code_hidden"> | null | undefined,
+): boolean {
+  if (!listing) return false;
+  const flag = (value: unknown) =>
+    value === true || value === 1 || value === "1" || value === "true";
+  return flag(listing.hide_code) || flag(listing.code_hidden);
+}
+
 export function mapListingToPlateCard(listing: MarketplaceListingCard) {
   let plateCode = listing.plate_code || "";
   let plateDigits = listing.plate_digits || "";
@@ -613,6 +622,17 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     } else {
       plateDigits = listing.display_plate.trim();
     }
+  }
+
+  const hideCode = isHiddenPlateCode(listing);
+
+  // When code is hidden, API often returns non-numeric display_plate junk — clear it
+  // so the plate overlay can use digit placeholders instead of sanitizing to empty.
+  if (hideCode && plateDigits && !/^\d+$/.test(plateDigits.trim())) {
+    plateDigits = "";
+  }
+  if (hideCode && plateCode && !/^[A-Za-z]+$/.test(plateCode.trim())) {
+    plateCode = "";
   }
 
   const code =
@@ -643,7 +663,8 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     rating: listing.seller?.rating ?? 0,
     previouslySold: listing.previously_sold,
     isFavorite: listing.is_watchlisted,
-    hideCode: listing.hide_code || listing.code_hidden,
+    hideCode,
+    digitCount: listing.digit_count,
     imageUrl: listing.preview?.image_url,
   };
 }

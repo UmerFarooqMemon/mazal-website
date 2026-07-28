@@ -15,6 +15,7 @@ import {
   getListingDetail,
   getListingOffers,
   getMyOffers,
+  isHiddenPlateCode,
   rejectOffer,
   startPurchaseFromOffer,
   submitOffer,
@@ -715,7 +716,13 @@ export default function OfferNegotiation() {
             <OfferDealSummary
               askingPrice={askingPrice}
               plate_code={listing?.plate_code || ""}
-              plate_digits={listing?.plate_digits || ""}
+              plate_digits={
+                listing?.plate_digits &&
+                (!isHiddenPlateCode(listing) ||
+                  /^\d+$/.test(listing.plate_digits.trim()))
+                  ? listing.plate_digits
+                  : ""
+              }
               emirate={
                 listing?.emirate_label?.toUpperCase() ||
                 listing?.emirate ||
@@ -723,7 +730,8 @@ export default function OfferNegotiation() {
               }
               plate_type={listing?.plate_type || undefined}
               plate_design={listing?.plate_design || undefined}
-              hideCode={listing?.hide_code || listing?.code_hidden}
+              hideCode={isHiddenPlateCode(listing)}
+              digitCount={listing?.digit_count}
             />
           </div>
         </div>

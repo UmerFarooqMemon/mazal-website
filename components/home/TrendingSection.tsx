@@ -87,11 +87,18 @@ export default function TrendingSection() {
               code={plate.code}
               price={plate.price}
               type={plate.type}
+              tier={plate.tier}
               views={plate.views}
               rating={plate.rating}
               isFavorite={plate.isFavorite}
               previouslySold={plate.previouslySold}
               imageUrl={plate.imageUrl}
+              plate_code={plate.plate_code}
+              plate_digits={plate.plate_digits}
+              plate_type={plate.plate_type}
+              plate_design={plate.plate_design}
+              hideCode={plate.hideCode}
+              digitCount={plate.digitCount}
             />
           ))}
         </div>

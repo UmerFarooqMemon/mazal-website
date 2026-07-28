@@ -19,6 +19,7 @@ import {
   getListingDetail,
   getRevealStatus,
   initiateReveal,
+  isHiddenPlateCode,
   proceedAfterReveal,
   type MarketplaceListingDetail,
   type MarketplaceReveal,
@@ -189,11 +190,16 @@ export default function RevealPage() {
   }
 
   const typeLabel = listing.listing_type_label || listing.listing_type;
+  const hideCode = codeHidden || isHiddenPlateCode(listing);
   const plateCode = listing.plate_code || "";
-  const plateDigits =
+  const rawDigits =
     listing.plate_digits ||
-    listing.display_plate?.replace(/^[A-Za-z]+\s*[-|]?\s*/, "") ||
+    (!hideCode
+      ? listing.display_plate?.replace(/^[A-Za-z]+\s*[-|]?\s*/, "")
+      : "") ||
     "";
+  const plateDigits =
+    hideCode && rawDigits && !/^\d+$/.test(rawDigits.trim()) ? "" : rawDigits;
 
   return (
     <div
@@ -242,7 +248,8 @@ export default function RevealPage() {
                   plateType={listing.plate_type || undefined}
                   plateDesign={listing.plate_design || undefined}
                   crop="hero"
-                  hideCode={codeHidden}
+                  hideCode={hideCode}
+                  digitCount={listing.digit_count}
                 />
               </div>
             </div>

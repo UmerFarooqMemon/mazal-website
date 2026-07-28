@@ -41,6 +41,8 @@ interface NumberPlateDisplayProps {
   plateDesign?: string;
   crop?: PlateCropVariant;
   hideCode?: boolean;
+  /** Digit length hint for blurred placeholders when API omits plate_digits. */
+  digitCount?: number;
   showCode?: boolean;
   className?: string;
   wrapperClassName?: string;
@@ -59,6 +61,7 @@ export default function NumberPlateDisplay({
   plateDesign,
   crop = "form",
   hideCode = false,
+  digitCount,
   showCode,
   className = "",
   wrapperClassName = "w-full overflow-hidden",
@@ -79,11 +82,13 @@ export default function NumberPlateDisplay({
     getDefaultPlatePreview(lookup);
 
   const variantMeta = plateVariant ? variantsByKey[plateVariant] : undefined;
+  // When code is hidden, API often strips plate_code — still show a blurred letter unless
+  // the variant explicitly has no code field.
   const showCodeField =
     showCode !== undefined
       ? showCode
       : (variantMeta?.fields?.includes("plate_code") ?? true) &&
-        (variantMeta?.has_code ?? Boolean(plate_code));
+        (variantMeta?.has_code ?? (Boolean(plate_code) || hideCode));
 
   const usesPlateWidthFont = crop === "deal-summary";
   const fontScaleMultiplier =
@@ -98,7 +103,9 @@ export default function NumberPlateDisplay({
           plate_digits={plate_digits}
           emirate={emirate}
           preview={resolvedPreview || undefined}
-          hideCode={showCodeField && hideCode}
+          hideCode={hideCode}
+          allowCodePlaceholder={showCodeField}
+          digitCount={digitCount}
           width={width}
           className={className}
           scaleFontToWidth={scaleFontToWidth || usesPlateWidthFont}

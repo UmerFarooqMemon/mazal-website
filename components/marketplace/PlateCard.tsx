@@ -25,6 +25,8 @@ interface PlateCardProps {
   plate_type?: string;
   plate_design?: string;
   hideCode?: boolean;
+  /** Digit length hint for blurred placeholders when API omits plate_digits. */
+  digitCount?: number;
   /** Marketplace grid only: scale overlay font to card width instead of viewport. */
   fitPlateFont?: boolean;
 }
@@ -43,6 +45,7 @@ export default function PlateCard({
   plate_type,
   plate_design,
   hideCode = false,
+  digitCount,
   fitPlateFont = false,
 }: PlateCardProps) {
   const { t, locale } = useLocale();
@@ -54,15 +57,17 @@ export default function PlateCard({
 
   const badgeLabel = t(`listings.tier_${tier}`) || tier;
 
-  const digits =
-    plate_digits ||
-    (code.includes("|") ? code.split("|").pop()?.trim() : code) ||
-    "";
+  const digits = hideCode
+    ? plate_digits || ""
+    : plate_digits ||
+      (code.includes("|") ? code.split("|").pop()?.trim() : code) ||
+      "";
 
-  const letterCode =
-    plate_code ||
-    (code.includes("|") ? code.split("|")[0]?.trim() : "") ||
-    "";
+  const letterCode = hideCode
+    ? plate_code || ""
+    : plate_code ||
+      (code.includes("|") ? code.split("|")[0]?.trim() : "") ||
+      "";
 
   return (
     <Link
@@ -115,6 +120,7 @@ export default function PlateCard({
           plateDesign={plate_design}
           crop="card"
           hideCode={hideCode}
+          digitCount={digitCount}
           scaleFontToWidth={fitPlateFont}
           fontScaleMultiplier={fitPlateFont ? 2.3 : undefined}
         />

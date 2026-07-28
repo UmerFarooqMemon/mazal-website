@@ -3,7 +3,10 @@ import { Shield, Clock, Star, Eye } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
-import type { MarketplaceListingDetail } from "@/services/marketplace";
+import {
+  isHiddenPlateCode,
+  type MarketplaceListingDetail,
+} from "@/services/marketplace";
 
 interface PlateHeroProps {
   listing?: MarketplaceListingDetail | null;
@@ -55,11 +58,16 @@ export default function PlateHero({ listing }: PlateHeroProps) {
     },
   ];
 
+  const hideCode = isHiddenPlateCode(listing);
   const plateCode = listing?.plate_code || "";
-  const plateDigits =
+  const rawDigits =
     listing?.plate_digits ||
-    listing?.display_plate?.replace(/^[A-Za-z]+\s*[-|]?\s*/, "") ||
+    (!hideCode
+      ? listing?.display_plate?.replace(/^[A-Za-z]+\s*[-|]?\s*/, "")
+      : "") ||
     "";
+  const plateDigits =
+    hideCode && rawDigits && !/^\d+$/.test(rawDigits.trim()) ? "" : rawDigits;
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,7 +88,8 @@ export default function PlateHero({ listing }: PlateHeroProps) {
             plateType={listing?.plate_type || undefined}
             plateDesign={listing?.plate_design || undefined}
             crop="hero"
-            hideCode={listing?.hide_code || listing?.code_hidden}
+            hideCode={hideCode}
+            digitCount={listing?.digit_count}
           />
         </div>
       </div>
