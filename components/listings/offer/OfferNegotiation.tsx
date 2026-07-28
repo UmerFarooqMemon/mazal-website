@@ -12,6 +12,8 @@ import OfferDealSummary from "./OfferDealSummary";
 import {
   acceptOffer,
   counterOffer,
+  endNegotiation,
+  finalOffer,
   getListingDetail,
   getListingOffers,
   getMyOffers,
@@ -20,6 +22,7 @@ import {
   startPurchaseFromOffer,
   submitOffer,
   withdrawOffer,
+  type MarketplaceCounterOfferQuota,
   type MarketplaceListingDetail,
   type MarketplaceOffer,
 } from "@/services/marketplace";
@@ -37,6 +40,8 @@ function offerAmount(offer: MarketplaceOffer) {
   return Number(offer.amount) || 0;
 }
 
+type ComposeMode = "counter" | "final";
+
 export default function OfferNegotiation() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -47,13 +52,51 @@ export default function OfferNegotiation() {
   const [actionLoading, setActionLoading] = useState(false);
   const [listing, setListing] = useState<MarketplaceListingDetail | null>(null);
   const [offers, setOffers] = useState<MarketplaceOffer[]>([]);
+  const [quota, setQuota] = useState<MarketplaceCounterOfferQuota | null>(null);
   const [draftAmount, setDraftAmount] = useState(0);
   const [counterAmount, setCounterAmount] = useState(0);
   const [showCounterForm, setShowCounterForm] = useState(false);
+  const [composeMode, setComposeMode] = useState<ComposeMode>("counter");
   const [composeOpen, setComposeOpen] = useState(false);
+  const [buyerFinal, setBuyerFinal] = useState(false);
 
   const isOwner = Boolean(listing?.is_owner);
-  const askingPrice = listing?.asking_price || 0;
+  const askingPrice = Number(listing?.asking_price) || 0;
+
+  const deriveQuota = useCallback(
+    (nextOffers: MarketplaceOffer[], limit: number) => {
+      const pending = [...nextOffers]
+        .reverse()
+        .find((offer) => offer.status === "pending");
+      const buyerId = pending?.buyer?.id;
+      const used = nextOffers.filter(
+        (offer) =>
+          offer.initiated_by === "seller" || offer.is_seller_counter,
+      ).length;
+      // Prefer seller counters for the active buyer thread when known.
+      const usedForBuyer =
+        buyerId != null
+          ? nextOffers.filter(
+              (offer) =>
+                (offer.initiated_by === "seller" || offer.is_seller_counter) &&
+                offer.buyer?.id === buyerId,
+            ).length
+          : used;
+      const remaining = Math.max(0, limit - usedForBuyer);
+      const hasPendingFinal = nextOffers.some(
+        (offer) => offer.status === "pending" && offer.is_final,
+      );
+      return {
+        limit,
+        used: usedForBuyer,
+        remaining,
+        can_counter: remaining > 0 && !hasPendingFinal,
+        can_negotiate: !hasPendingFinal,
+        has_pending_final: hasPendingFinal,
+      } satisfies MarketplaceCounterOfferQuota;
+    },
+    [],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,20 +104,28 @@ export default function OfferNegotiation() {
       const listingResponse = await getListingDetail(params.id, locale);
       const nextListing = listingResponse.data.listing;
       setListing(nextListing);
-      setDraftAmount(Math.max(1, Math.round(nextListing.asking_price * 0.95)));
-      setCounterAmount(Math.max(1, Math.round(nextListing.asking_price * 0.98)));
+      const price = Number(nextListing.asking_price) || 0;
+      setDraftAmount(Math.max(1, Math.round(price * 0.95)));
+      setCounterAmount(Math.max(1, Math.round(price * 0.98)));
+
+      let nextOffers: MarketplaceOffer[] = [];
+      let apiLimit = counterOfferLimit;
 
       if (nextListing.is_owner) {
         const offersResponse = await getListingOffers(params.id, locale);
-        setOffers(offersResponse.data.offers || []);
+        nextOffers = offersResponse.data.offers || [];
+        if (typeof offersResponse.data.counter_offer_limit === "number") {
+          apiLimit = offersResponse.data.counter_offer_limit;
+        }
       } else {
         const offersResponse = await getMyOffers(locale);
-        setOffers(
-          (offersResponse.data.offers || []).filter(
-            (offer) => String(offer.listing_id) === String(params.id),
-          ),
+        nextOffers = (offersResponse.data.offers || []).filter(
+          (offer) => String(offer.listing_id) === String(params.id),
         );
       }
+
+      setOffers(nextOffers);
+      setQuota(deriveQuota(nextOffers, apiLimit));
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to load offers.",
@@ -82,7 +133,7 @@ export default function OfferNegotiation() {
     } finally {
       setLoading(false);
     }
-  }, [locale, params.id]);
+  }, [counterOfferLimit, deriveQuota, locale, params.id]);
 
   useEffect(() => {
     load();
@@ -110,30 +161,37 @@ export default function OfferNegotiation() {
     [sortedOffers],
   );
 
+  const effectiveQuota = quota || {
+    limit: counterOfferLimit,
+    used: 0,
+    remaining: counterOfferLimit,
+    can_counter: true,
+    can_negotiate: true,
+    has_pending_final: false,
+  };
+
+  const hasPendingFinal =
+    Boolean(latestPending?.is_final) || effectiveQuota.has_pending_final;
+  const canNegotiate = effectiveQuota.can_negotiate && !hasPendingFinal;
+  const canCounter = effectiveQuota.can_counter && canNegotiate;
+  const hasReachedCounterLimit = effectiveQuota.remaining <= 0;
+
+  const counterLimitMessage = t("offer.counter_limit_reached").replace(
+    "{limit}",
+    String(effectiveQuota.limit),
+  );
+  const finalLockedMessage =
+    t("offer.final_locked") ||
+    "A final offer is pending. Further negotiation is closed — accept or end the negotiation.";
+
   const canBuyerStartNegotiation =
     !isOwner &&
     listing?.can_make_offer !== false &&
     !latestPending &&
-    !acceptedOffer;
+    !acceptedOffer &&
+    canNegotiate;
 
-  const counterOffersUsed = sortedOffers.length;
-  const hasReachedCounterLimit = counterOffersUsed >= counterOfferLimit;
-  const counterOffersRemaining = Math.max(0, counterOfferLimit - counterOffersUsed);
-
-  const counterLimitMessage = t("offer.counter_limit_reached").replace(
-    "{limit}",
-    String(counterOfferLimit),
-  );
-
-  const assertCanCounter = () => {
-    if (hasReachedCounterLimit) {
-      toast.error(counterLimitMessage);
-      return false;
-    }
-    return true;
-  };
-
-  const canBuyerCompose = canBuyerStartNegotiation && !hasReachedCounterLimit;
+  const canBuyerCompose = canBuyerStartNegotiation;
 
   const canSellerActOn =
     isOwner &&
@@ -154,10 +212,22 @@ export default function OfferNegotiation() {
     !latestPending.is_seller_counter;
 
   const offerTitle = (offer: MarketplaceOffer, index: number) => {
+    if (offer.is_final) {
+      if (offer.is_seller_counter || offer.initiated_by === "seller") {
+        return t("offer.seller_final");
+      }
+      return t("offer.buyer_final") || t("offer.final_offer");
+    }
     if (offer.is_seller_counter || offer.initiated_by === "seller") {
       return `${t("offer.seller_counter")} # ${index + 1}`;
     }
     return `${t("offer.counter_offer")} # ${index + 1}`;
+  };
+
+  const applyQuotaFromResponse = (
+    nextQuota?: MarketplaceCounterOfferQuota,
+  ) => {
+    if (nextQuota) setQuota(nextQuota);
   };
 
   const handleSellerAccept = async (offer: MarketplaceOffer) => {
@@ -204,20 +274,35 @@ export default function OfferNegotiation() {
   };
 
   const handleSendBuyerOffer = async () => {
-    if (!assertCanCounter()) return;
+    if (!canNegotiate) {
+      toast.error(finalLockedMessage);
+      return;
+    }
     if (draftAmount < 1) {
       toast.error(t("offer.invalid_amount") || "Enter a valid offer amount.");
       return;
     }
     setActionLoading(true);
     try {
-      await submitOffer(
+      const response = await submitOffer(
         params.id,
-        { amount: draftAmount, message: t("offer.counter_offer") },
+        {
+          amount: draftAmount,
+          message: buyerFinal
+            ? t("offer.final_offer") || "Final offer"
+            : t("offer.counter_offer"),
+          is_final: buyerFinal,
+        },
         locale,
       );
-      toast.success(t("offer.sent_success") || "Offer submitted successfully.");
+      applyQuotaFromResponse(response.data.counter_offer_quota);
+      toast.success(
+        buyerFinal
+          ? t("offer.final_sent") || "Final offer submitted successfully."
+          : t("offer.sent_success") || "Offer submitted successfully.",
+      );
       setComposeOpen(false);
+      setBuyerFinal(false);
       await load();
     } catch (error) {
       toast.error(
@@ -230,22 +315,48 @@ export default function OfferNegotiation() {
 
   const handleSellerCounter = async () => {
     if (!latestPending) return;
-    if (!assertCanCounter()) return;
+    if (composeMode === "counter" && !canCounter) {
+      toast.error(
+        hasPendingFinal ? finalLockedMessage : counterLimitMessage,
+      );
+      return;
+    }
     if (counterAmount < 1) {
       toast.error(t("offer.invalid_amount") || "Enter a valid offer amount.");
       return;
     }
     setActionLoading(true);
     try {
-      await counterOffer(
-        latestPending.id,
-        { amount: counterAmount, message: t("offer.seller_counter") },
-        locale,
-      );
-      toast.success(
-        t("offer.counter_sent") || "Counter offer sent successfully.",
-      );
+      if (composeMode === "final") {
+        const response = await finalOffer(
+          latestPending.id,
+          {
+            amount: counterAmount,
+            message: t("offer.seller_final") || "Final offer",
+          },
+          locale,
+        );
+        applyQuotaFromResponse(response.data.counter_offer_quota);
+        toast.success(
+          t("offer.final_sent") || "Final offer sent successfully.",
+        );
+      } else {
+        const response = await counterOffer(
+          latestPending.id,
+          {
+            amount: counterAmount,
+            message: t("offer.seller_counter"),
+            is_final: false,
+          },
+          locale,
+        );
+        applyQuotaFromResponse(response.data.counter_offer_quota);
+        toast.success(
+          t("offer.counter_sent") || "Counter offer sent successfully.",
+        );
+      }
       setShowCounterForm(false);
+      setComposeMode("counter");
       await load();
     } catch (error) {
       toast.error(
@@ -271,6 +382,23 @@ export default function OfferNegotiation() {
     }
   };
 
+  const handleEndNegotiation = async (offer: MarketplaceOffer) => {
+    setActionLoading(true);
+    try {
+      await endNegotiation(offer.id, locale);
+      toast.success(t("offer.ended_success") || "Negotiation ended.");
+      await load();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to end negotiation.",
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleWithdraw = async (offer: MarketplaceOffer) => {
     setActionLoading(true);
     try {
@@ -290,6 +418,22 @@ export default function OfferNegotiation() {
     router.push(
       `/${locale}/listings/${params.id}/checkout?role=buyer&price=${askingPrice}`,
     );
+  };
+
+  const openSellerForm = (mode: ComposeMode, offer: MarketplaceOffer) => {
+    if (mode === "counter" && !canCounter) {
+      toast.error(
+        hasPendingFinal ? finalLockedMessage : counterLimitMessage,
+      );
+      return;
+    }
+    if (mode === "final" && !canNegotiate) {
+      toast.error(finalLockedMessage);
+      return;
+    }
+    setComposeMode(mode);
+    setCounterAmount(Math.max(1, Math.round(offerAmount(offer) * 1.02)));
+    setShowCounterForm(true);
   };
 
   if (loading) {
@@ -339,7 +483,6 @@ export default function OfferNegotiation() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
           <div className="lg:col-span-3 space-y-4">
-            {/* Listing asking price card */}
             <div
               className="rounded-2xl border p-5 md:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
               style={{
@@ -390,9 +533,13 @@ export default function OfferNegotiation() {
                         color: getColor("primary"),
                       }}
                       leftIcon={<RefreshCw className="w-4 h-4" strokeWidth={2} />}
-                      disabled={hasReachedCounterLimit || actionLoading}
+                      disabled={actionLoading || !canNegotiate}
                       onClick={() => {
-                        if (!assertCanCounter()) return;
+                        if (!canNegotiate) {
+                          toast.error(finalLockedMessage);
+                          return;
+                        }
+                        setBuyerFinal(false);
                         setComposeOpen(true);
                       }}
                     >
@@ -400,27 +547,41 @@ export default function OfferNegotiation() {
                     </Button>
                   </div>
                   {hasReachedCounterLimit && (
-                    <p className="text-xs text-start" style={{ color: getColor("error") }}>
+                    <p
+                      className="text-xs text-start"
+                      style={{ color: getColor("error") }}
+                    >
                       {counterLimitMessage}
                     </p>
                   )}
-                  {!hasReachedCounterLimit && counterOffersUsed > 0 && (
-                    <p className="text-xs text-start" style={{ color: getColor("mutedText") }}>
+                  {!hasReachedCounterLimit && effectiveQuota.used > 0 && (
+                    <p
+                      className="text-xs text-start"
+                      style={{ color: getColor("mutedText") }}
+                    >
                       {t("offer.counter_limit_remaining").replace(
                         "{remaining}",
-                        String(counterOffersRemaining),
+                        String(effectiveQuota.remaining),
                       )}
                     </p>
                   )}
                 </div>
               )}
+              {!isOwner && hasPendingFinal && !canBuyerStartNegotiation && (
+                <p
+                  className="text-xs text-start"
+                  style={{ color: getColor("error") }}
+                >
+                  {finalLockedMessage}
+                </p>
+              )}
             </div>
 
-            {/* Offer history */}
             {sortedOffers.map((offer, index) => {
               const isLatestPending = latestPending?.id === offer.id;
               const isSellerCounter =
                 offer.is_seller_counter || offer.initiated_by === "seller";
+              const isFinalPending = isLatestPending && Boolean(offer.is_final);
 
               return (
                 <div
@@ -428,8 +589,11 @@ export default function OfferNegotiation() {
                   className="rounded-2xl border p-5 md:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
                   style={{
                     backgroundColor: getColor("surface"),
-                    borderColor: getColor("border"),
-                    opacity: isLatestPending || offer.status === "accepted" ? 1 : 0.72,
+                    borderColor: offer.is_final
+                      ? getColor("primary")
+                      : getColor("border"),
+                    opacity:
+                      isLatestPending || offer.status === "accepted" ? 1 : 0.72,
                   }}
                 >
                   <div className="flex items-start justify-between gap-3 mb-4">
@@ -439,15 +603,28 @@ export default function OfferNegotiation() {
                     >
                       {offerTitle(offer, index)}
                     </h3>
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
-                      style={{
-                        backgroundColor: getColor("primaryLight"),
-                        color: getColor("secondaryText"),
-                      }}
-                    >
-                      {offer.status_label || offer.status}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {offer.is_final && (
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+                          style={{
+                            backgroundColor: getColor("primary"),
+                            color: "#fff",
+                          }}
+                        >
+                          {t("offer.final_badge") || "Final"}
+                        </span>
+                      )}
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+                        style={{
+                          backgroundColor: getColor("primaryLight"),
+                          color: getColor("secondaryText"),
+                        }}
+                      >
+                        {offer.status_label || offer.status}
+                      </span>
+                    </div>
                   </div>
 
                   <label
@@ -476,49 +653,75 @@ export default function OfferNegotiation() {
 
                   {isLatestPending && canSellerActOn && !showCounterForm && (
                     <div className="space-y-3">
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <Button
-                          variant="primary"
-                          size="lg"
-                          className="flex-1"
-                          loading={actionLoading}
-                          onClick={() => handleSellerAccept(offer)}
-                        >
-                          {t("offer.accept")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          className="flex-1"
-                          style={{
-                            borderColor: getColor("primary"),
-                            color: getColor("primary"),
-                          }}
-                          leftIcon={
-                            <RefreshCw className="w-4 h-4" strokeWidth={2} />
-                          }
-                          disabled={hasReachedCounterLimit || actionLoading}
-                          onClick={() => {
-                            if (!assertCanCounter()) return;
-                            setCounterAmount(
-                              Math.max(1, Math.round(offerAmount(offer) * 1.02)),
-                            );
-                            setShowCounterForm(true);
-                          }}
-                        >
-                          {t("offer.negotiate")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          className="flex-1"
-                          disabled={actionLoading}
-                          onClick={() => handleReject(offer)}
-                        >
-                          {t("offer.reject") || "Reject"}
-                        </Button>
-                      </div>
-                      {hasReachedCounterLimit && (
+                      {isFinalPending ? (
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button
+                            variant="primary"
+                            size="lg"
+                            className="flex-1"
+                            loading={actionLoading}
+                            onClick={() => handleSellerAccept(offer)}
+                          >
+                            {t("offer.accept")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className="flex-1"
+                            disabled={actionLoading}
+                            onClick={() => handleEndNegotiation(offer)}
+                          >
+                            {t("offer.end_negotiation")}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button
+                            variant="primary"
+                            size="lg"
+                            className="flex-1"
+                            loading={actionLoading}
+                            onClick={() => handleSellerAccept(offer)}
+                          >
+                            {t("offer.accept")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className="flex-1"
+                            style={{
+                              borderColor: getColor("primary"),
+                              color: getColor("primary"),
+                            }}
+                            leftIcon={
+                              <RefreshCw className="w-4 h-4" strokeWidth={2} />
+                            }
+                            disabled={actionLoading || !canCounter}
+                            onClick={() => openSellerForm("counter", offer)}
+                          >
+                            {t("offer.negotiate")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className="flex-1"
+                            disabled={actionLoading || !canNegotiate}
+                            onClick={() => openSellerForm("final", offer)}
+                          >
+                            {t("offer.final_offer") || "Final Offer"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className="flex-1"
+                            disabled={actionLoading}
+                            onClick={() => handleReject(offer)}
+                          >
+                            {t("offer.reject") || "Reject"}
+                          </Button>
+                        </div>
+                      )}
+                      {hasReachedCounterLimit && !isFinalPending && (
                         <p
                           className="text-xs text-start"
                           style={{ color: getColor("error") }}
@@ -526,38 +729,70 @@ export default function OfferNegotiation() {
                           {counterLimitMessage}
                         </p>
                       )}
+                      {isFinalPending && (
+                        <p
+                          className="text-xs text-start"
+                          style={{ color: getColor("mutedText") }}
+                        >
+                          {finalLockedMessage}
+                        </p>
+                      )}
                     </div>
                   )}
 
                   {isLatestPending && canBuyerActOn && (
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        className="flex-1"
-                        loading={actionLoading}
-                        onClick={() => goToCheckout(offer)}
-                      >
-                        {t("offer.accept")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="flex-1"
-                        disabled={actionLoading}
-                        onClick={() => handleReject(offer)}
-                      >
-                        {t("offer.reject") || "Reject"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="flex-1"
-                        disabled={actionLoading}
-                        onClick={() => handleWithdraw(offer)}
-                      >
-                        {t("offer.end_negotiation")}
-                      </Button>
+                    <div className="space-y-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          variant="primary"
+                          size="lg"
+                          className="flex-1"
+                          loading={actionLoading}
+                          onClick={() => goToCheckout(offer)}
+                        >
+                          {t("offer.accept")}
+                        </Button>
+                        {isFinalPending ? (
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className="flex-1"
+                            disabled={actionLoading}
+                            onClick={() => handleEndNegotiation(offer)}
+                          >
+                            {t("offer.end_negotiation")}
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              className="flex-1"
+                              disabled={actionLoading}
+                              onClick={() => handleReject(offer)}
+                            >
+                              {t("offer.reject") || "Reject"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              className="flex-1"
+                              disabled={actionLoading}
+                              onClick={() => handleWithdraw(offer)}
+                            >
+                              {t("offer.end_negotiation")}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                      {isFinalPending && (
+                        <p
+                          className="text-xs text-start"
+                          style={{ color: getColor("mutedText") }}
+                        >
+                          {finalLockedMessage}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -567,7 +802,11 @@ export default function OfferNegotiation() {
                       size="lg"
                       fullWidth
                       disabled={actionLoading}
-                      onClick={() => handleWithdraw(offer)}
+                      onClick={() =>
+                        offer.is_final
+                          ? handleEndNegotiation(offer)
+                          : handleWithdraw(offer)
+                      }
                     >
                       {t("offer.end_negotiation")}
                     </Button>
@@ -588,7 +827,6 @@ export default function OfferNegotiation() {
               );
             })}
 
-            {/* Buyer compose new offer */}
             {!isOwner && composeOpen && canBuyerCompose && (
               <div
                 className="rounded-2xl border p-5 md:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
@@ -601,7 +839,9 @@ export default function OfferNegotiation() {
                   className="text-xl font-serif font-bold mb-4"
                   style={{ color: getColor("primaryText") }}
                 >
-                  {t("offer.counter_offer")}
+                  {buyerFinal
+                    ? t("offer.final_offer") || "Final Offer"
+                    : t("offer.counter_offer")}
                 </h3>
                 <label
                   className="block text-xs font-medium mb-2"
@@ -621,22 +861,39 @@ export default function OfferNegotiation() {
                     color: getColor("primaryText"),
                   }}
                 />
+                <label
+                  className="flex items-center gap-2 mb-4 text-sm cursor-pointer"
+                  style={{ color: getColor("primaryText") }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={buyerFinal}
+                    onChange={(e) => setBuyerFinal(e.target.checked)}
+                    className="size-4 rounded border"
+                  />
+                  {t("offer.mark_as_final") ||
+                    "Mark as final offer (no further negotiation)"}
+                </label>
                 <div className="flex gap-3">
                   <Button
                     variant="primary"
                     size="lg"
                     className="flex-1"
                     loading={actionLoading}
-                    disabled={hasReachedCounterLimit}
                     onClick={handleSendBuyerOffer}
                   >
-                    {t("offer.send_offer")}
+                    {buyerFinal
+                      ? t("offer.send_final") || "Send Final Offer"
+                      : t("offer.send_offer")}
                   </Button>
                   <Button
                     variant="outline"
                     size="lg"
                     className="flex-1"
-                    onClick={() => setComposeOpen(false)}
+                    onClick={() => {
+                      setComposeOpen(false);
+                      setBuyerFinal(false);
+                    }}
                   >
                     {t("listings.back") || "Back"}
                   </Button>
@@ -644,7 +901,6 @@ export default function OfferNegotiation() {
               </div>
             )}
 
-            {/* Seller counter form */}
             {isOwner && showCounterForm && latestPending && (
               <div
                 className="rounded-2xl border p-5 md:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
@@ -657,8 +913,19 @@ export default function OfferNegotiation() {
                   className="text-xl font-serif font-bold mb-4"
                   style={{ color: getColor("primaryText") }}
                 >
-                  {t("offer.seller_counter")}
+                  {composeMode === "final"
+                    ? t("offer.seller_final")
+                    : t("offer.seller_counter")}
                 </h3>
+                {composeMode === "final" && (
+                  <p
+                    className="text-sm mb-4"
+                    style={{ color: getColor("secondaryText") }}
+                  >
+                    {t("offer.final_hint") ||
+                      "After a final offer, the buyer can only accept or end negotiation."}
+                  </p>
+                )}
                 <label
                   className="block text-xs font-medium mb-2"
                   style={{ color: getColor("mutedText") }}
@@ -685,16 +952,20 @@ export default function OfferNegotiation() {
                     size="lg"
                     className="flex-1"
                     loading={actionLoading}
-                    disabled={hasReachedCounterLimit}
                     onClick={handleSellerCounter}
                   >
-                    {t("offer.send_offer")}
+                    {composeMode === "final"
+                      ? t("offer.send_final") || "Send Final Offer"
+                      : t("offer.send_offer")}
                   </Button>
                   <Button
                     variant="outline"
                     size="lg"
                     className="flex-1"
-                    onClick={() => setShowCounterForm(false)}
+                    onClick={() => {
+                      setShowCounterForm(false);
+                      setComposeMode("counter");
+                    }}
                   >
                     {t("listings.back") || "Back"}
                   </Button>

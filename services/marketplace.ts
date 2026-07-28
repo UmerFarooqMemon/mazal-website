@@ -268,6 +268,7 @@ export interface MarketplaceOffer {
   initiated_by?: "buyer" | "seller" | string;
   parent_offer_id?: number | null;
   is_seller_counter?: boolean;
+  is_final?: boolean;
   buyer?: { id: number; name: string };
   listing?: {
     id: number;
@@ -279,6 +280,15 @@ export interface MarketplaceOffer {
   responded_at?: string | null;
   created_at: string;
   updated_at?: string;
+}
+
+export interface MarketplaceCounterOfferQuota {
+  limit: number;
+  used: number;
+  remaining: number;
+  can_counter: boolean;
+  can_negotiate: boolean;
+  has_pending_final: boolean;
 }
 
 export interface MarketplaceListingPlanTransaction {
@@ -1033,27 +1043,27 @@ export function proceedAfterReveal(listingId: string | number, locale: string) {
 // 19. Submit Offer
 export function submitOffer(
   listingId: string | number,
-  payload: { amount: number; message?: string },
+  payload: { amount: number; message?: string; is_final?: boolean },
   locale: string,
 ) {
-  return marketplaceRequest<{ offer: MarketplaceOffer }>(
-    `/listings/${listingId}/offers`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify(payload),
-    },
-  );
+  return marketplaceRequest<{
+    offer: MarketplaceOffer;
+    counter_offer_quota?: MarketplaceCounterOfferQuota;
+  }>(`/listings/${listingId}/offers`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
 }
 
 // 20. Get Listing Offers (Seller)
 export function getListingOffers(listingId: string | number, locale: string) {
-  return marketplaceRequest<{ offers: MarketplaceOffer[] }>(
-    `/listings/${listingId}/offers`,
-    { locale, auth: "required" },
-  );
+  return marketplaceRequest<{
+    offers: MarketplaceOffer[];
+    counter_offer_limit?: number;
+  }>(`/listings/${listingId}/offers`, { locale, auth: "required" });
 }
 
 // 21. My Offers (Buyer)
@@ -1134,17 +1144,53 @@ export function withdrawOffer(offerId: string | number, locale: string) {
 /** Seller counter-offer → creates a new pending offer initiated_by=seller. */
 export function counterOffer(
   offerId: string | number,
+  payload: { amount: number; message?: string; is_final?: boolean },
+  locale: string,
+) {
+  return marketplaceRequest<{
+    offer: MarketplaceOffer;
+    counter_offer_quota?: MarketplaceCounterOfferQuota;
+  }>(`/offers/${offerId}/counter`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Seller final counter (locks further negotiation). */
+export function finalOffer(
+  offerId: string | number,
   payload: { amount: number; message?: string },
   locale: string,
 ) {
+  return marketplaceRequest<{
+    offer: MarketplaceOffer;
+    counter_offer_quota?: MarketplaceCounterOfferQuota;
+  }>(`/offers/${offerId}/final`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** End negotiation without accepting (typical after a final offer). */
+export function endNegotiation(
+  offerId: string | number,
+  locale: string,
+  reason?: string,
+) {
   return marketplaceRequest<{ offer: MarketplaceOffer }>(
-    `/offers/${offerId}/counter`,
+    `/offers/${offerId}/end-negotiation`,
     {
       method: "POST",
       locale,
       auth: "required",
       contentType: "application/json",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ reason }),
     },
   );
 }
