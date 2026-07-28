@@ -28,6 +28,11 @@ interface User {
   role: string;
   email?: string | null;
   phone?: string | null;
+  kyc_verified?: boolean;
+  kyc_verified_at?: string | null;
+  emirates_id_verified?: boolean;
+  identity_verified?: boolean;
+  kyc_profile_type?: "uae_resident" | "international" | null;
 }
 
 function normalizeUser(user: AuthUser): User {
@@ -38,6 +43,11 @@ function normalizeUser(user: AuthUser): User {
     role: user.role || "user",
     email: user.email ?? null,
     phone: user.phone ?? null,
+    kyc_verified: Boolean(user.kyc_verified),
+    kyc_verified_at: user.kyc_verified_at ?? null,
+    emirates_id_verified: Boolean(user.emirates_id_verified),
+    identity_verified: Boolean(user.identity_verified),
+    kyc_profile_type: user.kyc_profile_type ?? null,
   };
 }
 

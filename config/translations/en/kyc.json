@@ -53,6 +53,8 @@
   "save_error": "Unable to save this step. Please check your details and try again.",
   "pending_review_note": "Your KYC is pending review. We'll notify you once it's verified.",
   "already_verified": "Your identity is already verified.",
+  "verified_title": "KYC verified",
+  "verified_description": "Your account is verified and ready for marketplace purchases, auction bidding, and private deals.",
   "submit_pending": "Pending review",
   "submit_verified": "Verified",
   "submit_approved": "KYC approved. Marketplace, auctions and private deals are unlocked.",

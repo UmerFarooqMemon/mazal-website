@@ -2,15 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield } from "lucide-react";
+import { CheckCircle2, Shield } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { Button } from "@/components/ui";
 import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import ProfileStep from "@/components/kyc/ProfileStep";
 import IdentityStep from "@/components/kyc/IdentityStep";
 import DocumentsStep from "@/components/kyc/DocumentsStep";
 import ReviewStep from "@/components/kyc/ReviewStep";
+import { useAuth } from "@/hooks/useAuth";
 import {
   formatEmiratesId,
   INITIAL_IDENTITY,
@@ -35,6 +37,58 @@ import {
 } from "@/services/kyc";
 
 const STEPS = ["profile", "identity", "documents", "review"] as const;
+
+function KycFormSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50 animate-pulse">
+      <section className="border-b border-gray-200 bg-linear-to-b from-gray-100 to-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
+          <div className="w-52 h-8 rounded-full bg-gray-200 mb-4" />
+          <div className="w-full max-w-xl h-12 rounded-xl bg-gray-200 mb-3" />
+          <div className="w-full max-w-lg h-5 rounded bg-gray-200 mb-2" />
+          <div className="w-full max-w-md h-5 rounded bg-gray-200" />
+
+          <div className="flex flex-wrap gap-3 w-full pt-6">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex-1 min-w-[140px] rounded-[14px] border border-gray-200 bg-white p-3.5"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="size-[23px] rounded-full bg-gray-200 shrink-0" />
+                  <div className="w-20 h-3 rounded bg-gray-200" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-8">
+        <div className="rounded-[20px] border border-gray-200 bg-white p-8 md:p-10 shadow-[0_30px_60px_-25px_rgba(1,15,81,0.08)]">
+          <div className="w-40 h-8 rounded-lg bg-gray-200 mb-2" />
+          <div className="w-full max-w-md h-4 rounded bg-gray-200 mb-8" />
+
+          <div className="space-y-5">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index}>
+                <div className="w-28 h-3 rounded bg-gray-200 mb-2" />
+                <div className="w-full h-12 rounded-xl bg-gray-100" />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 flex items-center justify-between">
+            <div className="w-28 h-11 rounded-xl bg-gray-200" />
+            <div className="w-44 h-11 rounded-xl bg-gray-200" />
+          </div>
+        </div>
+
+        <div className="w-full max-w-3xl h-4 rounded bg-gray-200 mx-auto mt-8" />
+      </section>
+    </div>
+  );
+}
 
 function parseUploadedDocuments(
   documents: KycApplication["documents"],
@@ -115,6 +169,7 @@ export default function KYCForm() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -195,17 +250,6 @@ export default function KYCForm() {
     };
   }, [locale, t]);
 
-  const stepperSteps: StepItem[] = useMemo(
-    () =>
-      STEPS.map((key, index) => ({
-        key,
-        label: t(`kyc.step_${key}`),
-        status:
-          index < step ? "completed" : index === step ? "current" : "upcoming",
-      })),
-    [step, t],
-  );
-
   const setProfileType = (profileType: KycProfileType) => {
     setForm((prev) => ({
       ...prev,
@@ -262,10 +306,31 @@ export default function KYCForm() {
   const goNext = () => setStep((prev) => Math.min(STEPS.length - 1, prev + 1));
 
   const activeProfileType = form.profileType ?? "uae_resident";
-  const isLocked =
+  const isVerified =
+    Boolean(user?.kyc_verified) ||
     form.verified ||
-    form.status === "approved" ||
-    form.status === "pending_review";
+    form.status === "approved";
+  const isPendingReview = !isVerified && form.status === "pending_review";
+  const isLocked =
+    isVerified || isPendingReview;
+
+  const stepperSteps: StepItem[] = useMemo(
+    () =>
+      STEPS.map((key, index) => ({
+        key,
+        label: t(`kyc.step_${key}`),
+        status: isVerified
+          ? index <= step
+            ? "completed"
+            : "upcoming"
+          : index < step
+            ? "completed"
+            : index === step
+              ? "current"
+              : "upcoming",
+      })),
+    [isVerified, step, t],
+  );
 
   const handleApiError = (error: unknown, fallback: string) => {
     const err = error as Error & { fieldErrors?: Record<string, string> };
@@ -403,14 +468,7 @@ export default function KYCForm() {
   };
 
   if (loading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: getColor("background") }}
-      >
-        <p style={{ color: getColor("secondaryText") }}>{t("kyc.loading")}</p>
-      </div>
-    );
+    return <KycFormSkeleton />;
   }
 
   return (
@@ -452,12 +510,12 @@ export default function KYCForm() {
             {t("kyc.description")}
           </p>
 
-          {(form.status === "pending_review" || form.verified) && (
+          {(isPendingReview || isVerified) && (
             <p
               className={`mt-4 text-sm font-medium text-start`}
-              style={{ color: getColor("primary") }}
+              style={{ color: isVerified ? getColor("success") : getColor("primary") }}
             >
-              {form.verified
+              {isVerified
                 ? t("kyc.already_verified")
                 : t("kyc.pending_review_note")}
             </p>
@@ -506,9 +564,82 @@ export default function KYCForm() {
           />
         )}
 
-        {step === 3 && (
+        {step === 3 && isVerified && (
+          <div
+            className="rounded-[20px] border p-8 md:p-10 shadow-[0_30px_60px_-25px_rgba(1,15,81,0.2)]"
+            style={{
+              backgroundColor: getColor("surface"),
+              borderColor: `${getColor("success")}33`,
+            }}
+          >
+            <div
+              className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.18em] uppercase"
+              style={{
+                backgroundColor: `${getColor("success")}14`,
+                borderColor: `${getColor("success")}33`,
+                color: getColor("success"),
+              }}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              {t("kyc.submit_verified")}
+            </div>
+
+            <h2
+              className="mt-5 text-start font-serif text-3xl tracking-tight"
+              style={{ color: getColor("primaryText") }}
+            >
+              {t("kyc.verified_title")}
+            </h2>
+
+            <p
+              className="mt-3 max-w-2xl text-start text-sm leading-7"
+              style={{ color: getColor("secondaryText") }}
+            >
+              {t("kyc.verified_description")}
+            </p>
+
+            <div
+              className="mt-6 rounded-2xl border p-5"
+              style={{
+                backgroundColor: `${getColor("success")}0D`,
+                borderColor: `${getColor("success")}22`,
+              }}
+            >
+              <p
+                className="text-sm font-medium text-start"
+                style={{ color: getColor("primaryText") }}
+              >
+                {t("kyc.submit_approved")}
+              </p>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => router.push(`/${locale}/marketplace`)}
+              >
+                {t("common.marketplace")}
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => router.push(`/${locale}/dashboard-certificates`)}
+              >
+                {t("common.dashboard")}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && !isVerified && (
           <ReviewStep
-            state={{ ...form, profileType: activeProfileType }}
+            state={{
+              ...form,
+              profileType: activeProfileType,
+              verified: isVerified,
+              status: isPendingReview ? "pending_review" : form.status,
+            }}
             review={review}
             submitting={submitting}
             onSubmit={handleSubmit}

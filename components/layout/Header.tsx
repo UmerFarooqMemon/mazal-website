@@ -21,6 +21,8 @@ import {
   Handshake,
   Gavel,
   FileBadge,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 
 export default function Header() {
@@ -34,6 +36,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
 
   const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
+  const isKycVerified = Boolean(user?.kyc_verified);
 
   useEffect(() => {
     setMounted(true);
@@ -109,6 +112,26 @@ export default function Header() {
     color: active ? getColor("primary") : getColor("secondaryText"),
   });
 
+  const kycBadgeConfig = isKycVerified
+    ? {
+        label: t("common.kyc_verified"),
+        shortLabel: t("common.kyc_short"),
+        icon: CheckCircle2,
+        backgroundColor: "#E8F7EF",
+        borderColor: "#A7E1BF",
+        color: "#138A52",
+      }
+    : {
+        label: t("common.kyc_pending"),
+        shortLabel: t("common.kyc_short"),
+        icon: Clock,
+        backgroundColor: "#FFF4E3",
+        borderColor: "#F4C98A",
+        color: "#B7791F",
+      };
+
+  const KycIcon = kycBadgeConfig.icon;
+
   return (
     <>
       <header
@@ -141,18 +164,34 @@ export default function Header() {
             <div className="hidden lg:flex items-center gap-2 shrink-0">
               <LanguageSwitcher />
               {featureFlags.kyc && (
-                <Link
-                  href={`/${locale}/kyc`}
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border text-[11px] font-semibold tracking-wide transition-colors"
-                  style={{
-                    backgroundColor: getColor("surface"),
-                    borderColor: getColor("border"),
-                    color: getColor("primary"),
-                  }}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
-                  {t("common.kyc_short")}
-                </Link>
+                isAuthenticated ? (
+                  <Link
+                    href={`/${locale}/kyc`}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border text-[11px] font-semibold tracking-wide whitespace-nowrap transition-colors"
+                    style={{
+                      backgroundColor: kycBadgeConfig.backgroundColor,
+                      borderColor: kycBadgeConfig.borderColor,
+                      color: kycBadgeConfig.color,
+                    }}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
+                    <span>{kycBadgeConfig.label}</span>
+                    <KycIcon className="w-3.5 h-3.5" strokeWidth={2.2} />
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/${locale}/kyc`}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border text-[11px] font-semibold tracking-wide transition-colors"
+                    style={{
+                      backgroundColor: getColor("surface"),
+                      borderColor: getColor("border"),
+                      color: getColor("primary"),
+                    }}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
+                    {t("common.kyc_short")}
+                  </Link>
+                )
               )}
 
               {mounted && isAuthenticated ? (
@@ -227,19 +266,37 @@ export default function Header() {
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 lg:hidden">
               <LanguageSwitcher />
               {featureFlags.kyc && (
-                <Link
-                  href={`/${locale}/kyc`}
-                  className="h-8 w-8 inline-flex items-center justify-center rounded-full border transition-colors"
-                  style={{
-                    backgroundColor: getColor("surface"),
-                    borderColor: getColor("border"),
-                    color: getColor("primary"),
-                  }}
-                  aria-label={t("common.kyc_short")}
-                  title={t("common.kyc_short")}
-                >
-                  <ShieldCheck className="w-4 h-4" strokeWidth={2} />
-                </Link>
+                isAuthenticated ? (
+                  <Link
+                    href={`/${locale}/kyc`}
+                    className="inline-flex h-8 max-w-[9.5rem] items-center gap-1 rounded-full border px-2.5 text-[10px] font-semibold tracking-wide transition-colors"
+                    style={{
+                      backgroundColor: kycBadgeConfig.backgroundColor,
+                      borderColor: kycBadgeConfig.borderColor,
+                      color: kycBadgeConfig.color,
+                    }}
+                    aria-label={kycBadgeConfig.label}
+                    title={kycBadgeConfig.label}
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                    <span className="truncate">{kycBadgeConfig.shortLabel}</span>
+                    <KycIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.2} />
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/${locale}/kyc`}
+                    className="h-8 w-8 inline-flex items-center justify-center rounded-full border transition-colors"
+                    style={{
+                      backgroundColor: getColor("surface"),
+                      borderColor: getColor("border"),
+                      color: getColor("primary"),
+                    }}
+                    aria-label={t("common.kyc_short")}
+                    title={t("common.kyc_short")}
+                  >
+                    <ShieldCheck className="w-4 h-4" strokeWidth={2} />
+                  </Link>
+                )
               )}
               {mounted && isAuthenticated ? (
                 <Link
@@ -386,8 +443,17 @@ export default function Header() {
                     <span
                       className={`flex items-center gap-3`}
                     >
-                      <ShieldCheck className="w-5 h-5" strokeWidth={2} />
-                      {t("common.kyc_short")}
+                      {isAuthenticated ? (
+                        <>
+                          <KycIcon className="w-5 h-5" strokeWidth={2.2} />
+                          {kycBadgeConfig.label}
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck className="w-5 h-5" strokeWidth={2} />
+                          {t("common.kyc_short")}
+                        </>
+                      )}
                     </span>
                     {isActive("/kyc") && (
                       <span

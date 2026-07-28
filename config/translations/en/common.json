@@ -54,6 +54,8 @@
   "sell_plate": "Sell Your Plate",
   "kyc": "KYC Verified",
   "kyc_short": "KYC",
+  "kyc_verified": "KYC",
+  "kyc_pending": "KYC Pending",
   "platform": "Platform",
   "trust": "Trust",
   "escrow_custody": "Escrow Custody",

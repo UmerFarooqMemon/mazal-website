@@ -54,6 +54,8 @@
   "sell_plate": "بيع لوحتك",
   "kyc": "توثيق الهوية",
   "kyc_short": "توثيق",
+  "kyc_verified": "توثيق",
+  "kyc_pending": "توثيق قيد المراجعة",
   "platform": "المنصة",
   "trust": "الثقة",
   "escrow_custody": "حفظ الضمان",
