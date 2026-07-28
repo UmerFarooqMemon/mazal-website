@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,11 +13,13 @@ import {
   Calendar,
   Clock,
   Upload,
+  Copy,
+  Check,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
-import BankSelect from "@/components/ui/BankSelect";
+import { Button, DirhamAmount, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import type { DepositPaymentMethod, DepositPaymentMode } from "./types";
 
@@ -27,8 +29,9 @@ interface DepositPaymentStepProps {
   onModeChange: (mode: DepositPaymentMode) => void;
   onBack: () => void;
   onContinue: () => void;
-  /** Auction deposits use hosted PayTabs — skip local card fields. */
-  paytabsOnly?: boolean;
+  depositAmount?: number;
+  paymentReference?: string;
+  submitting?: boolean;
 }
 
 const METHOD_META: Record<
@@ -47,13 +50,22 @@ const CARD_TYPES = [
   { key: "amex", label: "American Express" },
 ];
 
+const BANK_DETAIL_KEYS = [
+  { key: "bank_name", value: "Emirates NBD" },
+  { key: "account_name", value: "Mazal Escrow LLC" },
+  { key: "iban", value: "AE070331234567890123456" },
+  { key: "swift_code", value: "EBILAEAD" },
+] as const;
+
 export default function DepositPaymentStep({
   method,
   mode,
   onModeChange,
   onBack,
   onContinue,
-  paytabsOnly = false,
+  depositAmount = 0,
+  paymentReference,
+  submitting = false,
 }: DepositPaymentStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -63,14 +75,13 @@ export default function DepositPaymentStep({
   const meta = METHOD_META[method];
   const MethodIcon = meta.icon;
 
-  const [bankForm, setBankForm] = useState({
-    amount: "100000",
-    bank: "fab",
-    bankOther: "",
-    accountNumber: "",
-    iban: "",
-    notes: "",
-  });
+  const amountLabel = useMemo(() => {
+    if (!depositAmount) return "";
+    return String(depositAmount);
+  }, [depositAmount]);
+
+  const [copied, setCopied] = useState<string | null>(null);
+  const [proofFileName, setProofFileName] = useState<string | null>(null);
   const [cardForm, setCardForm] = useState({
     cardType: "",
     holderName: "",
@@ -79,7 +90,7 @@ export default function DepositPaymentStep({
     cvv: "",
   });
   const [checkForm, setCheckForm] = useState({
-    amount: "",
+    amount: amountLabel,
     checkNumber: "",
     location: "",
     address: "",
@@ -87,85 +98,47 @@ export default function DepositPaymentStep({
     time: "",
   });
   const [cashForm, setCashForm] = useState({
-    amount: "",
+    amount: amountLabel,
     location: "",
     address: "",
     date: "",
     time: "",
   });
+  const [bankNotes, setBankNotes] = useState("");
 
-  const showModeToggle = !paytabsOnly && method !== "card";
+  const showModeToggle = method !== "card";
+  const reference =
+    paymentReference ||
+    (depositAmount > 0 ? `AUC-DEP-${depositAmount}` : "AUC-DEP");
 
-  if (paytabsOnly) {
-    return (
-      <div
-        className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(0,0,0,0.18)] p-6 md:p-8"
-        style={{
-          backgroundColor: getColor("surface"),
-          borderColor: getColor("border"),
-        }}
-      >
-        <div className="mb-6">
-          <h2
-            className="text-2xl font-serif mb-1"
-            style={{ color: getColor("primaryText") }}
-          >
-            {t("auctions.payment_title")}
-          </h2>
-          <p className="text-sm" style={{ color: getColor("secondaryText") }}>
-            {t("auctions.paytabs_checkout_desc") ||
-              "You will be redirected to PayTabs to pay your refundable auction deposit securely. Do not treat the browser return alone as payment proof — we confirm via webhook."}
-          </p>
-        </div>
+  const bankRows = [
+    ...BANK_DETAIL_KEYS.map((row) => ({
+      key: row.key,
+      label: t(`auctions.bank_detail_${row.key}`),
+      value: row.value,
+    })),
+    {
+      key: "reference",
+      label: t("auctions.bank_detail_reference"),
+      value: reference,
+    },
+  ];
 
-        <div
-          className="flex items-center gap-3 rounded-2xl border px-4 py-3.5 mb-8"
-          style={{
-            borderColor: getColor("border"),
-            backgroundColor: getColor("primaryLight"),
-          }}
-        >
-          <CreditCard
-            className="w-5 h-5 shrink-0"
-            style={{ color: getColor("primary") }}
-          />
-          <div>
-            <div
-              className="font-medium text-sm"
-              style={{ color: getColor("primaryText") }}
-            >
-              {t("auctions.method_card")}
-            </div>
-            <div className="text-xs" style={{ color: getColor("mutedText") }}>
-              {t("auctions.secure_online")}
-            </div>
-          </div>
-        </div>
+  const copyValue = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(key);
+      toast.success(t("auctions.copied") || "Copied");
+      window.setTimeout(() => setCopied(null), 1500);
+    } catch {
+      toast.error(t("auctions.copy_failed") || "Copy failed");
+    }
+  };
 
-        <div
-          className="flex items-center justify-between border-t pt-6"
-          style={{ borderColor: getColor("border") }}
-        >
-          <Button
-            variant="outline"
-            size="md"
-            onClick={onBack}
-            leftIcon={<BackIcon className="w-4 h-4" />}
-          >
-            {t("auctions.back")}
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={onContinue}
-            rightIcon={<NextIcon className="w-4 h-4" />}
-          >
-            {t("auctions.pay_with_paytabs") || "Pay with PayTabs"}
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const continueLabel =
+    method === "card"
+      ? t("auctions.pay_with_paytabs") || "Pay with PayTabs"
+      : t("auctions.continue");
 
   return (
     <div
@@ -184,7 +157,10 @@ export default function DepositPaymentStep({
             {t("auctions.payment_title")}
           </h2>
           <p className="text-sm" style={{ color: getColor("secondaryText") }}>
-            {t("auctions.deposit_method_subtitle")}
+            {method === "card"
+              ? t("auctions.paytabs_checkout_desc") ||
+                t("auctions.deposit_method_subtitle")
+              : t("auctions.deposit_method_subtitle")}
           </p>
         </div>
 
@@ -240,7 +216,7 @@ export default function DepositPaymentStep({
         >
           <MethodIcon className="w-5 h-5" />
         </div>
-        <div>
+        <div className="min-w-0">
           <div
             className="font-medium"
             style={{ color: getColor("primaryText") }}
@@ -248,44 +224,77 @@ export default function DepositPaymentStep({
             {t(`auctions.${meta.titleKey}`)}
           </div>
           <div className="text-sm" style={{ color: getColor("mutedText") }}>
-            {t("auctions.secure_online")}
+            {depositAmount > 0 ? (
+              <>
+                {t("auctions.summary_min_deposit")}:{" "}
+                <DirhamAmount amount={depositAmount} />
+              </>
+            ) : (
+              t("auctions.secure_online")
+            )}
           </div>
         </div>
       </div>
 
       {method === "bank" && (
         <div className="space-y-4 mb-6">
-          <Input
-            label={t("auctions.field_amount")}
-            value={bankForm.amount}
-            onChange={(e) =>
-              setBankForm({ ...bankForm, amount: e.target.value })
-            }
-            placeholder="AED 100,000"
-          />
-          <BankSelect
-            label={t("auctions.field_select_bank")}
-            value={bankForm.bank}
-            otherValue={bankForm.bankOther}
-            onChange={(v) => setBankForm({ ...bankForm, bank: v })}
-            onOtherChange={(v) => setBankForm({ ...bankForm, bankOther: v })}
-            otherLabel={t("auctions.field_other_bank")}
-            otherPlaceholder={t("auctions.field_other_bank_placeholder")}
-          />
-          <Input
-            label={t("auctions.field_account_number")}
-            value={bankForm.accountNumber}
-            onChange={(e) =>
-              setBankForm({ ...bankForm, accountNumber: e.target.value })
-            }
-            placeholder="100,000"
-          />
-          <Input
-            label={t("auctions.field_iban")}
-            value={bankForm.iban}
-            onChange={(e) => setBankForm({ ...bankForm, iban: e.target.value })}
-            placeholder="AE00 0000 0000 0000 0000 000"
-          />
+          <div
+            className="flex items-start gap-3 rounded-xl px-4 py-3.5"
+            style={{
+              backgroundColor: getColor("primaryLight"),
+              color: getColor("secondaryText"),
+            }}
+          >
+            <Info
+              className="w-4 h-4 mt-0.5 shrink-0"
+              style={{ color: getColor("primary") }}
+            />
+            <p className="text-sm leading-relaxed">
+              {t("auctions.bank_transfer_instructions")}
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {bankRows.map((row) => (
+              <div
+                key={row.key}
+                className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5"
+                style={{
+                  borderColor: getColor("border"),
+                  backgroundColor: getColor("surface"),
+                }}
+              >
+                <div className="min-w-0">
+                  <div
+                    className="text-xs mb-0.5"
+                    style={{ color: getColor("mutedText") }}
+                  >
+                    {row.label}
+                  </div>
+                  <div
+                    className="text-sm font-medium truncate"
+                    style={{ color: getColor("primaryText") }}
+                  >
+                    {row.value}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyValue(row.key, row.value)}
+                  className="shrink-0 p-2 rounded-lg"
+                  style={{ color: getColor("primary") }}
+                  aria-label={`Copy ${row.label}`}
+                >
+                  {copied === row.key ? (
+                    <Check className="w-4 h-4" style={{ color: getColor("success") }} />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+
           <div>
             <label
               className="block text-[11px] font-medium mb-2"
@@ -294,10 +303,8 @@ export default function DepositPaymentStep({
               {t("auctions.field_notes")}
             </label>
             <textarea
-              value={bankForm.notes}
-              onChange={(e) =>
-                setBankForm({ ...bankForm, notes: e.target.value })
-              }
+              value={bankNotes}
+              onChange={(e) => setBankNotes(e.target.value)}
               placeholder={t("auctions.field_notes_placeholder")}
               rows={3}
               className="w-full rounded-xl border bg-white py-3 px-4 text-sm resize-none outline-none"
@@ -307,6 +314,7 @@ export default function DepositPaymentStep({
               }}
             />
           </div>
+
           <label
             className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 cursor-pointer transition-colors text-center"
             style={{
@@ -317,15 +325,40 @@ export default function DepositPaymentStep({
           >
             <Upload className="w-5 h-5" style={{ color: getColor("primary") }} />
             <span className="text-sm font-medium">
-              {t("auctions.upload_payment_proof")}
+              {proofFileName || t("auctions.upload_payment_proof")}
             </span>
-            <input type="file" className="hidden" accept="image/*,.pdf" />
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*,.pdf"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                setProofFileName(file?.name ?? null);
+              }}
+            />
           </label>
         </div>
       )}
 
       {method === "card" && (
         <div className="space-y-4 mb-6">
+          <div
+            className="flex items-start gap-3 rounded-xl px-4 py-3.5"
+            style={{
+              backgroundColor: getColor("primaryLight"),
+              color: getColor("secondaryText"),
+            }}
+          >
+            <Info
+              className="w-4 h-4 mt-0.5 shrink-0"
+              style={{ color: getColor("primary") }}
+            />
+            <p className="text-sm leading-relaxed">
+              {t("auctions.paytabs_checkout_desc") ||
+                "You will be redirected to PayTabs to pay your refundable auction deposit securely."}
+            </p>
+          </div>
+
           <Select
             label={t("auctions.field_card_type")}
             options={CARD_TYPES}
@@ -375,6 +408,9 @@ export default function DepositPaymentStep({
               placeholder="123"
             />
           </div>
+          <p className="text-xs" style={{ color: getColor("mutedText") }}>
+            {t("auctions.card_fields_hint")}
+          </p>
         </div>
       )}
 
@@ -439,7 +475,7 @@ export default function DepositPaymentStep({
                 ? setCheckForm({ ...checkForm, location: e.target.value })
                 : setCashForm({ ...cashForm, location: e.target.value })
             }
-            placeholder="eg. 000123"
+            placeholder="eg. Dubai"
           />
 
           <div>
@@ -510,6 +546,7 @@ export default function DepositPaymentStep({
           size="md"
           onClick={onBack}
           leftIcon={<BackIcon className="w-4 h-4" />}
+          disabled={submitting}
         >
           {t("auctions.back")}
         </Button>
@@ -518,8 +555,9 @@ export default function DepositPaymentStep({
           size="md"
           onClick={onContinue}
           rightIcon={<NextIcon className="w-4 h-4" />}
+          disabled={submitting}
         >
-          {t("auctions.continue")}
+          {continueLabel}
         </Button>
       </div>
     </div>

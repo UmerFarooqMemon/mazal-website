@@ -18,6 +18,7 @@ import type {
   DepositPaymentMode,
 } from "@/components/auction/types";
 import {
+  confirmAuctionDeposit,
   createAuctionDepositCheckout,
   getAuctionState,
   registerForAuction,
@@ -36,6 +37,10 @@ function isDepositHeld(registration?: MarketplaceAuctionRegistration | null) {
   );
 }
 
+function isOfflineMethod(method: DepositPaymentMethod) {
+  return method === "bank" || method === "managers_check" || method === "cash";
+}
+
 export default function AuctionRegisterPage({
   params,
 }: {
@@ -48,7 +53,7 @@ export default function AuctionRegisterPage({
   const searchParams = useSearchParams();
 
   const [step, setStep] = useState(0);
-  const [method, setMethod] = useState<DepositPaymentMethod>("card");
+  const [method, setMethod] = useState<DepositPaymentMethod>("bank");
   const [mode, setMode] = useState<DepositPaymentMode>("single");
   const [summary, setSummary] = useState<AuctionSummaryData | null>(null);
   const [registration, setRegistration] =
@@ -57,6 +62,7 @@ export default function AuctionRegisterPage({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pollingReturn, setPollingReturn] = useState(false);
+  const [offlineSubmitted, setOfflineSubmitted] = useState(false);
 
   const refreshAuction = useCallback(async () => {
     const response = await getAuctionState(auctionId, locale);
@@ -66,6 +72,16 @@ export default function AuctionRegisterPage({
     setSummary(mapToAuctionSummary(auction, viewerRegistration));
     return viewerRegistration;
   }, [auctionId, locale]);
+
+  const ensureRegistration = useCallback(async () => {
+    if (registration?.id) return registration;
+
+    const response = await registerForAuction(auctionId, locale);
+    const nextRegistration = response.data.registration;
+    setRegistration(nextRegistration);
+    await refreshAuction();
+    return nextRegistration;
+  }, [auctionId, locale, refreshAuction, registration]);
 
   useEffect(() => {
     let active = true;
@@ -77,9 +93,8 @@ export default function AuctionRegisterPage({
         if (!active) return;
         if (isDepositHeld(viewerRegistration)) {
           setStep(2);
-        } else if (viewerRegistration) {
-          setStep(1);
         }
+        // Keep step 0 so the user can pick one of the four deposit methods.
       })
       .catch((err) => {
         if (!active) return;
@@ -107,6 +122,7 @@ export default function AuctionRegisterPage({
         t("auctions.paytabs_failed") ||
           "Payment was not completed. Please try again.",
       );
+      setMethod("card");
       setStep(1);
       return;
     }
@@ -114,6 +130,7 @@ export default function AuctionRegisterPage({
     let cancelled = false;
     let attempts = 0;
     setPollingReturn(true);
+    setMethod("card");
     setStep(2);
 
     const poll = async () => {
@@ -168,15 +185,16 @@ export default function AuctionRegisterPage({
   }, [step, t]);
 
   const showSidebar = step < 2;
+  const depositHeld = isDepositHeld(registration);
+  const paymentReference = registration?.id
+    ? `AUC-${auctionId}-${registration.id}`
+    : undefined;
 
-  const handleRegister = async () => {
+  const handleMethodContinue = async () => {
     setSubmitting(true);
     setError(null);
     try {
-      const response = await registerForAuction(auctionId, locale);
-      const nextRegistration = response.data.registration;
-      setRegistration(nextRegistration);
-      await refreshAuction();
+      await ensureRegistration();
       setStep(1);
     } catch (err) {
       setError(
@@ -187,31 +205,73 @@ export default function AuctionRegisterPage({
     }
   };
 
-  const handlePaytabsCheckout = async () => {
-    if (!registration) {
-      setError("Registration is required before paying the deposit.");
-      return;
+  const handlePaytabsCheckout = async (
+    nextRegistration: MarketplaceAuctionRegistration,
+  ) => {
+    const response = await createAuctionDepositCheckout(
+      auctionId,
+      nextRegistration.id,
+      locale,
+    );
+    const redirectUrl = response.data.redirect_url;
+    if (!redirectUrl) {
+      throw new Error("Missing PayTabs checkout URL.");
     }
+    window.location.href = redirectUrl;
+  };
 
+  const handleOfflineSubmit = async (
+    nextRegistration: MarketplaceAuctionRegistration,
+  ) => {
+    // Production auction deposits are PayTabs-only. Offline methods:
+    // 1) Try local confirm-deposit when MARKETPLACE_FAKE_AUCTION_DEPOSITS is on
+    // 2) Otherwise show awaiting/pending verification UI
+    try {
+      const response = await confirmAuctionDeposit(
+        auctionId,
+        nextRegistration.id,
+        locale,
+        paymentReference || `${method}-${Date.now()}`,
+      );
+      setRegistration(response.data.registration);
+      await refreshAuction();
+    } catch (err) {
+      // Offline evidence APIs are not on backend yet — still advance to awaiting.
+      console.warn("confirm-deposit unavailable for offline method:", err);
+    } finally {
+      setOfflineSubmitted(true);
+      setStep(2);
+    }
+  };
+
+  const handlePaymentContinue = async () => {
     setSubmitting(true);
     setError(null);
     try {
-      const response = await createAuctionDepositCheckout(
-        auctionId,
-        registration.id,
-        locale,
-      );
-      const redirectUrl = response.data.redirect_url;
-      if (!redirectUrl) {
-        throw new Error("Missing PayTabs checkout URL.");
+      const nextRegistration = await ensureRegistration();
+      if (!nextRegistration?.id) {
+        throw new Error("Registration is required before paying the deposit.");
       }
-      window.location.href = redirectUrl;
+
+      if (method === "card") {
+        await handlePaytabsCheckout(nextRegistration);
+        // Keep submitting=true while redirecting to PayTabs.
+        return;
+      }
+
+      if (isOfflineMethod(method)) {
+        await handleOfflineSubmit(nextRegistration);
+        return;
+      }
+
+      setStep(2);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to start PayTabs checkout.",
+          : "Failed to continue deposit payment.",
       );
+    } finally {
       setSubmitting(false);
     }
   };
@@ -225,7 +285,16 @@ export default function AuctionRegisterPage({
     );
   }
 
-  const depositHeld = isDepositHeld(registration);
+  const statusVariant =
+    pollingReturn || (method === "card" && !depositHeld)
+      ? "awaiting"
+      : offlineSubmitted && !depositHeld
+        ? "awaiting"
+        : depositHeld
+          ? "success"
+          : isOfflineMethod(method)
+            ? "awaiting"
+            : "success";
 
   return (
     <div
@@ -262,7 +331,8 @@ export default function AuctionRegisterPage({
                 method={method}
                 onMethodChange={setMethod}
                 onBack={() => router.back()}
-                onContinue={handleRegister}
+                onContinue={handleMethodContinue}
+                submitting={submitting}
               />
             )}
 
@@ -272,18 +342,15 @@ export default function AuctionRegisterPage({
                 mode={mode}
                 onModeChange={setMode}
                 onBack={() => setStep(0)}
-                onContinue={handlePaytabsCheckout}
-                paytabsOnly
+                onContinue={handlePaymentContinue}
+                depositAmount={summary?.minimumDeposit}
+                paymentReference={paymentReference}
+                submitting={submitting}
               />
             )}
 
             {step === 2 && (
-              <DepositStatusStep
-                method={method}
-                variant={
-                  pollingReturn || !depositHeld ? "awaiting" : "success"
-                }
-              />
+              <DepositStatusStep method={method} variant={statusVariant} />
             )}
 
             {submitting && step < 2 && (
@@ -300,7 +367,7 @@ export default function AuctionRegisterPage({
             <div className="space-y-4">
               <AuctionSummaryCard
                 data={summary}
-                showCheckAmount={false}
+                showCheckAmount={method === "managers_check"}
               />
               <AuctionBenefitsCard />
             </div>

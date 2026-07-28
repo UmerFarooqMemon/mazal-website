@@ -18,7 +18,24 @@ export default function DepositStatusStep({
 
   const isAwaiting =
     variant === "awaiting" ||
-    (variant == null && (method === "managers_check" || method === "cash"));
+    (variant == null &&
+      (method === "managers_check" || method === "cash" || method === "bank"));
+
+  const awaitingTitle =
+    method === "bank"
+      ? t("auctions.awaiting_bank_title") || t("auctions.awaiting_collection_title")
+      : method === "card"
+        ? t("auctions.awaiting_card_title") || t("auctions.awaiting_collection_title")
+        : t("auctions.awaiting_collection_title");
+
+  const awaitingDesc =
+    method === "bank"
+      ? t("auctions.awaiting_bank_desc")
+      : method === "cash"
+        ? t("auctions.awaiting_cash_desc") || t("auctions.awaiting_collection_desc")
+        : method === "card"
+          ? t("auctions.deposit_pending_verification")
+          : t("auctions.awaiting_collection_desc");
 
   return (
     <div className="w-full max-w-3xl mx-auto">
@@ -37,18 +54,14 @@ export default function DepositStatusStep({
           className="font-serif text-[28px] md:text-[34px] tracking-tight mb-4"
           style={{ color: getColor("primaryText") }}
         >
-          {isAwaiting
-            ? t("auctions.awaiting_collection_title")
-            : t("auctions.success_title")}
+          {isAwaiting ? awaitingTitle : t("auctions.success_title")}
         </h2>
 
         <p
           className="text-[14px] sm:text-[15px] leading-relaxed max-w-lg mx-auto"
           style={{ color: getColor("secondaryText") }}
         >
-          {isAwaiting
-            ? t("auctions.awaiting_collection_desc")
-            : t("auctions.success_desc")}
+          {isAwaiting ? awaitingDesc : t("auctions.success_desc")}
         </p>
       </div>
     </div>
