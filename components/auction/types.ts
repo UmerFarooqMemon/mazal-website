@@ -36,6 +36,28 @@ export type DepositPaymentMethod =
 
 export type DepositPaymentMode = "single" | "split";
 
+export type DepositPaymentSubmitPayload =
+  | { method: "card" }
+  | {
+      method: "bank";
+      payment_reference: string;
+      notes?: string;
+      evidence: File;
+    }
+  | {
+      method: "managers_check";
+      check_number: string;
+      collection_date: string;
+      collection_time: string;
+      notes?: string;
+    }
+  | {
+      method: "cash";
+      collection_date: string;
+      collection_time: string;
+      notes?: string;
+    };
+
 export interface AuctionSummaryData {
   currentBiddingLimit: number;
   minimumDeposit: number;

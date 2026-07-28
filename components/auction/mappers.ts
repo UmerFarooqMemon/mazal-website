@@ -194,7 +194,11 @@ function mapDepositStatus(
   ) {
     return "verified";
   }
-  if (status.includes("pending") || status.includes("await")) {
+  if (
+    status.includes("pending") ||
+    status.includes("await") ||
+    status.includes("verification")
+  ) {
     return "pending";
   }
   return "not_submitted";

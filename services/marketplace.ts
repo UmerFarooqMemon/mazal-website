@@ -37,6 +37,36 @@ export interface MarketplaceAuctionProviderTransaction {
   processed_at?: string | null;
 }
 
+export type AuctionDepositApiMethod =
+  | "card"
+  | "bank_transfer"
+  | "managers_check"
+  | "cash_collection";
+
+export interface MarketplaceAuctionBankInstructions {
+  method?: string;
+  configured?: boolean;
+  recipient?: string;
+  notice?: string;
+  reference?: string;
+  amount?: number | string;
+  account_holder_name?: string | null;
+  bank_name?: string | null;
+  iban?: string | null;
+  swift_bic?: string | null;
+  cheque_payee?: string | null;
+  collection_location?: string | null;
+  collection_address?: string | null;
+  provider?: string;
+}
+
+export interface MarketplaceAuctionDepositMethod {
+  key: AuctionDepositApiMethod | string;
+  label: string;
+  offline?: boolean;
+  instructions?: MarketplaceAuctionBankInstructions | Record<string, unknown>;
+}
+
 export interface MarketplaceAuctionRegistration {
   id: number;
   listing_id: number;
@@ -45,8 +75,17 @@ export interface MarketplaceAuctionRegistration {
   deposit_amount: number | string;
   deposit_status: string;
   deposit_status_label?: string;
+  deposit_method?: AuctionDepositApiMethod | string | null;
+  deposit_method_label?: string | null;
+  deposit_details?: Record<string, unknown> | null;
   deposit_held_at?: string | null;
   deposit_released_at?: string | null;
+  deposit_submitted_at?: string | null;
+  deposit_rejected_at?: string | null;
+  deposit_rejection_reason?: string | null;
+  has_evidence?: boolean;
+  evidence_url?: string | null;
+  custody_instructions?: MarketplaceAuctionBankInstructions | null;
   no_show_penalty_amount?: number | string | null;
   no_show_marked_at?: string | null;
   registered_at?: string | null;
@@ -1400,6 +1439,111 @@ export function createAuctionDepositCheckout(
       auth: "required",
       contentType: "application/json",
       body: JSON.stringify({}),
+    },
+  );
+}
+
+// 45c. Auction deposit methods catalog (card + offline)
+export function getAuctionDepositMethods(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    methods: MarketplaceAuctionDepositMethod[];
+    bank_instructions: MarketplaceAuctionBankInstructions;
+    deposit_amount?: number | string;
+    reference?: string;
+  }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/methods`,
+    { locale, auth: "required" },
+  );
+}
+
+// 45d. Bank transfer instructions (MAZAL_CUSTODY_*)
+export function getAuctionBankInstructions(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    bank_instructions: MarketplaceAuctionBankInstructions;
+  }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/bank-instructions`,
+    { locale, auth: "required" },
+  );
+}
+
+// 45e. Submit bank transfer proof (multipart)
+export function submitAuctionBankProof(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+  payload: {
+    payment_reference: string;
+    notes?: string;
+    evidence: File;
+  },
+) {
+  const formData = new FormData();
+  formData.append("payment_reference", payload.payment_reference);
+  if (payload.notes) formData.append("notes", payload.notes);
+  formData.append("evidence", payload.evidence);
+
+  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/proof`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      body: formData,
+    },
+  );
+}
+
+// 45f. Submit manager's check deposit
+export function submitAuctionManagersCheck(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+  payload: {
+    check_number: string;
+    collection_date: string;
+    collection_time: string;
+    notes?: string;
+  },
+) {
+  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/managers-check`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+// 45g. Submit cash collection deposit
+export function submitAuctionCashCollection(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+  payload: {
+    collection_date: string;
+    collection_time: string;
+    notes?: string;
+  },
+) {
+  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/cash-collection`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
     },
   );
 }

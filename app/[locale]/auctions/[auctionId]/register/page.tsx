@@ -15,13 +15,18 @@ import { mapToAuctionSummary } from "@/components/auction/mappers";
 import type {
   AuctionSummaryData,
   DepositPaymentMethod,
-  DepositPaymentMode,
+  DepositPaymentSubmitPayload,
 } from "@/components/auction/types";
 import {
-  confirmAuctionDeposit,
   createAuctionDepositCheckout,
+  getAuctionBankInstructions,
+  getAuctionDepositMethods,
   getAuctionState,
   registerForAuction,
+  submitAuctionBankProof,
+  submitAuctionCashCollection,
+  submitAuctionManagersCheck,
+  type MarketplaceAuctionBankInstructions,
   type MarketplaceAuctionRegistration,
 } from "@/services/marketplace";
 
@@ -37,8 +42,24 @@ function isDepositHeld(registration?: MarketplaceAuctionRegistration | null) {
   );
 }
 
-function isOfflineMethod(method: DepositPaymentMethod) {
-  return method === "bank" || method === "managers_check" || method === "cash";
+function isPendingVerification(
+  registration?: MarketplaceAuctionRegistration | null,
+) {
+  if (!registration) return false;
+  return (
+    registration.deposit_status?.toLowerCase() === "pending_verification"
+  );
+}
+
+function mapApiMethodToUi(
+  method?: string | null,
+): DepositPaymentMethod | null {
+  if (!method) return null;
+  if (method === "bank_transfer") return "bank";
+  if (method === "cash_collection") return "cash";
+  if (method === "managers_check") return "managers_check";
+  if (method === "card") return "card";
+  return null;
 }
 
 export default function AuctionRegisterPage({
@@ -54,10 +75,14 @@ export default function AuctionRegisterPage({
 
   const [step, setStep] = useState(0);
   const [method, setMethod] = useState<DepositPaymentMethod>("bank");
-  const [mode, setMode] = useState<DepositPaymentMode>("single");
   const [summary, setSummary] = useState<AuctionSummaryData | null>(null);
   const [registration, setRegistration] =
     useState<MarketplaceAuctionRegistration | null>(null);
+  const [bankInstructions, setBankInstructions] =
+    useState<MarketplaceAuctionBankInstructions | null>(null);
+  const [custodyInstructions, setCustodyInstructions] =
+    useState<MarketplaceAuctionBankInstructions | null>(null);
+  const [instructionsLoading, setInstructionsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +108,58 @@ export default function AuctionRegisterPage({
     return nextRegistration;
   }, [auctionId, locale, refreshAuction, registration]);
 
+  const loadDepositInstructions = useCallback(
+    async (
+      nextRegistration: MarketplaceAuctionRegistration,
+      selectedMethod: DepositPaymentMethod,
+    ) => {
+      setInstructionsLoading(true);
+      try {
+        const catalog = await getAuctionDepositMethods(
+          auctionId,
+          nextRegistration.id,
+          locale,
+        );
+        setBankInstructions(catalog.data.bank_instructions ?? null);
+
+        const selectedApiKey =
+          selectedMethod === "bank"
+            ? "bank_transfer"
+            : selectedMethod === "cash"
+              ? "cash_collection"
+              : selectedMethod;
+        const selected = catalog.data.methods?.find(
+          (item) => item.key === selectedApiKey,
+        );
+        const selectedInstructions = (selected?.instructions ||
+          null) as MarketplaceAuctionBankInstructions | null;
+        setCustodyInstructions(selectedInstructions);
+
+        if (selectedMethod === "bank") {
+          try {
+            const bank = await getAuctionBankInstructions(
+              auctionId,
+              nextRegistration.id,
+              locale,
+            );
+            setBankInstructions(bank.data.bank_instructions);
+          } catch {
+            // Catalog already includes bank_instructions fallback.
+          }
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load deposit instructions.",
+        );
+      } finally {
+        setInstructionsLoading(false);
+      }
+    },
+    [auctionId, locale],
+  );
+
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -93,8 +170,16 @@ export default function AuctionRegisterPage({
         if (!active) return;
         if (isDepositHeld(viewerRegistration)) {
           setStep(2);
+          return;
         }
-        // Keep step 0 so the user can pick one of the four deposit methods.
+        if (isPendingVerification(viewerRegistration)) {
+          const uiMethod = mapApiMethodToUi(
+            viewerRegistration?.deposit_method,
+          );
+          if (uiMethod) setMethod(uiMethod);
+          setOfflineSubmitted(true);
+          setStep(2);
+        }
       })
       .catch((err) => {
         if (!active) return;
@@ -186,15 +271,15 @@ export default function AuctionRegisterPage({
 
   const showSidebar = step < 2;
   const depositHeld = isDepositHeld(registration);
-  const paymentReference = registration?.id
-    ? `AUC-${auctionId}-${registration.id}`
-    : undefined;
+  const pendingVerification =
+    offlineSubmitted || isPendingVerification(registration);
 
   const handleMethodContinue = async () => {
     setSubmitting(true);
     setError(null);
     try {
-      await ensureRegistration();
+      const nextRegistration = await ensureRegistration();
+      await loadDepositInstructions(nextRegistration, method);
       setStep(1);
     } catch (err) {
       setError(
@@ -220,31 +305,9 @@ export default function AuctionRegisterPage({
     window.location.href = redirectUrl;
   };
 
-  const handleOfflineSubmit = async (
-    nextRegistration: MarketplaceAuctionRegistration,
+  const handlePaymentContinue = async (
+    payload: DepositPaymentSubmitPayload,
   ) => {
-    // Production auction deposits are PayTabs-only. Offline methods:
-    // 1) Try local confirm-deposit when MARKETPLACE_FAKE_AUCTION_DEPOSITS is on
-    // 2) Otherwise show awaiting/pending verification UI
-    try {
-      const response = await confirmAuctionDeposit(
-        auctionId,
-        nextRegistration.id,
-        locale,
-        paymentReference || `${method}-${Date.now()}`,
-      );
-      setRegistration(response.data.registration);
-      await refreshAuction();
-    } catch (err) {
-      // Offline evidence APIs are not on backend yet — still advance to awaiting.
-      console.warn("confirm-deposit unavailable for offline method:", err);
-    } finally {
-      setOfflineSubmitted(true);
-      setStep(2);
-    }
-  };
-
-  const handlePaymentContinue = async () => {
     setSubmitting(true);
     setError(null);
     try {
@@ -253,17 +316,52 @@ export default function AuctionRegisterPage({
         throw new Error("Registration is required before paying the deposit.");
       }
 
-      if (method === "card") {
+      if (payload.method === "card") {
         await handlePaytabsCheckout(nextRegistration);
-        // Keep submitting=true while redirecting to PayTabs.
         return;
       }
 
-      if (isOfflineMethod(method)) {
-        await handleOfflineSubmit(nextRegistration);
-        return;
+      if (payload.method === "bank") {
+        const response = await submitAuctionBankProof(
+          auctionId,
+          nextRegistration.id,
+          locale,
+          {
+            payment_reference: payload.payment_reference,
+            notes: payload.notes,
+            evidence: payload.evidence,
+          },
+        );
+        setRegistration(response.data.registration);
+      } else if (payload.method === "managers_check") {
+        const response = await submitAuctionManagersCheck(
+          auctionId,
+          nextRegistration.id,
+          locale,
+          {
+            check_number: payload.check_number,
+            collection_date: payload.collection_date,
+            collection_time: payload.collection_time,
+            notes: payload.notes,
+          },
+        );
+        setRegistration(response.data.registration);
+      } else {
+        const response = await submitAuctionCashCollection(
+          auctionId,
+          nextRegistration.id,
+          locale,
+          {
+            collection_date: payload.collection_date,
+            collection_time: payload.collection_time,
+            notes: payload.notes,
+          },
+        );
+        setRegistration(response.data.registration);
       }
 
+      await refreshAuction();
+      setOfflineSubmitted(true);
       setStep(2);
     } catch (err) {
       setError(
@@ -288,13 +386,11 @@ export default function AuctionRegisterPage({
   const statusVariant =
     pollingReturn || (method === "card" && !depositHeld)
       ? "awaiting"
-      : offlineSubmitted && !depositHeld
+      : pendingVerification && !depositHeld
         ? "awaiting"
         : depositHeld
           ? "success"
-          : isOfflineMethod(method)
-            ? "awaiting"
-            : "success";
+          : "awaiting";
 
   return (
     <div
@@ -339,12 +435,12 @@ export default function AuctionRegisterPage({
             {step === 1 && (
               <DepositPaymentStep
                 method={method}
-                mode={mode}
-                onModeChange={setMode}
                 onBack={() => setStep(0)}
                 onContinue={handlePaymentContinue}
                 depositAmount={summary?.minimumDeposit}
-                paymentReference={paymentReference}
+                bankInstructions={bankInstructions}
+                custodyInstructions={custodyInstructions}
+                instructionsLoading={instructionsLoading}
                 submitting={submitting}
               />
             )}
