@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
+import { formatPriceInput } from "@/lib/card-input";
 import type { MarketplaceAuction } from "@/services/marketplace";
 import { placeAuctionBid } from "@/services/marketplace";
 
@@ -19,6 +20,11 @@ function toNumber(value: number | string | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function parseBidAmount(raw: string): number {
+  const digits = raw.replace(/\D/g, "");
+  return digits ? Number(digits) : 0;
+}
+
 export default function BidInput({
   listingId,
   auction,
@@ -30,12 +36,14 @@ export default function BidInput({
     toNumber(auction.min_next_bid) ||
     toNumber(auction.current_high_bid) + toNumber(auction.min_bid_increment) ||
     1;
-  const [amount, setAmount] = useState(minBid);
+  const [amountInput, setAmountInput] = useState(() =>
+    formatPriceInput(String(minBid))
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setAmount(minBid);
+    setAmountInput(formatPriceInput(String(minBid)));
   }, [minBid]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,10 +51,23 @@ export default function BidInput({
     setSubmitting(true);
     setError(null);
 
+    const amount = parseBidAmount(amountInput);
+    if (amount < minBid) {
+      setError(
+        t("auctions.bid_too_low").replace(
+          "{amount}",
+          minBid.toLocaleString()
+        )
+      );
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const response = await placeAuctionBid(listingId, amount, locale);
       onBidPlaced?.(response.data.auction);
-      setAmount(toNumber(response.data.auction.min_next_bid) || amount);
+      const nextMinBid = toNumber(response.data.auction.min_next_bid) || amount;
+      setAmountInput(formatPriceInput(String(nextMinBid)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to place bid.");
     } finally {
@@ -64,11 +85,16 @@ export default function BidInput({
       </label>
       <div className="flex flex-col sm:flex-row gap-3">
         <input
-          type="number"
-          min={minBid}
-          step={toNumber(auction.min_bid_increment) || 1}
-          value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
+          type="text"
+          inputMode="numeric"
+          value={amountInput}
+          onFocus={() => setAmountInput("")}
+          onBlur={() => {
+            if (!amountInput.trim()) {
+              setAmountInput(formatPriceInput(String(minBid)));
+            }
+          }}
+          onChange={(e) => setAmountInput(formatPriceInput(e.target.value))}
           className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none"
           style={{
             borderColor: getColor("border"),
