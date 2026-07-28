@@ -173,9 +173,11 @@ export default function Header() {
                       borderColor: kycBadgeConfig.borderColor,
                       color: kycBadgeConfig.color,
                     }}
+                    aria-label={kycBadgeConfig.label}
+                    title={kycBadgeConfig.label}
                   >
                     <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
-                    <span>{kycBadgeConfig.label}</span>
+                    <span>{kycBadgeConfig.shortLabel}</span>
                     <KycIcon className="w-3.5 h-3.5" strokeWidth={2.2} />
                   </Link>
                 ) : (

@@ -16,6 +16,7 @@ export interface AuctionListing {
   plateVariant: string;
   kind: AuctionKind;
   status: AuctionListingStatus;
+  askingPrice: number;
   currentBid: number;
   views: number;
   endsIn?: string;

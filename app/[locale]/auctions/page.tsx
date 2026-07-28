@@ -36,7 +36,7 @@ export default function AuctionsPage() {
       );
 
       const mapped = (response.data.listings || []).map((listing) =>
-        mapListingToAuctionListing(listing),
+        mapListingToAuctionListing(listing, listing.auction),
       );
       setAuctions(mapped);
     } catch (err) {

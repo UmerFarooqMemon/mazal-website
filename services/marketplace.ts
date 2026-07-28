@@ -156,7 +156,7 @@ export interface MarketplaceListingCard {
   plate_design?: string | null;
   display_plate: string;
   digit_count: number;
-  asking_price: number;
+  asking_price: number | string;
   hide_code: boolean;
   code_hidden: boolean;
   view_count: number;
@@ -171,6 +171,7 @@ export interface MarketplaceListingCard {
   is_watchlisted?: boolean;
   preview?: MarketplaceListingPreview | null;
   published_at: string;
+  auction?: MarketplaceAuction | null;
 }
 
 export interface MarketplaceListingPlan {
@@ -446,7 +447,7 @@ export interface CreateListingPayload {
   plate_code?: string;
   plate_digits: string;
   plate_design?: string;
-  asking_price: number;
+  asking_price: number | string;
   description?: string;
   hide_code?: boolean;
   status?: "draft" | "pending_approval" | "pending_plan_payment";
@@ -571,6 +572,33 @@ function normalizeBoostTier(
   return undefined;
 }
 
+export function toMarketplaceNumber(
+  value: number | string | null | undefined,
+): number {
+  if (value == null || value === "") return 0;
+  const parsed =
+    typeof value === "number" ? value : Number(String(value).replace(/,/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function resolveListingAskingPrice(
+  listing: Pick<MarketplaceListingCard, "asking_price"> & {
+    auction?: MarketplaceAuction | null;
+  },
+): number {
+  const askingPrice = toMarketplaceNumber(listing.asking_price);
+  if (askingPrice > 0) return askingPrice;
+
+  const auction = listing.auction;
+  if (!auction) return askingPrice;
+
+  return (
+    toMarketplaceNumber(auction.starting_price) ||
+    toMarketplaceNumber(auction.reserve_price) ||
+    toMarketplaceNumber(auction.current_high_bid)
+  );
+}
+
 export function mapListingToPlateCard(listing: MarketplaceListingCard) {
   let plateCode = listing.plate_code || "";
   let plateDigits = listing.plate_digits || "";
@@ -608,7 +636,7 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     plate_digits: plateDigits,
     plate_type: listing.plate_type || undefined,
     plate_design: listing.plate_design || undefined,
-    price: listing.asking_price,
+    price: resolveListingAskingPrice(listing),
     type: listing.listing_type_label?.toUpperCase() || listing.listing_type,
     tier,
     views: listing.view_count,

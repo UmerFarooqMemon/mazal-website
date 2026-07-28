@@ -122,6 +122,12 @@ export default function PlateCard({
 
       <div className={`text-start`}>
         <div
+          className="text-[10px] font-bold uppercase tracking-wider mb-1"
+          style={{ color: getColor("mutedText") }}
+        >
+          {t("listings.asking_price")}
+        </div>
+        <div
           className="text-[22px] leading-8 font-serif font-bold tracking-tight"
           style={{ color: getColor("primaryText") }}
         >

@@ -1,8 +1,10 @@
-import type {
-  MarketplaceAuction,
-  MarketplaceAuctionRegistration,
-  MarketplaceListingCard,
-  MarketplaceListingDetail,
+import {
+  resolveListingAskingPrice,
+  toMarketplaceNumber,
+  type MarketplaceAuction,
+  type MarketplaceAuctionRegistration,
+  type MarketplaceListingCard,
+  type MarketplaceListingDetail,
 } from "@/services/marketplace";
 import type {
   AuctionKind,
@@ -12,9 +14,7 @@ import type {
 } from "./types";
 
 function toNumber(value: number | string | null | undefined): number {
-  if (value == null || value === "") return 0;
-  const parsed = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return toMarketplaceNumber(value);
 }
 
 export function formatCountdown(targetIso: string): string {
@@ -115,21 +115,23 @@ export function mapListingToAuctionListing(
   listing: MarketplaceListingCard,
   auction?: MarketplaceAuction | null,
 ): AuctionListing {
+  const resolvedAuction = auction ?? listing.auction ?? null;
   const plate = extractPlateFields(listing);
-  const status = deriveAuctionStatus(auction, listing.status);
-  const kind = deriveAuctionKind(auction);
+  const status = deriveAuctionStatus(resolvedAuction, listing.status);
+  const kind = deriveAuctionKind(resolvedAuction);
   const isTimedStart =
     status === "scheduled" ||
     status === "upcoming" ||
     status === "starting_soon" ||
     status === "paused";
 
-  const currentBid = auction
-    ? toNumber(auction.current_high_bid) ||
-      toNumber(auction.starting_price) ||
-      toNumber(auction.reserve_price) ||
-      listing.asking_price
-    : listing.asking_price;
+  const askingPrice = resolveListingAskingPrice(listing);
+  const currentBid = resolvedAuction
+    ? toMarketplaceNumber(resolvedAuction.current_high_bid) ||
+      toMarketplaceNumber(resolvedAuction.starting_price) ||
+      toMarketplaceNumber(resolvedAuction.reserve_price) ||
+      askingPrice
+    : askingPrice;
 
   return {
     id: String(listing.id),
@@ -139,18 +141,21 @@ export function mapListingToAuctionListing(
     plateVariant: plate.plateVariant,
     kind,
     status,
+    askingPrice,
     currentBid,
     views: listing.view_count,
-    currentBids: auction?.bid_count,
+    currentBids: resolvedAuction?.bid_count,
     startsIn:
-      isTimedStart && auction?.starts_at
-        ? formatCountdown(auction.starts_at)
+      isTimedStart && resolvedAuction?.starts_at
+        ? formatCountdown(resolvedAuction.starts_at)
         : undefined,
     endsIn:
-      !isTimedStart && auction?.ends_at
-        ? formatCountdown(auction.ends_at)
+      !isTimedStart && resolvedAuction?.ends_at
+        ? formatCountdown(resolvedAuction.ends_at)
         : undefined,
-    timeLeft: auction?.ends_at ? formatCountdown(auction.ends_at) : undefined,
+    timeLeft: resolvedAuction?.ends_at
+      ? formatCountdown(resolvedAuction.ends_at)
+      : undefined,
   };
 }
 
