@@ -684,21 +684,34 @@ type PlateSource = {
   plate_digits?: string | null;
   display_plate?: string | null;
   title?: string | null;
+  hide_code?: boolean | number | string | null;
+  code_hidden?: boolean | number | string | null;
 };
 
 /**
- * Resolves plate code + digits for display. Hidden listings null out
- * `plate_code` / `plate_digits` and mask `display_plate`, but `title` still
- * ends with the real digits (e.g. "dubai A 433"), so fall back to it.
+ * Resolves plate code + digits for display.
+ * Title digits are only used when hide_code/code_hidden is true — those
+ * listings null out plate_digits and mask display_plate, but title still
+ * ends with the real number (e.g. "dubai A 433"). Normal listings keep
+ * using plate_code / plate_digits / display_plate only.
  */
 export function resolvePlateParts(listing?: PlateSource | null) {
   if (!listing) return { code: "", digits: "" };
 
   const fromDisplay = splitDisplayPlate(listing.display_plate);
+  const code = listing.plate_code || fromDisplay.code;
+
+  if (!isHiddenPlateCode(listing)) {
+    return {
+      code,
+      digits: listing.plate_digits || fromDisplay.digits,
+    };
+  }
+
   const titleDigits = String(listing.title || "").match(/(\d+)\s*$/)?.[1] || "";
 
   return {
-    code: listing.plate_code || fromDisplay.code,
+    code,
     digits: listing.plate_digits || titleDigits || fromDisplay.digits,
   };
 }
