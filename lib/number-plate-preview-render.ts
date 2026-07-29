@@ -93,9 +93,16 @@ function metallicClassName(config?: PlateOverlayConfig | null): string {
     : METAL_PLATE_TEXT_CLASS;
 }
 
+/**
+ * Mask glyphs the API sends instead of digits while a listing code is hidden
+ * (e.g. display_plate "A •••"). They render like digits so the plate isn't empty.
+ */
+const PLATE_DIGIT_MASK_CHARS = "•●·*?#×";
+
 export function sanitizePlateDigits(value: string, maxLength = 5): string {
+  const maskClass = PLATE_DIGIT_MASK_CHARS.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return String(value || "")
-    .replace(/\D/g, "")
+    .replace(new RegExp(`[^\\d${maskClass}]`, "g"), "")
     .slice(0, maxLength);
 }
 

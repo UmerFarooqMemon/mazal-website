@@ -657,20 +657,31 @@ export function isHiddenPlateCode(
   return flag(listing.hide_code) || flag(listing.code_hidden);
 }
 
+/**
+ * Splits `display_plate` into code + digits. Hidden listings arrive masked
+ * (e.g. "A •••"), so the digits part may be mask glyphs rather than numbers.
+ */
+export function splitDisplayPlate(displayPlate?: string | null) {
+  const raw = String(displayPlate || "").trim();
+  if (!raw) return { code: "", digits: "" };
+
+  const match = raw.match(/^([A-Za-z]+)?\s*[-|]?\s*(.*)$/);
+  if (!match) return { code: "", digits: raw };
+
+  return {
+    code: match[1]?.toUpperCase() || "",
+    digits: match[2]?.trim() || "",
+  };
+}
+
 export function mapListingToPlateCard(listing: MarketplaceListingCard) {
   let plateCode = listing.plate_code || "";
   let plateDigits = listing.plate_digits || "";
 
   if (!plateDigits && listing.display_plate) {
-    const match = listing.display_plate.match(/^([A-Za-z]+)\s*[-|]?\s*(\d+)$/);
-    if (match) {
-      plateCode = plateCode || match[1].toUpperCase();
-      plateDigits = match[2];
-    } else if (/^\d+$/.test(listing.display_plate.trim())) {
-      plateDigits = listing.display_plate.trim();
-    } else {
-      plateDigits = listing.display_plate.trim();
-    }
+    const parsed = splitDisplayPlate(listing.display_plate);
+    plateCode = plateCode || parsed.code;
+    plateDigits = parsed.digits;
   }
 
   const hideCode = isHiddenPlateCode(listing);
