@@ -28,6 +28,7 @@ interface User {
   role: string;
   email?: string | null;
   phone?: string | null;
+  emirates_id?: string | null;
   kyc_verified?: boolean;
   kyc_verified_at?: string | null;
   emirates_id_verified?: boolean;
@@ -43,6 +44,7 @@ function normalizeUser(user: AuthUser): User {
     role: user.role || "user",
     email: user.email ?? null,
     phone: user.phone ?? null,
+    emirates_id: user.emirates_id ?? null,
     kyc_verified: Boolean(user.kyc_verified),
     kyc_verified_at: user.kyc_verified_at ?? null,
     emirates_id_verified: Boolean(user.emirates_id_verified),
