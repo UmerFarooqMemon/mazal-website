@@ -5,7 +5,7 @@ import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import {
   isHiddenPlateCode,
-  splitDisplayPlate,
+  resolvePlateParts,
   type MarketplaceListingDetail,
 } from "@/services/marketplace";
 
@@ -60,9 +60,7 @@ export default function PlateHero({ listing }: PlateHeroProps) {
   ];
 
   const hideCode = isHiddenPlateCode(listing);
-  const fallbackPlate = splitDisplayPlate(listing?.display_plate);
-  const plateCode = listing?.plate_code || fallbackPlate.code;
-  const plateDigits = listing?.plate_digits || fallbackPlate.digits;
+  const { code: plateCode, digits: plateDigits } = resolvePlateParts(listing);
 
   return (
     <div className="flex flex-col gap-4">

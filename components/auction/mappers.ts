@@ -1,7 +1,7 @@
 import {
   isHiddenPlateCode,
   resolveListingAskingPrice,
-  splitDisplayPlate,
+  resolvePlateParts,
   toMarketplaceNumber,
   type MarketplaceAuction,
   type MarketplaceAuctionRegistration,
@@ -89,20 +89,12 @@ function deriveAuctionKind(auction: MarketplaceAuction | null | undefined): Auct
 }
 
 function extractPlateFields(listing: MarketplaceListingCard) {
-  let code = listing.plate_code || "";
-  let digits = listing.plate_digits || "";
-  const hideCode = isHiddenPlateCode(listing);
-
-  if (!digits && listing.display_plate) {
-    const parsed = splitDisplayPlate(listing.display_plate);
-    code = code || parsed.code;
-    digits = parsed.digits;
-  }
+  const { code, digits } = resolvePlateParts(listing);
 
   return {
     code,
     digits,
-    hideCode,
+    hideCode: isHiddenPlateCode(listing),
     plateVariant:
       listing.plate_design ||
       listing.plate_type ||

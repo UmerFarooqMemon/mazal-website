@@ -661,28 +661,50 @@ export function isHiddenPlateCode(
  * Splits `display_plate` into code + digits. Hidden listings arrive masked
  * (e.g. "A •••"), so the digits part may be mask glyphs rather than numbers.
  */
-export function splitDisplayPlate(displayPlate?: string | null) {
+function splitDisplayPlate(displayPlate?: string | null) {
   const raw = String(displayPlate || "").trim();
   if (!raw) return { code: "", digits: "" };
 
   const match = raw.match(/^([A-Za-z]+)?\s*[-|]?\s*(.*)$/);
   if (!match) return { code: "", digits: raw };
 
+  // Plate codes are at most 3 letters; longer prefixes are emirate names
+  // (e.g. "Dubai • • •"), which must not be mistaken for a code.
+  const prefix = match[1] || "";
+  const isCode = prefix.length > 0 && prefix.length <= 3;
+
   return {
-    code: match[1]?.toUpperCase() || "",
-    digits: match[2]?.trim() || "",
+    code: isCode ? prefix.toUpperCase() : "",
+    digits: (isCode ? match[2] : raw.slice(prefix.length)).trim(),
+  };
+}
+
+type PlateSource = {
+  plate_code?: string | null;
+  plate_digits?: string | null;
+  display_plate?: string | null;
+  title?: string | null;
+};
+
+/**
+ * Resolves plate code + digits for display. Hidden listings null out
+ * `plate_code` / `plate_digits` and mask `display_plate`, but `title` still
+ * ends with the real digits (e.g. "dubai A 433"), so fall back to it.
+ */
+export function resolvePlateParts(listing?: PlateSource | null) {
+  if (!listing) return { code: "", digits: "" };
+
+  const fromDisplay = splitDisplayPlate(listing.display_plate);
+  const titleDigits = String(listing.title || "").match(/(\d+)\s*$/)?.[1] || "";
+
+  return {
+    code: listing.plate_code || fromDisplay.code,
+    digits: listing.plate_digits || titleDigits || fromDisplay.digits,
   };
 }
 
 export function mapListingToPlateCard(listing: MarketplaceListingCard) {
-  let plateCode = listing.plate_code || "";
-  let plateDigits = listing.plate_digits || "";
-
-  if (!plateDigits && listing.display_plate) {
-    const parsed = splitDisplayPlate(listing.display_plate);
-    plateCode = plateCode || parsed.code;
-    plateDigits = parsed.digits;
-  }
+  const { code: plateCode, digits: plateDigits } = resolvePlateParts(listing);
 
   const hideCode = isHiddenPlateCode(listing);
 

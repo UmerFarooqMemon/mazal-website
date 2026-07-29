@@ -22,7 +22,7 @@ import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProce
 import {
   getListingDetail,
   isHiddenPlateCode,
-  splitDisplayPlate,
+  resolvePlateParts,
   type MarketplaceListingDetail,
 } from "@/services/marketplace";
 
@@ -85,7 +85,7 @@ export default function MarketplaceCheckout({
   // Listing APIs expose type + design separately — never treat design alone as the variant key.
   const plateVariant = `${plateType}_${plateDesign}`;
   const hideCode = isHiddenPlateCode(listing);
-  const fallbackPlate = splitDisplayPlate(listing?.display_plate);
+  const plate = resolvePlateParts(listing);
 
   const deal: DealData = {
     role: initialRole,
@@ -93,8 +93,8 @@ export default function MarketplaceCheckout({
     plateType,
     plateVariant,
     plateDesign,
-    code: listing?.plate_code || fallbackPlate.code,
-    digit: listing?.plate_digits || fallbackPlate.digits,
+    code: plate.code,
+    digit: plate.digits,
     price: resolvedPrice,
     hideCode,
   };

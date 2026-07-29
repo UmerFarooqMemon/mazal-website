@@ -19,7 +19,7 @@ import {
   getMyOffers,
   isHiddenPlateCode,
   rejectOffer,
-  splitDisplayPlate,
+  resolvePlateParts,
   startPurchaseFromOffer,
   submitOffer,
   withdrawOffer,
@@ -987,14 +987,8 @@ export default function OfferNegotiation() {
           <div className="lg:col-span-2 sticky top-24">
             <OfferDealSummary
               askingPrice={askingPrice}
-              plate_code={
-                listing?.plate_code ||
-                splitDisplayPlate(listing?.display_plate).code
-              }
-              plate_digits={
-                listing?.plate_digits ||
-                splitDisplayPlate(listing?.display_plate).digits
-              }
+              plate_code={resolvePlateParts(listing).code}
+              plate_digits={resolvePlateParts(listing).digits}
               emirate={
                 listing?.emirate_label?.toUpperCase() ||
                 listing?.emirate ||

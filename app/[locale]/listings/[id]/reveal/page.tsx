@@ -21,7 +21,7 @@ import {
   initiateReveal,
   isHiddenPlateCode,
   proceedAfterReveal,
-  splitDisplayPlate,
+  resolvePlateParts,
   type MarketplaceListingDetail,
   type MarketplaceReveal,
 } from "@/services/marketplace";
@@ -192,9 +192,7 @@ export default function RevealPage() {
 
   const typeLabel = listing.listing_type_label || listing.listing_type;
   const hideCode = codeHidden || isHiddenPlateCode(listing);
-  const fallbackPlate = splitDisplayPlate(listing.display_plate);
-  const plateCode = listing.plate_code || fallbackPlate.code;
-  const plateDigits = listing.plate_digits || fallbackPlate.digits;
+  const { code: plateCode, digits: plateDigits } = resolvePlateParts(listing);
 
   return (
     <div
