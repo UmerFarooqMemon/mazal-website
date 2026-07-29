@@ -1,13 +1,66 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
+import { mapListingToHomeV2Plate } from "@/components/home-v2/HomeV2PlateCard";
 import { useLocale } from "@/context/LocaleContext";
+import {
+  getFeaturedAuctionListings,
+  type MarketplaceListingCard,
+} from "@/services/marketplace";
 
 export default function HomeV2Hero() {
   const { locale, t } = useLocale();
+  const [listings, setListings] = useState<MarketplaceListingCard[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    getFeaturedAuctionListings(locale)
+      .then((response) => {
+        if (!active) return;
+        setListings(response.data.listings || []);
+        setActiveIndex(0);
+      })
+      .catch(() => {
+        if (active) setListings([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [locale]);
+
+  useEffect(() => {
+    if (listings.length < 2) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % listings.length);
+    }, 6000);
+
+    return () => window.clearInterval(timer);
+  }, [listings.length]);
+
+  const featuredListing = listings[activeIndex];
+  const featuredPlate = featuredListing
+    ? mapListingToHomeV2Plate(featuredListing)
+    : null;
+  const featuredHref = featuredListing
+    ? `/${locale}/listings/${featuredListing.id}`
+    : `/${locale}/auctions`;
+  const digitPattern =
+    featuredListing?.digit_count === 1
+      ? t("home.hero_single_digit")
+      : `${featuredListing?.digit_count ?? 0} ${
+          locale === "ar" ? "أرقام" : "digits"
+        }`;
 
   return (
     <section className="overflow-hidden bg-[#f2faef]">
@@ -68,55 +121,98 @@ export default function HomeV2Hero() {
               {t("home.v2_hero_card_label")}
             </p>
 
-            <NumberPlateDisplay
-              plate_code="M"
-              plate_digits="7"
-              emirate="DUBAI"
-              plateVariant="private_new_colorful"
-              crop="card"
-            />
-
-            <div className="mt-5 flex items-end justify-between gap-4">
-              <div>
-                <div className="text-xs text-[#545e6f]">{t("home.hero_asking")}</div>
-                <div className="font-serif text-3xl font-semibold tracking-tight text-[#081123]">
-                  <DirhamAmount amount={12_500_000} weight="bold" />
-                </div>
+            {loading ? (
+              <div className="flex min-h-72 items-center justify-center text-sm text-[#545e6f]">
+                {t("common.loading")}
               </div>
-              <Link
-                href={`/${locale}/marketplace`}
-                className="inline-flex items-center gap-1 rounded-full bg-[#152e2b] px-4 py-2 text-sm font-medium text-[#fbfaf6] transition-opacity hover:opacity-90"
-              >
-                {t("home.hero_view")}
-                <HomeV2Icon src="/home-v2/icon-arrow.svg" size={16} />
-              </Link>
-            </div>
+            ) : !featuredListing || !featuredPlate ? (
+              <div className="flex min-h-72 items-center justify-center text-center text-sm text-[#545e6f]">
+                {t("common.no_results")}
+              </div>
+            ) : (
+              <>
+                <NumberPlateDisplay
+                  plate_code={featuredPlate.code}
+                  plate_digits={featuredPlate.digits}
+                  emirate={featuredPlate.emirate}
+                  preview={featuredPlate.preview}
+                  plateType={featuredPlate.plateType}
+                  plateDesign={featuredPlate.plateDesign}
+                  crop="card"
+                  hideCode={featuredPlate.hideCode}
+                  scaleFontToWidth
+                  fontScaleMultiplier={2.3}
+                />
 
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              {[
-                { value: t("home.hero_single_digit"), label: t("home.hero_pattern") },
-                { value: "8,421", label: t("home.hero_views") },
-                { value: "4.9★", label: t("home.hero_seller") },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="flex flex-col items-center justify-center rounded-md bg-[rgba(21,46,43,0.02)] p-3 text-center"
-                >
-                  <div className="font-serif text-base font-semibold tracking-tight text-[#152e2b]">
-                    {stat.value}
+                <div className="mt-5 flex items-end justify-between gap-4">
+                  <div>
+                    <div className="text-xs text-[#545e6f]">
+                      {t("home.hero_asking")}
+                    </div>
+                    <div className="font-serif text-3xl font-semibold tracking-tight text-[#081123]">
+                      <DirhamAmount amount={featuredPlate.price} weight="bold" />
+                    </div>
                   </div>
-                  <div className="text-xs text-[#545e6f]">{stat.label}</div>
+                  <Link
+                    href={featuredHref}
+                    className="inline-flex items-center gap-1 rounded-full bg-[#152e2b] px-4 py-2 text-sm font-medium text-[#fbfaf6] transition-opacity hover:opacity-90"
+                  >
+                    {t("home.hero_view")}
+                    <HomeV2Icon src="/home-v2/icon-arrow.svg" size={16} />
+                  </Link>
                 </div>
-              ))}
-            </div>
 
-            <div className="mx-auto mt-5 flex justify-center">
-              <HomeV2Icon src="/home-v2/dots.svg" width={36} height={8} />
-            </div>
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                  {[
+                    { value: digitPattern, label: t("home.hero_pattern") },
+                    {
+                      value: featuredPlate.views.toLocaleString(
+                        locale === "ar" ? "ar-AE" : "en-US",
+                      ),
+                      label: t("home.hero_views"),
+                    },
+                    {
+                      value: `${featuredPlate.rating.toFixed(1)}★`,
+                      label: t("home.hero_seller"),
+                    },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="flex flex-col items-center justify-center rounded-md bg-[rgba(21,46,43,0.02)] p-3 text-center"
+                    >
+                      <div className="font-serif text-base font-semibold tracking-tight text-[#152e2b]">
+                        {stat.value}
+                      </div>
+                      <div className="text-xs text-[#545e6f]">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  className="mx-auto mt-5 flex justify-center gap-2"
+                  aria-label={t("home.v2_hero_card_label")}
+                >
+                  {listings.map((listing, index) => (
+                    <button
+                      key={listing.id}
+                      type="button"
+                      onClick={() => setActiveIndex(index)}
+                      className={`h-2 rounded-full transition-all ${
+                        index === activeIndex
+                          ? "w-5 bg-[#152e2b]"
+                          : "w-2 bg-[#b9c5c2]"
+                      }`}
+                      aria-label={`${index + 1}`}
+                      aria-current={index === activeIndex ? "true" : undefined}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           <Link
-            href={`/${locale}/auctions`}
+            href={featuredHref}
             className="rounded-xl border border-[rgba(212,12,26,0.3)] bg-[#fff6f6] p-4 transition-opacity hover:opacity-90 sm:p-[17px]"
           >
             <div className="mb-2 flex items-center gap-2">
@@ -130,10 +226,14 @@ export default function HomeV2Hero() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-serif text-lg font-semibold tracking-tight text-[#081123]">
-                {t("home.v2_hero_auctioning")}
+                {featuredListing?.title || t("home.v2_hero_auctioning")}
               </span>
               <span className="font-serif text-lg font-semibold tracking-tight text-[#152e2b]">
-                {t("home.v2_hero_auction_value")}
+                {featuredPlate ? (
+                  <DirhamAmount amount={featuredPlate.price} weight="bold" />
+                ) : (
+                  t("home.v2_hero_auction_value")
+                )}
               </span>
             </div>
           </Link>

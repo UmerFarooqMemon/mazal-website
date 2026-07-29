@@ -1,14 +1,52 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
-import HomeV2PlateCard from "@/components/home-v2/HomeV2PlateCard";
 import {
-  TRENDING_PLATES,
-  WATCHING_PLATES,
-} from "@/components/home-v2/plates-data";
+  default as HomeV2PlateCard,
+  mapListingToHomeV2Plate,
+} from "@/components/home-v2/HomeV2PlateCard";
 import { useLocale } from "@/context/LocaleContext";
 import type { HomeV2Plate } from "@/components/home-v2/HomeV2PlateCard";
+import {
+  getMarketWatchingListings,
+  getTrendingListings,
+} from "@/services/marketplace";
+
+function useHomepageListings(loader: typeof getMarketWatchingListings) {
+  const { locale } = useLocale();
+  const [plates, setPlates] = useState<HomeV2Plate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    loader(locale)
+      .then((response) => {
+        if (!active) return;
+        setHasError(false);
+        setPlates(
+          (response.data.listings || []).map(mapListingToHomeV2Plate),
+        );
+      })
+      .catch(() => {
+        if (!active) return;
+        setPlates([]);
+        setHasError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [loader, locale]);
+
+  return { plates, loading, hasError };
+}
 
 function PlateGridSection({
   badge,
@@ -16,6 +54,8 @@ function PlateGridSection({
   title,
   subtitle,
   plates,
+  loading,
+  hasError,
   seeAll,
 }: {
   badge: string;
@@ -23,6 +63,8 @@ function PlateGridSection({
   title: string;
   subtitle?: string;
   plates: HomeV2Plate[];
+  loading: boolean;
+  hasError: boolean;
   seeAll?: boolean;
 }) {
   const { locale, t } = useLocale();
@@ -56,11 +98,25 @@ function PlateGridSection({
           ) : null}
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {plates.map((plate) => (
-            <HomeV2PlateCard key={plate.id} plate={plate} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="py-10 text-center text-sm text-[#545e6f]">
+            {t("common.loading")}
+          </div>
+        ) : hasError ? (
+          <div className="py-10 text-center text-sm text-[#545e6f]">
+            {t("common.error_submission")}
+          </div>
+        ) : plates.length === 0 ? (
+          <div className="py-10 text-center text-sm text-[#545e6f]">
+            {t("common.no_results")}
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {plates.map((plate) => (
+              <HomeV2PlateCard key={plate.id} plate={plate} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -68,6 +124,9 @@ function PlateGridSection({
 
 export function HomeV2Watching() {
   const { t } = useLocale();
+  const { plates, loading, hasError } = useHomepageListings(
+    getMarketWatchingListings,
+  );
 
   return (
     <PlateGridSection
@@ -75,20 +134,26 @@ export function HomeV2Watching() {
       badgeIcon="/home-v2/icon-trending.svg"
       title={t("home.trending_title")}
       subtitle={t("home.v2_watching_subtitle")}
-      plates={WATCHING_PLATES}
+      plates={plates}
+      loading={loading}
+      hasError={hasError}
     />
   );
 }
 
 export function HomeV2Trending() {
   const { t } = useLocale();
+  const { plates, loading, hasError } =
+    useHomepageListings(getTrendingListings);
 
   return (
     <PlateGridSection
       badge={t("home.trending_badge")}
       badgeIcon="/home-v2/icon-trending.svg"
       title={t("home.v2_trending_plates_title")}
-      plates={TRENDING_PLATES}
+      plates={plates}
+      loading={loading}
+      hasError={hasError}
       seeAll
     />
   );

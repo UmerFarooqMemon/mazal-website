@@ -116,6 +116,8 @@ export interface MarketplaceAuction {
   // Open (untimed) auctions publish without a schedule.
   starts_at: string | null;
   ends_at: string | null;
+  status?: string;
+  current_price?: number | string | null;
   reserve_price?: number | string | null;
   starting_price?: number | string;
   outcome?: string | null;
@@ -816,6 +818,20 @@ export function searchListings(
 export function getTrendingListings(locale: string) {
   return marketplaceRequest<{ listings: MarketplaceListingCard[] }>(
     "/listings/trending",
+    { locale },
+  );
+}
+
+export function getFeaturedAuctionListings(locale: string) {
+  return marketplaceRequest<{ listings: MarketplaceListingCard[] }>(
+    "/listings/featured-auctions",
+    { locale },
+  );
+}
+
+export function getMarketWatchingListings(locale: string) {
+  return marketplaceRequest<{ listings: MarketplaceListingCard[] }>(
+    "/listings/market-watching",
     { locale },
   );
 }

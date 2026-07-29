@@ -5,11 +5,17 @@ import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DiamondTierBadge, DirhamAmount } from "@/components/ui";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
 import { useLocale } from "@/context/LocaleContext";
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
+import {
+  mapListingToPlateCard,
+  toMarketplaceNumber,
+  type MarketplaceListingCard,
+} from "@/services/marketplace";
 
 export type PlateTier = "diamond" | "gold" | "silver" | "verified";
 
 export type HomeV2Plate = {
-  id: string;
+  id: string | number;
   code: string;
   digits: string;
   emirate?: string;
@@ -18,7 +24,42 @@ export type HomeV2Plate = {
   rating: number;
   tier: PlateTier;
   showHeart?: boolean;
+  plateType?: string;
+  plateDesign?: string;
+  preview?: PlatePreviewConfig | null;
+  hideCode?: boolean;
+  href?: string;
 };
+
+export function mapListingToHomeV2Plate(
+  listing: MarketplaceListingCard,
+): HomeV2Plate {
+  const card = mapListingToPlateCard(listing);
+  const auctionPrice =
+    listing.listing_type === "auction"
+      ? listing.auction?.current_price ?? listing.auction?.current_high_bid
+      : undefined;
+
+  return {
+    id: listing.id,
+    code: card.plate_code || "",
+    digits: card.plate_digits || listing.display_plate || "",
+    emirate: card.emirate,
+    price:
+      auctionPrice == null
+        ? card.price
+        : toMarketplaceNumber(auctionPrice),
+    views: card.views,
+    rating: card.rating,
+    tier: card.tier,
+    showHeart: Boolean(card.isFavorite),
+    plateType: card.plate_type,
+    plateDesign: card.plate_design,
+    preview: card.preview,
+    hideCode: card.hideCode,
+    href: `/listings/${listing.id}`,
+  };
+}
 
 const TIER_STYLES: Record<
   Exclude<PlateTier, "diamond">,
@@ -47,7 +88,7 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
 
   return (
     <Link
-      href={`/${locale}/home-v2/plates/${plate.id}`}
+      href={`/${locale}${plate.href ?? `/home-v2/plates/${plate.id}`}`}
       className="flex flex-col gap-4 rounded-xl border border-[#d9dee6] bg-white p-5 shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)] transition-shadow hover:shadow-[0_8px_28px_-10px_rgba(21,46,43,0.2)]"
     >
       <div className="flex items-center justify-between">
@@ -76,8 +117,18 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
         plate_code={plate.code}
         plate_digits={plate.digits}
         emirate={plate.emirate ?? "DUBAI"}
-        plateVariant="private_new_colorful"
+        preview={plate.preview}
+        plateType={plate.plateType}
+        plateDesign={plate.plateDesign}
+        plateVariant={
+          plate.preview || plate.plateType || plate.plateDesign
+            ? undefined
+            : "private_new_colorful"
+        }
         crop="card"
+        hideCode={plate.hideCode}
+        scaleFontToWidth
+        fontScaleMultiplier={2.3}
       />
 
       <div className="flex flex-col gap-1">
