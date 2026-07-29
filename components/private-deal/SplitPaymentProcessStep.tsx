@@ -41,7 +41,7 @@ interface SplitPaymentProcessStepProps {
 }
 
 const METHOD_META: Record<
-  PaymentMethod,
+  Exclude<PaymentMethod, "wallet">,
   { titleKey: string; icon: typeof Building2 }
 > = {
   bank: { titleKey: "bank_transfer", icon: Building2 },

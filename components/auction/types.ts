@@ -31,7 +31,8 @@ export type DepositPaymentMethod =
   | "bank"
   | "card"
   | "managers_check"
-  | "cash";
+  | "cash"
+  | "wallet";
 
 export type DepositPaymentMode = "single" | "split";
 

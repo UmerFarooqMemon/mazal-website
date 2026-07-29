@@ -18,12 +18,14 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import BankSelect from "@/components/ui/BankSelect";
+import WalletMethodOption from "@/components/wallet/WalletMethodOption";
 
 export type PaymentMethod =
   | "bank"
   | "card"
   | "managers_check"
-  | "cash";
+  | "cash"
+  | "wallet";
 
 export type PaymentMode = "single" | "split";
 
@@ -31,7 +33,7 @@ export type SplitPaymentStatus = "awaiting" | "completed";
 
 export interface SplitPaymentEntry {
   id: string;
-  method: PaymentMethod;
+  method: Exclude<PaymentMethod, "wallet">;
   amount: number;
   notes: string;
   bank?: string;
@@ -45,7 +47,7 @@ export interface SplitPaymentEntry {
 
 interface DraftSplit {
   id: string;
-  method: PaymentMethod;
+  method: Exclude<PaymentMethod, "wallet">;
   amount: string;
   notes: string;
   bank: string;
@@ -67,11 +69,13 @@ interface PaymentMethodStepProps {
   onBack: () => void;
   onContinue: () => void;
   onProcessSplit: (paymentId: string) => void;
+  /** Opens the wallet module when Wallet is selected / continued. */
+  onOpenWallet?: () => void;
   saving?: boolean;
 }
 
 const METHODS: {
-  key: PaymentMethod;
+  key: Exclude<PaymentMethod, "wallet">;
   titleKey: string;
   icon: typeof Building2;
 }[] = [
@@ -86,7 +90,10 @@ function parseAmount(value: string) {
   return Number.isFinite(n) ? n : 0;
 }
 
-function createDraft(method: PaymentMethod, remaining: number): DraftSplit {
+function createDraft(
+  method: Exclude<PaymentMethod, "wallet">,
+  remaining: number,
+): DraftSplit {
   return {
     id: `draft-${method}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     method,
@@ -100,7 +107,7 @@ function createDraft(method: PaymentMethod, remaining: number): DraftSplit {
   };
 }
 
-function methodMeta(method: PaymentMethod) {
+function methodMeta(method: Exclude<PaymentMethod, "wallet">) {
   return METHODS.find((m) => m.key === method)!;
 }
 
@@ -116,6 +123,7 @@ export default function PaymentMethodStep({
   onBack,
   onContinue,
   onProcessSplit,
+  onOpenWallet,
   saving = false,
 }: PaymentMethodStepProps) {
   const { t, locale } = useLocale();
@@ -161,7 +169,7 @@ export default function PaymentMethodStep({
     });
   };
 
-  const addMethod = (key: PaymentMethod) => {
+  const addMethod = (key: Exclude<PaymentMethod, "wallet">) => {
     setDrafts((prev) => {
       const rem =
         totalAmount - prev.reduce((s, d) => s + parseAmount(d.amount), 0);
@@ -304,6 +312,13 @@ export default function PaymentMethodStep({
       {mode === "single" ? (
         <>
           <div className="space-y-3 mb-8">
+            <WalletMethodOption
+              selected={method === "wallet"}
+              onSelect={() => {
+                onMethodChange("wallet");
+                onOpenWallet?.();
+              }}
+            />
             {METHODS.map((item) => {
               const Icon = item.icon;
               const selected = method === item.key;

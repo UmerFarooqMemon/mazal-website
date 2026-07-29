@@ -9,7 +9,7 @@ import { Button, DirhamAmount, Input } from "@/components/ui";
 import type { PaymentMethod } from "./PaymentMethodStep";
 
 interface PaymentDetailsStepProps {
-  method: PaymentMethod;
+  method: Exclude<PaymentMethod, "wallet">;
   amount: number;
   onBack: () => void;
   onContinue: () => void;

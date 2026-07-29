@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import type { StepItem } from "@/components/private-deal/Stepper";
+import toast from "react-hot-toast";
 import DepositFlowHeader from "@/components/auction/DepositFlowHeader";
 import DepositMethodStep from "@/components/auction/DepositMethodStep";
 import DepositPaymentStep from "@/components/auction/DepositPaymentStep";
 import DepositStatusStep from "@/components/auction/DepositStatusStep";
 import AuctionSummaryCard from "@/components/auction/AuctionSummaryCard";
 import AuctionBenefitsCard from "@/components/auction/AuctionBenefitsCard";
+import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import { mapToAuctionSummary } from "@/components/auction/mappers";
 import type {
   AuctionSummaryData,
@@ -88,6 +90,12 @@ export default function AuctionRegisterPage({
   const [error, setError] = useState<string | null>(null);
   const [pollingReturn, setPollingReturn] = useState(false);
   const [offlineSubmitted, setOfflineSubmitted] = useState(false);
+  const [walletPaid, setWalletPaid] = useState(false);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+
+  const openWalletModule = () => {
+    router.push(`/${locale}/wallet`);
+  };
 
   const refreshAuction = useCallback(async () => {
     const response = await getAuctionState(auctionId, locale);
@@ -270,11 +278,16 @@ export default function AuctionRegisterPage({
   }, [step, t]);
 
   const showSidebar = step < 2;
-  const depositHeld = isDepositHeld(registration);
+  const depositHeld = walletPaid || isDepositHeld(registration);
   const pendingVerification =
     offlineSubmitted || isPendingVerification(registration);
 
   const handleMethodContinue = async () => {
+    if (method === "wallet") {
+      setWalletModalOpen(true);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
@@ -287,6 +300,19 @@ export default function AuctionRegisterPage({
       );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleWalletPaid = async () => {
+    setWalletPaid(true);
+    setOfflineSubmitted(true);
+    setStep(2);
+    toast.success(t("wallet.paid_from_wallet"));
+    try {
+      await ensureRegistration();
+      await refreshAuction();
+    } catch {
+      // Local wallet payment still succeeds even if registration refresh fails.
     }
   };
 
@@ -428,11 +454,12 @@ export default function AuctionRegisterPage({
                 onMethodChange={setMethod}
                 onBack={() => router.back()}
                 onContinue={handleMethodContinue}
+                onOpenWallet={openWalletModule}
                 submitting={submitting}
               />
             )}
 
-            {step === 1 && (
+            {step === 1 && method !== "wallet" && (
               <DepositPaymentStep
                 method={method}
                 onBack={() => setStep(0)}
@@ -470,6 +497,15 @@ export default function AuctionRegisterPage({
           )}
         </div>
       </section>
+
+      <WalletPaymentModal
+        isOpen={walletModalOpen}
+        onClose={() => setWalletModalOpen(false)}
+        amountDue={summary?.minimumDeposit ?? 0}
+        reference={t("auctions.summary_min_deposit")}
+        holdFor={auctionId}
+        onPaid={handleWalletPaid}
+      />
     </div>
   );
 }

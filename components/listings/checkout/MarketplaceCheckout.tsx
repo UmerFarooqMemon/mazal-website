@@ -19,6 +19,7 @@ import PaymentMethodStep, {
 import PaymentDetailsStep from "@/components/private-deal/PaymentDetailsStep";
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
+import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import {
   getListingDetail,
   isHiddenPlateCode,
@@ -65,6 +66,7 @@ export default function MarketplaceCheckout({
   const [processingSplitId, setProcessingSplitId] = useState<string | null>(
     null,
   );
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   useEffect(() => {
     getListingDetail(listingId, locale)
@@ -175,7 +177,14 @@ export default function MarketplaceCheckout({
           onSplitPaymentsChange={setSplitPayments}
           onAllocatedChange={setSplitAllocated}
           onBack={() => setStep(0)}
-          onContinue={() => setStep(2)}
+          onContinue={() => {
+            if (paymentMethod === "wallet") {
+              setWalletModalOpen(true);
+              return;
+            }
+            setStep(2);
+          }}
+          onOpenWallet={() => router.push(`/${locale}/wallet`)}
           onProcessSplit={(paymentId) => {
             setProcessingSplitId(paymentId);
             setStep(2);
@@ -200,7 +209,7 @@ export default function MarketplaceCheckout({
 
       return (
         <PaymentDetailsStep
-          method={paymentMethod}
+          method={paymentMethod === "wallet" ? "bank" : paymentMethod}
           amount={resolvedPrice}
           onBack={() => setStep(1)}
           onContinue={() => setStep(3)}
@@ -286,6 +295,14 @@ export default function MarketplaceCheckout({
           renderMain()
         )}
       </section>
+
+      <WalletPaymentModal
+        isOpen={walletModalOpen}
+        onClose={() => setWalletModalOpen(false)}
+        amountDue={resolvedPrice}
+        reference={t("private-deal.payment_title")}
+        onPaid={() => setStep(3)}
+      />
     </div>
   );
 }

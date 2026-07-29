@@ -41,6 +41,7 @@ export default function RevealPage() {
   const [codeHidden, setCodeHidden] = useState(true);
   const [reveal, setReveal] = useState<MarketplaceReveal | null>(null);
   const [step, setStep] = useState<RevealStep>("method");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "wallet">("card");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +107,32 @@ export default function RevealPage() {
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to start reveal.",
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleWalletPaid = async () => {
+    setActionLoading(true);
+    try {
+      if (!reveal) {
+        const response = await initiateReveal(params.id, locale);
+        setReveal(response.data.reveal);
+        setFeeAmount(Number(response.data.reveal_fee_amount));
+      }
+      const reference = `wallet-${Date.now()}`;
+      const response = await confirmRevealPayment(params.id, locale, reference);
+      setReveal(response.data.reveal);
+      if (response.data.listing) {
+        setListing(response.data.listing);
+      }
+      setCodeHidden(false);
+      setStep("done");
+      toast.success(t("wallet.paid_from_wallet"));
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to confirm reveal payment.",
       );
     } finally {
       setActionLoading(false);
@@ -260,12 +287,15 @@ export default function RevealPage() {
               </div>
             ) : step === "method" ? (
               <RevealPaymentMethodStep
-                selected="card"
+                selected={paymentMethod}
+                amountDue={feeAmount ?? 0}
                 loading={actionLoading}
+                onSelect={setPaymentMethod}
                 onBack={() =>
                   router.push(`/${locale}/listings/${params.id}`)
                 }
                 onContinue={handleContinueToCard}
+                onWalletPaid={() => void handleWalletPaid()}
               />
             ) : step === "card" ? (
               <RevealCardFormStep

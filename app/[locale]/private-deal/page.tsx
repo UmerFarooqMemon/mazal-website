@@ -24,6 +24,7 @@ import PaymentMethodStep, {
 } from "@/components/private-deal/PaymentMethodStep";
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
+import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import {
   createPrivateDeal,
   createPrivateDealCheckout,
@@ -41,7 +42,7 @@ import {
 
 const STICKY_HEADER_OFFSET = 69;
 
-const PAYMENT_METHOD_MAP: Record<PaymentMethod, string> = {
+const PAYMENT_METHOD_MAP: Record<Exclude<PaymentMethod, "wallet">, string> = {
   bank: "bank_transfer",
   card: "card",
   managers_check: "managers_check",
@@ -94,6 +95,7 @@ export default function PrivateDealPage() {
   const [processingSplitId, setProcessingSplitId] = useState<string | null>(
     null,
   );
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   const resolveDealId = () => dealIdRef.current || dealId;
 
@@ -411,6 +413,11 @@ export default function PrivateDealPage() {
   };
 
   const handleSinglePaymentContinue = async () => {
+    if (paymentMethod === "wallet") {
+      setWalletModalOpen(true);
+      return;
+    }
+
     await withSubmit(async () => {
       const singlePayment: SplitPaymentEntry = {
         id: "single-payment",
@@ -594,6 +601,7 @@ export default function PrivateDealPage() {
             onAllocatedChange={setSplitAllocatedLive}
             onBack={() => setStep(2)}
             onContinue={() => void handleSinglePaymentContinue()}
+            onOpenWallet={() => router.push(`/${locale}/wallet`)}
             onProcessSplit={(id) => {
               setProcessingSplitId(id);
               setStep(4);
@@ -719,6 +727,17 @@ export default function PrivateDealPage() {
           renderMain()
         )}
       </section>
+
+      <WalletPaymentModal
+        isOpen={walletModalOpen}
+        onClose={() => setWalletModalOpen(false)}
+        amountDue={deal.price}
+        reference={t("private-deal.payment_title")}
+        onPaid={() => {
+          toast.success(t("wallet.paid_from_wallet"));
+          setStep(5);
+        }}
+      />
     </div>
   );
 }

@@ -26,7 +26,7 @@ import type {
 } from "./types";
 
 interface DepositPaymentStepProps {
-  method: DepositPaymentMethod;
+  method: Exclude<DepositPaymentMethod, "wallet">;
   onBack: () => void;
   onContinue: (payload: DepositPaymentSubmitPayload) => void;
   depositAmount?: number;
@@ -37,7 +37,7 @@ interface DepositPaymentStepProps {
 }
 
 const METHOD_META: Record<
-  DepositPaymentMethod,
+  Exclude<DepositPaymentMethod, "wallet">,
   { titleKey: string; icon: typeof Building2 }
 > = {
   bank: { titleKey: "method_bank", icon: Building2 },
