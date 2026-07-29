@@ -11,6 +11,10 @@ import Button from "@/components/ui/Button";
 import { ShieldCheck, X } from "lucide-react";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 import SiteLogo from "@/components/layout/SiteLogo";
+import {
+  getPasswordValidationError,
+  passwordMeetsRequirements,
+} from "@/lib/password-validation";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -38,13 +42,18 @@ export default function ResetPasswordPage() {
       setFieldErrors((prev) => ({ ...prev, confirm: undefined }));
   };
 
-  // Validate fields
+  // Validate fields — matches backend Password::min(10)->letters()->numbers()
   const validateFields = () => {
     const errors: { password?: string; confirm?: string } = {};
-    if (!password.trim()) {
+    const passwordError = getPasswordValidationError(password);
+    if (passwordError === "required") {
       errors.password = t("common.error_field_required");
-    } else if (password.length < 8) {
+    } else if (passwordError === "min") {
       errors.password = t("common.password_min_length");
+    } else if (passwordError === "letters") {
+      errors.password = t("common.password_requires_letter");
+    } else if (passwordError === "numbers") {
+      errors.password = t("common.password_requires_number");
     }
     if (!confirmPassword.trim()) {
       errors.confirm = t("common.error_field_required");
@@ -54,6 +63,8 @@ export default function ResetPasswordPage() {
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
+  const passwordChecks = passwordMeetsRequirements(password);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +87,7 @@ export default function ResetPasswordPage() {
         login,
         token,
         password,
-        password_confirmation: password,
+        password_confirmation: confirmPassword,
       });
       sessionStorage.removeItem("reset_login");
       sessionStorage.removeItem("reset_token");
@@ -166,23 +177,35 @@ export default function ResetPasswordPage() {
               required
             />
 
-            {/* Password Requirements */}
+            {/* Password Requirements — same as backend register/reset rules */}
             <div
               className={`text-xs space-y-1 text-start`}
               style={{ color: getColor("mutedText") }}
             >
-              {[
-                "pw_at_least_8",
-                "pw_uppercase",
-                "pw_lowercase",
-                "pw_number",
-                "pw_special",
-              ].map((key) => (
+              {(
+                [
+                  {
+                    key: "pw_at_least_10",
+                    met: passwordChecks.minLength,
+                  },
+                  {
+                    key: "pw_letter",
+                    met: passwordChecks.hasLetter,
+                  },
+                  {
+                    key: "pw_number",
+                    met: passwordChecks.hasNumber,
+                  },
+                ] as const
+              ).map(({ key, met }) => (
                 <p
                   key={key}
                   className={`flex items-center gap-2`}
+                  style={{
+                    color: met ? getColor("primary") : getColor("mutedText"),
+                  }}
                 >
-                  <span>✓</span>
+                  <span>{met ? "✓" : "○"}</span>
                   <span>{t(`common.${key}`)}</span>
                 </p>
               ))}

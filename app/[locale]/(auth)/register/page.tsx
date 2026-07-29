@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 import SiteLogo from "@/components/layout/SiteLogo";
+import { getPasswordValidationError } from "@/lib/password-validation";
 
 export default function RegisterPage() {
   const { t, locale, loading: localeLoading } = useLocale();
@@ -65,10 +66,15 @@ export default function RegisterPage() {
       errors.email = t("common.email_or_mobile_required");
       errors.mobile = t("common.email_or_mobile_required");
     }
-    if (!formData.password.trim()) {
+    const passwordError = getPasswordValidationError(formData.password);
+    if (passwordError === "required") {
       errors.password = t("common.error_field_required");
-    } else if (formData.password.length < 8) {
+    } else if (passwordError === "min") {
       errors.password = t("common.password_min_length");
+    } else if (passwordError === "letters") {
+      errors.password = t("common.password_requires_letter");
+    } else if (passwordError === "numbers") {
+      errors.password = t("common.password_requires_number");
     }
     if (formData.password !== formData.password_confirmation) {
       errors.password_confirmation = t("common.passwords_dont_match");
@@ -108,7 +114,7 @@ export default function RegisterPage() {
         name: formData.full_name,
         login: formData.email || formData.mobile,
         password: formData.password,
-        password_confirmation: formData.password,
+        password_confirmation: formData.password_confirmation,
       });
       toast.dismiss(loadingToast);
       toast.success(t("common.register_success"));
