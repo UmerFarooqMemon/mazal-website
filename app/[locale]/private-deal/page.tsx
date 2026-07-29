@@ -397,16 +397,7 @@ export default function PrivateDealPage() {
 
   const handleJoinDeal = async () => {
     await withSubmit(async () => {
-      const sharedDealId = resolveDealId() || searchParams.get("deal");
-      if (!sharedDealId) {
-        throw new Error("Invite link is missing a deal id.");
-      }
-
-      const response = await joinPrivateDeal(
-        sharedDealId,
-        otp.join(""),
-        locale,
-      );
+      const response = await joinPrivateDeal(otp.join(""), locale);
       hydrateFromApiDeal(extractPrivateDeal(response), "buyer");
       setStep(2);
     });

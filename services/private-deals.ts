@@ -194,12 +194,8 @@ export function issuePrivateDealInvitation(id: string | number, locale: string) 
   });
 }
 
-export function joinPrivateDeal(
-  id: string | number,
-  verificationCode: string,
-  locale: string,
-) {
-  return privateDealsRequest<{ deal: PrivateDeal }>(`/${id}/join`, {
+export function joinPrivateDeal(verificationCode: string, locale: string) {
+  return privateDealsRequest<{ deal: PrivateDeal }>("/join", {
     method: "POST",
     locale,
     contentType: "application/json",
