@@ -1,6 +1,7 @@
 import {
   isHiddenPlateCode,
   resolveListingAskingPrice,
+  resolveListingPreview,
   resolvePlateParts,
   toMarketplaceNumber,
   type MarketplaceAuction,
@@ -60,8 +61,10 @@ function deriveAuctionStatus(
   }
 
   const now = Date.now();
-  const startsAt = new Date(auction.starts_at).getTime();
-  const endsAt = new Date(auction.ends_at).getTime();
+  const startsAt = auction.starts_at
+    ? new Date(auction.starts_at).getTime()
+    : NaN;
+  const endsAt = auction.ends_at ? new Date(auction.ends_at).getTime() : NaN;
 
   if (!Number.isNaN(startsAt) && now < startsAt) {
     const minutesUntilStart = (startsAt - now) / 60000;
@@ -95,6 +98,9 @@ function extractPlateFields(listing: MarketplaceListingCard) {
     code,
     digits,
     hideCode: isHiddenPlateCode(listing),
+    preview: resolveListingPreview(listing),
+    plateType: listing.plate_type || undefined,
+    plateDesign: listing.plate_design || undefined,
     plateVariant:
       listing.plate_design ||
       listing.plate_type ||
@@ -131,6 +137,9 @@ export function mapListingToAuctionListing(
     digits: plate.digits,
     emirate: plate.emirate,
     plateVariant: plate.plateVariant,
+    plateType: plate.plateType,
+    plateDesign: plate.plateDesign,
+    preview: plate.preview,
     kind,
     status,
     askingPrice,

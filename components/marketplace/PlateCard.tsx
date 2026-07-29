@@ -5,6 +5,7 @@ import { useLocale } from "../../context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DiamondTierBadge, DirhamAmount } from "@/components/ui";
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 interface PlateCardProps {
   id: string | number;
@@ -24,6 +25,8 @@ interface PlateCardProps {
   plate_digits?: string;
   plate_type?: string;
   plate_design?: string;
+  /** Render config from the listing API — wins over plate_type/design lookup. */
+  preview?: PlatePreviewConfig | null;
   hideCode?: boolean;
   /** Marketplace grid only: scale overlay font to card width instead of viewport. */
   fitPlateFont?: boolean;
@@ -42,6 +45,7 @@ export default function PlateCard({
   plate_digits,
   plate_type,
   plate_design,
+  preview,
   hideCode = false,
   fitPlateFont = false,
 }: PlateCardProps) {
@@ -116,6 +120,7 @@ export default function PlateCard({
           plate_code={letterCode}
           plate_digits={digits}
           emirate={emirate}
+          preview={preview}
           plateType={plate_type}
           plateDesign={plate_design}
           crop="card"

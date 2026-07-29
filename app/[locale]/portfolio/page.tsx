@@ -11,6 +11,7 @@ import type { PortfolioPlate } from "@/components/portfolio/data";
 import { formatCountdown } from "@/components/auction/mappers";
 import {
   getMyListings,
+  resolveListingPreview,
   type MarketplaceListingDetail,
 } from "@/services/marketplace";
 
@@ -28,6 +29,9 @@ function mapListingToPortfolioPlate(
     emirate: listing.emirate_label?.toUpperCase() || listing.emirate,
     code: listing.plate_code || "",
     digits: listing.plate_digits || "",
+    preview: resolveListingPreview(listing),
+    plateType: listing.plate_type || undefined,
+    plateDesign: listing.plate_design || undefined,
     estValue: Number(listing.asking_price) || 0,
     returnPct: 0,
     status: isAuction ? "auction" : isListed ? "listed" : "owned",

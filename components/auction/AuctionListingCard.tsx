@@ -53,7 +53,10 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
           plate_code={auction.code}
           plate_digits={auction.digits}
           emirate={auction.emirate}
+          preview={auction.preview}
           plateVariant={auction.plateVariant}
+          plateType={auction.plateType}
+          plateDesign={auction.plateDesign}
           crop="card"
           hideCode={Boolean(auction.hideCode)}
           scaleFontToWidth
@@ -120,7 +123,7 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
             className="text-[13px] font-semibold tabular-nums"
             style={{ color: getColor("primaryText") }}
           >
-            {isTimedStart ? auction.startsIn : auction.endsIn}
+            {(isTimedStart ? auction.startsIn : auction.endsIn) || "—"}
           </div>
         </div>
       </div>

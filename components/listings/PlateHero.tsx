@@ -5,6 +5,7 @@ import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import {
   isHiddenPlateCode,
+  resolveListingPreview,
   resolvePlateParts,
   type MarketplaceListingDetail,
 } from "@/services/marketplace";
@@ -78,6 +79,7 @@ export default function PlateHero({ listing }: PlateHeroProps) {
             emirate={
               listing?.emirate_label?.toUpperCase() || listing?.emirate || ""
             }
+            preview={resolveListingPreview(listing)}
             plateType={listing?.plate_type || undefined}
             plateDesign={listing?.plate_design || undefined}
             crop="hero"

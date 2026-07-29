@@ -38,7 +38,10 @@ export default function PortfolioPlateHero({
             plate_code={plate.code}
             plate_digits={plate.digits}
             emirate={plate.emirate}
-            plateVariant="private_new_colorful"
+            preview={plate.preview}
+            plateType={plate.plateType}
+            plateDesign={plate.plateDesign}
+            plateVariant={plate.preview ? undefined : "private_new_colorful"}
             crop="hero"
           />
         </div>

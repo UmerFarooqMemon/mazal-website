@@ -4,6 +4,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 interface OfferDealSummaryProps {
   askingPrice: number;
@@ -12,6 +13,7 @@ interface OfferDealSummaryProps {
   emirate?: string;
   plate_type?: string;
   plate_design?: string;
+  preview?: PlatePreviewConfig | null;
   hideCode?: boolean;
 }
 
@@ -22,6 +24,7 @@ export default function OfferDealSummary({
   emirate = "DUBAI",
   plate_type,
   plate_design,
+  preview,
   hideCode = false,
 }: OfferDealSummaryProps) {
   const { t, locale } = useLocale();
@@ -70,6 +73,7 @@ export default function OfferDealSummary({
           plate_code={plate_code}
           plate_digits={plate_digits}
           emirate={emirate}
+          preview={preview}
           plateType={plate_type}
           plateDesign={plate_design}
           crop="deal-summary"

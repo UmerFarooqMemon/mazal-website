@@ -81,6 +81,7 @@ export default function SimilarPlates({ listingId }: SimilarPlatesProps) {
               plate_digits={plate.plate_digits}
               plate_type={plate.plate_type}
               plate_design={plate.plate_design}
+              preview={plate.preview}
               hideCode={plate.hideCode}
             />
           ))}

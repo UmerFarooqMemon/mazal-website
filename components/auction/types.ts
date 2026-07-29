@@ -1,3 +1,5 @@
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
+
 export type AuctionListingStatus =
   | "scheduled"
   | "live"
@@ -14,6 +16,10 @@ export interface AuctionListing {
   digits: string;
   emirate: string;
   plateVariant: string;
+  plateType?: string;
+  plateDesign?: string;
+  /** Plate render config from the listing API, when provided. */
+  preview?: PlatePreviewConfig | null;
   kind: AuctionKind;
   status: AuctionListingStatus;
   askingPrice: number;

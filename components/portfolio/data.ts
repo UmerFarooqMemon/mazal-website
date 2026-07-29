@@ -1,3 +1,5 @@
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
+
 export type PortfolioPlateStatus = "owned" | "listed" | "auction";
 
 export interface PortfolioPlate {
@@ -5,6 +7,10 @@ export interface PortfolioPlate {
   emirate: string;
   code: string;
   digits: string;
+  /** Plate render config from the listing API, when provided. */
+  preview?: PlatePreviewConfig | null;
+  plateType?: string;
+  plateDesign?: string;
   estValue: number;
   returnPct: number;
   status: PortfolioPlateStatus;

@@ -44,7 +44,7 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
           className="text-[13px] font-medium"
           style={{ color: getColor("primaryText") }}
         >
-          {t("auctions.current_bids")}: {auction.currentBids ?? 5}
+          {t("auctions.current_bids")}: {auction.currentBids ?? 0}
         </span>
       </div>
 
@@ -53,7 +53,10 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
           plate_code={auction.code}
           plate_digits={auction.digits}
           emirate={auction.emirate}
+          preview={auction.preview}
           plateVariant={auction.plateVariant}
+          plateType={auction.plateType}
+          plateDesign={auction.plateDesign}
           crop="card"
           hideCode={Boolean(auction.hideCode)}
           scaleFontToWidth
@@ -102,7 +105,7 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
                 className="text-[20px] sm:text-[22px] font-bold tabular-nums"
                 style={{ color: getColor("success") }}
               >
-                {auction.timeLeft || "1m: 12 S"}
+                {auction.timeLeft || "—"}
               </div>
             </div>
           </div>

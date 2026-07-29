@@ -6,15 +6,23 @@ import { useTheme } from "@/context/ThemeContext";
 import { formatCountdown } from "./mappers";
 
 interface AuctionTimerProps {
-  endsAt: string;
+  /** Null for open auctions that run without an end date. */
+  endsAt: string | null;
 }
 
 export default function AuctionTimer({ endsAt }: AuctionTimerProps) {
   const { t } = useLocale();
   const { getColor } = useTheme();
-  const [timeLeft, setTimeLeft] = useState(formatCountdown(endsAt));
+  const [timeLeft, setTimeLeft] = useState(() =>
+    endsAt ? formatCountdown(endsAt) : "—",
+  );
 
   useEffect(() => {
+    if (!endsAt) {
+      setTimeLeft("—");
+      return;
+    }
+
     setTimeLeft(formatCountdown(endsAt));
     const interval = setInterval(() => {
       setTimeLeft(formatCountdown(endsAt));

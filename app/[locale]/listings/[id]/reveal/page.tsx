@@ -21,6 +21,7 @@ import {
   initiateReveal,
   isHiddenPlateCode,
   proceedAfterReveal,
+  resolveListingPreview,
   resolvePlateParts,
   type MarketplaceListingDetail,
   type MarketplaceReveal,
@@ -276,6 +277,7 @@ export default function RevealPage() {
                     listing.emirate ||
                     ""
                   }
+                  preview={resolveListingPreview(listing)}
                   plateType={listing.plate_type || undefined}
                   plateDesign={listing.plate_design || undefined}
                   crop="hero"

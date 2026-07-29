@@ -19,6 +19,7 @@ import {
   getMyOffers,
   isHiddenPlateCode,
   rejectOffer,
+  resolveListingPreview,
   resolvePlateParts,
   startPurchaseFromOffer,
   submitOffer,
@@ -996,6 +997,7 @@ export default function OfferNegotiation() {
               }
               plate_type={listing?.plate_type || undefined}
               plate_design={listing?.plate_design || undefined}
+              preview={resolveListingPreview(listing)}
               hideCode={isHiddenPlateCode(listing)}
             />
           </div>

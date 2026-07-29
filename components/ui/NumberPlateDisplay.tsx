@@ -80,12 +80,15 @@ export default function NumberPlateDisplay({
 
   const variantMeta = plateVariant ? variantsByKey[plateVariant] : undefined;
   // When code is hidden, API often strips plate_code — still show a blurred letter unless
-  // the variant explicitly has no code field.
+  // the variant explicitly has no code field. Listing payloads carry overlays but
+  // no variant key, so there the overlay config decides whether a code exists.
   const showCodeField =
     showCode !== undefined
       ? showCode
-      : (variantMeta?.fields?.includes("plate_code") ?? true) &&
-        (variantMeta?.has_code ?? (Boolean(plate_code) || hideCode));
+      : !variantMeta && preview?.overlays
+        ? Boolean(preview.overlays.plate_code)
+        : (variantMeta?.fields?.includes("plate_code") ?? true) &&
+          (variantMeta?.has_code ?? (Boolean(plate_code) || hideCode));
 
   const usesPlateWidthFont = crop === "deal-summary";
   const fontScaleMultiplier =

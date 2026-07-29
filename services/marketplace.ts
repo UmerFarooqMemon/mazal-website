@@ -1,3 +1,5 @@
+import type { PlatePreviewConfig } from "@/lib/plate-preview";
+
 export interface MarketplaceApiResponse<T> {
   status?: boolean;
   message?: string;
@@ -14,7 +16,12 @@ export interface MarketplaceSeller {
   emirates_id_verified: boolean;
 }
 
-export interface MarketplaceListingPreview {
+/**
+ * Listings carry the same render config as the number-plate options endpoint
+ * (background image + overlay positions), so the plate can be drawn exactly as
+ * the API describes it instead of guessing from plate_type / plate_design.
+ */
+export interface MarketplaceListingPreview extends PlatePreviewConfig {
   image_url?: string;
   style?: string;
 }
@@ -106,9 +113,10 @@ export interface MarketplaceAuctionRegistration {
 }
 
 export interface MarketplaceAuction {
-  starts_at: string;
-  ends_at: string;
-  reserve_price: number | string;
+  // Open (untimed) auctions publish without a schedule.
+  starts_at: string | null;
+  ends_at: string | null;
+  reserve_price?: number | string | null;
   starting_price?: number | string;
   outcome?: string | null;
   outcome_label?: string | null;
@@ -185,6 +193,7 @@ export interface MarketplaceListingCard {
   listing_type: string;
   listing_type_label: string;
   status: string;
+  status_label?: string;
   title: string;
   emirate: string;
   emirate_label: string;
@@ -200,6 +209,7 @@ export interface MarketplaceListingCard {
   code_hidden: boolean;
   view_count: number;
   watcher_count: number;
+  trending_score?: number;
   offer_count: number;
   previously_sold: boolean;
   /** Boost / featured tier shown on marketplace cards (Figma: Diamond / Gold / Silver). */
@@ -210,6 +220,9 @@ export interface MarketplaceListingCard {
   is_watchlisted?: boolean;
   preview?: MarketplaceListingPreview | null;
   published_at: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  is_scheduled?: boolean;
   auction?: MarketplaceAuction | null;
 }
 
@@ -726,6 +739,24 @@ export function resolvePlateParts(listing?: PlateSource | null) {
   };
 }
 
+/**
+ * Returns the listing's plate render config, or null when the payload only has
+ * the legacy `{ image_url, style }` shape — those cannot be rendered as a plate
+ * and must fall back to the options lookup.
+ */
+export function resolveListingPreview(
+  listing?: { preview?: MarketplaceListingPreview | null } | null,
+): PlatePreviewConfig | null {
+  const preview = listing?.preview;
+  if (!preview) return null;
+
+  const hasBackground = Boolean(
+    preview.background_image?.url || preview.background_image_url,
+  );
+
+  return hasBackground ? preview : null;
+}
+
 export function mapListingToPlateCard(listing: MarketplaceListingCard) {
   const { code: plateCode, digits: plateDigits } = resolvePlateParts(listing);
 
@@ -760,6 +791,7 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     previouslySold: listing.previously_sold,
     isFavorite: listing.is_watchlisted,
     hideCode,
+    preview: resolveListingPreview(listing),
     imageUrl: listing.preview?.image_url,
   };
 }
