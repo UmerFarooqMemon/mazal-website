@@ -300,7 +300,9 @@ export default function RegisterPage() {
                   >
                     <span>{t("common.agree_terms_part1")}</span>
                     <Link
-                      href=""
+                      href={`/${locale}/terms`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="hover:underline whitespace-nowrap"
                       style={{ color: getColor("primary") }}
                     >
@@ -308,7 +310,9 @@ export default function RegisterPage() {
                     </Link>
                     <span>{t("common.agree_terms_part2")}</span>
                     <Link
-                      href=""
+                      href={`/${locale}/privacy`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="hover:underline whitespace-nowrap"
                       style={{ color: getColor("primary") }}
                     >
