@@ -659,7 +659,13 @@ export function isHiddenPlateCode(
   if (!listing) return false;
   const flag = (value: unknown) =>
     value === true || value === 1 || value === "1" || value === "true";
-  return flag(listing.hide_code) || flag(listing.code_hidden);
+  // code_hidden is viewer-specific (false after reveal payment).
+  // hide_code is the listing setting and stays true after reveal — only
+  // fall back to it when code_hidden is absent from the payload.
+  if (listing.code_hidden != null) {
+    return flag(listing.code_hidden);
+  }
+  return flag(listing.hide_code);
 }
 
 /**
@@ -693,10 +699,11 @@ type PlateSource = HiddenCodeSource & {
 
 /**
  * Resolves plate code + digits for display.
- * Title digits are only used when hide_code/code_hidden is true — those
- * listings null out plate_digits and mask display_plate, but title still
- * ends with the real number (e.g. "dubai A 433"). Normal listings keep
- * using plate_code / plate_digits / display_plate only.
+ * Title digits are only used when the code is currently hidden from the
+ * viewer (code_hidden) — those listings null out plate_digits and mask
+ * display_plate, but title still ends with the real number (e.g.
+ * "dubai A 433"). Normal / revealed listings keep using plate_code /
+ * plate_digits / display_plate only.
  */
 export function resolvePlateParts(listing?: PlateSource | null) {
   if (!listing) return { code: "", digits: "" };

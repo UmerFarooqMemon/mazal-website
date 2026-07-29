@@ -113,6 +113,41 @@ export default function RevealPage() {
     }
   };
 
+  const applyRevealConfirm = (
+    response: Awaited<ReturnType<typeof confirmRevealPayment>>,
+  ) => {
+    setReveal(response.data.reveal);
+    setCodeHidden(false);
+    setStep("done");
+
+    const codeScreen = response.data.code_screen;
+    const revealedListing = response.data.listing;
+
+    setListing((previous) => {
+      const base = revealedListing ?? previous;
+      if (!base) return previous;
+
+      return {
+        ...base,
+        // Viewer can see the code now — do not keep blur from hide_code setting.
+        code_hidden: false,
+        plate_code:
+          codeScreen?.plate_code ??
+          revealedListing?.plate_code ??
+          base.plate_code,
+        plate_digits:
+          codeScreen?.plate_digits ??
+          revealedListing?.plate_digits ??
+          base.plate_digits,
+        display_plate:
+          codeScreen?.display_plate ||
+          revealedListing?.display_plate ||
+          base.display_plate,
+        reveal: response.data.reveal ?? base.reveal,
+      };
+    });
+  };
+
   const handleWalletPaid = async () => {
     setActionLoading(true);
     try {
@@ -123,12 +158,7 @@ export default function RevealPage() {
       }
       const reference = `wallet-${Date.now()}`;
       const response = await confirmRevealPayment(params.id, locale, reference);
-      setReveal(response.data.reveal);
-      if (response.data.listing) {
-        setListing(response.data.listing);
-      }
-      setCodeHidden(false);
-      setStep("done");
+      applyRevealConfirm(response);
       toast.success(t("wallet.paid_from_wallet"));
     } catch (err) {
       toast.error(
@@ -144,30 +174,7 @@ export default function RevealPage() {
     try {
       const reference = `card-${cardForm.cardNumber.replace(/\D/g, "").slice(-4)}-${Date.now()}`;
       const response = await confirmRevealPayment(params.id, locale, reference);
-      setReveal(response.data.reveal);
-      if (response.data.listing) {
-        setListing(response.data.listing);
-      } else if (response.data.code_screen?.unlocked) {
-        setListing((previous) =>
-          previous
-            ? {
-                ...previous,
-                plate_code:
-                  response.data.code_screen.plate_code ?? previous.plate_code,
-                plate_digits:
-                  response.data.code_screen.plate_digits ??
-                  previous.plate_digits,
-                display_plate:
-                  response.data.code_screen.display_plate ||
-                  previous.display_plate,
-                code_hidden: false,
-                hide_code: false,
-              }
-            : previous,
-        );
-      }
-      setCodeHidden(false);
-      setStep("done");
+      applyRevealConfirm(response);
       toast.success(t("listings.reveal_confirmed"));
     } catch (err) {
       toast.error(
@@ -218,8 +225,12 @@ export default function RevealPage() {
   }
 
   const typeLabel = listing.listing_type_label || listing.listing_type;
+  // Prefer local reveal state; fall back to listing.code_hidden (not hide_code).
   const hideCode = codeHidden || isHiddenPlateCode(listing);
-  const { code: plateCode, digits: plateDigits } = resolvePlateParts(listing);
+  const { code: plateCode, digits: plateDigits } = resolvePlateParts({
+    ...listing,
+    code_hidden: hideCode,
+  });
 
   return (
     <div
