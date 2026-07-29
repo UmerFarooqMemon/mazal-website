@@ -648,8 +648,13 @@ export function resolveListingAskingPrice(
   );
 }
 
+type HiddenCodeSource = {
+  hide_code?: boolean | number | string | null;
+  code_hidden?: boolean | number | string | null;
+};
+
 export function isHiddenPlateCode(
-  listing: Pick<MarketplaceListingCard, "hide_code" | "code_hidden"> | null | undefined,
+  listing: HiddenCodeSource | null | undefined,
 ): boolean {
   if (!listing) return false;
   const flag = (value: unknown) =>
@@ -679,13 +684,11 @@ function splitDisplayPlate(displayPlate?: string | null) {
   };
 }
 
-type PlateSource = {
+type PlateSource = HiddenCodeSource & {
   plate_code?: string | null;
   plate_digits?: string | null;
   display_plate?: string | null;
   title?: string | null;
-  hide_code?: boolean | number | string | null;
-  code_hidden?: boolean | number | string | null;
 };
 
 /**
