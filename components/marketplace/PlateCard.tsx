@@ -4,7 +4,7 @@ import { Eye, Star } from "lucide-react";
 import { useLocale } from "../../context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
-import { DirhamAmount } from "@/components/ui";
+import { DiamondTierBadge, DirhamAmount } from "@/components/ui";
 
 interface PlateCardProps {
   id: string | number;
@@ -89,15 +89,19 @@ export default function PlateCard({
       <div
         className={`flex justify-between items-center mb-4`}
       >
-        <span
-          className="text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider"
-          style={{
-            backgroundColor: getColor("primaryLight"),
-            color: getColor("primary"),
-          }}
-        >
-          {badgeLabel}
-        </span>
+        {tier === "diamond" ? (
+          <DiamondTierBadge />
+        ) : (
+          <span
+            className="text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider"
+            style={{
+              backgroundColor: getColor("primaryLight"),
+              color: getColor("primary"),
+            }}
+          >
+            {badgeLabel}
+          </span>
+        )}
         <div
           className={`flex items-center gap-1.5 text-xs`}
           style={{ color: getColor("mutedText") }}

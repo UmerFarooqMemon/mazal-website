@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
-import { DirhamAmount } from "@/components/ui";
+import { DiamondTierBadge, DirhamAmount } from "@/components/ui";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
 import { useLocale } from "@/context/LocaleContext";
 
@@ -21,14 +21,9 @@ export type HomeV2Plate = {
 };
 
 const TIER_STYLES: Record<
-  PlateTier,
+  Exclude<PlateTier, "diamond">,
   { labelKey: string; className: string; icon: string }
 > = {
-  diamond: {
-    labelKey: "listings.tier_diamond",
-    className: "bg-linear-to-r from-[#152e2b] to-[#00664e]",
-    icon: "/home-v2/icon-diamond.svg",
-  },
   gold: {
     labelKey: "listings.tier_gold",
     className: "bg-linear-to-br from-[#e0ae57] to-[#a77927]",
@@ -48,7 +43,7 @@ const TIER_STYLES: Record<
 
 export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
   const { locale, t } = useLocale();
-  const tier = TIER_STYLES[plate.tier];
+  const tier = plate.tier === "diamond" ? null : TIER_STYLES[plate.tier];
 
   return (
     <Link
@@ -56,12 +51,16 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
       className="flex flex-col gap-4 rounded-xl border border-[#d9dee6] bg-white p-5 shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)] transition-shadow hover:shadow-[0_8px_28px_-10px_rgba(21,46,43,0.2)]"
     >
       <div className="flex items-center justify-between">
-        <span
-          className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.3px] text-white uppercase ${tier.className}`}
-        >
-          <HomeV2Icon src={tier.icon} size={12} />
-          {t(tier.labelKey)}
-        </span>
+        {tier ? (
+          <span
+            className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.3px] text-white uppercase ${tier.className}`}
+          >
+            <HomeV2Icon src={tier.icon} size={12} />
+            {t(tier.labelKey)}
+          </span>
+        ) : (
+          <DiamondTierBadge />
+        )}
         <div className="flex items-center gap-2.5">
           <span className="flex items-center gap-1 text-xs text-[#545e6f]">
             <HomeV2Icon src="/home-v2/icon-eye.svg" size={14} />
