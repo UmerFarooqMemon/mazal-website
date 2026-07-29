@@ -84,11 +84,6 @@ export default function MarketplaceCheckout({
   // Listing APIs expose type + design separately — never treat design alone as the variant key.
   const plateVariant = `${plateType}_${plateDesign}`;
   const hideCode = isHiddenPlateCode(listing);
-  const plateDigits =
-    listing?.plate_digits &&
-    (!hideCode || /^\d+$/.test(listing.plate_digits.trim()))
-      ? listing.plate_digits
-      : "";
 
   const deal: DealData = {
     role: initialRole,
@@ -97,10 +92,9 @@ export default function MarketplaceCheckout({
     plateVariant,
     plateDesign,
     code: listing?.plate_code || "",
-    digit: plateDigits,
+    digit: listing?.plate_digits || "",
     price: resolvedPrice,
     hideCode,
-    digitCount: listing?.digit_count,
   };
 
   const steps: StepItem[] = useMemo(() => {

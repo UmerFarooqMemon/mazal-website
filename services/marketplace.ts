@@ -675,15 +675,6 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
 
   const hideCode = isHiddenPlateCode(listing);
 
-  // When code is hidden, API often returns non-numeric display_plate junk — clear it
-  // so the plate overlay can use digit placeholders instead of sanitizing to empty.
-  if (hideCode && plateDigits && !/^\d+$/.test(plateDigits.trim())) {
-    plateDigits = "";
-  }
-  if (hideCode && plateCode && !/^[A-Za-z]+$/.test(plateCode.trim())) {
-    plateCode = "";
-  }
-
   const code =
     plateCode && plateDigits
       ? `${plateCode} | ${plateDigits}`
@@ -713,7 +704,6 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     previouslySold: listing.previously_sold,
     isFavorite: listing.is_watchlisted,
     hideCode,
-    digitCount: listing.digit_count,
     imageUrl: listing.preview?.image_url,
   };
 }

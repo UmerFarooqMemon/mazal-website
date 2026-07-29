@@ -60,14 +60,10 @@ export default function PlateHero({ listing }: PlateHeroProps) {
 
   const hideCode = isHiddenPlateCode(listing);
   const plateCode = listing?.plate_code || "";
-  const rawDigits =
-    listing?.plate_digits ||
-    (!hideCode
-      ? listing?.display_plate?.replace(/^[A-Za-z]+\s*[-|]?\s*/, "")
-      : "") ||
-    "";
   const plateDigits =
-    hideCode && rawDigits && !/^\d+$/.test(rawDigits.trim()) ? "" : rawDigits;
+    listing?.plate_digits ||
+    listing?.display_plate?.replace(/^[A-Za-z]+\s*[-|]?\s*/, "") ||
+    "";
 
   return (
     <div className="flex flex-col gap-4">
@@ -89,7 +85,6 @@ export default function PlateHero({ listing }: PlateHeroProps) {
             plateDesign={listing?.plate_design || undefined}
             crop="hero"
             hideCode={hideCode}
-            digitCount={listing?.digit_count}
           />
         </div>
       </div>

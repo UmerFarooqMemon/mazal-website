@@ -92,24 +92,14 @@ function extractPlateFields(listing: MarketplaceListingCard) {
   let digits = listing.plate_digits || "";
   const hideCode = isHiddenPlateCode(listing);
 
-  if (!hideCode && !digits && listing.display_plate) {
+  if (!digits && listing.display_plate) {
     const match = listing.display_plate.match(/^([A-Za-z]+)\s*[-|]?\s*(\d+)$/);
     if (match) {
       code = code || match[1].toUpperCase();
       digits = match[2];
-    } else if (/^\d+$/.test(listing.display_plate.trim())) {
-      digits = listing.display_plate.trim();
     } else {
       digits = listing.display_plate.trim();
     }
-  }
-
-  // When hidden, drop non-numeric junk so overlays can use blurred placeholders.
-  if (hideCode && digits && !/^\d+$/.test(digits.trim())) {
-    digits = "";
-  }
-  if (hideCode && code && !/^[A-Za-z]+$/.test(code.trim())) {
-    code = "";
   }
 
   return {
@@ -170,7 +160,6 @@ export function mapListingToAuctionListing(
       ? formatCountdown(resolvedAuction.ends_at)
       : undefined,
     hideCode: plate.hideCode,
-    digitCount: listing.digit_count,
   };
 }
 

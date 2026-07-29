@@ -8,18 +8,8 @@ import {
   type PlateRenderState,
 } from "@/lib/number-plate-preview-render";
 
-/** Placeholders when API strips values under hide_code / code_hidden — keeps blurred ink on the plate. */
+/** Placeholder letter when API strips the code under hide_code / code_hidden. */
 const HIDDEN_CODE_PLACEHOLDER = "A";
-const HIDDEN_DIGIT_CHAR = "8";
-
-function resolveHiddenDigits(digits: string, digitCount?: number): string {
-  if (digits.trim()) return digits;
-  const n =
-    typeof digitCount === "number" && digitCount > 0
-      ? Math.min(Math.max(Math.floor(digitCount), 1), 5)
-      : 5;
-  return HIDDEN_DIGIT_CHAR.repeat(n);
-}
 
 interface PlateWithOverlayProps {
   plate_code: string;
@@ -32,7 +22,7 @@ interface PlateWithOverlayProps {
   preview?: PlatePreviewConfig;
   isRTL?: boolean;
   /**
-   * When true, blurs code + digits (blur(14px)) using placeholders if API omitted them.
+   * When true, blurs only the plate code letter — digits stay sharp in their API position.
    */
   hideCode?: boolean;
   /**
@@ -40,8 +30,6 @@ interface PlateWithOverlayProps {
    * False for classic/no-code variants so we never invent a code letter.
    */
   allowCodePlaceholder?: boolean;
-  /** Used to size digit placeholders when plate_digits is empty and hideCode is on. */
-  digitCount?: number;
   /** When true, scale overlay font size to rendered plate width (deal summary). */
   scaleFontToWidth?: boolean;
   /** Extra multiplier applied with width-based font scaling (deal summary). */
@@ -61,8 +49,7 @@ function OverlaySpan({
 
   const className = [overlay.className, overlayClass].filter(Boolean).join(" ");
 
-  // Same approach as create-listing / private plate hide-code, but stronger
-  // so characters stay unreadable while ink still reads on the plate.
+  // Strong blur so the letter stays unreadable while still reading as ink on the plate.
   const content = overlay.inner ? (
     <span
       className={overlay.inner.className}
@@ -110,18 +97,14 @@ export default function PlateWithOverlay({
   preview,
   hideCode = false,
   allowCodePlaceholder = false,
-  digitCount,
   scaleFontToWidth = false,
   fontScaleMultiplier = 1,
 }: PlateWithOverlayProps) {
-  // API often omits code/digits when hidden — still render glyphs so blur has something to show.
+  // API often omits the code when hidden — still render a glyph so blur has something to show.
   const effectiveCode =
     hideCode && allowCodePlaceholder && !plate_code.trim()
       ? HIDDEN_CODE_PLACEHOLDER
       : plate_code;
-  const effectiveDigits = hideCode
-    ? resolveHiddenDigits(plate_digits, digitCount)
-    : plate_digits;
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [renderState, setRenderState] = useState<PlateRenderState | null>(() =>
@@ -129,7 +112,7 @@ export default function PlateWithOverlay({
       ? computePlateRenderState(
           preview,
           effectiveCode,
-          effectiveDigits,
+          plate_digits,
           420,
           scaleFontToWidth,
           fontScaleMultiplier,
@@ -142,7 +125,7 @@ export default function PlateWithOverlay({
     const next = computePlateRenderState(
       preview,
       effectiveCode,
-      effectiveDigits,
+      plate_digits,
       rootWidth,
       scaleFontToWidth,
       fontScaleMultiplier,
@@ -151,7 +134,7 @@ export default function PlateWithOverlay({
   }, [
     preview,
     effectiveCode,
-    effectiveDigits,
+    plate_digits,
     scaleFontToWidth,
     fontScaleMultiplier,
   ]);
@@ -235,7 +218,6 @@ export default function PlateWithOverlay({
           }
         }
         overlayClass="plate-overlay-digits-ar"
-        blur={hideCode}
       />
       <OverlaySpan
         overlay={
@@ -247,7 +229,6 @@ export default function PlateWithOverlay({
           }
         }
         overlayClass="plate-overlay-digits"
-        blur={hideCode}
       />
     </div>
   );

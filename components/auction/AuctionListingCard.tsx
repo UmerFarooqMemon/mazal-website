@@ -56,7 +56,6 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
           plateVariant={auction.plateVariant}
           crop="card"
           hideCode={Boolean(auction.hideCode)}
-          digitCount={auction.digitCount}
           scaleFontToWidth
           fontScaleMultiplier={2.3}
         />

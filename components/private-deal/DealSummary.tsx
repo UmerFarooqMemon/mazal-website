@@ -20,9 +20,8 @@ export interface DealData {
   code: string;
   digit: string;
   price: number;
-  /** When true, blur plate code + digits (hide_code / code_hidden). */
+  /** When true, blur the plate code letter (hide_code / code_hidden). */
   hideCode?: boolean;
-  digitCount?: number;
 }
 
 interface Variant {
@@ -83,10 +82,6 @@ export default function DealSummary({
     (selectedVariant?.has_code ?? (Boolean(data.code) || Boolean(data.hideCode)));
 
   const hideCode = Boolean(data.hideCode);
-  const plateDigits =
-    hideCode && data.digit && !/^\d+$/.test(data.digit.trim())
-      ? ""
-      : data.digit;
 
   const emirateLabel =
     data.emirate?.toLowerCase() === "dubai"
@@ -117,7 +112,7 @@ export default function DealSummary({
       >
         <NumberPlateDisplay
           plate_code={showCodeField ? data.code : ""}
-          plate_digits={plateDigits}
+          plate_digits={data.digit}
           emirate={emirateLabel}
           preview={selectedVariant?.preview}
           plateVariant={data.plateVariant}
@@ -126,7 +121,6 @@ export default function DealSummary({
           crop={plateCrop}
           showCode={showCodeField}
           hideCode={hideCode}
-          digitCount={data.digitCount}
           wrapperClassName={
             plateCrop === "deal-summary"
               ? "deal-summary-plate w-full"

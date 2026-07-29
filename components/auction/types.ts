@@ -23,9 +23,8 @@ export interface AuctionListing {
   startsIn?: string;
   currentBids?: number;
   timeLeft?: string;
-  /** When true, plate code + digits are heavily blurred on the plate preview. */
+  /** When true, the plate code letter is blurred on the plate preview. */
   hideCode?: boolean;
-  digitCount?: number;
 }
 
 export type DepositPaymentMethod =

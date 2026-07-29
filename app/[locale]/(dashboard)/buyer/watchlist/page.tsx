@@ -132,7 +132,6 @@ export default function BuyerWatchlistPage() {
                 plate_type={plate.plate_type}
                 plate_design={plate.plate_design}
                 hideCode={plate.hideCode}
-                digitCount={plate.digitCount}
               />
               <button
                 type="button"

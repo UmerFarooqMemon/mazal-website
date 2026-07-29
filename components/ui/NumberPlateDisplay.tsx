@@ -41,8 +41,6 @@ interface NumberPlateDisplayProps {
   plateDesign?: string;
   crop?: PlateCropVariant;
   hideCode?: boolean;
-  /** Digit length hint for blurred placeholders when API omits plate_digits. */
-  digitCount?: number;
   showCode?: boolean;
   className?: string;
   wrapperClassName?: string;
@@ -61,7 +59,6 @@ export default function NumberPlateDisplay({
   plateDesign,
   crop = "form",
   hideCode = false,
-  digitCount,
   showCode,
   className = "",
   wrapperClassName = "w-full overflow-hidden",
@@ -105,7 +102,6 @@ export default function NumberPlateDisplay({
           preview={resolvedPreview || undefined}
           hideCode={hideCode}
           allowCodePlaceholder={showCodeField}
-          digitCount={digitCount}
           width={width}
           className={className}
           scaleFontToWidth={scaleFontToWidth || usesPlateWidthFont}
