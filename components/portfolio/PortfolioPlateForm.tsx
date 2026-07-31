@@ -15,6 +15,7 @@ import {
   Search,
   ChevronDown,
 } from "lucide-react";
+import { formatPriceInput } from "@/lib/card-input";
 
 // Types
 interface PlateCodeItem {
@@ -288,7 +289,7 @@ export default function PortfolioPlateForm({
       plate_variant: form.plate_variant,
       plate_code: showCodeField ? form.plate_code : undefined,
       plate_digits: form.plate_digits,
-      price: form.price,
+      price: form.price.replace(/\D/g, "") || "0",
       description: form.description,
       mulkiya_image: selectedFile,
     });
@@ -544,6 +545,7 @@ export default function PortfolioPlateForm({
           <div className="relative">
             <input
               type="text"
+              inputMode="numeric"
               className={`w-full rounded-xl border bg-white py-3 px-4 text-sm focus:outline-none focus:ring-2 transition-all text-start`}
               style={{
                 borderColor:
@@ -553,8 +555,11 @@ export default function PortfolioPlateForm({
                 color: getColor("primaryText"),
               }}
               value={form.price}
-              onChange={(e) => handleChange("price", e.target.value)}
+              onChange={(e) =>
+                handleChange("price", formatPriceInput(e.target.value))
+              }
               onBlur={() => handleBlur("price")}
+              placeholder="450,000"
             />
           </div>
           {touched.price && errors.price && (

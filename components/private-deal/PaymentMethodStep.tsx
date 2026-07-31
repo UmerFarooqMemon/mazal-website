@@ -19,6 +19,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import BankSelect from "@/components/ui/BankSelect";
 import WalletMethodOption from "@/components/wallet/WalletMethodOption";
+import { formatPriceInput } from "@/lib/card-input";
 
 export type PaymentMethod =
   | "bank"
@@ -619,13 +620,18 @@ export default function PaymentMethodStep({
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <Input
                               label={t("private-deal.amount")}
-                              value={draft.amount}
+                              value={
+                                draft.amount
+                                  ? formatPriceInput(draft.amount)
+                                  : ""
+                              }
                               onChange={(e) =>
                                 patchDraft(draft.id, {
-                                  amount: e.target.value.replace(/[^\d.]/g, ""),
+                                  amount: e.target.value.replace(/\D/g, ""),
                                 })
                               }
                               placeholder="100,000"
+                              inputMode="numeric"
                             />
                             <BankSelect
                               label={t("private-deal.select_bank")}
@@ -685,13 +691,18 @@ export default function PaymentMethodStep({
                         <>
                           <Input
                             label={t("private-deal.amount")}
-                            value={draft.amount}
+                            value={
+                              draft.amount
+                                ? formatPriceInput(draft.amount)
+                                : ""
+                            }
                             onChange={(e) =>
                               patchDraft(draft.id, {
-                                amount: e.target.value.replace(/[^\d.]/g, ""),
+                                amount: e.target.value.replace(/\D/g, ""),
                               })
                             }
                             placeholder="100,000"
+                            inputMode="numeric"
                           />
                           <div>
                             <label

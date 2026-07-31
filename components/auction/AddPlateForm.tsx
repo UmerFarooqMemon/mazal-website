@@ -16,6 +16,7 @@ import Select from "@/components/ui/Select";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 import { createListing } from "@/services/marketplace";
+import { formatPriceInput } from "@/lib/card-input";
 
 interface AddPlateFormProps {
   onBack: () => void;
@@ -405,15 +406,16 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
           <Input
             name="price"
             label={t("auctions.field_amount")}
-            type="number"
-            min={1}
-            value={String(form.price)}
+            type="text"
+            inputMode="numeric"
+            value={form.price ? formatPriceInput(String(form.price)) : ""}
             onChange={(e) =>
               setForm((prev) => ({
                 ...prev,
-                price: Number(e.target.value) || 0,
+                price: Number(e.target.value.replace(/\D/g, "")) || 0,
               }))
             }
+            placeholder="68,000"
           />
         </div>
 

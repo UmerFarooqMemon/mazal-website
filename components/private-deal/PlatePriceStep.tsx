@@ -16,6 +16,7 @@ import DirhamText from "@/components/ui/DirhamText";
 import Select from "@/components/ui/Select";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { DealData } from "./DealSummary";
+import { formatPriceInput } from "@/lib/card-input";
 
 interface PlateCodeItem {
   code: string;
@@ -491,15 +492,16 @@ export default function PlatePriceStep({
         <Input
           label={<DirhamText text={t("private-deal.agreed_price_aed")} />}
           icon={<Wallet className="w-4 h-4" />}
-          value={data.price ? data.price.toLocaleString("en-AE") : ""}
+          value={data.price ? formatPriceInput(String(data.price)) : ""}
           onChange={(e) => {
-            const raw = e.target.value.replace(/,/g, "").replace(/\D/g, "");
+            const raw = e.target.value.replace(/\D/g, "");
             onChange({ price: raw ? Number(raw) : 0 });
             clearError("price");
           }}
           onBlur={() => handleBlur("price")}
           error={touched.price ? errors.price : undefined}
           placeholder="450,000"
+          inputMode="numeric"
         />
       </div>
 
