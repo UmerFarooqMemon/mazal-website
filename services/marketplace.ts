@@ -59,6 +59,7 @@ export interface MarketplaceAuctionBankInstructions {
   reference?: string;
   amount?: number | string;
   account_holder_name?: string | null;
+  account_number?: string | null;
   bank_name?: string | null;
   iban?: string | null;
   swift_bic?: string | null;

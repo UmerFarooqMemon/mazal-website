@@ -11,3 +11,4 @@ export { default as CountdownTimer } from "./CountdownTimer";
 export { default as DirhamAmount } from "./DirhamAmount";
 export { default as DirhamText } from "./DirhamText";
 export { default as DirhamSymbolIcon } from "./DirhamSymbolIcon";
+export { default as BeneficiaryInformation } from "./BeneficiaryInformation";

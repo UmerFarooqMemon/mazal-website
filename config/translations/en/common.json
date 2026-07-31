@@ -154,5 +154,11 @@
   "password_reset_success": "Password reset successful! Redirecting...",
   "reset_failed": "Failed to reset password. Please try again.",
   "session_expired": "Session expired. Please request a new code.",
-  "no_results": "No matching results found. Try adjusting your search or filters."
+  "no_results": "No matching results found. Try adjusting your search or filters.",
+  "beneficiary_information": "Beneficiary Information",
+  "beneficiary_name": "Beneficiary name",
+  "iban": "IBAN",
+  "account_number": "Account Number",
+  "copied": "Copied",
+  "copy_failed": "Copy failed"
 }

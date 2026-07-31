@@ -109,16 +109,6 @@ export default function DepositPaymentStep({
         value: source.bank_name || "—",
       },
       {
-        key: "account_name",
-        label: t("auctions.bank_detail_account_name"),
-        value: source.account_holder_name || "—",
-      },
-      {
-        key: "iban",
-        label: t("auctions.bank_detail_iban"),
-        value: source.iban || "—",
-      },
-      {
         key: "swift_code",
         label: t("auctions.bank_detail_swift_code"),
         value: source.swift_bic || "—",
@@ -135,7 +125,7 @@ export default function DepositPaymentStep({
           ? String(depositAmount)
           : "—",
       },
-    ];
+    ].filter((row) => row.value && row.value !== "—");
   }, [bankInstructions, depositAmount, t]);
 
   const collectionInfo = useMemo(() => {
@@ -339,49 +329,51 @@ export default function DepositPaymentStep({
               {t("common.loading") || "Loading..."}
             </p>
           ) : (
-            <div className="space-y-3">
-              {bankRows.map((row) => (
-                <div
-                  key={row.key}
-                  className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5"
-                  style={{
-                    borderColor: getColor("border"),
-                    backgroundColor: getColor("surface"),
-                  }}
-                >
-                  <div className="min-w-0">
-                    <div
-                      className="text-xs mb-0.5"
-                      style={{ color: getColor("mutedText") }}
-                    >
-                      {row.label}
-                    </div>
-                    <div
-                      className="text-sm font-medium truncate"
-                      style={{ color: getColor("primaryText") }}
-                    >
-                      {row.value}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => copyValue(row.key, row.value)}
-                    className="shrink-0 p-2 rounded-lg"
-                    style={{ color: getColor("primary") }}
-                    aria-label={`Copy ${row.label}`}
+            bankRows.length > 0 && (
+              <div className="space-y-3">
+                {bankRows.map((row) => (
+                  <div
+                    key={row.key}
+                    className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5"
+                    style={{
+                      borderColor: getColor("border"),
+                      backgroundColor: getColor("surface"),
+                    }}
                   >
-                    {copied === row.key ? (
-                      <Check
-                        className="w-4 h-4"
-                        style={{ color: getColor("success") }}
-                      />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div className="min-w-0">
+                      <div
+                        className="text-xs mb-0.5"
+                        style={{ color: getColor("mutedText") }}
+                      >
+                        {row.label}
+                      </div>
+                      <div
+                        className="text-sm font-medium truncate"
+                        style={{ color: getColor("primaryText") }}
+                      >
+                        {row.value}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyValue(row.key, row.value)}
+                      className="shrink-0 p-2 rounded-lg"
+                      style={{ color: getColor("primary") }}
+                      aria-label={`Copy ${row.label}`}
+                    >
+                      {copied === row.key ? (
+                        <Check
+                          className="w-4 h-4"
+                          style={{ color: getColor("success") }}
+                        />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )
           )}
 
           <Input

@@ -10,6 +10,7 @@ import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import RoleSelector from "@/components/private-deal/RoleSelector";
 import DealSummary, { type DealData } from "@/components/private-deal/DealSummary";
 import EscrowBenefits from "@/components/private-deal/EscrowBenefits";
+import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
 import PlatePriceStep from "@/components/private-deal/PlatePriceStep";
 import ConfirmDetailsStep, {
   type ConfirmDetailsData,
@@ -916,6 +917,9 @@ export default function PrivateDealPage() {
                 plateCrop="deal-summary"
                 pricing={summaryPricing}
               />
+              {paymentMethod === "bank" && isBuyer && step >= 3 && step <= 4 && (
+                <BeneficiaryInformation />
+              )}
               <EscrowBenefits />
             </div>
           </div>

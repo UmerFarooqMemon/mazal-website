@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import DepositFlowHeader from "@/components/auction/DepositFlowHeader";
 import DepositMethodStep from "@/components/auction/DepositMethodStep";
 import DepositPaymentStep from "@/components/auction/DepositPaymentStep";
+import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
 import DepositStatusStep from "@/components/auction/DepositStatusStep";
 import AuctionSummaryCard from "@/components/auction/AuctionSummaryCard";
 import AuctionBenefitsCard from "@/components/auction/AuctionBenefitsCard";
@@ -507,6 +508,16 @@ export default function AuctionRegisterPage({
                 data={summary}
                 showCheckAmount={method === "managers_check"}
               />
+              {method === "bank" && (
+                <BeneficiaryInformation
+                  beneficiaryName={
+                    bankInstructions?.account_holder_name ||
+                    bankInstructions?.recipient
+                  }
+                  iban={bankInstructions?.iban}
+                  accountNumber={bankInstructions?.account_number}
+                />
+              )}
               <AuctionBenefitsCard />
             </div>
           )}

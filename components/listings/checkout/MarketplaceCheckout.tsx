@@ -9,6 +9,7 @@ import { useTheme } from "@/context/ThemeContext";
 import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import DealSummary, { type DealData } from "@/components/private-deal/DealSummary";
 import EscrowBenefits from "@/components/private-deal/EscrowBenefits";
+import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
 import ConfirmDetailsStep, {
   type ConfirmDetailsData,
 } from "@/components/private-deal/ConfirmDetailsStep";
@@ -311,6 +312,9 @@ export default function MarketplaceCheckout({
                   plateCrop="deal-summary"
                 />
               </div>
+              {paymentMethod === "bank" && step >= 1 && (
+                <BeneficiaryInformation />
+              )}
               <EscrowBenefits />
             </div>
           </div>

@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamSymbolIcon, Input } from "@/components/ui";
+import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
 import type { StepItem } from "@/components/private-deal/Stepper";
 import WalletFlowHeader from "@/components/wallet/WalletFlowHeader";
 import { WALLET_PAGE_BG } from "@/components/wallet/theme";
@@ -495,6 +496,10 @@ export default function WalletTopUpPage() {
                         ),
                       )}
                     </div>
+
+                    {method === "bank_transfer" && (
+                      <BeneficiaryInformation className="mt-5" />
+                    )}
                   </>
                 )}
 
@@ -513,50 +518,59 @@ export default function WalletTopUpPage() {
                       {t("wallet.topup_details_subtitle")}
                     </p>
 
-                    {custody && (
-                      <div
-                        className="rounded-2xl border px-4 py-4 mb-5 space-y-2 text-sm"
-                        style={{ borderColor: getColor("border") }}
-                      >
-                        <p
-                          className="font-medium"
-                          style={{ color: getColor("primaryText") }}
+                    {activePayment.method === "bank_transfer" ? (
+                      <BeneficiaryInformation
+                        className="mb-5"
+                        beneficiaryName={custody?.account_holder_name}
+                        iban={custody?.iban}
+                        accountNumber={custody?.account_number}
+                      />
+                    ) : (
+                      custody && (
+                        <div
+                          className="rounded-2xl border px-4 py-4 mb-5 space-y-2 text-sm"
+                          style={{ borderColor: getColor("border") }}
                         >
-                          {t("wallet.custody_instructions")}
-                        </p>
-                        {custody.account_holder_name && (
-                          <p style={{ color: getColor("secondaryText") }}>
-                            {custody.account_holder_name}
+                          <p
+                            className="font-medium"
+                            style={{ color: getColor("primaryText") }}
+                          >
+                            {t("wallet.custody_instructions")}
                           </p>
-                        )}
-                        {custody.bank_name && (
-                          <p style={{ color: getColor("secondaryText") }}>
-                            {custody.bank_name}
-                          </p>
-                        )}
-                        {custody.iban && (
-                          <p style={{ color: getColor("secondaryText") }}>
-                            IBAN: {custody.iban}
-                          </p>
-                        )}
-                        {custody.cheque_payee && (
-                          <p style={{ color: getColor("secondaryText") }}>
-                            {custody.cheque_payee}
-                          </p>
-                        )}
-                        {(custody.collection_location ||
-                          custody.collection_address) && (
-                          <p style={{ color: getColor("secondaryText") }}>
-                            {custody.collection_location ||
-                              custody.collection_address}
-                          </p>
-                        )}
-                        {custody.note && (
-                          <p style={{ color: getColor("mutedText") }}>
-                            {custody.note}
-                          </p>
-                        )}
-                      </div>
+                          {custody.account_holder_name && (
+                            <p style={{ color: getColor("secondaryText") }}>
+                              {custody.account_holder_name}
+                            </p>
+                          )}
+                          {custody.bank_name && (
+                            <p style={{ color: getColor("secondaryText") }}>
+                              {custody.bank_name}
+                            </p>
+                          )}
+                          {custody.iban && (
+                            <p style={{ color: getColor("secondaryText") }}>
+                              IBAN: {custody.iban}
+                            </p>
+                          )}
+                          {custody.cheque_payee && (
+                            <p style={{ color: getColor("secondaryText") }}>
+                              {custody.cheque_payee}
+                            </p>
+                          )}
+                          {(custody.collection_location ||
+                            custody.collection_address) && (
+                            <p style={{ color: getColor("secondaryText") }}>
+                              {custody.collection_location ||
+                                custody.collection_address}
+                            </p>
+                          )}
+                          {custody.note && (
+                            <p style={{ color: getColor("mutedText") }}>
+                              {custody.note}
+                            </p>
+                          )}
+                        </div>
+                      )
                     )}
 
                     <div className="space-y-3.5">
