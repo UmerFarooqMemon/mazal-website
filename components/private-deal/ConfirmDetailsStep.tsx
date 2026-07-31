@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
+import { formatEmiratesId } from "@/components/kyc/types";
 import { Button, EmiratesIdInput, Input, PhoneInput } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import {
+  formatUaePhone,
   isValidUaeMobile,
   uaeMobileStartsWithFive,
 } from "@/lib/uae-phone";
@@ -51,13 +54,71 @@ export default function ConfirmDetailsStep({
 }: ConfirmDetailsStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const { user } = useAuth();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
+  const didPrefill = useRef(false);
   const [phoneErrors, setPhoneErrors] = useState<{
     mobile?: string;
     secondaryMobile?: string;
   }>({});
+
+  useEffect(() => {
+    if (!user || didPrefill.current) return;
+
+    const sessionEmail =
+      (typeof user.email === "string" && user.email.trim()) ||
+      (typeof user.login === "string" && user.login.includes("@")
+        ? user.login.trim()
+        : "");
+    const sessionPhone =
+      typeof user.phone === "string" && user.phone.trim()
+        ? formatUaePhone(user.phone)
+        : "";
+    const sessionEmiratesId =
+      typeof user.emirates_id === "string" && user.emirates_id.trim()
+        ? formatEmiratesId(user.emirates_id)
+        : "";
+
+    const patch: Partial<ConfirmDetailsData> = {};
+
+    if (!data.fullName.trim() && user.name?.trim()) {
+      patch.fullName = user.name.trim();
+    }
+    if (!data.mobile.trim() && sessionPhone) {
+      patch.mobile = sessionPhone;
+    }
+    if (!data.email.trim() && sessionEmail) {
+      patch.email = sessionEmail;
+    }
+    if (!data.emiratesId.trim() && sessionEmiratesId) {
+      patch.emiratesId = sessionEmiratesId;
+    }
+    if (
+      variant === "buyer" &&
+      data.identification === "emirates_id" &&
+      !data.identificationValue.trim() &&
+      sessionEmiratesId
+    ) {
+      patch.identificationValue = sessionEmiratesId;
+    }
+
+    didPrefill.current = true;
+    if (Object.keys(patch).length > 0) {
+      onChange(patch);
+    }
+  }, [
+    data.email,
+    data.emiratesId,
+    data.fullName,
+    data.identification,
+    data.identificationValue,
+    data.mobile,
+    onChange,
+    user,
+    variant,
+  ]);
 
   const typeOptions = [
     { key: "individual", label: t("private-deal.type_individual") },
