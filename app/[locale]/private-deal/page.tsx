@@ -24,6 +24,7 @@ import PaymentMethodStep, {
 } from "@/components/private-deal/PaymentMethodStep";
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
+import GiftNoPaymentBanner from "@/components/private-deal/GiftNoPaymentBanner";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import {
   createPrivateDeal,
@@ -182,7 +183,22 @@ export default function PrivateDealPage() {
 
   const isSeller = deal.role === "seller";
   const isBuyer = deal.role === "buyer";
-  const buyerPaymentRequired = apiDeal?.buyer_payment_required !== false;
+  const isGiftDeal =
+    Boolean(apiDeal?.is_gift) ||
+    Boolean(details.giftPlate) ||
+    apiDeal?.buyer_payment_required === false;
+  const buyerPaymentRequired =
+    !isGiftDeal && apiDeal?.buyer_payment_required !== false;
+  const summaryPricing = {
+    feeBreakdown: apiDeal?.fee_breakdown,
+    totalFees: apiDeal?.total_fees,
+    totalDue: isGiftDeal ? (apiDeal?.total_due ?? "0.00") : apiDeal?.total_due,
+    sellerNet: isGiftDeal
+      ? (apiDeal?.seller_net ?? "0.00")
+      : apiDeal?.seller_net,
+    isGift: isGiftDeal,
+    buyerPaymentRequired: !buyerPaymentRequired ? false : undefined,
+  };
 
   const splitAllocated = useMemo(() => {
     if (paymentMode !== "split") return 0;
@@ -369,35 +385,12 @@ export default function PrivateDealPage() {
     );
   };
 
-  const handleSellerDealCreate = async () => {
-    await withSubmit(async () => {
-      const response = await createPrivateDeal(
-        {
-          intent: "complete",
-          emirate: deal.emirate,
-          plate_variant: deal.plateVariant,
-          plate_type: deal.plateType,
-          plate_code: deal.code || undefined,
-          plate_digits: deal.digit,
-          plate_design: undefined,
-          agreed_price: asMoney(deal.price),
-        },
-        locale,
-      );
-
-      const createdDeal = extractPrivateDeal(response);
-      hydrateFromApiDeal(createdDeal, "seller");
-      setStep(2);
-    });
+  const handleSellerPlateContinue = () => {
+    setStep(2);
   };
 
   const handleSavePartyDetails = async (variant: "seller" | "buyer") => {
     await withSubmit(async () => {
-      const activeDealId = resolveDealId();
-      if (!activeDealId) {
-        throw new Error("Deal not found.");
-      }
-
       if (variant === "seller" && details.giftPlate) {
         const email = (details.giftEmail || "").trim();
         if (!email) {
@@ -408,17 +401,20 @@ export default function PrivateDealPage() {
         }
       }
 
-      const response = await savePrivateDealParty(
-        activeDealId,
-        getPartyPayload(),
-        locale,
-      );
-      let nextDeal = extractPrivateDeal(response);
+      let activeDealId = resolveDealId();
+      let nextDeal: PrivateDeal;
 
-      if (variant === "seller") {
-        const termsResponse = await updatePrivateDealTerms(
-          activeDealId,
+      if (variant === "seller" && !activeDealId) {
+        const createResponse = await createPrivateDeal(
           {
+            intent: "complete",
+            emirate: deal.emirate,
+            plate_variant: deal.plateVariant,
+            plate_type: deal.plateType,
+            plate_code: deal.code || undefined,
+            plate_digits: deal.digit,
+            plate_design: undefined,
+            agreed_price: asMoney(deal.price),
             is_gift: Boolean(details.giftPlate),
             recipient_email: details.giftPlate
               ? (details.giftEmail || "").trim()
@@ -429,9 +425,43 @@ export default function PrivateDealPage() {
           },
           locale,
         );
-        nextDeal = extractPrivateDeal(termsResponse);
+        nextDeal = extractPrivateDeal(createResponse);
+        hydrateFromApiDeal(nextDeal, "seller");
+        activeDealId = String(nextDeal.id);
+      } else {
+        if (!activeDealId) {
+          throw new Error("Deal not found.");
+        }
+
+        if (variant === "seller") {
+          const termsResponse = await updatePrivateDealTerms(
+            activeDealId,
+            {
+              is_gift: Boolean(details.giftPlate),
+              recipient_email: details.giftPlate
+                ? (details.giftEmail || "").trim()
+                : undefined,
+              gift_message: details.giftPlate
+                ? details.giftMessage?.trim() || undefined
+                : undefined,
+            },
+            locale,
+          );
+          nextDeal = extractPrivateDeal(termsResponse);
+          hydrateFromApiDeal(nextDeal, "seller");
+        }
       }
 
+      if (!activeDealId) {
+        throw new Error("Deal not found.");
+      }
+
+      const partyResponse = await savePrivateDealParty(
+        activeDealId,
+        getPartyPayload(),
+        locale,
+      );
+      nextDeal = extractPrivateDeal(partyResponse);
       hydrateFromApiDeal(nextDeal, variant);
 
       if (variant === "buyer" && nextDeal.buyer_payment_required === false) {
@@ -604,7 +634,7 @@ export default function PrivateDealPage() {
             data={deal}
             onChange={patchDeal}
             onBack={() => setStep(0)}
-            onContinue={handleSellerDealCreate}
+            onContinue={handleSellerPlateContinue}
           />
         );
       }
@@ -669,6 +699,7 @@ export default function PrivateDealPage() {
         if (!buyerPaymentRequired) {
           return (
             <PaymentSuccessStep
+              variant="gift"
               onDone={() => router.push(`/${locale}/marketplace`)}
             />
           );
@@ -724,6 +755,7 @@ export default function PrivateDealPage() {
       }
       return (
         <PaymentSuccessStep
+          variant={buyerPaymentRequired ? "payment" : "gift"}
           onDone={() => router.push(`/${locale}/marketplace`)}
         />
       );
@@ -807,11 +839,13 @@ export default function PrivateDealPage() {
           >
             <div className="lg:col-span-2">{renderMain()}</div>
             <div className="lg:col-span-1 space-y-6">
+              {isGiftDeal && <GiftNoPaymentBanner />}
               <DealSummary
                 data={deal}
                 showAllocation={showSplitAllocation}
                 allocatedAmount={splitAllocated}
                 plateCrop="deal-summary"
+                pricing={summaryPricing}
               />
               <EscrowBenefits />
             </div>

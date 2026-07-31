@@ -24,6 +24,20 @@ export interface DealData {
   hideCode?: boolean;
 }
 
+export interface DealSummaryPricing {
+  feeBreakdown?: Array<{
+    slug: string;
+    label: string;
+    amount: string;
+  }> | null;
+  totalFees?: string | number | null;
+  totalDue?: string | number | null;
+  sellerNet?: string | number | null;
+  /** Gift deals: buyer pays 0 / seller net 0 per API guide. */
+  isGift?: boolean;
+  buyerPaymentRequired?: boolean;
+}
+
 interface Variant {
   key: string;
   plate_type?: string;
@@ -37,6 +51,13 @@ interface DealSummaryProps {
   allocatedAmount?: number;
   showAllocation?: boolean;
   plateCrop?: PlateCropVariant;
+  pricing?: DealSummaryPricing;
+}
+
+function toAmount(value: string | number | null | undefined): number | null {
+  if (value == null || value === "") return null;
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 export default function DealSummary({
@@ -44,14 +65,32 @@ export default function DealSummary({
   allocatedAmount = 0,
   showAllocation = false,
   plateCrop = "form",
+  pricing,
 }: DealSummaryProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const price = data.price || 0;
-  const fees = Math.round(price * 0.08);
-  const net = price - fees;
-  const feeLine = Math.round(price * 0.01);
+  const isGift =
+    Boolean(pricing?.isGift) || pricing?.buyerPaymentRequired === false;
+
+  const apiFees = toAmount(pricing?.totalFees);
+  const apiDue = toAmount(pricing?.totalDue);
+  const apiNet = toAmount(pricing?.sellerNet);
+  const breakdown = pricing?.feeBreakdown?.filter(
+    (row) => row?.label && row.amount != null,
+  );
+
+  const fallbackFees = Math.round(price * 0.08);
+  const fallbackNet = price - fallbackFees;
+  const fallbackFeeLine = Math.round(price * 0.01);
+
+  const totalFees = isGift
+    ? (apiFees ?? fallbackFees)
+    : (apiFees ?? fallbackFees);
+  const totalDue = isGift ? (apiDue ?? 0) : (apiDue ?? price + fallbackFees);
+  const sellerNet = isGift ? (apiNet ?? 0) : (apiNet ?? fallbackNet);
+
   const allocated = Math.min(Math.max(0, allocatedAmount), price);
   const remaining = Math.max(0, price - allocated);
   const pct = price > 0 ? Math.min(100, Math.round((allocated / price) * 100)) : 0;
@@ -148,38 +187,56 @@ export default function DealSummary({
           isRTL={isRTL}
           getColor={getColor}
         />
-        <Row
-          label={t("private-deal.escrow_custody")}
-          value={<DirhamAmount amount={feeLine} />}
-          isRTL={isRTL}
-          muted
-          getColor={getColor}
-        />
-        <Row
-          label={t("private-deal.platform_fee")}
-          value={<DirhamAmount amount={Math.round(price * 0.04)} />}
-          isRTL={isRTL}
-          muted
-          getColor={getColor}
-        />
-        <Row
-          label={t("private-deal.service_transfer")}
-          value={<DirhamAmount amount={Math.round(price * 0.03)} />}
-          isRTL={isRTL}
-          muted
-          getColor={getColor}
-        />
+
+        {breakdown && breakdown.length > 0 ? (
+          breakdown.map((row) => (
+            <Row
+              key={row.slug || row.label}
+              label={row.label}
+              value={<DirhamAmount amount={Number(row.amount) || 0} />}
+              isRTL={isRTL}
+              muted
+              getColor={getColor}
+            />
+          ))
+        ) : (
+          <>
+            <Row
+              label={t("private-deal.escrow_custody")}
+              value={<DirhamAmount amount={fallbackFeeLine} />}
+              isRTL={isRTL}
+              muted
+              getColor={getColor}
+            />
+            <Row
+              label={t("private-deal.platform_fee")}
+              value={<DirhamAmount amount={Math.round(price * 0.04)} />}
+              isRTL={isRTL}
+              muted
+              getColor={getColor}
+            />
+            <Row
+              label={t("private-deal.service_transfer")}
+              value={<DirhamAmount amount={Math.round(price * 0.03)} />}
+              isRTL={isRTL}
+              muted
+              getColor={getColor}
+            />
+          </>
+        )}
+
         <div
           className="border-t pt-3"
           style={{ borderColor: getColor("border") }}
         >
           <Row
             label={t("private-deal.total_fees")}
-            value={<DirhamAmount amount={fees} />}
+            value={<DirhamAmount amount={totalFees} />}
             isRTL={isRTL}
             getColor={getColor}
           />
         </div>
+
         <div
           className={`flex justify-between items-center pt-1 text-base font-bold`}
         >
@@ -189,12 +246,26 @@ export default function DealSummary({
               : t("private-deal.you_receive_net")}
           </span>
           <span style={{ color: getColor("primary") }}>
-            <DirhamAmount amount={data.role === "buyer" ? price + fees : net} weight="bold" />
+            <DirhamAmount
+              amount={data.role === "buyer" ? totalDue : sellerNet}
+              weight="bold"
+            />
           </span>
         </div>
+
+        {isGift && (
+          <p
+            className="text-xs text-start pt-1"
+            style={{ color: getColor("mutedText") }}
+          >
+            {data.role === "seller"
+              ? t("private-deal.gift_no_payout_note")
+              : t("private-deal.gift_no_payment_note")}
+          </p>
+        )}
       </div>
 
-      {showAllocation && (
+      {showAllocation && !isGift && (
         <div
           className="mt-5 rounded-2xl border p-4"
           style={{
@@ -202,9 +273,7 @@ export default function DealSummary({
             backgroundColor: getColor("primaryLight"),
           }}
         >
-          <div
-            className="grid grid-cols-3 gap-2 mb-4"
-          >
+          <div className="grid grid-cols-3 gap-2 mb-4">
             <div className="text-start">
               <div
                 className="text-[11px] mb-1"
@@ -256,9 +325,7 @@ export default function DealSummary({
             >
               {pct}%
             </div>
-            <div
-              className={`flex items-center gap-2`}
-            >
+            <div className={`flex items-center gap-2`}>
               <div
                 className="relative flex-1 h-2 rounded-full"
                 style={{ backgroundColor: getColor("border") }}
