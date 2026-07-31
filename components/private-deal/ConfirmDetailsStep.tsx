@@ -1,10 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, EmiratesIdInput, Input, PhoneInput } from "@/components/ui";
 import Select from "@/components/ui/Select";
+import {
+  isValidUaeMobile,
+  uaeMobileStartsWithFive,
+} from "@/lib/uae-phone";
 
 export interface ConfirmDetailsData {
   fullName: string;
@@ -48,6 +54,10 @@ export default function ConfirmDetailsStep({
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
+  const [phoneErrors, setPhoneErrors] = useState<{
+    mobile?: string;
+    secondaryMobile?: string;
+  }>({});
 
   const typeOptions = [
     { key: "individual", label: t("private-deal.type_individual") },
@@ -86,6 +96,39 @@ export default function ConfirmDetailsStep({
       identificationValue: "",
       ...(identification === "traffic" ? { emiratesId: "" } : {}),
     });
+  };
+
+  const validatePhone = (value: string, required: boolean) => {
+    if (!value.trim()) {
+      return required ? t("common.mobile_invalid") : undefined;
+    }
+    if (uaeMobileStartsWithFive(value) === false) {
+      return t("common.mobile_must_start_with_5");
+    }
+    if (!isValidUaeMobile(value)) {
+      return t("common.mobile_invalid");
+    }
+    return undefined;
+  };
+
+  const handleContinue = () => {
+    const mobileError = validatePhone(data.mobile, true);
+    const secondaryError =
+      variant === "buyer" && data.secondaryMobile.trim()
+        ? validatePhone(data.secondaryMobile, false)
+        : undefined;
+
+    setPhoneErrors({
+      mobile: mobileError,
+      secondaryMobile: secondaryError,
+    });
+
+    if (mobileError || secondaryError) {
+      toast.error(mobileError || secondaryError || t("common.mobile_invalid"));
+      return;
+    }
+
+    onContinue();
   };
 
   return (
@@ -198,8 +241,13 @@ export default function ConfirmDetailsStep({
         <PhoneInput
           label={t("private-deal.mobile_number")}
           value={data.mobile}
-          onChange={(mobile) => onChange({ mobile })}
-          placeholder={t("private-deal.mobile_placeholder")}
+          onChange={(mobile) => {
+            onChange({ mobile });
+            if (phoneErrors.mobile) {
+              setPhoneErrors((prev) => ({ ...prev, mobile: undefined }));
+            }
+          }}
+          error={phoneErrors.mobile}
         />
         <Input
           label={t("private-deal.email")}
@@ -249,8 +297,16 @@ export default function ConfirmDetailsStep({
             <PhoneInput
               label={t("private-deal.mobile_number")}
               value={data.secondaryMobile}
-              onChange={(secondaryMobile) => onChange({ secondaryMobile })}
-              placeholder={t("private-deal.mobile_placeholder")}
+              onChange={(secondaryMobile) => {
+                onChange({ secondaryMobile });
+                if (phoneErrors.secondaryMobile) {
+                  setPhoneErrors((prev) => ({
+                    ...prev,
+                    secondaryMobile: undefined,
+                  }));
+                }
+              }}
+              error={phoneErrors.secondaryMobile}
             />
             {data.personType === "organization" && (
               <div className="sm:col-span-2">
@@ -312,7 +368,7 @@ export default function ConfirmDetailsStep({
         <Button
           variant="primary"
           size="md"
-          onClick={onContinue}
+          onClick={handleContinue}
           rightIcon={<NextIcon className="w-4 h-4" />}
           disabled={submitting}
         >

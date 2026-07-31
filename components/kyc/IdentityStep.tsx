@@ -13,7 +13,10 @@ import {
   type KycIdentityData,
   type KycProfileType,
 } from "@/components/kyc/types";
-import { isValidUaeMobile } from "@/lib/uae-phone";
+import {
+  isValidUaeMobile,
+  uaeMobileStartsWithFive,
+} from "@/lib/uae-phone";
 
 interface IdentityStepProps {
   profileType: Exclude<KycProfileType, null>;
@@ -93,8 +96,10 @@ export default function IdentityStep({
     }
     if (!identity.phone.trim()) {
       next.phone = t("kyc.fill_required");
+    } else if (uaeMobileStartsWithFive(identity.phone) === false) {
+      next.phone = t("common.mobile_must_start_with_5");
     } else if (!isValidUaeMobile(identity.phone)) {
-      next.phone = t("kyc.invalid_phone");
+      next.phone = t("common.mobile_invalid");
     }
     if (!identity.email.trim()) {
       next.email = t("kyc.fill_required");
@@ -128,7 +133,16 @@ export default function IdentityStep({
     if (!validate()) {
       const phoneInvalid =
         !!identity.phone.trim() && !isValidUaeMobile(identity.phone);
-      toast.error(phoneInvalid ? t("kyc.invalid_phone") : t("kyc.fill_required"));
+      const phoneStartInvalid =
+        !!identity.phone.trim() &&
+        uaeMobileStartsWithFive(identity.phone) === false;
+      toast.error(
+        phoneStartInvalid
+          ? t("common.mobile_must_start_with_5")
+          : phoneInvalid
+            ? t("common.mobile_invalid")
+            : t("kyc.fill_required"),
+      );
       return;
     }
     await onContinue();
@@ -234,7 +248,6 @@ export default function IdentityStep({
               return next;
             });
           }}
-          placeholder={t("kyc.mobile_placeholder")}
           error={getError("phone", ["phone", "phone_country_code"])}
         />
 

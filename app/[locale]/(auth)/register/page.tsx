@@ -24,7 +24,11 @@ import {
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 import SiteLogo from "@/components/layout/SiteLogo";
 import { getPasswordValidationError } from "@/lib/password-validation";
-import { toUaePhoneE164 } from "@/lib/uae-phone";
+import {
+  isValidUaeMobile,
+  toUaePhoneE164,
+  uaeMobileStartsWithFive,
+} from "@/lib/uae-phone";
 
 export default function RegisterPage() {
   const { t, locale, loading: localeLoading } = useLocale();
@@ -66,6 +70,13 @@ export default function RegisterPage() {
     if (!formData.email.trim() && !formData.mobile.trim()) {
       errors.email = t("common.email_or_mobile_required");
       errors.mobile = t("common.email_or_mobile_required");
+    } else if (formData.mobile.trim()) {
+      const startsWithFive = uaeMobileStartsWithFive(formData.mobile);
+      if (startsWithFive === false) {
+        errors.mobile = t("common.mobile_must_start_with_5");
+      } else if (!isValidUaeMobile(formData.mobile)) {
+        errors.mobile = t("common.mobile_invalid");
+      }
     }
     const passwordError = getPasswordValidationError(formData.password);
     if (passwordError === "required") {
@@ -207,7 +218,6 @@ export default function RegisterPage() {
                     name="mobile"
                     label={t("common.mobile_number")}
                     icon={<Phone size={20} strokeWidth={1.5} />}
-                    placeholder={t("common.mobile_placeholder")}
                     value={formData.mobile}
                     onChange={(value) => handleFieldChange("mobile", value)}
                     error={fieldErrors.mobile}

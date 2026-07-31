@@ -4,31 +4,30 @@ import {
   ChangeEvent,
   InputHTMLAttributes,
   KeyboardEvent,
+  ReactNode,
   forwardRef,
   useCallback,
   useLayoutEffect,
   useRef,
 } from "react";
+import { useLocale } from "@/context/LocaleContext";
 import {
-  UAE_NATIONAL_PHONE_MAX_LENGTH,
-  UAE_NATIONAL_PHONE_PLACEHOLDER,
   UAE_PHONE_MAX_LENGTH,
   UAE_PHONE_PLACEHOLDER,
-  formatUaeNationalPhone,
+  UAE_PHONE_SAMPLE,
+  caretAfterUaeNationalDigits,
+  countUaeNationalDigitsBefore,
   formatUaePhone,
+  uaeMobileStartsWithFive,
 } from "@/lib/uae-phone";
 import Input from "./Input";
-
-export type PhoneInputMode = "international" | "national";
 
 interface PhoneInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
   value: string;
   onChange: (value: string) => void;
-  /** international: +971 XX XXX XXXX · national: XX XXX XXXX */
-  mode?: PhoneInputMode;
   label?: React.ReactNode;
-  error?: string;
+  error?: ReactNode;
   hint?: string;
   icon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -37,55 +36,49 @@ interface PhoneInputProps
 const isDigit = (char: string | undefined) =>
   char !== undefined && char >= "0" && char <= "9";
 
-function countDigits(value: string) {
-  let count = 0;
-  for (const char of value) if (isDigit(char)) count++;
-  return count;
+/** Keep the sample LTR + nowrap so Arabic RTL never reverses or splits it */
+function withPhoneSample(message: ReactNode): ReactNode {
+  if (message == null || message === false || message === "") return message;
+  return (
+    <>
+      {message}{" "}
+      <bdi
+        dir="ltr"
+        className="inline-block whitespace-nowrap"
+        style={{ unicodeBidi: "isolate" }}
+      >
+        {UAE_PHONE_SAMPLE}
+      </bdi>
+    </>
+  );
 }
 
-/** Caret index in the masked value that sits right after `digitCount` digits */
-function caretAfterDigits(masked: string, digitCount: number) {
-  if (digitCount <= 0) return 0;
-
-  let seen = 0;
-  for (let index = 0; index < masked.length; index++) {
-    if (!isDigit(masked[index])) continue;
-
-    seen++;
-    if (seen < digitCount) continue;
-
-    let caret = index + 1;
-    while (caret < masked.length && !isDigit(masked[caret])) caret++;
-    return caret;
-  }
-
-  return masked.length;
-}
-
+/**
+ * UAE mobile input — same caret/mask behavior as EmiratesIdInput.
+ * Digits only; formats as +971 XX XXX XXXX while typing.
+ * Live EN/AR error when the number does not start with 5.
+ */
 const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
-  (
-    {
-      value,
-      onChange,
-      mode = "international",
-      placeholder,
-      maxLength,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ value, onChange, placeholder, maxLength, error, ...props }, ref) => {
+    const { t } = useLocale();
     const inputRef = useRef<HTMLInputElement | null>(null);
     const pendingCaret = useRef<number | null>(null);
-    const format =
-      mode === "national" ? formatUaeNationalPhone : formatUaePhone;
-    const defaultPlaceholder =
-      mode === "national"
-        ? UAE_NATIONAL_PHONE_PLACEHOLDER
-        : UAE_PHONE_PLACEHOLDER;
-    const defaultMaxLength =
-      mode === "national"
-        ? UAE_NATIONAL_PHONE_MAX_LENGTH
-        : UAE_PHONE_MAX_LENGTH;
+
+    const startError =
+      uaeMobileStartsWithFive(value) === false
+        ? t("common.mobile_must_start_with_5")
+        : undefined;
+
+    const rawError = error || startError;
+    const showSample =
+      typeof rawError === "string" &&
+      (rawError === t("common.mobile_must_start_with_5") ||
+        rawError === t("common.mobile_invalid") ||
+        rawError === t("kyc.invalid_phone") ||
+        rawError.includes("مثال") ||
+        rawError.toLowerCase().includes("example"));
+
+    const displayError = showSample ? withPhoneSample(rawError) : rawError;
 
     const setRefs = useCallback(
       (node: HTMLInputElement | null) => {
@@ -113,10 +106,10 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       rawValue: string,
       rawCaret: number,
     ) => {
-      const formatted = format(rawValue);
-      const caret = caretAfterDigits(
+      const formatted = formatUaePhone(rawValue);
+      const caret = caretAfterUaeNationalDigits(
         formatted,
-        countDigits(rawValue.slice(0, rawCaret)),
+        countUaeNationalDigitsBefore(rawValue, rawCaret),
       );
 
       pendingCaret.current = caret;
@@ -143,12 +136,18 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       const current = input.value;
       let target = selectionStart;
 
+      const prefix = current.match(/^\+971\s*/);
+      const nationalStart = prefix ? prefix[0].length : 0;
+
       if (event.key === "Backspace") {
-        while (target > 0 && !isDigit(current[target - 1])) target--;
+        while (target > nationalStart && !isDigit(current[target - 1])) target--;
+        if (target <= nationalStart) {
+          event.preventDefault();
+          return;
+        }
         if (target === selectionStart) return;
 
         event.preventDefault();
-        if (target === 0) return;
         commit(
           input,
           current.slice(0, target - 1) + current.slice(selectionStart),
@@ -173,14 +172,17 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       <Input
         ref={setRefs}
         {...props}
-        type="tel"
-        inputMode="tel"
+        type="text"
+        inputMode="numeric"
         autoComplete="tel"
+        dir="ltr"
+        className={`!text-left [unicode-bidi:isolate] ${props.className ?? ""}`}
         value={value}
-        maxLength={maxLength ?? defaultMaxLength}
+        maxLength={maxLength ?? UAE_PHONE_MAX_LENGTH}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder ?? defaultPlaceholder}
+        placeholder={placeholder ?? UAE_PHONE_PLACEHOLDER}
+        error={displayError}
       />
     );
   },

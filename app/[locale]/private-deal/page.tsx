@@ -26,7 +26,11 @@ import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 import GiftNoPaymentBanner from "@/components/private-deal/GiftNoPaymentBanner";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
-import { toUaePhoneE164 } from "@/lib/uae-phone";
+import {
+  isValidUaeMobile,
+  toUaePhoneE164,
+  uaeMobileStartsWithFive,
+} from "@/lib/uae-phone";
 import {
   createPrivateDeal,
   createPrivateDealCheckout,
@@ -395,6 +399,27 @@ export default function PrivateDealPage() {
 
   const handleSavePartyDetails = async (variant: "seller" | "buyer") => {
     await withSubmit(async () => {
+      if (!details.mobile.trim()) {
+        throw new Error(t("common.email_or_mobile_required"));
+      }
+      if (uaeMobileStartsWithFive(details.mobile) === false) {
+        throw new Error(t("common.mobile_must_start_with_5"));
+      }
+      if (!isValidUaeMobile(details.mobile)) {
+        throw new Error(t("common.mobile_invalid"));
+      }
+      if (
+        details.secondaryMobile.trim() &&
+        (uaeMobileStartsWithFive(details.secondaryMobile) === false ||
+          !isValidUaeMobile(details.secondaryMobile))
+      ) {
+        throw new Error(
+          uaeMobileStartsWithFive(details.secondaryMobile) === false
+            ? t("common.mobile_must_start_with_5")
+            : t("common.mobile_invalid"),
+        );
+      }
+
       if (variant === "seller" && details.giftPlate) {
         const email = (details.giftEmail || "").trim();
         if (!email) {

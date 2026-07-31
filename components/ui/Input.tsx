@@ -8,7 +8,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   label?: React.ReactNode;
-  error?: string;
+  error?: React.ReactNode;
   hint?: string;
 }
 
@@ -104,7 +104,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {/* Error Message */}
         {error && (
           <p
-            className={`text-[10px] mt-1.5 ${isRTL ? "text-right" : "text-left"}`}
+            className={`text-[10px] mt-1.5 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
             style={{ color: getColor("error") }}
           >
             {error}

@@ -14,7 +14,11 @@ import {
   type MarketplaceGift,
   type MarketplacePurchase,
 } from "@/services/marketplace";
-import { toUaePhoneE164 } from "@/lib/uae-phone";
+import {
+  isValidUaeMobile,
+  toUaePhoneE164,
+  uaeMobileStartsWithFive,
+} from "@/lib/uae-phone";
 
 type GiftTab = "received" | "sent" | "create" | "accept";
 
@@ -114,6 +118,16 @@ export default function BuyerGiftsPage() {
           "Recipient email is required.",
       );
       return;
+    }
+    if (createForm.recipientPhone.trim()) {
+      if (uaeMobileStartsWithFive(createForm.recipientPhone) === false) {
+        toast.error(t("common.mobile_must_start_with_5"));
+        return;
+      }
+      if (!isValidUaeMobile(createForm.recipientPhone)) {
+        toast.error(t("common.mobile_invalid"));
+        return;
+      }
     }
 
     setSubmitting(true);
