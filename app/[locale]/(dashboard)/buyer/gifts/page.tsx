@@ -5,7 +5,7 @@ import { Gift, Mail } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
+import { Button, Input, PhoneInput } from "@/components/ui";
 import {
   acceptGift,
   createGiftFromPurchase,
@@ -14,6 +14,7 @@ import {
   type MarketplaceGift,
   type MarketplacePurchase,
 } from "@/services/marketplace";
+import { toUaePhoneE164 } from "@/lib/uae-phone";
 
 type GiftTab = "received" | "sent" | "create" | "accept";
 
@@ -122,7 +123,9 @@ export default function BuyerGiftsPage() {
         {
           recipient_name: createForm.recipientName.trim(),
           recipient_email: createForm.recipientEmail.trim(),
-          recipient_phone: createForm.recipientPhone.trim() || undefined,
+          recipient_phone: createForm.recipientPhone.trim()
+            ? toUaePhoneE164(createForm.recipientPhone) || undefined
+            : undefined,
           message: createForm.message.trim() || undefined,
         },
         locale,
@@ -450,16 +453,15 @@ export default function BuyerGiftsPage() {
               }
               placeholder="sara@example.com"
             />
-            <Input
+            <PhoneInput
               label={t("marketplace.gift_recipient_phone") || "Phone (optional)"}
               value={createForm.recipientPhone}
-              onChange={(e) =>
+              onChange={(recipientPhone) =>
                 setCreateForm((prev) => ({
                   ...prev,
-                  recipientPhone: e.target.value,
+                  recipientPhone,
                 }))
               }
-              placeholder="+971500000000"
             />
             <div>
               <label

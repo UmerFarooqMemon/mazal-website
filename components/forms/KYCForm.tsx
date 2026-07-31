@@ -17,12 +17,12 @@ import {
   formatEmiratesId,
   INITIAL_IDENTITY,
   INITIAL_KYC_STATE,
-  sanitizePhone,
   type KycDocumentKey,
   type KycFormState,
   type KycProfileType,
   type KycUploadedDocument,
 } from "@/components/kyc/types";
+import { formatUaePhone, toUaeNationalDigits } from "@/lib/uae-phone";
 import {
   getCurrentKyc,
   getKycOptions,
@@ -139,9 +139,9 @@ function mapApplicationToForm(kyc: KycApplication | null | undefined): Partial<K
       emirateOfResidence: kyc.emirate_of_residence || "",
       passportNumber: kyc.passport_number || "",
       countryOfResidence: kyc.country_of_residence || "",
-      phone: kyc.phone || "",
+      phone: kyc.phone ? formatUaePhone(String(kyc.phone)) : "",
       email: kyc.email || "",
-      phoneCountryCode: kyc.phone_country_code || "+971",
+      phoneCountryCode: "+971",
     },
     uploadedDocuments: parseUploadedDocuments(kyc.documents),
     custodyAgreed: Boolean(kyc.custody_agreement_accepted),
@@ -257,11 +257,7 @@ export default function KYCForm() {
       // Changing profile clears identity + docs on the backend; mirror locally.
       identity:
         prev.profileType && prev.profileType !== profileType
-          ? {
-              ...INITIAL_IDENTITY,
-              phoneCountryCode:
-                profileType === "international" ? "+44" : "+971",
-            }
+          ? INITIAL_IDENTITY
           : prev.identity,
       documents:
         prev.profileType && prev.profileType !== profileType
@@ -358,10 +354,7 @@ export default function KYCForm() {
     setSaving(true);
     setFieldErrors({});
     try {
-      const phone = sanitizePhone(
-        form.identity.phone,
-        form.identity.phoneCountryCode,
-      );
+      const phone = toUaeNationalDigits(form.identity.phone);
       const payload =
         activeProfileType === "uae_resident"
           ? {
@@ -369,7 +362,7 @@ export default function KYCForm() {
               date_of_birth: form.identity.dateOfBirth,
               emirates_id: form.identity.emiratesId,
               emirate_of_residence: form.identity.emirateOfResidence,
-              phone_country_code: form.identity.phoneCountryCode,
+              phone_country_code: "+971",
               phone,
               email: form.identity.email.trim(),
             }
@@ -378,7 +371,7 @@ export default function KYCForm() {
               date_of_birth: form.identity.dateOfBirth,
               passport_number: form.identity.passportNumber.trim(),
               country_of_residence: form.identity.countryOfResidence,
-              phone_country_code: form.identity.phoneCountryCode,
+              phone_country_code: "+971",
               phone,
               email: form.identity.email.trim(),
             };

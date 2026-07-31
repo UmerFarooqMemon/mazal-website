@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import AuthHero from "@/components/auth/AuthHero";
-import { EmiratesIdInput } from "@/components/ui";
+import { EmiratesIdInput, PhoneInput } from "@/components/ui";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,7 @@ import {
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 import SiteLogo from "@/components/layout/SiteLogo";
 import { getPasswordValidationError } from "@/lib/password-validation";
+import { toUaePhoneE164 } from "@/lib/uae-phone";
 
 export default function RegisterPage() {
   const { t, locale, loading: localeLoading } = useLocale();
@@ -112,7 +113,10 @@ export default function RegisterPage() {
     try {
       await register({
         name: formData.full_name,
-        login: formData.email || formData.mobile,
+        login:
+          formData.email ||
+          toUaePhoneE164(formData.mobile) ||
+          formData.mobile,
         password: formData.password,
         password_confirmation: formData.password_confirmation,
       });
@@ -199,17 +203,13 @@ export default function RegisterPage() {
                     autoComplete="name"
                     error={fieldErrors.full_name}
                   />
-                  <Input
+                  <PhoneInput
                     name="mobile"
                     label={t("common.mobile_number")}
                     icon={<Phone size={20} strokeWidth={1.5} />}
-                    type="tel"
                     placeholder={t("common.mobile_placeholder")}
                     value={formData.mobile}
-                    onChange={(e) =>
-                      handleFieldChange("mobile", e.target.value)
-                    }
-                    autoComplete="tel"
+                    onChange={(value) => handleFieldChange("mobile", value)}
                     error={fieldErrors.mobile}
                   />
                 </div>

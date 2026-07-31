@@ -26,6 +26,7 @@ import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 import GiftNoPaymentBanner from "@/components/private-deal/GiftNoPaymentBanner";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
+import { toUaePhoneE164 } from "@/lib/uae-phone";
 import {
   createPrivateDeal,
   createPrivateDealCheckout,
@@ -310,6 +311,9 @@ export default function PrivateDealPage() {
   };
 
   const getPartyPayload = () => {
+    const mobile = toUaePhoneE164(details.mobile) || details.mobile;
+    const secondaryMobile =
+      toUaePhoneE164(details.secondaryMobile) || details.secondaryMobile;
     const isCompany = details.personType === "organization";
     if (isCompany) {
       return {
@@ -324,7 +328,7 @@ export default function PrivateDealPage() {
           details.licenseSource ||
           Object.keys(options?.license_sources || {})[0] ||
           "dubai_det",
-        authorized_mobile: details.secondaryMobile || details.mobile,
+        authorized_mobile: secondaryMobile || mobile,
         email: details.email,
         accept_terms: true,
       };
@@ -334,7 +338,7 @@ export default function PrivateDealPage() {
       intent: "complete",
       party_type: "individual",
       full_name: details.fullName,
-      mobile_number: details.mobile,
+      mobile_number: mobile,
       email: details.email,
       emirates_id:
         details.identification === "traffic"

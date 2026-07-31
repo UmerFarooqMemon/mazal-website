@@ -5,17 +5,15 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, EmiratesIdInput, Input } from "@/components/ui";
+import { Button, EmiratesIdInput, Input, PhoneInput } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import {
-  getPhoneLengthRule,
   isValidEmail,
   isValidEmiratesId,
-  isValidPhone,
-  sanitizePhone,
   type KycIdentityData,
   type KycProfileType,
 } from "@/components/kyc/types";
+import { isValidUaeMobile } from "@/lib/uae-phone";
 
 interface IdentityStepProps {
   profileType: Exclude<KycProfileType, null>;
@@ -27,18 +25,6 @@ interface IdentityStepProps {
   emiratesOptions?: { key: string; label: string }[];
   fieldErrors?: Record<string, string>;
 }
-
-const COUNTRY_CODES = [
-  { key: "+971", label: "+971" },
-  { key: "+966", label: "+966" },
-  { key: "+974", label: "+974" },
-  { key: "+973", label: "+973" },
-  { key: "+968", label: "+968" },
-  { key: "+965", label: "+965" },
-  { key: "+1", label: "+1" },
-  { key: "+44", label: "+44" },
-  { key: "+91", label: "+91" },
-];
 
 /** API expects full country names (e.g. "United Kingdom") */
 const COUNTRIES = [
@@ -105,12 +91,9 @@ export default function IdentityStep({
     if (!identity.dateOfBirth) {
       next.dateOfBirth = t("kyc.fill_required");
     }
-    if (!identity.phoneCountryCode) {
-      next.phoneCountryCode = t("kyc.fill_required");
-    }
     if (!identity.phone.trim()) {
       next.phone = t("kyc.fill_required");
-    } else if (!isValidPhone(identity.phone, identity.phoneCountryCode)) {
+    } else if (!isValidUaeMobile(identity.phone)) {
       next.phone = t("kyc.invalid_phone");
     }
     if (!identity.email.trim()) {
@@ -144,8 +127,7 @@ export default function IdentityStep({
   const handleContinue = async () => {
     if (!validate()) {
       const phoneInvalid =
-        !!identity.phone.trim() &&
-        !isValidPhone(identity.phone, identity.phoneCountryCode);
+        !!identity.phone.trim() && !isValidUaeMobile(identity.phone);
       toast.error(phoneInvalid ? t("kyc.invalid_phone") : t("kyc.fill_required"));
       return;
     }
@@ -235,55 +217,26 @@ export default function IdentityStep({
           </>
         )}
 
-        <div className="w-full">
-          <label
-            className={`block text-[11px] font-medium leading-none mb-2 text-start`}
-            style={{ color: getColor("secondaryText") }}
-          >
-            {t("kyc.mobile_number")}
-          </label>
-          <div className={`flex gap-2`}>
-            <div className="w-[110px] shrink-0">
-              <Select
-                options={COUNTRY_CODES}
-                value={identity.phoneCountryCode}
-                onChange={(value) => {
-                  setIdentity({
-                    ...identity,
-                    phoneCountryCode: value,
-                    phone: sanitizePhone(identity.phone, value),
-                  });
-                  setErrors((prev) => {
-                    if (!prev.phone && !prev.phoneCountryCode) return prev;
-                    const next = { ...prev };
-                    delete next.phone;
-                    delete next.phoneCountryCode;
-                    return next;
-                  });
-                }}
-                error={getError("phoneCountryCode", ["phone_country_code"])}
-              />
-            </div>
-            <Input
-              value={identity.phone}
-              onChange={(e) =>
-                update(
-                  "phone",
-                  sanitizePhone(e.target.value, identity.phoneCountryCode),
-                )
-              }
-              placeholder={
-                identity.phoneCountryCode === "+971" ||
-                identity.phoneCountryCode === "+966"
-                  ? "501234567"
-                  : "Phone number"
-              }
-              inputMode="tel"
-              maxLength={getPhoneLengthRule(identity.phoneCountryCode).max}
-              error={getError("phone", ["phone"])}
-            />
-          </div>
-        </div>
+        <PhoneInput
+          label={t("kyc.mobile_number")}
+          value={identity.phone}
+          onChange={(phone) => {
+            setIdentity({
+              ...identity,
+              phone,
+              phoneCountryCode: "+971",
+            });
+            setErrors((prev) => {
+              if (!prev.phone && !prev.phoneCountryCode) return prev;
+              const next = { ...prev };
+              delete next.phone;
+              delete next.phoneCountryCode;
+              return next;
+            });
+          }}
+          placeholder={t("kyc.mobile_placeholder")}
+          error={getError("phone", ["phone", "phone_country_code"])}
+        />
 
         <Input
           label={t("kyc.email_address")}

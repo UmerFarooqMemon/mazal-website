@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, EmiratesIdInput, Input } from "@/components/ui";
+import { Button, EmiratesIdInput, Input, PhoneInput } from "@/components/ui";
 import Select from "@/components/ui/Select";
 
 export interface ConfirmDetailsData {
@@ -195,10 +195,10 @@ export default function ConfirmDetailsStep({
           onChange={(e) => onChange({ fullName: e.target.value })}
           placeholder={t("private-deal.full_name_placeholder")}
         />
-        <Input
+        <PhoneInput
           label={t("private-deal.mobile_number")}
           value={data.mobile}
-          onChange={(e) => onChange({ mobile: e.target.value })}
+          onChange={(mobile) => onChange({ mobile })}
           placeholder={t("private-deal.mobile_placeholder")}
         />
         <Input
@@ -246,10 +246,10 @@ export default function ConfirmDetailsStep({
                 placeholder="88454"
               />
             )}
-            <Input
+            <PhoneInput
               label={t("private-deal.mobile_number")}
               value={data.secondaryMobile}
-              onChange={(e) => onChange({ secondaryMobile: e.target.value })}
+              onChange={(secondaryMobile) => onChange({ secondaryMobile })}
               placeholder={t("private-deal.mobile_placeholder")}
             />
             {data.personType === "organization" && (
