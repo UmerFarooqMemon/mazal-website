@@ -264,3 +264,18 @@ export function createPrivateDealCheckout(
     locale,
   });
 }
+
+export function payPrivateDealWithWallet(
+  id: string | number,
+  paymentId: string | number,
+  locale: string,
+) {
+  return privateDealsRequest<{
+    deal: PrivateDeal;
+    wallet?: Record<string, unknown>;
+    wallet_transaction?: Record<string, unknown>;
+  }>(`/${id}/payments/${paymentId}/wallet`, {
+    method: "POST",
+    locale,
+  });
+}

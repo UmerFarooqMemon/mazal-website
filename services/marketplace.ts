@@ -48,7 +48,8 @@ export type AuctionDepositApiMethod =
   | "card"
   | "bank_transfer"
   | "managers_check"
-  | "cash_collection";
+  | "cash_collection"
+  | "wallet";
 
 export interface MarketplaceAuctionBankInstructions {
   method?: string;
@@ -71,6 +72,8 @@ export interface MarketplaceAuctionDepositMethod {
   key: AuctionDepositApiMethod | string;
   label: string;
   offline?: boolean;
+  sufficient?: boolean;
+  available_balance?: number | string;
   instructions?: MarketplaceAuctionBankInstructions | Record<string, unknown>;
 }
 
@@ -87,6 +90,8 @@ export interface MarketplaceAuctionRegistration {
   deposit_details?: Record<string, unknown> | null;
   deposit_held_at?: string | null;
   deposit_released_at?: string | null;
+  deposit_released_amount?: number | string | null;
+  deposit_releasable_amount?: number | string | null;
   deposit_submitted_at?: string | null;
   deposit_rejected_at?: string | null;
   deposit_rejection_reason?: string | null;
@@ -1178,6 +1183,20 @@ export function confirmRevealPayment(
   );
 }
 
+// 17b. Pay reveal fee from Mazal wallet
+export function payRevealWithWallet(listingId: string | number, locale: string) {
+  return marketplaceRequest<
+    MarketplaceRevealScreen & {
+      wallet?: Record<string, unknown>;
+      wallet_transaction?: Record<string, unknown>;
+    }
+  >(`/listings/${listingId}/reveal/wallet`, {
+    method: "POST",
+    locale,
+    auth: "required",
+  });
+}
+
 // 18. Proceed After Reveal
 export function proceedAfterReveal(listingId: string | number, locale: string) {
   return marketplaceRequest<
@@ -1397,6 +1416,23 @@ export function confirmPurchasePayment(
       }),
     },
   );
+}
+
+// 28b. Pay purchase custody payment from Mazal wallet
+export function payPurchaseWithWallet(
+  purchaseId: string | number,
+  paymentId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    purchase: MarketplacePurchase;
+    wallet?: Record<string, unknown>;
+    wallet_transaction?: Record<string, unknown>;
+  }>(`/purchases/${purchaseId}/payments/${paymentId}/wallet`, {
+    method: "POST",
+    locale,
+    auth: "required",
+  });
 }
 
 // 29. Submit Bank Transfer Evidence / collection payment
@@ -1657,6 +1693,50 @@ export function createAuctionDepositCheckout(
       auth: "required",
       contentType: "application/json",
       body: JSON.stringify({}),
+    },
+  );
+}
+
+// 45b2. Pay auction deposit from Mazal wallet
+export function payAuctionDepositWithWallet(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    registration: MarketplaceAuctionRegistration;
+    wallet?: Record<string, unknown>;
+    wallet_transaction?: Record<string, unknown>;
+  }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/wallet`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
+}
+
+// 45b3. Release held auction deposit (full/partial) back to wallet
+export function releaseAuctionDepositToWallet(
+  listingId: string | number,
+  registrationId: string | number,
+  locale: string,
+  payload: { amount: number | string; idempotency_key?: string },
+) {
+  return marketplaceRequest<{
+    registration: MarketplaceAuctionRegistration;
+    wallet?: Record<string, unknown>;
+    wallet_transaction?: Record<string, unknown>;
+    released_amount?: number | string;
+  }>(
+    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/release-to-wallet`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
     },
   );
 }

@@ -13,6 +13,8 @@ import FundsOnHoldCard from "@/components/wallet/FundsOnHoldCard";
 import CashOutModal from "@/components/wallet/CashOutModal";
 import ReleaseFundsModal from "@/components/wallet/ReleaseFundsModal";
 import { WALLET_PAGE_BG } from "@/components/wallet/theme";
+import { createWalletCashOut } from "@/services/wallet";
+import { releaseAuctionDepositToWallet } from "@/services/marketplace";
 
 export default function WalletPage() {
   const { t, locale } = useLocale();
@@ -40,16 +42,24 @@ export default function WalletPage() {
             >
               {t("wallet.page_subtitle")}
             </p>
+            {wallet.error && (
+              <p className="text-sm mt-2" style={{ color: getColor("error") }}>
+                {wallet.error}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.9fr] gap-5 lg:gap-6 items-start">
             <div className="space-y-5">
               <WalletBalanceCard
-                balance={wallet.balance}
+                balance={wallet.availableBalance}
                 onTopUp={() => router.push(`/${locale}/wallet/top-up`)}
                 onCashOut={() => setCashOutOpen(true)}
               />
-              <WalletActivityCard transactions={wallet.transactions} />
+              <WalletActivityCard
+                transactions={wallet.transactions}
+                loading={wallet.loading}
+              />
             </div>
 
             <div className="space-y-5">
@@ -72,9 +82,12 @@ export default function WalletPage() {
       <CashOutModal
         isOpen={cashOutOpen}
         onClose={() => setCashOutOpen(false)}
-        balance={wallet.balance}
-        onConfirm={(amount, bankLabel) => {
-          wallet.cashOut(amount, bankLabel);
+        balance={wallet.availableBalance}
+        minAmount={wallet.limits?.min_cash_out ?? 100}
+        maxAmount={wallet.limits?.max_cash_out}
+        onConfirm={async (payload) => {
+          await createWalletCashOut(locale, payload);
+          await wallet.refresh();
           toast.success(t("wallet.cash_out_success"));
         }}
       />
@@ -82,9 +95,19 @@ export default function WalletPage() {
       <ReleaseFundsModal
         isOpen={releaseOpen}
         onClose={() => setReleaseOpen(false)}
+        holds={wallet.holds}
         heldAmount={wallet.heldAmount}
-        onConfirm={(amount) => {
-          wallet.releaseFunds(amount);
+        onConfirm={async (hold, amount) => {
+          await releaseAuctionDepositToWallet(
+            hold.listingId,
+            hold.sourceId,
+            locale,
+            {
+              amount: amount.toFixed(2),
+              idempotency_key: `release-${hold.sourceId}-${Date.now()}`,
+            },
+          );
+          await wallet.refresh();
           toast.success(t("wallet.release_success"));
         }}
       />

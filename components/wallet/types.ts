@@ -1,33 +1,41 @@
-export type WalletTransactionKind = "top_up" | "cash_out" | "purchase";
+export type WalletFundingSource =
+  | "card"
+  | "bank_transfer"
+  | "managers_check"
+  | "cash_collection";
 
-export type WalletFundingSource = "card" | "bank";
+/** @deprecated Prefer WalletLedgerTransaction from services/wallet */
+export type WalletTransactionKind =
+  | "top_up"
+  | "cash_out"
+  | "purchase"
+  | "deposit"
+  | "profit"
+  | "hold"
+  | "release"
+  | "refund"
+  | "adjustment";
 
 export interface WalletTransaction {
-  id: string;
-  kind: WalletTransactionKind;
-  /** Card last four digits for card top ups, bank name for transfers/payouts. */
+  id: string | number;
+  kind: WalletTransactionKind | string;
   reference: string;
-  source: WalletFundingSource;
+  source?: WalletFundingSource | string;
   amount: number;
+  signedAmount?: number;
   createdAt: string;
-  /** Short right-hand caption, e.g. "Bought AA 777". */
   note?: string;
+  direction?: "credit" | "debit" | string;
 }
 
 export interface WalletHold {
   id: string;
+  sourceId: number;
+  listingId: number;
   amount: number;
-  reference: string;
-  source: WalletFundingSource;
-  createdAt: string;
-  /** Auction the deposit is held against, when the hold came from a deposit. */
-  auctionId?: string;
-}
-
-export interface WalletState {
-  balance: number;
-  income: number;
-  spending: number;
-  transactions: WalletTransaction[];
-  holds: WalletHold[];
+  releasableAmount: number;
+  totalDepositAmount: number;
+  releasedAmount: number;
+  plate?: string | null;
+  createdAt?: string | null;
 }

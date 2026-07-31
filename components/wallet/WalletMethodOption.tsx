@@ -19,7 +19,7 @@ export default function WalletMethodOption({
 }: WalletMethodOptionProps) {
   const { t } = useLocale();
   const { getColor } = useTheme();
-  const { balance } = useWallet();
+  const { availableBalance } = useWallet();
 
   return (
     <button
@@ -53,7 +53,7 @@ export default function WalletMethodOption({
         </div>
         <div className="text-sm" style={{ color: getColor("mutedText") }}>
           {t("wallet.available_balance")}{" "}
-          <DirhamAmount amount={balance} decimals={2} />
+          <DirhamAmount amount={availableBalance} decimals={2} />
         </div>
       </div>
       <div

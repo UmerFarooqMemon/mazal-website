@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
+import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
@@ -22,21 +23,26 @@ import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProce
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import {
   getListingDetail,
+  getPurchase,
   isHiddenPlateCode,
+  payPurchaseWithWallet,
   resolvePlateParts,
   type MarketplaceListingDetail,
+  type MarketplacePurchase,
 } from "@/services/marketplace";
 
 interface MarketplaceCheckoutProps {
   listingId: string;
   initialRole: "buyer" | "seller";
   agreedPrice: number;
+  purchaseId?: string;
 }
 
 export default function MarketplaceCheckout({
   listingId,
   initialRole,
   agreedPrice,
+  purchaseId,
 }: MarketplaceCheckoutProps) {
   const router = useRouter();
   const { t, locale } = useLocale();
@@ -45,6 +51,7 @@ export default function MarketplaceCheckout({
 
   const [step, setStep] = useState(0);
   const [listing, setListing] = useState<MarketplaceListingDetail | null>(null);
+  const [purchase, setPurchase] = useState<MarketplacePurchase | null>(null);
   const [resolvedPrice, setResolvedPrice] = useState(agreedPrice);
   const [details, setDetails] = useState<ConfirmDetailsData>({
     fullName: "",
@@ -82,10 +89,23 @@ export default function MarketplaceCheckout({
       });
   }, [agreedPrice, listingId, locale]);
 
+  useEffect(() => {
+    if (!purchaseId) return;
+    getPurchase(purchaseId, locale)
+      .then((response) => {
+        setPurchase(response.data.purchase);
+        const due = Number(response.data.purchase.total_due);
+        if (Number.isFinite(due) && due > 0) {
+          setResolvedPrice(due);
+        }
+      })
+      .catch(() => {
+        // Purchase may still be optional for UI-only checkout paths.
+      });
+  }, [locale, purchaseId]);
+
   const plateType = listing?.plate_type || "private";
   const plateDesign = listing?.plate_design || "new_colorful";
-  // Variant keys are `${plate_type}_${plate_design}` (e.g. private_new_colorful).
-  // Listing APIs expose type + design separately — never treat design alone as the variant key.
   const plateVariant = `${plateType}_${plateDesign}`;
   const hideCode = isHiddenPlateCode(listing);
   const plate = resolvePlateParts(listing);
@@ -148,6 +168,13 @@ export default function MarketplaceCheckout({
       setStep(1);
     }
   };
+
+  const pendingPurchasePaymentId =
+    purchase?.payments?.find((payment) =>
+      ["pending", "awaiting", "unpaid"].includes(
+        String(payment.status || "").toLowerCase(),
+      ),
+    )?.id || purchase?.payments?.[0]?.id;
 
   const renderMain = () => {
     if (step === 0) {
@@ -238,33 +265,30 @@ export default function MarketplaceCheckout({
         className="border-b"
         style={{
           borderColor: getColor("border"),
-          background: `linear-gradient(to bottom, ${getColor("primaryLight")}66, ${getColor("background")})`,
+          backgroundColor: getColor("surface"),
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
-          <div
-            className={`inline-flex items-center gap-2 text-[12px] tracking-[0.2em] uppercase px-3.5 py-1.5 rounded-full mb-4 border`}
-            style={{
-              backgroundColor: `${getColor("primary")}0D`,
-              borderColor: `${getColor("primary")}33`,
-              color: getColor("primary"),
-            }}
-          >
-            <Shield className="w-3.5 h-3.5" />
-            {t("offer.checkout_badge")}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Shield
+              className="w-5 h-5"
+              style={{ color: getColor("primary") }}
+            />
+            <p
+              className="text-xs font-semibold tracking-[0.14em] uppercase"
+              style={{ color: getColor("primary") }}
+            >
+              {t("offer.checkout_badge") || "Checkout"}
+            </p>
           </div>
-
           <h1
-            className="max-w-3xl font-serif text-4xl md:text-5xl tracking-tight leading-[1.15] mb-4 text-start"
+            className={`text-3xl sm:text-4xl font-serif mb-2 ${isRTL ? "text-right" : ""}`}
             style={{ color: getColor("primaryText") }}
           >
-            {initialRole === "seller"
-              ? t("offer.checkout_seller_title")
-              : t("offer.checkout_buyer_title")}
+            {t("offer.checkout_title") || "Complete purchase"}
           </h1>
-
           <p
-            className="max-w-2xl text-base md:text-lg leading-relaxed text-start"
+            className="text-sm mb-6"
             style={{ color: getColor("secondaryText") }}
           >
             {t("offer.checkout_description")}
@@ -276,9 +300,7 @@ export default function MarketplaceCheckout({
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-20">
         {showSidebar ? (
-          <div
-            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-          >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">{renderMain()}</div>
             <div className="lg:col-span-1 space-y-6">
               <div className="marketplace-checkout-summary">
@@ -302,7 +324,21 @@ export default function MarketplaceCheckout({
         onClose={() => setWalletModalOpen(false)}
         amountDue={resolvedPrice}
         reference={t("private-deal.payment_title")}
-        onPaid={() => setStep(3)}
+        onPaid={async () => {
+          if (!purchaseId || !pendingPurchasePaymentId) {
+            throw new Error(
+              t("wallet.purchase_not_ready") ||
+                "Purchase payment is not ready yet.",
+            );
+          }
+          await payPurchaseWithWallet(
+            purchaseId,
+            pendingPurchasePaymentId,
+            locale,
+          );
+          toast.success(t("wallet.paid_from_wallet"));
+          setStep(3);
+        }}
       />
     </div>
   );

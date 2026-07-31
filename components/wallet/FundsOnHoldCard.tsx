@@ -106,14 +106,14 @@ export default function FundsOnHoldCard({
                   className="text-[10px] font-semibold uppercase tracking-[0.1em]"
                   style={{ color: getColor("mutedText") }}
                 >
-                  {t("wallet.activity_bank_card")}
+                  {hold.plate || t("wallet.deposited_for_auction")}
                 </p>
                 <p
                   className="text-[17px] font-semibold"
                   style={{ color: getColor("primaryText") }}
                 >
                   <DirhamAmount
-                    amount={hold.amount}
+                    amount={hold.releasableAmount}
                     decimals={2}
                     weight="semibold"
                   />
@@ -123,7 +123,7 @@ export default function FundsOnHoldCard({
                 className="text-[11px] shrink-0"
                 style={{ color: getColor("mutedText") }}
               >
-                {t("wallet.activity_via_card")}
+                {t("wallet.releasable")}
               </span>
             </div>
           ))}

@@ -10,17 +10,29 @@ import { resolveBankLabel } from "@/lib/uae-banks";
 import WalletDialog from "./WalletDialog";
 import { WALLET_MUTED_SURFACE } from "./theme";
 
+export interface CashOutFormPayload {
+  amount: number;
+  bank_name: string;
+  account_holder_name: string;
+  iban: string;
+  account_number?: string;
+}
+
 interface CashOutModalProps {
   isOpen: boolean;
   onClose: () => void;
   balance: number;
-  onConfirm: (amount: number, bankLabel: string) => void;
+  minAmount?: number;
+  maxAmount?: number;
+  onConfirm: (payload: CashOutFormPayload) => void | Promise<void>;
 }
 
 export default function CashOutModal({
   isOpen,
   onClose,
   balance,
+  minAmount = 100,
+  maxAmount,
   onConfirm,
 }: CashOutModalProps) {
   const { t } = useLocale();
@@ -33,20 +45,33 @@ export default function CashOutModal({
   const [iban, setIban] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const ceiling = maxAmount != null ? Math.min(balance, maxAmount) : balance;
 
   const reset = () => {
     setAmount("");
+    setBankKey("");
+    setOtherBank("");
+    setBeneficiary("");
+    setIban("");
+    setAccountNumber("");
     setError("");
   };
 
   const handleClose = () => {
+    if (submitting) return;
     reset();
     onClose();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const value = Number(amount);
-    if (!Number.isFinite(value) || value <= 0 || value > balance) {
+    if (
+      !Number.isFinite(value) ||
+      value < minAmount ||
+      value > ceiling
+    ) {
       setError(t("wallet.cash_out_invalid_amount"));
       return;
     }
@@ -55,9 +80,23 @@ export default function CashOutModal({
       return;
     }
 
-    onConfirm(value, resolveBankLabel(bankKey, otherBank));
-    reset();
-    onClose();
+    setSubmitting(true);
+    setError("");
+    try {
+      await onConfirm({
+        amount: value,
+        bank_name: resolveBankLabel(bankKey, otherBank),
+        account_holder_name: beneficiary.trim(),
+        iban: iban.replace(/\s/g, ""),
+        account_number: accountNumber.trim() || undefined,
+      });
+      reset();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("wallet.cash_out_failed"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -90,8 +129,8 @@ export default function CashOutModal({
           label={t("wallet.amount")}
           type="number"
           inputMode="decimal"
-          min={0}
-          max={balance}
+          min={minAmount}
+          max={ceiling}
           value={amount}
           onChange={(event) => {
             setAmount(event.target.value);
@@ -155,9 +194,10 @@ export default function CashOutModal({
         size="lg"
         fullWidth
         className="mt-6"
-        onClick={handleSubmit}
+        disabled={submitting}
+        onClick={() => void handleSubmit()}
       >
-        {t("wallet.cash_out_cta")}
+        {submitting ? t("wallet.processing") : t("wallet.cash_out_cta")}
       </Button>
     </WalletDialog>
   );

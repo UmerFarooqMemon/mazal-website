@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
+  Banknote,
   Building2,
   CheckCircle2,
   CreditCard,
+  FileText,
   Upload,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,30 +20,128 @@ import type { StepItem } from "@/components/private-deal/Stepper";
 import WalletFlowHeader from "@/components/wallet/WalletFlowHeader";
 import { WALLET_PAGE_BG } from "@/components/wallet/theme";
 import { useWallet } from "@/hooks/useWallet";
-import type { WalletFundingSource } from "@/components/wallet/types";
+import {
+  createWalletDeposit,
+  createWalletPayTabsCheckout,
+  getWalletDeposit,
+  submitWalletOfflinePayment,
+  type WalletCustodyInstructions,
+  type WalletDeposit,
+  type WalletDepositMethod,
+  type WalletDepositPayment,
+} from "@/services/wallet";
 
 type TopUpStep = 0 | 1 | 2;
+
+const METHOD_ICONS: Record<
+  string,
+  typeof CreditCard
+> = {
+  card: CreditCard,
+  bank_transfer: Building2,
+  managers_check: FileText,
+  cash_collection: Banknote,
+};
 
 export default function WalletTopUpPage() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const wallet = useWallet();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
 
+  const methodsFromApi = wallet.paymentMethods.length
+    ? wallet.paymentMethods
+    : [
+        { key: "card", label: t("wallet.method_card") },
+        { key: "bank_transfer", label: t("wallet.method_bank") },
+        { key: "managers_check", label: t("wallet.method_cheque") },
+        { key: "cash_collection", label: t("wallet.method_cash") },
+      ];
+
   const [step, setStep] = useState<TopUpStep>(0);
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState<WalletFundingSource>("card");
-  const [cardHolder, setCardHolder] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [notes, setNotes] = useState("");
-  const [proofName, setProofName] = useState("");
+  const [method, setMethod] = useState<WalletDepositMethod>("card");
+  const [deposit, setDeposit] = useState<WalletDeposit | null>(null);
+  const [activePayment, setActivePayment] = useState<WalletDepositPayment | null>(
+    null,
+  );
+  const [paymentReference, setPaymentReference] = useState("");
+  const [senderBankName, setSenderBankName] = useState("");
+  const [senderAccountLast4, setSenderAccountLast4] = useState("");
+  const [checkNumber, setCheckNumber] = useState("");
+  const [collectionDate, setCollectionDate] = useState("");
+  const [collectionTime, setCollectionTime] = useState("");
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [collectionNotes, setCollectionNotes] = useState("");
+  const [evidence, setEvidence] = useState<File | null>(null);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [donePending, setDonePending] = useState(false);
+
+  const minDeposit = wallet.limits?.min_deposit ?? 100;
+  const maxDeposit = wallet.limits?.max_deposit ?? 5_000_000;
+  const parsedAmount = Number(amount);
+
+  useEffect(() => {
+    if (methodsFromApi[0]?.key && !methodsFromApi.some((m) => m.key === method)) {
+      setMethod(methodsFromApi[0].key as WalletDepositMethod);
+    }
+  }, [method, methodsFromApi]);
+
+  const refreshWallet = wallet.refresh;
+
+  // Resume / poll after PayTabs browser return (lands on wallet; also support deposit_id on top-up).
+  useEffect(() => {
+    const depositId = searchParams.get("deposit_id");
+    if (!depositId) return;
+    let cancelled = false;
+    let tries = 0;
+
+    const poll = async () => {
+      try {
+        const response = await getWalletDeposit(depositId, locale);
+        if (cancelled) return;
+        const next = response.data.deposit;
+        setDeposit(next);
+        if (next.status === "funded") {
+          setDone(true);
+          setDonePending(false);
+          setStep(2);
+          await refreshWallet();
+          toast.success(t("wallet.topup_funded"));
+          return;
+        }
+        if (
+          next.payments?.every((p) =>
+            ["funded", "pending_verification", "rejected"].includes(p.status),
+          )
+        ) {
+          setDone(true);
+          setDonePending(next.status !== "funded");
+          setStep(2);
+        }
+        tries += 1;
+        if (tries < 12) {
+          window.setTimeout(() => void poll(), 2500);
+        }
+      } catch {
+        tries += 1;
+        if (tries < 8) {
+          window.setTimeout(() => void poll(), 2500);
+        }
+      }
+    };
+
+    void poll();
+    return () => {
+      cancelled = true;
+    };
+  }, [locale, refreshWallet, searchParams, t]);
 
   const steps: StepItem[] = useMemo(() => {
     const labels = [
@@ -61,7 +161,8 @@ export default function WalletTopUpPage() {
     }));
   }, [done, step, t]);
 
-  const parsedAmount = Number(amount);
+  const custody: WalletCustodyInstructions | null =
+    activePayment?.custody_instructions || null;
 
   const goBack = () => {
     if (done) {
@@ -76,44 +177,161 @@ export default function WalletTopUpPage() {
     setError("");
   };
 
+  const createDepositAndContinue = async () => {
+    if (!Number.isFinite(parsedAmount) || parsedAmount < minDeposit) {
+      setError(
+        t("wallet.topup_invalid_amount_range").replace(
+          "{min}",
+          String(minDeposit),
+        ),
+      );
+      return;
+    }
+    if (parsedAmount > maxDeposit) {
+      setError(t("wallet.topup_amount_too_high"));
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await createWalletDeposit(locale, {
+        amount: parsedAmount,
+        payments: [{ method, amount: parsedAmount }],
+      });
+      const nextDeposit = response.data.deposit;
+      const payment = nextDeposit.payments?.[0] || null;
+      setDeposit(nextDeposit);
+      setActivePayment(payment);
+
+      if (method === "card" && payment) {
+        const checkout = await createWalletPayTabsCheckout(
+          nextDeposit.id,
+          payment.id,
+          locale,
+        );
+        const redirectUrl = checkout.data.redirect_url;
+        if (!redirectUrl) {
+          throw new Error("Missing PayTabs checkout URL.");
+        }
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      setStep(1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("wallet.topup_failed"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submitOffline = async () => {
+    if (!deposit || !activePayment) {
+      setError(t("wallet.topup_failed"));
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("method", activePayment.method);
+
+    if (activePayment.method === "bank_transfer") {
+      if (!paymentReference.trim()) {
+        setError(t("wallet.payment_reference_required"));
+        return;
+      }
+      if (!evidence) {
+        setError(t("wallet.evidence_required"));
+        return;
+      }
+      formData.append("payment_reference", paymentReference.trim());
+      if (senderBankName.trim()) {
+        formData.append("sender_bank_name", senderBankName.trim());
+      }
+      if (senderAccountLast4.trim()) {
+        formData.append("sender_account_last4", senderAccountLast4.trim());
+      }
+      formData.append("evidence", evidence);
+    }
+
+    if (activePayment.method === "managers_check") {
+      if (!checkNumber.trim()) {
+        setError(t("wallet.check_number_required"));
+        return;
+      }
+      if (!pickupAddress.trim()) {
+        setError(t("wallet.pickup_address_required"));
+        return;
+      }
+      formData.append("check_number", checkNumber.trim());
+      formData.append("pickup_address", pickupAddress.trim());
+      if (collectionDate) formData.append("collection_date", collectionDate);
+      if (collectionTime) formData.append("collection_time", collectionTime);
+      if (collectionNotes.trim()) {
+        formData.append("collection_notes", collectionNotes.trim());
+      }
+      if (evidence) formData.append("evidence", evidence);
+    }
+
+    if (activePayment.method === "cash_collection") {
+      if (!pickupAddress.trim()) {
+        setError(t("wallet.pickup_address_required"));
+        return;
+      }
+      formData.append("pickup_address", pickupAddress.trim());
+      if (collectionDate) formData.append("collection_date", collectionDate);
+      if (collectionTime) formData.append("collection_time", collectionTime);
+      if (collectionNotes.trim()) {
+        formData.append("collection_notes", collectionNotes.trim());
+      }
+      if (evidence) formData.append("evidence", evidence);
+    }
+
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await submitWalletOfflinePayment(
+        deposit.id,
+        activePayment.id,
+        locale,
+        formData,
+      );
+      setDeposit(response.data.deposit);
+      setActivePayment(response.data.payment);
+      setDone(true);
+      setDonePending(true);
+      setStep(2);
+      toast.success(t("wallet.topup_pending_verification"));
+      await wallet.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("wallet.topup_failed"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const goNext = () => {
     setError("");
     if (step === 0) {
-      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-        setError(t("wallet.topup_invalid_amount"));
-        return;
-      }
-      setStep(1);
+      void createDepositAndContinue();
       return;
     }
-
     if (step === 1) {
-      if (method === "card") {
-        if (!cardHolder.trim() || !cardNumber.trim() || !expiry.trim() || !cvv.trim()) {
-          setError(t("wallet.cash_out_missing_bank"));
-          return;
-        }
-      }
-      setStep(2);
-      return;
+      void submitOffline();
     }
-
-    const reference =
-      method === "card"
-        ? cardNumber.replace(/\s/g, "").slice(-4) || "4242"
-        : "Bank transfer";
-    wallet.topUp(parsedAmount, method, reference);
-    setDone(true);
-    toast.success(t("wallet.topup_success_title"));
   };
 
-  const methodTile = (key: WalletFundingSource, title: string, Icon: typeof CreditCard) => {
+  const methodTile = (
+    key: string,
+    title: string,
+    Icon: typeof CreditCard,
+  ) => {
     const selected = method === key;
     return (
       <button
         key={key}
         type="button"
-        onClick={() => setMethod(key)}
+        onClick={() => setMethod(key as WalletDepositMethod)}
         className="w-full flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all text-start"
         style={
           selected
@@ -161,6 +379,16 @@ export default function WalletTopUpPage() {
     );
   };
 
+  const methodLabel = (key: string) => {
+    const fromApi = methodsFromApi.find((item) => item.key === key)?.label;
+    if (fromApi) return fromApi;
+    if (key === "card") return t("wallet.method_card");
+    if (key === "bank_transfer") return t("wallet.method_bank");
+    if (key === "managers_check") return t("wallet.method_cheque");
+    if (key === "cash_collection") return t("wallet.method_cash");
+    return key;
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: WALLET_PAGE_BG }}>
       <section className="px-4 sm:px-6 lg:px-8 pt-10 pb-8">
@@ -196,13 +424,17 @@ export default function WalletTopUpPage() {
                   className="text-2xl font-serif mb-2"
                   style={{ color: getColor("primaryText") }}
                 >
-                  {t("wallet.topup_success_title")}
+                  {donePending
+                    ? t("wallet.topup_pending_title")
+                    : t("wallet.topup_success_title")}
                 </h2>
                 <p
                   className="text-sm mb-8"
                   style={{ color: getColor("secondaryText") }}
                 >
-                  {t("wallet.topup_success_desc")}
+                  {donePending
+                    ? t("wallet.topup_pending_desc")
+                    : t("wallet.topup_success_desc")}
                 </p>
                 <Button
                   variant="primary"
@@ -234,7 +466,8 @@ export default function WalletTopUpPage() {
                       label={t("wallet.amount")}
                       type="number"
                       inputMode="decimal"
-                      min={0}
+                      min={minDeposit}
+                      max={maxDeposit}
                       value={amount}
                       onChange={(event) => {
                         setAmount(event.target.value);
@@ -252,13 +485,18 @@ export default function WalletTopUpPage() {
                       >
                         {t("wallet.topup_method_title")}
                       </p>
-                      {methodTile("card", t("wallet.method_card"), CreditCard)}
-                      {methodTile("bank", t("wallet.method_bank"), Building2)}
+                      {methodsFromApi.map((item) =>
+                        methodTile(
+                          item.key,
+                          item.label || methodLabel(item.key),
+                          METHOD_ICONS[item.key] || CreditCard,
+                        ),
+                      )}
                     </div>
                   </>
                 )}
 
-                {step === 1 && (
+                {step === 1 && activePayment && (
                   <>
                     <h2
                       className="text-2xl font-serif mb-1"
@@ -273,133 +511,152 @@ export default function WalletTopUpPage() {
                       {t("wallet.topup_details_subtitle")}
                     </p>
 
-                    {method === "card" ? (
-                      <div className="space-y-3.5">
-                        <Input
-                          label={t("wallet.field_card_holder")}
-                          value={cardHolder}
-                          onChange={(event) => setCardHolder(event.target.value)}
-                        />
-                        <Input
-                          label={t("wallet.field_card_number")}
-                          value={cardNumber}
-                          onChange={(event) => setCardNumber(event.target.value)}
-                          placeholder="**** **** **** ****"
-                        />
-                        <div className="grid grid-cols-2 gap-3">
-                          <Input
-                            label={t("wallet.field_expiry")}
-                            value={expiry}
-                            onChange={(event) => setExpiry(event.target.value)}
-                            placeholder="MM/YY"
-                          />
-                          <Input
-                            label={t("wallet.field_cvv")}
-                            value={cvv}
-                            onChange={(event) => setCvv(event.target.value)}
-                            placeholder="***"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3.5">
-                        <div>
-                          <label
-                            className="block text-[11px] font-medium mb-2"
-                            style={{ color: getColor("secondaryText") }}
-                          >
-                            {t("wallet.field_notes")}
-                          </label>
-                          <textarea
-                            value={notes}
-                            onChange={(event) => setNotes(event.target.value)}
-                            placeholder={t("wallet.field_notes_placeholder")}
-                            rows={3}
-                            className="w-full rounded-xl border bg-white py-3 px-4 text-sm resize-none outline-none"
-                            style={{
-                              borderColor: getColor("border"),
-                              color: getColor("primaryText"),
-                            }}
-                          />
-                        </div>
-                        <label
-                          className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 cursor-pointer text-center"
-                          style={{
-                            borderColor: getColor("border"),
-                            backgroundColor: getColor("primaryLight"),
-                            color: getColor("secondaryText"),
-                          }}
-                        >
-                          <Upload
-                            className="w-5 h-5"
-                            style={{ color: getColor("primary") }}
-                          />
-                          <span className="text-sm font-medium">
-                            {proofName || t("wallet.upload_payment_proof")}
-                          </span>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/jpeg,image/png,image/webp,application/pdf"
-                            onChange={(event) =>
-                              setProofName(event.target.files?.[0]?.name || "")
-                            }
-                          />
-                        </label>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {step === 2 && (
-                  <>
-                    <h2
-                      className="text-2xl font-serif mb-1"
-                      style={{ color: getColor("primaryText") }}
-                    >
-                      {t("wallet.step_submit_request")}
-                    </h2>
-                    <p
-                      className="text-sm mb-6"
-                      style={{ color: getColor("secondaryText") }}
-                    >
-                      {t("wallet.topup_success_desc")}
-                    </p>
-
-                    <div
-                      className="rounded-2xl border px-4 py-4 space-y-3"
-                      style={{ borderColor: getColor("border") }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="text-sm"
-                          style={{ color: getColor("mutedText") }}
-                        >
-                          {t("wallet.amount")}
-                        </span>
-                        <span
-                          className="font-semibold"
-                          style={{ color: getColor("primaryText") }}
-                        >
-                          {parsedAmount.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="text-sm"
-                          style={{ color: getColor("mutedText") }}
-                        >
-                          {t("wallet.step_select_payment")}
-                        </span>
-                        <span
+                    {custody && (
+                      <div
+                        className="rounded-2xl border px-4 py-4 mb-5 space-y-2 text-sm"
+                        style={{ borderColor: getColor("border") }}
+                      >
+                        <p
                           className="font-medium"
                           style={{ color: getColor("primaryText") }}
                         >
-                          {method === "card"
-                            ? t("wallet.method_card")
-                            : t("wallet.method_bank")}
-                        </span>
+                          {t("wallet.custody_instructions")}
+                        </p>
+                        {custody.account_holder_name && (
+                          <p style={{ color: getColor("secondaryText") }}>
+                            {custody.account_holder_name}
+                          </p>
+                        )}
+                        {custody.bank_name && (
+                          <p style={{ color: getColor("secondaryText") }}>
+                            {custody.bank_name}
+                          </p>
+                        )}
+                        {custody.iban && (
+                          <p style={{ color: getColor("secondaryText") }}>
+                            IBAN: {custody.iban}
+                          </p>
+                        )}
+                        {custody.cheque_payee && (
+                          <p style={{ color: getColor("secondaryText") }}>
+                            {custody.cheque_payee}
+                          </p>
+                        )}
+                        {(custody.collection_location ||
+                          custody.collection_address) && (
+                          <p style={{ color: getColor("secondaryText") }}>
+                            {custody.collection_location ||
+                              custody.collection_address}
+                          </p>
+                        )}
+                        {custody.note && (
+                          <p style={{ color: getColor("mutedText") }}>
+                            {custody.note}
+                          </p>
+                        )}
                       </div>
+                    )}
+
+                    <div className="space-y-3.5">
+                      {activePayment.method === "bank_transfer" && (
+                        <>
+                          <Input
+                            label={t("wallet.payment_reference")}
+                            value={paymentReference}
+                            onChange={(event) =>
+                              setPaymentReference(event.target.value)
+                            }
+                          />
+                          <Input
+                            label={t("wallet.sender_bank_name")}
+                            value={senderBankName}
+                            onChange={(event) =>
+                              setSenderBankName(event.target.value)
+                            }
+                          />
+                          <Input
+                            label={t("wallet.sender_account_last4")}
+                            value={senderAccountLast4}
+                            onChange={(event) =>
+                              setSenderAccountLast4(
+                                event.target.value.replace(/\D/g, "").slice(0, 4),
+                              )
+                            }
+                            placeholder="1234"
+                          />
+                        </>
+                      )}
+
+                      {activePayment.method === "managers_check" && (
+                        <Input
+                          label={t("wallet.check_number")}
+                          value={checkNumber}
+                          onChange={(event) => setCheckNumber(event.target.value)}
+                        />
+                      )}
+
+                      {(activePayment.method === "managers_check" ||
+                        activePayment.method === "cash_collection") && (
+                        <>
+                          <Input
+                            label={t("wallet.pickup_address")}
+                            value={pickupAddress}
+                            onChange={(event) =>
+                              setPickupAddress(event.target.value)
+                            }
+                          />
+                          <div className="grid grid-cols-2 gap-3">
+                            <Input
+                              label={t("wallet.collection_date")}
+                              type="date"
+                              value={collectionDate}
+                              onChange={(event) =>
+                                setCollectionDate(event.target.value)
+                              }
+                            />
+                            <Input
+                              label={t("wallet.collection_time")}
+                              type="time"
+                              value={collectionTime}
+                              onChange={(event) =>
+                                setCollectionTime(event.target.value)
+                              }
+                            />
+                          </div>
+                          <Input
+                            label={t("wallet.field_notes")}
+                            value={collectionNotes}
+                            onChange={(event) =>
+                              setCollectionNotes(event.target.value)
+                            }
+                          />
+                        </>
+                      )}
+
+                      <label
+                        className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 cursor-pointer text-center"
+                        style={{
+                          borderColor: getColor("border"),
+                          backgroundColor: getColor("primaryLight"),
+                          color: getColor("secondaryText"),
+                        }}
+                      >
+                        <Upload
+                          className="w-5 h-5"
+                          style={{ color: getColor("primary") }}
+                        />
+                        <span className="text-sm font-medium">
+                          {evidence?.name || t("wallet.upload_payment_proof")}
+                        </span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/jpeg,image/png,image/webp,application/pdf"
+                          onChange={(event) =>
+                            setEvidence(event.target.files?.[0] || null)
+                          }
+                        />
+                      </label>
                     </div>
                   </>
                 )}
@@ -419,6 +676,7 @@ export default function WalletTopUpPage() {
                     size="md"
                     onClick={goBack}
                     leftIcon={<BackIcon className="w-4 h-4" />}
+                    disabled={submitting}
                   >
                     {t("wallet.back")}
                   </Button>
@@ -427,10 +685,15 @@ export default function WalletTopUpPage() {
                     size="md"
                     onClick={goNext}
                     rightIcon={<NextIcon className="w-4 h-4" />}
+                    disabled={submitting}
                   >
-                    {step === 2
-                      ? t("wallet.submit_topup")
-                      : t("wallet.continue")}
+                    {submitting
+                      ? t("wallet.processing")
+                      : step === 1
+                        ? t("wallet.submit_topup")
+                        : method === "card"
+                          ? t("wallet.continue_to_paytabs")
+                          : t("wallet.continue")}
                   </Button>
                 </div>
               </>

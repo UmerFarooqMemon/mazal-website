@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, Wallet } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
@@ -15,9 +16,8 @@ interface WalletPaymentModalProps {
   amountDue: number;
   /** Rendered under the amount, e.g. the auction or plate the payment covers. */
   reference?: string;
-  /** When set the paid amount is kept on hold instead of being spent outright. */
-  holdFor?: string;
-  onPaid: () => void;
+  /** Parent performs the real wallet API call. */
+  onPaid: () => void | Promise<void>;
 }
 
 export default function WalletPaymentModal({
@@ -25,25 +25,32 @@ export default function WalletPaymentModal({
   onClose,
   amountDue,
   reference,
-  holdFor,
   onPaid,
 }: WalletPaymentModalProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const router = useRouter();
-  const { balance, pay, holdFunds } = useWallet();
+  const { availableBalance, refresh } = useWallet();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const sufficient = balance >= amountDue && amountDue > 0;
+  const sufficient = availableBalance >= amountDue && amountDue > 0;
 
-  const handlePay = () => {
-    if (!sufficient) return;
-    if (holdFor) {
-      holdFunds(amountDue, holdFor);
-    } else {
-      pay(amountDue, reference);
+  const handlePay = async () => {
+    if (!sufficient || submitting) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      await onPaid();
+      await refresh();
+      onClose();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("wallet.pay_failed"),
+      );
+    } finally {
+      setSubmitting(false);
     }
-    onPaid();
-    onClose();
   };
 
   return (
@@ -68,7 +75,7 @@ export default function WalletPaymentModal({
           className="text-[22px] font-semibold"
           style={{ color: getColor("primaryText") }}
         >
-          <DirhamAmount amount={balance} decimals={2} weight="semibold" />
+          <DirhamAmount amount={availableBalance} decimals={2} weight="semibold" />
         </p>
       </div>
 
@@ -101,10 +108,22 @@ export default function WalletPaymentModal({
         </p>
       )}
 
+      {error && (
+        <p className="text-xs mb-4" style={{ color: getColor("error") }}>
+          {error}
+        </p>
+      )}
+
       <div className="space-y-2.5">
         {sufficient ? (
-          <Button variant="primary" size="lg" fullWidth onClick={handlePay}>
-            {t("wallet.pay_from_wallet")}
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            disabled={submitting}
+            onClick={() => void handlePay()}
+          >
+            {submitting ? t("wallet.processing") : t("wallet.pay_from_wallet")}
           </Button>
         ) : (
           <Button

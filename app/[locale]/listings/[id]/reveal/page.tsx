@@ -20,6 +20,7 @@ import {
   getRevealStatus,
   initiateReveal,
   isHiddenPlateCode,
+  payRevealWithWallet,
   proceedAfterReveal,
   resolveListingPreview,
   resolvePlateParts,
@@ -114,10 +115,20 @@ export default function RevealPage() {
     }
   };
 
-  const applyRevealConfirm = (
-    response: Awaited<ReturnType<typeof confirmRevealPayment>>,
-  ) => {
-    setReveal(response.data.reveal);
+  const applyRevealConfirm = (response: {
+    data: {
+      reveal?: MarketplaceReveal | null;
+      code_screen?: {
+        plate_code?: string | null;
+        plate_digits?: string | null;
+        display_plate?: string | null;
+      } | null;
+      listing?: MarketplaceListingDetail | null;
+    };
+  }) => {
+    if (response.data.reveal) {
+      setReveal(response.data.reveal);
+    }
     setCodeHidden(false);
     setStep("done");
 
@@ -157,14 +168,14 @@ export default function RevealPage() {
         setReveal(response.data.reveal);
         setFeeAmount(Number(response.data.reveal_fee_amount));
       }
-      const reference = `wallet-${Date.now()}`;
-      const response = await confirmRevealPayment(params.id, locale, reference);
+      const response = await payRevealWithWallet(params.id, locale);
       applyRevealConfirm(response);
       toast.success(t("wallet.paid_from_wallet"));
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to confirm reveal payment.",
       );
+      throw err;
     } finally {
       setActionLoading(false);
     }

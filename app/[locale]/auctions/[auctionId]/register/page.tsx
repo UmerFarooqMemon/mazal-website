@@ -24,6 +24,7 @@ import {
   getAuctionBankInstructions,
   getAuctionDepositMethods,
   getAuctionState,
+  payAuctionDepositWithWallet,
   registerForAuction,
   submitAuctionBankProof,
   submitAuctionCashCollection,
@@ -304,15 +305,27 @@ export default function AuctionRegisterPage({
   };
 
   const handleWalletPaid = async () => {
-    setWalletPaid(true);
-    setOfflineSubmitted(true);
-    setStep(2);
-    toast.success(t("wallet.paid_from_wallet"));
+    setSubmitting(true);
+    setError(null);
     try {
-      await ensureRegistration();
+      const nextRegistration = await ensureRegistration();
+      await payAuctionDepositWithWallet(
+        auctionId,
+        nextRegistration.id,
+        locale,
+      );
+      setWalletPaid(true);
+      setOfflineSubmitted(true);
+      setStep(2);
+      toast.success(t("wallet.paid_from_wallet"));
       await refreshAuction();
-    } catch {
-      // Local wallet payment still succeeds even if registration refresh fails.
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("wallet.pay_failed"),
+      );
+      throw err;
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -505,7 +518,6 @@ export default function AuctionRegisterPage({
         onClose={() => setWalletModalOpen(false)}
         amountDue={summary?.minimumDeposit ?? 0}
         reference={t("auctions.summary_min_deposit")}
-        holdFor={auctionId}
         onPaid={handleWalletPaid}
       />
     </div>

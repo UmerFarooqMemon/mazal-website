@@ -9,6 +9,7 @@ import type { WalletTransaction } from "./types";
 
 interface WalletActivityCardProps {
   transactions: WalletTransaction[];
+  loading?: boolean;
 }
 
 type Group = "group_today" | "group_yesterday" | "group_earlier";
@@ -28,6 +29,7 @@ function groupOf(iso: string): Group {
 
 export default function WalletActivityCard({
   transactions,
+  loading = false,
 }: WalletActivityCardProps) {
   const { t } = useLocale();
   const { getColor } = useTheme();
@@ -54,21 +56,19 @@ export default function WalletActivityCard({
   };
 
   const titleOf = (item: WalletTransaction) => {
-    if (item.kind === "cash_out") return t("wallet.activity_cash_out");
-    if (item.source === "card")
-      return `${t("wallet.activity_bank_card")} *** ${item.reference}`;
-    return item.reference;
+    const key = `wallet.activity_type_${item.kind}`;
+    const translated = t(key);
+    if (translated && translated !== key) return translated;
+    return item.reference || String(item.kind);
   };
 
   const subtitleOf = (item: WalletTransaction) => {
-    if (item.kind === "cash_out")
-      return `${t("wallet.activity_to_bank")} ${item.reference}`;
-    return `${t("wallet.activity_topup")} • ${relativeTime(item.createdAt)}`;
+    return `${item.reference} • ${relativeTime(item.createdAt)}`;
   };
 
-  const noteOf = (item: WalletTransaction) => {
-    if (!item.note) return null;
-    return item.note.startsWith("activity_") ? t(`wallet.${item.note}`) : item.note;
+  const amountColor = (item: WalletTransaction) => {
+    const signed = item.signedAmount ?? (item.direction === "debit" ? -item.amount : item.amount);
+    return signed < 0 ? getColor("error") : getColor("primaryText");
   };
 
   return (
@@ -89,7 +89,13 @@ export default function WalletActivityCard({
         {t("wallet.recent_activity_subtitle")}
       </p>
 
-      {groups.length === 0 && (
+      {loading && (
+        <p className="text-sm py-6" style={{ color: getColor("mutedText") }}>
+          {t("wallet.loading")}
+        </p>
+      )}
+
+      {!loading && groups.length === 0 && (
         <p className="text-sm py-6" style={{ color: getColor("mutedText") }}>
           {t("wallet.no_activity")}
         </p>
@@ -105,58 +111,53 @@ export default function WalletActivityCard({
           </p>
 
           <div className="space-y-3">
-            {group.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3.5 rounded-2xl border px-4 py-3.5"
-                style={{
-                  borderColor: getColor("border"),
-                  backgroundColor: getColor("surface"),
-                }}
-              >
+            {group.items.map((item) => {
+              const signed =
+                item.signedAmount ??
+                (item.direction === "debit" ? -item.amount : item.amount);
+              return (
                 <div
-                  className="size-10 rounded-xl flex items-center justify-center shrink-0"
+                  key={item.id}
+                  className="flex items-center gap-3.5 rounded-2xl border px-4 py-3.5"
                   style={{
-                    backgroundColor: "#F8F9FC",
-                    color: getColor("primaryText"),
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("surface"),
                   }}
                 >
-                  <Landmark className="w-[18px] h-[18px]" />
-                </div>
+                  <div
+                    className="size-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{
+                      backgroundColor: "#F8F9FC",
+                      color: getColor("primaryText"),
+                    }}
+                  >
+                    <Landmark className="w-[18px] h-[18px]" />
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="font-medium truncate"
-                    style={{ color: getColor("primaryText") }}
-                  >
-                    {titleOf(item)}
-                  </p>
-                  <p
-                    className="text-xs truncate"
-                    style={{ color: getColor("mutedText") }}
-                  >
-                    {subtitleOf(item)}
-                  </p>
-                </div>
-
-                <div className="text-end shrink-0">
-                  <p
-                    className="font-semibold"
-                    style={{ color: getColor("primaryText") }}
-                  >
-                    <DirhamAmount amount={item.amount} weight="semibold" />
-                  </p>
-                  {noteOf(item) && (
+                  <div className="flex-1 min-w-0">
                     <p
-                      className="text-[11px]"
+                      className="font-medium truncate"
+                      style={{ color: getColor("primaryText") }}
+                    >
+                      {titleOf(item)}
+                    </p>
+                    <p
+                      className="text-xs truncate"
                       style={{ color: getColor("mutedText") }}
                     >
-                      {noteOf(item)}
+                      {subtitleOf(item)}
                     </p>
-                  )}
+                  </div>
+
+                  <div className="text-end shrink-0">
+                    <p className="font-semibold" style={{ color: amountColor(item) }}>
+                      {signed < 0 ? "-" : "+"}
+                      <DirhamAmount amount={Math.abs(signed)} weight="semibold" />
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}

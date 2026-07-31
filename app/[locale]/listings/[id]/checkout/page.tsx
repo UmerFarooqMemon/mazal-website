@@ -2,7 +2,11 @@ import MarketplaceCheckout from "@/components/listings/checkout/MarketplaceCheck
 
 interface MarketplaceCheckoutPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ role?: string; price?: string }>;
+  searchParams: Promise<{
+    role?: string;
+    price?: string;
+    purchaseId?: string;
+  }>;
 }
 
 export default async function MarketplaceCheckoutPage({
@@ -20,6 +24,7 @@ export default async function MarketplaceCheckoutPage({
       listingId={id}
       initialRole={initialRole}
       agreedPrice={agreedPrice}
+      purchaseId={query.purchaseId}
     />
   );
 }
