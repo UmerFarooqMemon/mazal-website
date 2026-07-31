@@ -1,6 +1,7 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -19,6 +20,7 @@ export default function MarketplaceFilters({
 }: MarketplaceFiltersProps) {
   const { t } = useLocale();
   const { getColor } = useTheme();
+  const [open, setOpen] = useState(false);
 
   const filterSections: {
     key: FilterKey;
@@ -73,52 +75,78 @@ export default function MarketplaceFilters({
     onChange(key, value);
   };
 
+  const headerLabel = (
+    <div
+      className="flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] uppercase"
+      style={{ color: getColor("mutedText") }}
+    >
+      <SlidersHorizontal className="w-4 h-4" strokeWidth={2.25} />
+      {t("marketplace.filters")}
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-8 items-start w-full">
-      <div
-        className="flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] uppercase"
-        style={{ color: getColor("mutedText") }}
+      <button
+        type="button"
+        className="flex items-center justify-between w-full lg:hidden"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
       >
-        <SlidersHorizontal className="w-4 h-4" strokeWidth={2.25} />
-        {t("marketplace.filters")}
-      </div>
+        {headerLabel}
+        <ChevronDown
+          className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
+          style={{ color: getColor("mutedText") }}
+          strokeWidth={2.25}
+        />
+      </button>
 
-      {filterSections.map((section) => (
-        <div key={section.key} className="w-full">
-          <h4
-            className="text-[11px] font-bold uppercase tracking-[0.12em] mb-3"
-            style={{ color: getColor("secondaryText") }}
-          >
-            {section.title}
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {section.options.map((option) => {
-              const isActive = selected[section.key] === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleSelect(section.key, option.value)}
-                  className="inline-flex items-center justify-center h-[30px] px-[13px] rounded-full text-[12px] font-medium transition-colors"
-                  style={
-                    isActive
-                      ? {
-                          backgroundColor: getColor("primaryText"),
-                          color: "#fff",
-                        }
-                      : {
-                          backgroundColor: "#EEF1F0",
-                          color: getColor("secondaryText"),
-                        }
-                  }
-                >
-                  {option.label}
-                </button>
-              );
-            })}
+      <div className="hidden lg:flex">{headerLabel}</div>
+
+      <div
+        className={`${
+          open ? "flex" : "hidden"
+        } lg:flex flex-col gap-8 items-start w-full`}
+      >
+        {filterSections.map((section) => (
+          <div key={section.key} className="w-full">
+            <h4
+              className="text-[11px] font-bold uppercase tracking-[0.12em] mb-3"
+              style={{ color: getColor("secondaryText") }}
+            >
+              {section.title}
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {section.options.map((option) => {
+                const isActive = selected[section.key] === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleSelect(section.key, option.value)}
+                    className="inline-flex items-center justify-center h-[30px] px-[13px] rounded-full text-[12px] font-medium transition-colors"
+                    style={
+                      isActive
+                        ? {
+                            backgroundColor: getColor("primaryText"),
+                            color: "#fff",
+                          }
+                        : {
+                            backgroundColor: "#EEF1F0",
+                            color: getColor("secondaryText"),
+                          }
+                    }
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
