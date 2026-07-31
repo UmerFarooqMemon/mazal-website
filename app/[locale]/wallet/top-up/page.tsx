@@ -20,6 +20,7 @@ import type { StepItem } from "@/components/private-deal/Stepper";
 import WalletFlowHeader from "@/components/wallet/WalletFlowHeader";
 import { WALLET_PAGE_BG } from "@/components/wallet/theme";
 import { useWallet } from "@/hooks/useWallet";
+import { formatPriceInput } from "@/lib/card-input";
 import {
   createWalletDeposit,
   createWalletPayTabsCheckout,
@@ -85,7 +86,9 @@ export default function WalletTopUpPage() {
 
   const minDeposit = wallet.limits?.min_deposit ?? 100;
   const maxDeposit = wallet.limits?.max_deposit ?? 5_000_000;
-  const parsedAmount = Number(amount);
+  const parsedAmount = amount.replace(/\D/g, "")
+    ? Number(amount.replace(/\D/g, ""))
+    : NaN;
 
   useEffect(() => {
     if (methodsFromApi[0]?.key && !methodsFromApi.some((m) => m.key === method)) {
@@ -462,21 +465,20 @@ export default function WalletTopUpPage() {
                       {t("wallet.topup_amount_subtitle")}
                     </p>
 
-                    <Input
-                      label={t("wallet.amount")}
-                      type="number"
-                      inputMode="decimal"
-                      min={minDeposit}
-                      max={maxDeposit}
-                      value={amount}
-                      onChange={(event) => {
-                        setAmount(event.target.value);
-                        setError("");
-                      }}
-                      placeholder="0.00"
-                      icon={<DirhamSymbolIcon className="w-3.5 h-3.5" />}
-                      className="mb-5"
-                    />
+                    <div className="mb-5">
+                      <Input
+                        label={t("wallet.amount")}
+                        type="text"
+                        inputMode="numeric"
+                        value={amount}
+                        onChange={(event) => {
+                          setAmount(formatPriceInput(event.target.value));
+                          setError("");
+                        }}
+                        placeholder="0"
+                        icon={<DirhamSymbolIcon size={14} />}
+                      />
+                    </div>
 
                     <div className="space-y-3 mb-2">
                       <p

@@ -876,11 +876,12 @@ export default function PrivateDealPage() {
           </div>
 
           <h1
-            className="max-w-3xl font-serif text-4xl md:text-5xl tracking-tight leading-[1.15] mb-4 text-start"
-            style={{ color: getColor("primaryText") }}
+            className={`max-w-3xl font-serif text-4xl md:text-5xl tracking-tight leading-[1.15] mb-4 ${isRTL ? "text-right" : "text-left"}`}
+            dir={isRTL ? "rtl" : "ltr"}
+            style={{ color: getColor("primaryText"), unicodeBidi: "isolate" }}
           >
-            <span>{t("private-deal.title_line1")} </span>
-            <span style={{ color: getColor("primary") }}>
+            <span className="block">{t("private-deal.title_line1")}</span>
+            <span className="block" style={{ color: getColor("primary") }}>
               {t("private-deal.title_line2")}
             </span>
           </h1>

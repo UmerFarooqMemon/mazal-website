@@ -152,7 +152,7 @@ export default function ReleaseFundsModal({
           setError("");
         }}
         placeholder="0.00"
-        icon={<DirhamSymbolIcon className="w-3.5 h-3.5" />}
+        icon={<DirhamSymbolIcon size={14} />}
         error={error || undefined}
       />
 

@@ -6,6 +6,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, DirhamSymbolIcon, Input } from "@/components/ui";
 import BankSelect from "@/components/ui/BankSelect";
+import { formatPriceInput } from "@/lib/card-input";
 import { resolveBankLabel } from "@/lib/uae-banks";
 import WalletDialog from "./WalletDialog";
 import { WALLET_MUTED_SURFACE } from "./theme";
@@ -66,7 +67,8 @@ export default function CashOutModal({
   };
 
   const handleSubmit = async () => {
-    const value = Number(amount);
+    const digits = amount.replace(/\D/g, "");
+    const value = digits ? Number(digits) : NaN;
     if (
       !Number.isFinite(value) ||
       value < minAmount ||
@@ -127,17 +129,15 @@ export default function CashOutModal({
       <div className="mb-5">
         <Input
           label={t("wallet.amount")}
-          type="number"
-          inputMode="decimal"
-          min={minAmount}
-          max={ceiling}
+          type="text"
+          inputMode="numeric"
           value={amount}
           onChange={(event) => {
-            setAmount(event.target.value);
+            setAmount(formatPriceInput(event.target.value));
             setError("");
           }}
-          placeholder="0.00"
-          icon={<DirhamSymbolIcon className="w-3.5 h-3.5" />}
+          placeholder="0"
+          icon={<DirhamSymbolIcon size={14} />}
         />
       </div>
 
