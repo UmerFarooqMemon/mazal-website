@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Share2, Check } from "lucide-react";
+import { Copy, Share2, Check, Mail } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
@@ -10,15 +10,23 @@ import { Button } from "@/components/ui";
 interface TransferProgressStepProps {
   otp?: string;
   shareUrl?: string;
+  /** Gift invites are emailed; sale invites are manual share. */
+  delivery?: string;
+  invitationEmailSent?: boolean;
+  recipientEmail?: string | null;
 }
 
 export default function TransferProgressStep({
   otp = "256 256 1245",
   shareUrl,
+  delivery,
+  invitationEmailSent,
+  recipientEmail,
 }: TransferProgressStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const [copied, setCopied] = useState(false);
+  const isGiftEmail = delivery === "email";
 
   const handleCopy = async () => {
     try {
@@ -74,6 +82,45 @@ export default function TransferProgressStep({
         </p>
       </div>
 
+      {isGiftEmail && (
+        <div
+          className="rounded-[22px] border px-5 py-4 flex items-start gap-3"
+          style={{
+            backgroundColor: `${getColor("primary")}0D`,
+            borderColor: `${getColor("primary")}33`,
+          }}
+        >
+          <Mail
+            className="w-5 h-5 shrink-0 mt-0.5"
+            style={{ color: getColor("primary") }}
+          />
+          <div className="text-start min-w-0">
+            <p
+              className="text-sm font-medium"
+              style={{ color: getColor("primaryText") }}
+            >
+              {invitationEmailSent
+                ? t("private-deal.gift_invite_emailed")
+                : t("private-deal.gift_invite_email_failed")}
+            </p>
+            {recipientEmail && (
+              <p
+                className="text-sm mt-1 truncate"
+                style={{ color: getColor("secondaryText") }}
+              >
+                {recipientEmail}
+              </p>
+            )}
+            <p
+              className="text-xs mt-2"
+              style={{ color: getColor("mutedText") }}
+            >
+              {t("private-deal.gift_invite_code_fallback")}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div
         className="rounded-[22px] border p-5 md:p-6"
         style={{
@@ -88,17 +135,21 @@ export default function TransferProgressStep({
             className={`text-base max-w-sm text-start`}
             style={{ color: getColor("secondaryText") }}
           >
-            {t("private-deal.share_otp_hint")}
+            {isGiftEmail
+              ? t("private-deal.gift_share_otp_hint")
+              : t("private-deal.share_otp_hint")}
           </p>
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={handleShare}
-            leftIcon={<Share2 className="w-5 h-5" />}
-            className="rounded-[22px] px-6"
-          >
-            {t("private-deal.share")}
-          </Button>
+          {!isGiftEmail && (
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={handleShare}
+              leftIcon={<Share2 className="w-5 h-5" />}
+              className="rounded-[22px] px-6"
+            >
+              {t("private-deal.share")}
+            </Button>
+          )}
           <button
             type="button"
             onClick={handleCopy}

@@ -129,6 +129,8 @@
   "evidence_required": "Please upload your transfer receipt.",
   "check_number_required": "Check number is required.",
   "collection_slot_required": "Collection date and time are required.",
+  "pickup_address_required": "Pickup address is required.",
+  "field_pickup_address": "Pickup address",
   "cheque_payee": "Cheque payee",
   "copied": "Copied",
   "copy_failed": "Copy failed",

@@ -58,8 +58,15 @@
   "gift_plate_title": "إهداء هذه اللوحة لشخص ما؟",
   "gift_yes": "نعم",
   "gift_no": "لا",
-  "gift_email": "البريد الإلكتروني",
+  "gift_email": "البريد الإلكتروني للمستلم",
   "gift_email_placeholder": "recipient@email.com",
+  "gift_email_required": "البريد الإلكتروني للمستلم مطلوب لصفقات الإهداء.",
+  "gift_message": "رسالة الإهداء (اختياري)",
+  "gift_message_placeholder": "استمتع باللوحة",
+  "gift_invite_emailed": "تم إرسال دعوة الإهداء بالبريد إلى المستلم.",
+  "gift_invite_email_failed": "تعذر إرسال الدعوة بالبريد. شارك الرمز أدناه كبديل.",
+  "gift_invite_code_fallback": "احتفظ بهذا الرمز لمرة واحدة كاحتياطي إذا لم يصل البريد.",
+  "gift_share_otp_hint": "يمكن للمستلم أيضاً الانضمام بهذا رمز التحقق عند الحاجة.",
   "confirm_title": "أكد تفاصيلك",
   "confirm_subtitle": "سنرسل لهم دعوة آمنة للتأكيد والتوقيع. لا يحتاجون إلى ملف عام.",
   "full_name": "الاسم الكامل",
@@ -159,5 +166,7 @@
   "collection_address": "عنوان التحصيل",
   "collection_date": "تاريخ التحصيل",
   "collection_time": "وقت التحصيل",
-  "full_street_address": "العنوان الكامل"
+  "full_street_address": "العنوان الكامل",
+  "pickup_address": "عنوان الاستلام",
+  "pickup_address_required": "عنوان الاستلام مطلوب للتحصيل النقدي أو بالشيك."
 }

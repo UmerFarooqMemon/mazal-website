@@ -8,8 +8,8 @@ import {
   type PlateRenderState,
 } from "@/lib/number-plate-preview-render";
 
-/** Placeholder letter when API strips the code under hide_code / code_hidden. */
-const HIDDEN_CODE_PLACEHOLDER = "A";
+/** Placeholder when API strips the letter code under hide_code / code_hidden. */
+const HIDDEN_CODE_PLACEHOLDER = "?";
 
 interface PlateWithOverlayProps {
   plate_code: string;
@@ -100,7 +100,8 @@ export default function PlateWithOverlay({
   scaleFontToWidth = false,
   fontScaleMultiplier = 1,
 }: PlateWithOverlayProps) {
-  // API often omits the code when hidden — still render a glyph so blur has something to show.
+  // API may send "?" for hidden letter codes, or omit the code entirely.
+  // Blur stays on whenever hideCode is true — same as before, including "?".
   const effectiveCode =
     hideCode && allowCodePlaceholder && !plate_code.trim()
       ? HIDDEN_CODE_PLACEHOLDER

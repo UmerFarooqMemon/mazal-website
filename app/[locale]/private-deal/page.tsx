@@ -36,6 +36,7 @@ import {
   savePrivateDealParty,
   savePrivateDealPaymentPlan,
   submitPrivateDealPayment,
+  updatePrivateDealTerms,
   type PrivateDeal,
   type PrivateDealOptions,
 } from "@/services/private-deals";
@@ -65,6 +66,8 @@ export default function PrivateDealPage() {
   const [apiDeal, setApiDeal] = useState<PrivateDeal | null>(null);
   const [shareUrl, setShareUrl] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [inviteDelivery, setInviteDelivery] = useState("manual_share");
+  const [inviteEmailSent, setInviteEmailSent] = useState(false);
   const [deal, setDeal] = useState<DealData>({
     role: null,
     emirate: "dubai",
@@ -86,6 +89,7 @@ export default function PrivateDealPage() {
     licenseSource: "mbr",
     giftPlate: false,
     giftEmail: "",
+    giftMessage: "",
   });
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank");
@@ -121,6 +125,15 @@ export default function PrivateDealPage() {
       digit: nextDeal.plate?.digits || prev.digit,
       price: Number(nextDeal.agreed_price || prev.price || 0),
     }));
+
+    if (nextDeal.is_gift != null || nextDeal.recipient_email) {
+      setDetails((prev) => ({
+        ...prev,
+        giftPlate: Boolean(nextDeal.is_gift),
+        giftEmail: nextDeal.recipient_email || prev.giftEmail || "",
+        giftMessage: nextDeal.gift_message || prev.giftMessage || "",
+      }));
+    }
   }
 
   useEffect(() => {
@@ -169,6 +182,7 @@ export default function PrivateDealPage() {
 
   const isSeller = deal.role === "seller";
   const isBuyer = deal.role === "buyer";
+  const buyerPaymentRequired = apiDeal?.buyer_payment_required !== false;
 
   const splitAllocated = useMemo(() => {
     if (paymentMode !== "split") return 0;
@@ -201,17 +215,31 @@ export default function PrivateDealPage() {
 
   // Buyer page steps: 0 role, 1 otp, 2 confirm, 3 payment method,
   // 4 payment details / process split, 5 success.
-  // Stepper collapses 3+4 into PAYMENT METHOD.
+  // Gift deals skip payment (buyer_payment_required === false).
   const buyerSteps: StepItem[] = useMemo(() => {
-    const labels = [
-      t("private-deal.stepper_role"),
-      t("private-deal.stepper_verification"),
-      t("private-deal.stepper_confirm"),
-      t("private-deal.stepper_payment"),
-      t("private-deal.stepper_escrow"),
-    ];
-    const stepperIndex =
-      step <= 2 ? step : step === 3 || step === 4 ? 3 : 4;
+    const labels = buyerPaymentRequired
+      ? [
+          t("private-deal.stepper_role"),
+          t("private-deal.stepper_verification"),
+          t("private-deal.stepper_confirm"),
+          t("private-deal.stepper_payment"),
+          t("private-deal.stepper_escrow"),
+        ]
+      : [
+          t("private-deal.stepper_role"),
+          t("private-deal.stepper_verification"),
+          t("private-deal.stepper_confirm"),
+          t("private-deal.stepper_escrow"),
+        ];
+    const stepperIndex = buyerPaymentRequired
+      ? step <= 2
+        ? step
+        : step === 3 || step === 4
+          ? 3
+          : 4
+      : step <= 2
+        ? step
+        : 3;
     return labels.map((label, index) => ({
       key: `buyer-${index}`,
       label,
@@ -222,7 +250,7 @@ export default function PrivateDealPage() {
             ? "current"
             : "upcoming",
     }));
-  }, [step, t]);
+  }, [step, t, buyerPaymentRequired]);
 
   const visibleStepper = step >= 1;
 
@@ -370,13 +398,48 @@ export default function PrivateDealPage() {
         throw new Error("Deal not found.");
       }
 
+      if (variant === "seller" && details.giftPlate) {
+        const email = (details.giftEmail || "").trim();
+        if (!email) {
+          throw new Error(
+            t("private-deal.gift_email_required") ||
+              "Recipient email is required for gift deals.",
+          );
+        }
+      }
+
       const response = await savePrivateDealParty(
         activeDealId,
         getPartyPayload(),
         locale,
       );
-      hydrateFromApiDeal(extractPrivateDeal(response), variant);
-      setStep(variant === "seller" ? 3 : 3);
+      let nextDeal = extractPrivateDeal(response);
+
+      if (variant === "seller") {
+        const termsResponse = await updatePrivateDealTerms(
+          activeDealId,
+          {
+            is_gift: Boolean(details.giftPlate),
+            recipient_email: details.giftPlate
+              ? (details.giftEmail || "").trim()
+              : undefined,
+            gift_message: details.giftPlate
+              ? details.giftMessage?.trim() || undefined
+              : undefined,
+          },
+          locale,
+        );
+        nextDeal = extractPrivateDeal(termsResponse);
+      }
+
+      hydrateFromApiDeal(nextDeal, variant);
+
+      if (variant === "buyer" && nextDeal.buyer_payment_required === false) {
+        setStep(5);
+        return;
+      }
+
+      setStep(3);
     });
   };
 
@@ -391,6 +454,8 @@ export default function PrivateDealPage() {
       hydrateFromApiDeal(extractPrivateDeal(response), "seller");
       setVerificationCode(response.data.verification_code);
       setShareUrl(response.data.invitation.share_url);
+      setInviteDelivery(response.data.invitation.delivery || "manual_share");
+      setInviteEmailSent(Boolean(response.data.invitation_email_sent));
       setStep(4);
     });
   };
@@ -440,6 +505,7 @@ export default function PrivateDealPage() {
     checkNumber?: string;
     collectionDate?: string;
     collectionTime?: string;
+    pickupAddress?: string;
   }) => {
     await withSubmit(async () => {
       const activeDealId = resolveDealId();
@@ -476,15 +542,29 @@ export default function PrivateDealPage() {
       }
 
       if (processingPayment.method === "managers_check") {
+        if (!(payload.pickupAddress || "").trim()) {
+          throw new Error(
+            t("private-deal.pickup_address_required") ||
+              "Pickup address is required.",
+          );
+        }
         formData.append("check_number", payload.checkNumber || "");
         formData.append("collection_date", payload.collectionDate || "");
         formData.append("collection_time", payload.collectionTime || "");
+        formData.append("pickup_address", payload.pickupAddress || "");
         formData.append("notes", payload.notes || "");
       }
 
       if (processingPayment.method === "cash") {
+        if (!(payload.pickupAddress || "").trim()) {
+          throw new Error(
+            t("private-deal.pickup_address_required") ||
+              "Pickup address is required.",
+          );
+        }
         formData.append("collection_date", payload.collectionDate || "");
         formData.append("collection_time", payload.collectionTime || "");
+        formData.append("pickup_address", payload.pickupAddress || "");
         formData.append("notes", payload.notes || "");
       }
 
@@ -536,6 +616,8 @@ export default function PrivateDealPage() {
             onBack={() => setStep(1)}
             onContinue={() => void handleSavePartyDetails("seller")}
             variant="seller"
+            showGiftOptions
+            submitting={submitting}
           />
         );
       }
@@ -548,7 +630,13 @@ export default function PrivateDealPage() {
         );
       }
       return (
-        <TransferProgressStep otp={verificationCode} shareUrl={shareUrl} />
+        <TransferProgressStep
+          otp={verificationCode}
+          shareUrl={shareUrl}
+          delivery={inviteDelivery}
+          invitationEmailSent={inviteEmailSent}
+          recipientEmail={apiDeal?.recipient_email || details.giftEmail}
+        />
       );
     }
 
@@ -573,15 +661,27 @@ export default function PrivateDealPage() {
             onContinue={() => void handleSavePartyDetails("buyer")}
             variant="buyer"
             continueLabel={t("private-deal.confirm")}
+            submitting={submitting}
           />
         );
       }
       if (step === 3) {
+        if (!buyerPaymentRequired) {
+          return (
+            <PaymentSuccessStep
+              onDone={() => router.push(`/${locale}/marketplace`)}
+            />
+          );
+        }
         return (
           <PaymentMethodStep
             method={paymentMethod}
             mode={paymentMode}
-            totalAmount={deal.price}
+            totalAmount={
+              Number(apiDeal?.total_due) > 0
+                ? Number(apiDeal?.total_due)
+                : deal.price
+            }
             splitPayments={splitPayments}
             onMethodChange={setPaymentMethod}
             onModeChange={(mode) => {
@@ -635,9 +735,11 @@ export default function PrivateDealPage() {
   const showSidebar =
     step >= 1 &&
     !(isSeller && step === 4) &&
-    !(isBuyer && step >= 5);
+    !(isBuyer && step >= 5) &&
+    !(isBuyer && !buyerPaymentRequired && step >= 3);
 
-  const showSplitAllocation = isBuyer && step >= 3 && paymentMode === "split";
+  const showSplitAllocation =
+    isBuyer && buyerPaymentRequired && step >= 3 && paymentMode === "split";
 
   if (themeLoading || localeLoading) {
     return (

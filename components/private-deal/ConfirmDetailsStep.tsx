@@ -18,6 +18,7 @@ export interface ConfirmDetailsData {
   licenseSource: string;
   giftPlate?: boolean;
   giftEmail?: string;
+  giftMessage?: string;
 }
 
 interface ConfirmDetailsStepProps {
@@ -27,6 +28,9 @@ interface ConfirmDetailsStepProps {
   onContinue: () => void;
   variant: "seller" | "buyer";
   continueLabel?: string;
+  /** Seller-only: show gift Yes/No + recipient email for private deals. */
+  showGiftOptions?: boolean;
+  submitting?: boolean;
 }
 
 export default function ConfirmDetailsStep({
@@ -36,6 +40,8 @@ export default function ConfirmDetailsStep({
   onContinue,
   variant,
   continueLabel,
+  showGiftOptions = false,
+  submitting = false,
 }: ConfirmDetailsStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -61,6 +67,27 @@ export default function ConfirmDetailsStep({
         ? t("private-deal.traffic_code")
         : t("private-deal.emirates_id");
 
+  const handlePersonTypeChange = (personType: string) => {
+    onChange({
+      personType,
+      identification:
+        personType === "organization" ? "trade_license" : "emirates_id",
+      identificationValue: "",
+      emiratesId: personType === "organization" ? "" : data.emiratesId,
+      secondaryMobile: "",
+      licenseSource:
+        personType === "organization" ? data.licenseSource || "mbr" : "",
+    });
+  };
+
+  const handleIdentificationChange = (identification: string) => {
+    onChange({
+      identification,
+      identificationValue: "",
+      ...(identification === "traffic" ? { emiratesId: "" } : {}),
+    });
+  };
+
   return (
     <div
       className="rounded-[20px] border shadow-[0_20px_50px_-24px_rgba(1,15,81,0.25)] p-6 md:p-8"
@@ -69,7 +96,7 @@ export default function ConfirmDetailsStep({
         borderColor: getColor("border"),
       }}
     >
-      {variant === "buyer" && (
+      {showGiftOptions && (
         <div className="mb-6">
           <p
             className={`text-sm font-medium mb-3 text-start`}
@@ -99,7 +126,7 @@ export default function ConfirmDetailsStep({
             <button
               type="button"
               onClick={() =>
-                onChange({ giftPlate: false, giftEmail: "" })
+                onChange({ giftPlate: false, giftEmail: "", giftMessage: "" })
               }
               className="px-5 py-2 rounded-full text-sm font-medium transition-colors"
               style={
@@ -112,13 +139,38 @@ export default function ConfirmDetailsStep({
             </button>
           </div>
           {data.giftPlate && (
-            <Input
-              label={t("private-deal.gift_email")}
-              type="email"
-              value={data.giftEmail || ""}
-              onChange={(e) => onChange({ giftEmail: e.target.value })}
-              placeholder={t("private-deal.gift_email_placeholder")}
-            />
+            <div className="space-y-3">
+              <Input
+                label={t("private-deal.gift_email")}
+                type="email"
+                value={data.giftEmail || ""}
+                onChange={(e) => onChange({ giftEmail: e.target.value })}
+                placeholder={t("private-deal.gift_email_placeholder")}
+              />
+              <div>
+                <label
+                  className={`block text-[11px] font-medium mb-1.5 text-start`}
+                  style={{ color: getColor("secondaryText") }}
+                >
+                  {t("private-deal.gift_message")}
+                </label>
+                <textarea
+                  value={data.giftMessage || ""}
+                  onChange={(e) =>
+                    onChange({ giftMessage: e.target.value.slice(0, 1000) })
+                  }
+                  rows={3}
+                  maxLength={1000}
+                  placeholder={t("private-deal.gift_message_placeholder")}
+                  className={`w-full rounded-xl border py-3 px-4 text-sm focus:outline-none text-start`}
+                  style={{
+                    borderColor: getColor("border"),
+                    backgroundColor: getColor("surface"),
+                    color: getColor("primaryText"),
+                  }}
+                />
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -168,13 +220,13 @@ export default function ConfirmDetailsStep({
               label={t("private-deal.type")}
               options={typeOptions}
               value={data.personType}
-              onChange={(v) => onChange({ personType: v })}
+              onChange={handlePersonTypeChange}
             />
             <Select
               label={t("private-deal.select_identifications")}
               options={idOptions}
               value={data.identification}
-              onChange={(v) => onChange({ identification: v })}
+              onChange={handleIdentificationChange}
             />
             {data.identification === "emirates_id" ? (
               <EmiratesIdInput
@@ -253,6 +305,7 @@ export default function ConfirmDetailsStep({
           size="md"
           onClick={onBack}
           leftIcon={<BackIcon className="w-4 h-4" />}
+          disabled={submitting}
         >
           {t("private-deal.back")}
         </Button>
@@ -261,6 +314,7 @@ export default function ConfirmDetailsStep({
           size="md"
           onClick={onContinue}
           rightIcon={<NextIcon className="w-4 h-4" />}
+          disabled={submitting}
         >
           {continueLabel || t("private-deal.continue")}
         </Button>

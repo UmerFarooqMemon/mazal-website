@@ -51,6 +51,11 @@ export interface PrivateDeal {
   seller_net?: string;
   seller_id?: number;
   buyer_id?: number | null;
+  is_gift?: boolean;
+  buyer_payment_required?: boolean;
+  recipient_email?: string | null;
+  gift_message?: string | null;
+  gift_funded_at?: string | null;
   payment_plan?: string | null;
   remaining_amount?: string;
   parties?: Array<Record<string, unknown>>;
@@ -183,10 +188,24 @@ export function savePrivateDealParty(
   });
 }
 
+export function updatePrivateDealTerms(
+  id: string | number,
+  payload: Record<string, unknown>,
+  locale: string,
+) {
+  return privateDealsRequest<{ deal: PrivateDeal }>(`/${id}/terms`, {
+    method: "PATCH",
+    locale,
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function issuePrivateDealInvitation(id: string | number, locale: string) {
   return privateDealsRequest<{
     invitation: PrivateDealInvitation;
     verification_code: string;
+    invitation_email_sent?: boolean;
     deal: PrivateDeal;
   }>(`/${id}/invitations`, {
     method: "POST",

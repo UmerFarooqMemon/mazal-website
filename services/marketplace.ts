@@ -444,10 +444,16 @@ export interface UpdatePurchaseAddonsPayload {
 
 export interface CreateGiftPayload {
   recipient_name: string;
-  recipient_email?: string | null;
+  recipient_email: string;
   recipient_phone?: string | null;
   recipient_user_id?: number | null;
   message?: string;
+}
+
+export interface CreateGiftResponse {
+  gift: MarketplaceGift;
+  invitation_code?: string;
+  invitation_email_sent?: boolean;
 }
 
 export interface MarketplaceWatchlistItem {
@@ -691,6 +697,15 @@ function splitDisplayPlate(displayPlate?: string | null) {
   const raw = String(displayPlate || "").trim();
   if (!raw) return { code: "", digits: "" };
 
+  // Hidden codes arrive as "?" (same length as the real letter code).
+  const hiddenMatch = raw.match(/^(\?+)\s*(.*)$/);
+  if (hiddenMatch) {
+    return {
+      code: hiddenMatch[1],
+      digits: (hiddenMatch[2] || "").trim(),
+    };
+  }
+
   const match = raw.match(/^([A-Za-z]+)?\s*[-|]?\s*(.*)$/);
   if (!match) return { code: "", digits: raw };
 
@@ -862,6 +877,26 @@ export function getMyListings(locale: string) {
 
 // 6. Create Listing
 export function createListing(payload: CreateListingPayload, locale: string) {
+  const hasStart = Boolean(payload.auction_starts_at);
+  const hasEnd = Boolean(payload.auction_ends_at);
+  if (hasStart !== hasEnd) {
+    return Promise.reject(
+      new Error(
+        "Auction start and end times must both be set, or both left empty.",
+      ),
+    );
+  }
+  if (
+    hasStart &&
+    hasEnd &&
+    new Date(payload.auction_ends_at!).getTime() <=
+      new Date(payload.auction_starts_at!).getTime()
+  ) {
+    return Promise.reject(
+      new Error("Auction end time must be after the start time."),
+    );
+  }
+
   if (payload.ownership_document) {
     const formData = new FormData();
     formData.append("listing_type", payload.listing_type);
@@ -982,6 +1017,26 @@ export function updateListing(
   payload: UpdateListingPayload,
   locale: string,
 ) {
+  const hasStart = Boolean(payload.auction_starts_at);
+  const hasEnd = Boolean(payload.auction_ends_at);
+  if (hasStart !== hasEnd) {
+    return Promise.reject(
+      new Error(
+        "Auction start and end times must both be set, or both left empty.",
+      ),
+    );
+  }
+  if (
+    hasStart &&
+    hasEnd &&
+    new Date(payload.auction_ends_at!).getTime() <=
+      new Date(payload.auction_starts_at!).getTime()
+  ) {
+    return Promise.reject(
+      new Error("Auction end time must be after the start time."),
+    );
+  }
+
   return marketplaceRequest<{ listing: MarketplaceListingDetail }>(
     `/listings/${id}`,
     {
@@ -1344,12 +1399,20 @@ export function confirmPurchasePayment(
   );
 }
 
-// 29. Submit Bank Transfer Evidence
+// 29. Submit Bank Transfer Evidence / collection payment
 export function submitPurchasePaymentEvidence(
   purchaseId: string | number,
   paymentId: string | number,
   locale: string,
-  payload: { payment_reference?: string; evidence?: File | Blob | null },
+  payload: {
+    payment_reference?: string;
+    evidence?: File | Blob | null;
+    check_number?: string;
+    collection_date?: string;
+    collection_time?: string;
+    pickup_address?: string;
+    collection_notes?: string;
+  },
 ) {
   const formData = new FormData();
   if (payload.payment_reference) {
@@ -1357,6 +1420,21 @@ export function submitPurchasePaymentEvidence(
   }
   if (payload.evidence) {
     formData.append("evidence", payload.evidence);
+  }
+  if (payload.check_number) {
+    formData.append("check_number", payload.check_number);
+  }
+  if (payload.collection_date) {
+    formData.append("collection_date", payload.collection_date);
+  }
+  if (payload.collection_time) {
+    formData.append("collection_time", payload.collection_time);
+  }
+  if (payload.pickup_address) {
+    formData.append("pickup_address", payload.pickup_address);
+  }
+  if (payload.collection_notes) {
+    formData.append("collection_notes", payload.collection_notes);
   }
 
   return marketplaceRequest<{ purchase: MarketplacePurchase }>(
@@ -1402,7 +1480,7 @@ export function createGiftFromPurchase(
   payload: CreateGiftPayload,
   locale: string,
 ) {
-  return marketplaceRequest<{ gift: MarketplaceGift }>(
+  return marketplaceRequest<CreateGiftResponse>(
     `/purchases/${purchaseId}/gifts`,
     {
       method: "POST",
@@ -1650,6 +1728,7 @@ export function submitAuctionManagersCheck(
     check_number: string;
     collection_date: string;
     collection_time: string;
+    pickup_address: string;
     notes?: string;
   },
 ) {
@@ -1673,6 +1752,7 @@ export function submitAuctionCashCollection(
   payload: {
     collection_date: string;
     collection_time: string;
+    pickup_address: string;
     notes?: string;
   },
 ) {

@@ -368,6 +368,7 @@ export default function AuctionRegisterPage({
             check_number: payload.check_number,
             collection_date: payload.collection_date,
             collection_time: payload.collection_time,
+            pickup_address: payload.pickup_address,
             notes: payload.notes,
           },
         );
@@ -380,6 +381,7 @@ export default function AuctionRegisterPage({
           {
             collection_date: payload.collection_date,
             collection_time: payload.collection_time,
+            pickup_address: payload.pickup_address,
             notes: payload.notes,
           },
         );

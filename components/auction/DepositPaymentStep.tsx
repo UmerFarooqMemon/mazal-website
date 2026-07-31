@@ -75,11 +75,13 @@ export default function DepositPaymentStep({
     checkNumber: "",
     date: "",
     time: "",
+    pickupAddress: "",
     notes: "",
   });
   const [cashForm, setCashForm] = useState({
     date: "",
     time: "",
+    pickupAddress: "",
     notes: "",
   });
 
@@ -214,11 +216,19 @@ export default function DepositPaymentStep({
         );
         return;
       }
+      if (!checkForm.pickupAddress.trim()) {
+        setFormError(
+          t("auctions.pickup_address_required") ||
+            "Pickup address is required.",
+        );
+        return;
+      }
       onContinue({
         method: "managers_check",
         check_number: checkForm.checkNumber.trim(),
         collection_date: checkForm.date,
         collection_time: checkForm.time,
+        pickup_address: checkForm.pickupAddress.trim(),
         notes: checkForm.notes.trim() || undefined,
       });
       return;
@@ -231,10 +241,17 @@ export default function DepositPaymentStep({
       );
       return;
     }
+    if (!cashForm.pickupAddress.trim()) {
+      setFormError(
+        t("auctions.pickup_address_required") || "Pickup address is required.",
+      );
+      return;
+    }
     onContinue({
       method: "cash",
       collection_date: cashForm.date,
       collection_time: cashForm.time,
+      pickup_address: cashForm.pickupAddress.trim(),
       notes: cashForm.notes.trim() || undefined,
     });
   };
@@ -565,6 +582,21 @@ export default function DepositPaymentStep({
               }
             />
           </div>
+
+          <Input
+            label={t("auctions.field_pickup_address")}
+            value={
+              method === "managers_check"
+                ? checkForm.pickupAddress
+                : cashForm.pickupAddress
+            }
+            onChange={(e) =>
+              method === "managers_check"
+                ? setCheckForm({ ...checkForm, pickupAddress: e.target.value })
+                : setCashForm({ ...cashForm, pickupAddress: e.target.value })
+            }
+            placeholder={t("auctions.field_full_address")}
+          />
 
           <div>
             <label

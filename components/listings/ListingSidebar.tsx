@@ -27,14 +27,19 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
   );
   const [watchlistLoading, setWatchlistLoading] = useState(false);
 
-  const plateCode = listing.code_hidden ? "?" : listing.plate_code || "—";
+  const plateCode = listing.code_hidden
+    ? listing.plate_code && /^\?+$/.test(String(listing.plate_code))
+      ? String(listing.plate_code)
+      : "?"
+    : listing.plate_code || "—";
   const plateDigits = listing.code_hidden
-    ? listing.digit_count
-      ? t("listings.digits_count_label").replace(
-          "{count}",
-          String(listing.digit_count),
-        )
-      : "—"
+    ? listing.plate_digits ||
+      (listing.digit_count
+        ? t("listings.digits_count_label").replace(
+            "{count}",
+            String(listing.digit_count),
+          )
+        : "—")
     : listing.digit_count
       ? `${listing.plate_digits || "—"} (${listing.digit_count}-digit)`
       : listing.plate_digits || "—";

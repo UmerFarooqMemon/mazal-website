@@ -35,6 +35,7 @@ interface SplitPaymentProcessStepProps {
     checkNumber?: string;
     collectionDate?: string;
     collectionTime?: string;
+    pickupAddress?: string;
   }) => void;
   submitting?: boolean;
   custodyInstructions?: Record<string, unknown>;
@@ -108,11 +109,13 @@ export default function SplitPaymentProcessStep({
     number: "",
     date: "",
     time: "",
+    pickupAddress: "",
     notes: payment.notes || "",
   });
   const [cash, setCash] = useState({
     date: "",
     time: "",
+    pickupAddress: "",
     notes: payment.notes || "",
   });
 
@@ -158,6 +161,7 @@ export default function SplitPaymentProcessStep({
         checkNumber: check.number,
         collectionDate: check.date,
         collectionTime: check.time,
+        pickupAddress: check.pickupAddress,
         notes: check.notes,
       });
       return;
@@ -166,6 +170,7 @@ export default function SplitPaymentProcessStep({
     onComplete({
       collectionDate: cash.date,
       collectionTime: cash.time,
+      pickupAddress: cash.pickupAddress,
       notes: cash.notes,
     });
   };
@@ -435,6 +440,14 @@ export default function SplitPaymentProcessStep({
                   icon={<Clock className="w-4 h-4" />}
                 />
               </div>
+              <Input
+                label={t("private-deal.pickup_address")}
+                value={check.pickupAddress}
+                onChange={(e) =>
+                  setCheck({ ...check, pickupAddress: e.target.value })
+                }
+                placeholder={t("private-deal.full_street_address")}
+              />
               <div>
                 <label
                   className={`block text-[11px] font-medium mb-1.5 text-start`}
@@ -504,6 +517,14 @@ export default function SplitPaymentProcessStep({
                   icon={<Clock className="w-4 h-4" />}
                 />
               </div>
+              <Input
+                label={t("private-deal.pickup_address")}
+                value={cash.pickupAddress}
+                onChange={(e) =>
+                  setCash({ ...cash, pickupAddress: e.target.value })
+                }
+                placeholder={t("private-deal.full_street_address")}
+              />
               <div>
                 <label
                   className={`block text-[11px] font-medium mb-1.5 text-start`}

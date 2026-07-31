@@ -58,6 +58,7 @@ export default function MarketplaceCheckout({
     licenseSource: "mbr",
     giftPlate: false,
     giftEmail: "",
+    giftMessage: "",
   });
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank");
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("single");

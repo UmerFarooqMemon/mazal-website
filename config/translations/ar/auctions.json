@@ -129,6 +129,8 @@
   "evidence_required": "يرجى رفع إيصال التحويل.",
   "check_number_required": "رقم الشيك مطلوب.",
   "collection_slot_required": "تاريخ ووقت التحصيل مطلوبان.",
+  "pickup_address_required": "عنوان الاستلام مطلوب.",
+  "field_pickup_address": "عنوان الاستلام",
   "cheque_payee": "المستفيد من الشيك",
   "copied": "تم النسخ",
   "copy_failed": "فشل النسخ",
