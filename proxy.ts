@@ -29,15 +29,6 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Temporary: Redirect root locale path to register page
-  for (const locale of locales) {
-    if (pathname === `/${locale}` || pathname === `/${locale}/`) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${locale}/login`;
-      return NextResponse.redirect(url);
-    }
-  }
-
   return NextResponse.next();
 }
 
