@@ -14,6 +14,7 @@ import {
 
 export default function HomeV2Hero() {
   const { locale, t } = useLocale();
+  const isRTL = locale === "ar";
   const [listings, setListings] = useState<MarketplaceListingCard[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -91,7 +92,11 @@ export default function HomeV2Hero() {
               className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-[#152e2b] to-[#00664e] px-6 py-3 text-sm font-medium text-[#fbfaf6] shadow-[0_30px_60px_-25px_rgba(1,15,81,0.35)] transition-opacity hover:opacity-90"
             >
               {t("home.hero_browse")}
-              <HomeV2Icon src="/home-v2/icon-arrow.svg" size={16} />
+              <HomeV2Icon
+                src="/home-v2/icon-arrow-light.svg"
+                size={16}
+                className={isRTL ? "-scale-x-100" : ""}
+              />
             </Link>
           </div>
 
@@ -156,7 +161,11 @@ export default function HomeV2Hero() {
                     className="inline-flex items-center gap-1 rounded-full bg-[#152e2b] px-4 py-2 text-sm font-medium text-[#fbfaf6] transition-opacity hover:opacity-90"
                   >
                     {t("home.hero_view")}
-                    <HomeV2Icon src="/home-v2/icon-arrow.svg" size={16} />
+                    <HomeV2Icon
+                      src="/home-v2/icon-arrow-light.svg"
+                      size={16}
+                      className={isRTL ? "-scale-x-100" : ""}
+                    />
                   </Link>
                 </div>
 

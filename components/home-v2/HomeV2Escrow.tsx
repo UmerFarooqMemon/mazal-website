@@ -6,6 +6,7 @@ import { useLocale } from "@/context/LocaleContext";
 
 export default function HomeV2Escrow() {
   const { locale, t } = useLocale();
+  const isRTL = locale === "ar";
 
   const steps = [
     {
@@ -59,7 +60,11 @@ export default function HomeV2Escrow() {
               className="inline-flex items-center gap-2 rounded-full bg-[#e0ae57] px-6 py-3 text-sm font-medium text-[#2b1500] transition-opacity hover:opacity-90"
             >
               {t("home.escrow_button")}
-              <HomeV2Icon src="/home-v2/icon-arrow-dark.svg" size={16} />
+              <HomeV2Icon
+                src="/home-v2/icon-arrow-dark.svg"
+                size={16}
+                className={isRTL ? "-scale-x-100" : ""}
+              />
             </Link>
           </div>
         </div>

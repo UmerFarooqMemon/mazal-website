@@ -15,15 +15,56 @@ body[dir="rtl"] {
   font-family: var(--font-inter), sans-serif !important;
 }
 
+/* Arabic: Almarai across the whole site (except plate fonts) */
+html:has([data-locale-root][lang="ar"]) *:not(.plate-text):not(.plate-overlay):not(.plate-digit-inner):not(.metal-plate-text):not(.metal-plate-text-light),
+html:has([data-locale-root][dir="rtl"]) *:not(.plate-text):not(.plate-overlay):not(.plate-digit-inner):not(.metal-plate-text):not(.metal-plate-text-light),
+[data-locale-root][lang="ar"] *:not(.plate-text):not(.plate-overlay):not(.plate-digit-inner):not(.metal-plate-text):not(.metal-plate-text-light),
+[data-locale-root][dir="rtl"] *:not(.plate-text):not(.plate-overlay):not(.plate-digit-inner):not(.metal-plate-text):not(.metal-plate-text-light) {
+  font-family: var(--font-almarai), "Almarai", sans-serif !important;
+}
+
 /* Font variables */
 :root {
   --font-inter: "Inter", sans-serif;
   --font-fraunces: "Fraunces", serif;
+  --font-almarai: "Almarai", sans-serif;
   --font-charleswright: "Charles Wright", "CharlesWright", sans-serif;
   --font-mazal-plate-digits: "Mazal Plate Digits", "Charles Wright", "CharlesWright",
     "Bahnschrift", "Arial Condensed", sans-serif;
   --font-mazal-plate-alphabets: "Mazal Plate Alphabets", "Charles Wright",
     "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif;
+}
+
+@font-face {
+  font-family: "Almarai";
+  src: url("/fonts/Almarai/Almarai-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Almarai";
+  src: url("/fonts/Almarai/Almarai-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Almarai";
+  src: url("/fonts/Almarai/Almarai-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Almarai";
+  src: url("/fonts/Almarai/Almarai-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
@@ -66,6 +107,13 @@ body[dir="rtl"] {
 
 .font-serif {
   font-family: var(--font-fraunces), serif !important;
+}
+
+[data-locale-root][lang="ar"] .font-serif,
+[data-locale-root][dir="rtl"] .font-serif,
+html:has([data-locale-root][lang="ar"]) .font-serif,
+html:has([data-locale-root][dir="rtl"]) .font-serif {
+  font-family: var(--font-almarai), "Almarai", sans-serif !important;
 }
 
 [data-locale-root][dir="rtl"] {

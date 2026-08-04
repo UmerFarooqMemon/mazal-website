@@ -1,4 +1,3 @@
-import { Inter } from "next/font/google";
 import { LocaleProvider } from "@/context/LocaleContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import {
@@ -6,12 +5,6 @@ import {
   ConditionalFooter,
 } from "@/components/layout/ConditionalLayout";
 import { Toaster } from "react-hot-toast";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
 export default async function LocaleLayout({
   children,
@@ -26,7 +19,6 @@ export default async function LocaleLayout({
 
   return (
     <div
-      className={inter.className}
       dir={dir}
       lang={validLocale}
       data-locale-root

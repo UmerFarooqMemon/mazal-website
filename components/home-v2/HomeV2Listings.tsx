@@ -68,6 +68,7 @@ function PlateGridSection({
   seeAll?: boolean;
 }) {
   const { locale, t } = useLocale();
+  const isRTL = locale === "ar";
 
   return (
     <section className="bg-[#f2faef]">
@@ -93,7 +94,7 @@ function PlateGridSection({
               className="inline-flex items-center gap-1 text-sm font-medium text-[#152e2b] hover:underline"
             >
               {t("home.trending_see_all")}
-              <span aria-hidden>→</span>
+              <span aria-hidden>{isRTL ? "←" : "→"}</span>
             </Link>
           ) : null}
         </div>
