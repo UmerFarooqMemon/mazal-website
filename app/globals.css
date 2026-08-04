@@ -149,6 +149,15 @@ body[dir="rtl"] {
   /* Default plate ink — digits font; code overlays override below */
   font-family: var(--font-mazal-plate-digits) !important;
   font-weight: 400 !important;
+  color: #050505;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0.7px 0.7px 0 rgba(255, 255, 255, 0.82),
+    -0.7px -0.7px 0 rgba(0, 0, 0, 0.5),
+    1.2px 1.2px 1.2px rgba(0, 0, 0, 0.28),
+    1.8px 1.8px 2px rgba(0, 0, 0, 0.18);
+  filter: drop-shadow(0 1.1px 0.5px rgba(0, 0, 0, 0.24));
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Letter code (A, B, AA, …) */
@@ -156,6 +165,7 @@ body[dir="rtl"] {
 .plate-preview .plate-overlay.plate-overlay-code .plate-digit-inner {
   font-family: var(--font-mazal-plate-alphabets) !important;
   font-weight: 700 !important;
+  letter-spacing: 0.01em;
 }
 
 /* Numeric digits (Latin + Arabic-Indic overlays) */
@@ -165,27 +175,6 @@ body[dir="rtl"] {
 .plate-preview .plate-overlay.plate-overlay-digits-ar .plate-digit-inner {
   font-family: var(--font-mazal-plate-digits) !important;
   font-weight: 400 !important;
-}
-
-/* Auction cards need a stronger embossed plate look at small sizes. */
-.auction-card-plate.plate-preview .plate-overlay,
-.auction-card-plate.plate-preview .plate-overlay .plate-digit-inner {
-  color: #050505 !important;
-  letter-spacing: 0.02em;
-  text-shadow:
-    0.6px 0.6px 0 rgba(255, 255, 255, 0.72),
-    -0.6px -0.6px 0 rgba(0, 0, 0, 0.42),
-    1px 1px 1px rgba(0, 0, 0, 0.28),
-    1.5px 1.5px 1.5px rgba(0, 0, 0, 0.18);
-  filter: drop-shadow(0 1px 0.45px rgba(0, 0, 0, 0.22));
-  -webkit-font-smoothing: antialiased;
-}
-
-.auction-card-plate.plate-preview .plate-overlay.plate-overlay-code,
-.auction-card-plate.plate-preview .plate-overlay.plate-overlay-code .plate-digit-inner {
-  letter-spacing: 0.01em;
-  transform-origin: center;
-  scale: 1 1.08;
 }
 
 .plate-preview .plate-overlay .plate-digit-inner {

@@ -78,9 +78,6 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
           crop="card"
           className="auction-card-plate"
           hideCode={Boolean(auction.hideCode)}
-          scaleFontToWidth
-          fontScaleMultiplier={2.3}
-          codeFontScaleMultiplier={1.72}
         />
       </div>
 

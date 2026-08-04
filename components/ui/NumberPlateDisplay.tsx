@@ -7,7 +7,7 @@ import {
   resolvePreviewFromLookup,
   usePlatePreviewLookup,
 } from "@/hooks/usePlatePreviewLookup";
-import { DEAL_SUMMARY_FONT_SCALE } from "@/lib/number-plate-preview-render";
+import { DEAL_SUMMARY_FONT_SCALE, PLATE_UNIFORM_FONT_SCALE } from "@/lib/number-plate-preview-render";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export type PlateCropVariant =
@@ -64,7 +64,7 @@ export default function NumberPlateDisplay({
   className = "",
   wrapperClassName = "w-full overflow-hidden",
   width,
-  scaleFontToWidth = false,
+  scaleFontToWidth = true,
   fontScaleMultiplier: fontScaleMultiplierProp,
   codeFontScaleMultiplier,
 }: NumberPlateDisplayProps) {
@@ -92,10 +92,12 @@ export default function NumberPlateDisplay({
         : (variantMeta?.fields?.includes("plate_code") ?? true) &&
           (variantMeta?.has_code ?? (Boolean(plate_code) || hideCode));
 
-  const usesPlateWidthFont = crop === "deal-summary";
   const fontScaleMultiplier =
     fontScaleMultiplierProp ??
-    (crop === "deal-summary" ? DEAL_SUMMARY_FONT_SCALE : 1);
+    (crop === "deal-summary" ? DEAL_SUMMARY_FONT_SCALE : PLATE_UNIFORM_FONT_SCALE);
+  // Keep code letters and digits on the same visual size when scaling.
+  const resolvedCodeFontScaleMultiplier =
+    codeFontScaleMultiplier ?? fontScaleMultiplier;
 
   return (
     <div dir="ltr" lang="en" className={wrapperClassName}>
@@ -109,9 +111,9 @@ export default function NumberPlateDisplay({
           allowCodePlaceholder={showCodeField}
           width={width}
           className={className}
-          scaleFontToWidth={scaleFontToWidth || usesPlateWidthFont}
+          scaleFontToWidth={scaleFontToWidth}
           fontScaleMultiplier={fontScaleMultiplier}
-          codeFontScaleMultiplier={codeFontScaleMultiplier}
+          codeFontScaleMultiplier={resolvedCodeFontScaleMultiplier}
         />
       </div>
     </div>

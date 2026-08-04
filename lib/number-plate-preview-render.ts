@@ -126,8 +126,11 @@ function abuDhabiClassicFontSize(rootWidth: number, digits: string): string {
 
 const PLATE_REFERENCE_WIDTH = 840;
 
+/** Shared plate text scale — digits and alphabets stay matched everywhere. */
+export const PLATE_UNIFORM_FONT_SCALE = 1.72;
+
 /** Extra bump for deal-summary sidebar plate (on top of width-based scaling). */
-export const DEAL_SUMMARY_FONT_SCALE = 1.7;
+export const DEAL_SUMMARY_FONT_SCALE = PLATE_UNIFORM_FONT_SCALE;
 
 function parseLengthToPx(value: string, basisWidth: number): number | null {
   const trimmed = value.trim().toLowerCase();

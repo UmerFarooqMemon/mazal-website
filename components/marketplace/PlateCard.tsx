@@ -125,8 +125,6 @@ export default function PlateCard({
           plateDesign={plate_design}
           crop="card"
           hideCode={hideCode}
-          scaleFontToWidth={fitPlateFont}
-          fontScaleMultiplier={fitPlateFont ? 2.3 : undefined}
         />
       </div>
 

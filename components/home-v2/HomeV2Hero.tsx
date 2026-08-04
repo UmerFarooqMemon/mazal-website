@@ -140,8 +140,6 @@ export default function HomeV2Hero() {
                   plateDesign={featuredPlate.plateDesign}
                   crop="card"
                   hideCode={featuredPlate.hideCode}
-                  scaleFontToWidth
-                  fontScaleMultiplier={2.3}
                 />
 
                 <div className="mt-5 flex items-end justify-between gap-4">

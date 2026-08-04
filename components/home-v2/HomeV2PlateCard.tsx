@@ -127,8 +127,6 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
         }
         crop="card"
         hideCode={plate.hideCode}
-        scaleFontToWidth
-        fontScaleMultiplier={2.3}
       />
 
       <div className="flex flex-col gap-1">
