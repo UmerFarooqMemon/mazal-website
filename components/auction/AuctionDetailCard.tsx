@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock, Gavel } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
@@ -7,6 +8,7 @@ import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { Button, DirhamAmount } from "@/components/ui";
 import DirhamSymbolIcon from "@/components/ui/DirhamSymbolIcon";
+import { formatCountdown } from "./mappers";
 import type { AuctionListing } from "./types";
 
 interface AuctionDetailCardProps {
@@ -16,6 +18,21 @@ interface AuctionDetailCardProps {
 export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const [timeLeft, setTimeLeft] = useState(() =>
+    auction.endsAt ? formatCountdown(auction.endsAt) : "—",
+  );
+
+  useEffect(() => {
+    if (!auction.endsAt) {
+      setTimeLeft("—");
+      return;
+    }
+
+    const update = () => setTimeLeft(formatCountdown(auction.endsAt!));
+    update();
+    const interval = window.setInterval(update, 1000);
+    return () => window.clearInterval(interval);
+  }, [auction.endsAt]);
 
   return (
     <div
@@ -103,7 +120,7 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
                 className="text-[20px] sm:text-[22px] font-bold tabular-nums"
                 style={{ color: getColor("success") }}
               >
-                {auction.timeLeft || "—"}
+                {timeLeft}
               </div>
             </div>
           </div>
