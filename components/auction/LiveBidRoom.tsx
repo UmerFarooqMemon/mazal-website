@@ -90,7 +90,7 @@ export default function LiveBidRoom({
           </p>
         ) : bids.length === 0 ? (
           <p className="text-sm" style={{ color: getColor("mutedText") }}>
-            {t("common.no_results") || "No bids yet."}
+            {t("auctions.be_first_to_bid")}
           </p>
         ) : (
           <ul className="space-y-2">
