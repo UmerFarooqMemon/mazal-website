@@ -32,7 +32,7 @@ function cacheKey(locale: Locale): string {
   return `${CACHE_PREFIX}${locale}`;
 }
 
-function isFresh(entry: CacheEntry | null | undefined): entry is CacheEntry {
+function isFresh(entry: CacheEntry | null | undefined): boolean {
   if (!entry?.labels) return false;
   return Date.now() - entry.fetchedAt < UI_LABELS_CACHE_TTL_MS;
 }
@@ -66,16 +66,16 @@ function writeLocalStorage(entry: CacheEntry): void {
 /** Sync read for first paint (memory → localStorage). Returns null if miss/stale. */
 export function getCachedUiLabelsSync(locale: Locale): UiLabelsMap | null {
   const mem = memoryCache.get(locale);
-  if (isFresh(mem)) return mem.labels;
+  if (mem && isFresh(mem)) return mem.labels;
 
   const stored = readLocalStorage(locale);
-  if (isFresh(stored)) {
+  if (stored && isFresh(stored)) {
     memoryCache.set(locale, stored);
     return stored.labels;
   }
 
   // Stale cache is still useful for instant paint while a refresh runs.
-  if (stored?.labels && Object.keys(stored.labels).length > 0) {
+  if (stored && Object.keys(stored.labels).length > 0) {
     memoryCache.set(locale, stored);
     return stored.labels;
   }
@@ -105,10 +105,10 @@ export async function getUiLabels(
 
   if (!force) {
     const mem = memoryCache.get(locale);
-    if (isFresh(mem)) return mem.labels;
+    if (mem && isFresh(mem)) return mem.labels;
 
     const stored = readLocalStorage(locale);
-    if (isFresh(stored)) {
+    if (stored && isFresh(stored)) {
       memoryCache.set(locale, stored);
       return stored.labels;
     }
