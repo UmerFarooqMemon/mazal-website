@@ -25,6 +25,8 @@ export interface AuctionListing {
   askingPrice: number;
   currentBid: number;
   views: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
   endsIn?: string;
   startsIn?: string;
   currentBids?: number;

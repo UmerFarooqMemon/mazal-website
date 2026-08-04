@@ -41,7 +41,7 @@ export function formatCountdown(targetIso: string): string {
     return `${hours}h ${pad(minutes)}:${pad(seconds)}`;
   }
 
-  return `${minutes}m: ${pad(seconds)} S`;
+  return `${minutes}m ${pad(seconds)}s`;
 }
 
 function deriveAuctionStatus(
@@ -146,6 +146,8 @@ export function mapListingToAuctionListing(
     currentBid,
     views: listing.view_count,
     currentBids: resolvedAuction?.bid_count,
+    startsAt: resolvedAuction?.starts_at,
+    endsAt: resolvedAuction?.ends_at,
     startsIn:
       isTimedStart && resolvedAuction?.starts_at
         ? formatCountdown(resolvedAuction.starts_at)

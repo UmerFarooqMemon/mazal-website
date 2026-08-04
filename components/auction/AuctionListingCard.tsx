@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Eye } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
+import { formatCountdown } from "./mappers";
 import type { AuctionListing, AuctionListingStatus } from "./types";
 
 interface AuctionListingCardProps {
@@ -33,6 +35,22 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
     auction.status === "upcoming" ||
     auction.status === "starting_soon" ||
     auction.status === "paused";
+  const countdownTarget = isTimedStart ? auction.startsAt : auction.endsAt;
+  const [timeLabel, setTimeLabel] = useState(() =>
+    countdownTarget ? formatCountdown(countdownTarget) : "—",
+  );
+
+  useEffect(() => {
+    if (!countdownTarget) {
+      setTimeLabel("—");
+      return;
+    }
+
+    const update = () => setTimeLabel(formatCountdown(countdownTarget));
+    update();
+    const interval = window.setInterval(update, 1000);
+    return () => window.clearInterval(interval);
+  }, [countdownTarget]);
 
   return (
     <Link
@@ -58,9 +76,11 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
           plateType={auction.plateType}
           plateDesign={auction.plateDesign}
           crop="card"
+          className="auction-card-plate"
           hideCode={Boolean(auction.hideCode)}
           scaleFontToWidth
           fontScaleMultiplier={2.3}
+          codeFontScaleMultiplier={1.72}
         />
       </div>
 
@@ -123,7 +143,7 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
             className="text-[13px] font-semibold tabular-nums"
             style={{ color: getColor("primaryText") }}
           >
-            {(isTimedStart ? auction.startsIn : auction.endsIn) || "—"}
+            {timeLabel}
           </div>
         </div>
       </div>

@@ -33,9 +33,10 @@ const ABU_DHABI_CLASSIC_CAR_FALLBACK = {
     top: "15.53%",
     height: "43.92%",
     layout_mode: "flex_cell" as const,
-    font_weight: "700",
+    font_weight: "400",
     color: "#000000",
-    font_family: '"Segoe UI", Arial, Tahoma, sans-serif',
+    font_family:
+      '"Mazal Plate Digits", "Charles Wright", "Bahnschrift", "Arial Condensed", sans-serif',
   },
   plate_digits: {
     left: "33.33%",
@@ -45,7 +46,8 @@ const ABU_DHABI_CLASSIC_CAR_FALLBACK = {
     layout_mode: "flex_cell" as const,
     font_weight: "700",
     color: "#000000",
-    font_family: '"Segoe UI", Arial, Tahoma, sans-serif',
+    font_family:
+      '"Mazal Plate Digits", "Charles Wright", "Bahnschrift", "Arial Condensed", sans-serif',
   },
 };
 
@@ -384,7 +386,11 @@ function buildOverlayState(
     if (!useMetallic) {
       style.color = config.color || "#000";
       style.fontWeight = config.font_weight || "700";
-      style.fontFamily = config.font_family || "Arial, sans-serif";
+      // Site-wide Mazal plate fonts are applied via CSS classes
+      // (plate-overlay-code / plate-overlay-digits); keep API family only as fallback.
+      style.fontFamily =
+        config.font_family ||
+        '"Mazal Plate Digits", "Charles Wright", sans-serif';
     } else if (isLightMetallicColor(config.color) && config.color) {
       style.color = config.color;
     }
@@ -433,7 +439,9 @@ function buildOverlayState(
     } else {
       innerStyle.color = config.color || "#000";
       innerStyle.fontWeight = config.font_weight || "700";
-      innerStyle.fontFamily = config.font_family || "Arial, sans-serif";
+      innerStyle.fontFamily =
+        config.font_family ||
+        '"Mazal Plate Digits", "Charles Wright", sans-serif';
     }
 
     if (config.font_size) {
@@ -550,6 +558,7 @@ export function computePlateRenderState(
   rootWidth = 420,
   scaleFontToWidth = false,
   fontScaleMultiplier = 1,
+  codeFontScaleMultiplier = fontScaleMultiplier,
 ): PlateRenderState | null {
   if (!previewConfig) return null;
 
@@ -591,9 +600,10 @@ export function computePlateRenderState(
 
   const scaleConfig = (
     config: PlateOverlayConfig | null | undefined,
+    multiplier = fontScaleMultiplier,
   ): PlateOverlayConfig | null | undefined =>
     scaleFontToWidth
-      ? withPlateWidthFontScale(config, rootWidth, fontScaleMultiplier)
+      ? withPlateWidthFontScale(config, rootWidth, multiplier)
       : config;
 
   const arConfig = scaleConfig(
@@ -602,7 +612,7 @@ export function computePlateRenderState(
   const enConfig = scaleConfig(
     scaledDigitsConfig(overlays.plate_digits, digitValue, layout, code),
   );
-  const codeConfig = scaleConfig(overlays.plate_code);
+  const codeConfig = scaleConfig(overlays.plate_code, codeFontScaleMultiplier);
 
   const digitsAr =
     overlays.plate_digits_ar && digitValue

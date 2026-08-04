@@ -20,6 +20,32 @@ body[dir="rtl"] {
   --font-inter: "Inter", sans-serif;
   --font-fraunces: "Fraunces", serif;
   --font-charleswright: "Charles Wright", "CharlesWright", sans-serif;
+  --font-mazal-plate-digits: "Mazal Plate Digits", "Charles Wright", "CharlesWright",
+    "Bahnschrift", "Arial Condensed", sans-serif;
+  --font-mazal-plate-alphabets: "Mazal Plate Alphabets", "Charles Wright",
+    "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif;
+}
+
+@font-face {
+  font-family: "Mazal Plate Digits";
+  src:
+    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.woff2") format("woff2"),
+    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.woff") format("woff"),
+    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Mazal Plate Alphabets";
+  src:
+    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.woff2") format("woff2"),
+    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.woff") format("woff"),
+    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
@@ -84,7 +110,7 @@ body[dir="rtl"] {
 }
 
 .plate-text {
-  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
+  font-family: var(--font-mazal-plate-alphabets) !important;
   font-weight: 700 !important;
   direction: ltr;
   unicode-bidi: isolate;
@@ -120,8 +146,46 @@ body[dir="rtl"] {
   display: inline-block;
   line-height: 1;
   z-index: 3;
-  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
+  /* Default plate ink — digits font; code overlays override below */
+  font-family: var(--font-mazal-plate-digits) !important;
+  font-weight: 400 !important;
+}
+
+/* Letter code (A, B, AA, …) */
+.plate-preview .plate-overlay.plate-overlay-code,
+.plate-preview .plate-overlay.plate-overlay-code .plate-digit-inner {
+  font-family: var(--font-mazal-plate-alphabets) !important;
   font-weight: 700 !important;
+}
+
+/* Numeric digits (Latin + Arabic-Indic overlays) */
+.plate-preview .plate-overlay.plate-overlay-digits,
+.plate-preview .plate-overlay.plate-overlay-digits .plate-digit-inner,
+.plate-preview .plate-overlay.plate-overlay-digits-ar,
+.plate-preview .plate-overlay.plate-overlay-digits-ar .plate-digit-inner {
+  font-family: var(--font-mazal-plate-digits) !important;
+  font-weight: 400 !important;
+}
+
+/* Auction cards need a stronger embossed plate look at small sizes. */
+.auction-card-plate.plate-preview .plate-overlay,
+.auction-card-plate.plate-preview .plate-overlay .plate-digit-inner {
+  color: #050505 !important;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0.6px 0.6px 0 rgba(255, 255, 255, 0.72),
+    -0.6px -0.6px 0 rgba(0, 0, 0, 0.42),
+    1px 1px 1px rgba(0, 0, 0, 0.28),
+    1.5px 1.5px 1.5px rgba(0, 0, 0, 0.18);
+  filter: drop-shadow(0 1px 0.45px rgba(0, 0, 0, 0.22));
+  -webkit-font-smoothing: antialiased;
+}
+
+.auction-card-plate.plate-preview .plate-overlay.plate-overlay-code,
+.auction-card-plate.plate-preview .plate-overlay.plate-overlay-code .plate-digit-inner {
+  letter-spacing: 0.01em;
+  transform-origin: center;
+  scale: 1 1.08;
 }
 
 .plate-preview .plate-overlay .plate-digit-inner {
@@ -131,8 +195,6 @@ body[dir="rtl"] {
 .plate-preview .plate-overlay.metal-plate-text,
 .plate-preview .plate-overlay .plate-digit-inner.metal-plate-text,
 .metal-plate-text {
-  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
-  font-weight: 700 !important;
   color: #0a0a0a;
   letter-spacing: 0.05em;
   text-shadow:
@@ -148,8 +210,6 @@ body[dir="rtl"] {
 .plate-preview .plate-overlay.metal-plate-text-light,
 .plate-preview .plate-overlay .plate-digit-inner.metal-plate-text-light,
 .metal-plate-text-light {
-  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
-  font-weight: 700 !important;
   letter-spacing: 0.05em;
   text-shadow:
     0.5px 0.5px 0 rgba(0, 0, 0, 0.55),

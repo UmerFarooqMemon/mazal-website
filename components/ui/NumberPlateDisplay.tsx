@@ -47,6 +47,7 @@ interface NumberPlateDisplayProps {
   width?: number;
   scaleFontToWidth?: boolean;
   fontScaleMultiplier?: number;
+  codeFontScaleMultiplier?: number;
 }
 
 export default function NumberPlateDisplay({
@@ -65,6 +66,7 @@ export default function NumberPlateDisplay({
   width,
   scaleFontToWidth = false,
   fontScaleMultiplier: fontScaleMultiplierProp,
+  codeFontScaleMultiplier,
 }: NumberPlateDisplayProps) {
   const { locale } = useLocale();
   const { lookup, variantsByKey } = usePlatePreviewLookup(locale);
@@ -109,6 +111,7 @@ export default function NumberPlateDisplay({
           className={className}
           scaleFontToWidth={scaleFontToWidth || usesPlateWidthFont}
           fontScaleMultiplier={fontScaleMultiplier}
+          codeFontScaleMultiplier={codeFontScaleMultiplier}
         />
       </div>
     </div>
