@@ -263,9 +263,6 @@ export default function CertificateForm({
       }
     }
 
-    if (!selectedFile) {
-      newErrors.mulkiya = t("certificates.mulkiya_required");
-    }
     return newErrors;
   };
 
@@ -619,7 +616,10 @@ export default function CertificateForm({
             className={`block text-[11px] font-medium mb-1.5 text-start`}
             style={{ color: getColor("secondaryText") }}
           >
-            {t("certificates.upload_document")}
+            {t("certificates.upload_document")}{" "}
+            <span style={{ color: getColor("mutedText") }}>
+              ({t("common.optional")})
+            </span>
           </label>
           <input
             ref={fileInputRef}

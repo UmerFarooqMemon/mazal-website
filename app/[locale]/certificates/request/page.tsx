@@ -35,11 +35,6 @@ export default function CertificateRequestPage() {
       return;
     }
 
-    if (!formData.mulkiya_image || !(formData.mulkiya_image instanceof File)) {
-      toast.error(t("certificates.mulkiya_required"));
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
@@ -58,11 +53,13 @@ export default function CertificateRequestPage() {
       formDataToSend.append("plate_digits", formData.plate_digits);
       formDataToSend.append("price", formData.price || "0");
       formDataToSend.append("description", formData.description || "");
-      formDataToSend.append(
-        "mulkiya",
-        formData.mulkiya_image,
-        formData.mulkiya_image.name,
-      );
+      if (formData.mulkiya_image instanceof File) {
+        formDataToSend.append(
+          "mulkiya",
+          formData.mulkiya_image,
+          formData.mulkiya_image.name,
+        );
+      }
 
       const response = await fetch("/api/number-plates", {
         method: "POST",
