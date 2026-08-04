@@ -126,7 +126,6 @@ export function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
-/** National number length rules by dialing code (without country code / leading 0) */
 const PHONE_LENGTH_BY_CODE: Record<string, { min: number; max: number }> = {
   "+971": { min: 9, max: 9 }, // UAE mobile
   "+966": { min: 9, max: 9 }, // Saudi mobile
@@ -137,35 +136,103 @@ const PHONE_LENGTH_BY_CODE: Record<string, { min: number; max: number }> = {
   "+1": { min: 10, max: 10 }, // US / Canada
   "+44": { min: 10, max: 10 }, // UK mobile
   "+91": { min: 10, max: 10 }, // India
+  "+92": { min: 10, max: 10 }, // Pakistan
 };
 
 const DEFAULT_PHONE_LENGTH = { min: 7, max: 15 };
+
+/** Country of residence label → E.164 dialing code */
+export const KYC_COUNTRY_DIAL_CODES: Record<string, string> = {
+  "United Arab Emirates": "+971",
+  "Saudi Arabia": "+966",
+  Kuwait: "+965",
+  Bahrain: "+973",
+  Qatar: "+974",
+  Oman: "+968",
+  India: "+91",
+  Pakistan: "+92",
+  "United Kingdom": "+44",
+  "United States": "+1",
+  Other: "+971",
+};
+
+export function dialCodeForCountry(countryName: string): string {
+  return KYC_COUNTRY_DIAL_CODES[countryName] || "+971";
+}
 
 export function getPhoneLengthRule(countryCode: string) {
   return PHONE_LENGTH_BY_CODE[countryCode] ?? DEFAULT_PHONE_LENGTH;
 }
 
-/** Digits only, capped to the country max (strips leading 0) */
-export function sanitizePhone(value: string, countryCode: string) {
-  const max = getPhoneLengthRule(countryCode).max;
+/** National digits only (no dial code / leading 0), capped to country max */
+export function toNationalPhoneDigits(value: string, countryCode: string) {
+  const codeDigits = countryCode.replace(/\D/g, "");
   let digits = digitsOnly(value);
-  // Users often type local format with leading 0 — drop it
+  if (codeDigits && digits.startsWith(codeDigits)) {
+    digits = digits.slice(codeDigits.length);
+  }
   if (digits.startsWith("0")) {
     digits = digits.slice(1);
   }
-  return digits.slice(0, max);
+  return digits.slice(0, getPhoneLengthRule(countryCode).max);
+}
+
+/** Digits only, capped to the country max (strips leading 0) */
+export function sanitizePhone(value: string, countryCode: string) {
+  return toNationalPhoneDigits(value, countryCode);
 }
 
 export function isValidPhone(value: string, countryCode: string) {
-  const digits = digitsOnly(value);
-  if (!digits || digits.startsWith("0")) return false;
+  const digits = toNationalPhoneDigits(value, countryCode);
+  if (!digits) return false;
   const { min, max } = getPhoneLengthRule(countryCode);
   if (digits.length < min || digits.length > max) return false;
   // UAE / Saudi mobiles start with 5
-  if ((countryCode === "+971" || countryCode === "+966") && !digits.startsWith("5")) {
+  if (
+    (countryCode === "+971" || countryCode === "+966") &&
+    !digits.startsWith("5")
+  ) {
     return false;
   }
   return true;
+}
+
+/** Display format: +CODE followed by national digits (UAE keeps XX XXX XXXX groups) */
+export function formatPhoneWithCountryCode(value: string, countryCode: string) {
+  const national = toNationalPhoneDigits(value, countryCode);
+  if (!national) return "";
+
+  if (countryCode === "+971") {
+    const p1 = national.slice(0, 2);
+    const p2 = national.slice(2, 5);
+    const p3 = national.slice(5, 9);
+    let formatted = p1;
+    if (p2) formatted += ` ${p2}`;
+    if (p3) formatted += ` ${p3}`;
+    return `${countryCode} ${formatted}`;
+  }
+
+  // Group remaining national digits in chunks of 3–4 for readability
+  const parts: string[] = [];
+  let i = 0;
+  while (i < national.length) {
+    const size = i === 0 && national.length > 8 ? 3 : 3;
+    parts.push(national.slice(i, i + size));
+    i += size;
+  }
+  return `${countryCode} ${parts.join(" ")}`;
+}
+
+export function phonePlaceholderForCode(countryCode: string) {
+  const { max } = getPhoneLengthRule(countryCode);
+  if (countryCode === "+971") return "+971 -- --- ----";
+  const dashes = "-".repeat(Math.min(max, 10));
+  return `${countryCode} ${dashes}`;
+}
+
+export function phoneMaxLengthForCode(countryCode: string) {
+  // code + spaces + national digits
+  return countryCode.length + 1 + getPhoneLengthRule(countryCode).max + 4;
 }
 
 export function isAllowedKycFile(file: File) {

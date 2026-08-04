@@ -8,8 +8,12 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button, EmiratesIdInput, Input, PhoneInput } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import {
+  dialCodeForCountry,
+  formatPhoneWithCountryCode,
   isValidEmail,
   isValidEmiratesId,
+  isValidPhone,
+  toNationalPhoneDigits,
   type KycIdentityData,
   type KycProfileType,
 } from "@/components/kyc/types";
@@ -96,10 +100,31 @@ export default function IdentityStep({
     }
     if (!identity.phone.trim()) {
       next.phone = t("kyc.fill_required");
-    } else if (uaeMobileStartsWithFive(identity.phone) === false) {
-      next.phone = t("common.mobile_must_start_with_5");
-    } else if (!isValidUaeMobile(identity.phone)) {
-      next.phone = t("common.mobile_invalid");
+    } else if (isUae) {
+      if (uaeMobileStartsWithFive(identity.phone) === false) {
+        next.phone = t("common.mobile_must_start_with_5");
+      } else if (!isValidUaeMobile(identity.phone)) {
+        next.phone = t("common.mobile_invalid");
+      }
+    } else if (
+      !isValidPhone(
+        identity.phone,
+        identity.phoneCountryCode || dialCodeForCountry(identity.countryOfResidence),
+      )
+    ) {
+      const code =
+        identity.phoneCountryCode ||
+        dialCodeForCountry(identity.countryOfResidence);
+      const national = toNationalPhoneDigits(identity.phone, code);
+      if (
+        (code === "+971" || code === "+966") &&
+        national.length > 0 &&
+        !national.startsWith("5")
+      ) {
+        next.phone = t("common.mobile_must_start_with_5");
+      } else {
+        next.phone = t("common.mobile_invalid");
+      }
     }
     if (!identity.email.trim()) {
       next.email = t("kyc.fill_required");
@@ -131,11 +156,22 @@ export default function IdentityStep({
 
   const handleContinue = async () => {
     if (!validate()) {
+      const dialCode =
+        identity.phoneCountryCode ||
+        (isUae
+          ? "+971"
+          : dialCodeForCountry(identity.countryOfResidence));
       const phoneInvalid =
-        !!identity.phone.trim() && !isValidUaeMobile(identity.phone);
+        !!identity.phone.trim() &&
+        (isUae
+          ? !isValidUaeMobile(identity.phone)
+          : !isValidPhone(identity.phone, dialCode));
+      const national = toNationalPhoneDigits(identity.phone, dialCode);
       const phoneStartInvalid =
         !!identity.phone.trim() &&
-        uaeMobileStartsWithFive(identity.phone) === false;
+        (dialCode === "+971" || dialCode === "+966") &&
+        national.length > 0 &&
+        !national.startsWith("5");
       toast.error(
         phoneStartInvalid
           ? t("common.mobile_must_start_with_5")
@@ -224,7 +260,28 @@ export default function IdentityStep({
               label={t("kyc.country_of_residence")}
               options={COUNTRIES}
               value={identity.countryOfResidence}
-              onChange={(value) => update("countryOfResidence", value)}
+              onChange={(value) => {
+                const nextCode = dialCodeForCountry(value);
+                const national = toNationalPhoneDigits(
+                  identity.phone,
+                  identity.phoneCountryCode || "+971",
+                );
+                setIdentity({
+                  ...identity,
+                  countryOfResidence: value,
+                  phoneCountryCode: nextCode,
+                  phone: national
+                    ? formatPhoneWithCountryCode(national, nextCode)
+                    : "",
+                });
+                setErrors((prev) => {
+                  if (!prev.countryOfResidence && !prev.phone) return prev;
+                  const next = { ...prev };
+                  delete next.countryOfResidence;
+                  delete next.phone;
+                  return next;
+                });
+              }}
               placeholder={t("kyc.select_country")}
               error={getError("countryOfResidence", ["country_of_residence"])}
             />
@@ -233,12 +290,22 @@ export default function IdentityStep({
 
         <PhoneInput
           label={t("kyc.mobile_number")}
+          countryCode={
+            isUae
+              ? "+971"
+              : identity.phoneCountryCode ||
+                dialCodeForCountry(identity.countryOfResidence)
+          }
           value={identity.phone}
           onChange={(phone) => {
+            const code = isUae
+              ? "+971"
+              : identity.phoneCountryCode ||
+                dialCodeForCountry(identity.countryOfResidence);
             setIdentity({
               ...identity,
               phone,
-              phoneCountryCode: "+971",
+              phoneCountryCode: code,
             });
             setErrors((prev) => {
               if (!prev.phone && !prev.phoneCountryCode) return prev;

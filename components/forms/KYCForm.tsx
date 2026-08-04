@@ -14,15 +14,18 @@ import DocumentsStep from "@/components/kyc/DocumentsStep";
 import ReviewStep from "@/components/kyc/ReviewStep";
 import { useAuth } from "@/hooks/useAuth";
 import {
+  dialCodeForCountry,
   formatEmiratesId,
+  formatPhoneWithCountryCode,
   INITIAL_IDENTITY,
   INITIAL_KYC_STATE,
+  toNationalPhoneDigits,
   type KycDocumentKey,
   type KycFormState,
   type KycProfileType,
   type KycUploadedDocument,
 } from "@/components/kyc/types";
-import { formatUaePhone, toUaeNationalDigits } from "@/lib/uae-phone";
+import { toUaeNationalDigits } from "@/lib/uae-phone";
 import {
   getCurrentKyc,
   getKycOptions,
@@ -128,6 +131,11 @@ function mapApplicationToForm(kyc: KycApplication | null | undefined): Partial<K
   const dob = kyc.date_of_birth
     ? String(kyc.date_of_birth).slice(0, 10)
     : "";
+  const phoneCountryCode =
+    kyc.phone_country_code ||
+    (kyc.country_of_residence
+      ? dialCodeForCountry(kyc.country_of_residence)
+      : "+971");
 
   return {
     profileType: (kyc.profile_type as KycProfileType) || null,
@@ -139,9 +147,11 @@ function mapApplicationToForm(kyc: KycApplication | null | undefined): Partial<K
       emirateOfResidence: kyc.emirate_of_residence || "",
       passportNumber: kyc.passport_number || "",
       countryOfResidence: kyc.country_of_residence || "",
-      phone: kyc.phone ? formatUaePhone(String(kyc.phone)) : "",
+      phone: kyc.phone
+        ? formatPhoneWithCountryCode(String(kyc.phone), phoneCountryCode)
+        : "",
       email: kyc.email || "",
-      phoneCountryCode: "+971",
+      phoneCountryCode,
     },
     uploadedDocuments: parseUploadedDocuments(kyc.documents),
     custodyAgreed: Boolean(kyc.custody_agreement_accepted),
@@ -354,7 +364,14 @@ export default function KYCForm() {
     setSaving(true);
     setFieldErrors({});
     try {
-      const phone = toUaeNationalDigits(form.identity.phone);
+      const dialCode =
+        activeProfileType === "uae_resident"
+          ? "+971"
+          : form.identity.phoneCountryCode || "+971";
+      const phone =
+        dialCode === "+971"
+          ? toUaeNationalDigits(form.identity.phone)
+          : toNationalPhoneDigits(form.identity.phone, dialCode);
       const payload =
         activeProfileType === "uae_resident"
           ? {
@@ -371,7 +388,7 @@ export default function KYCForm() {
               date_of_birth: form.identity.dateOfBirth,
               passport_number: form.identity.passportNumber.trim(),
               country_of_residence: form.identity.countryOfResidence,
-              phone_country_code: "+971",
+              phone_country_code: dialCode,
               phone,
               email: form.identity.email.trim(),
             };

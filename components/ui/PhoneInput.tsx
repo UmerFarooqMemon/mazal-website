@@ -12,20 +12,21 @@ import {
 } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import {
-  UAE_PHONE_MAX_LENGTH,
-  UAE_PHONE_PLACEHOLDER,
-  UAE_PHONE_SAMPLE,
-  caretAfterUaeNationalDigits,
-  countUaeNationalDigitsBefore,
-  formatUaePhone,
-  uaeMobileStartsWithFive,
-} from "@/lib/uae-phone";
+  formatPhoneWithCountryCode,
+  getPhoneLengthRule,
+  phoneMaxLengthForCode,
+  phonePlaceholderForCode,
+  toNationalPhoneDigits,
+} from "@/components/kyc/types";
+import { UAE_PHONE_SAMPLE } from "@/lib/uae-phone";
 import Input from "./Input";
 
 interface PhoneInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
   value: string;
   onChange: (value: string) => void;
+  /** E.164 dialing code shown as the fixed prefix (e.g. +971, +966). */
+  countryCode?: string;
   label?: React.ReactNode;
   error?: ReactNode;
   hint?: string;
@@ -36,8 +37,7 @@ interface PhoneInputProps
 const isDigit = (char: string | undefined) =>
   char !== undefined && char >= "0" && char <= "9";
 
-/** Keep the sample LTR + nowrap so Arabic RTL never reverses or splits it */
-function withPhoneSample(message: ReactNode): ReactNode {
+function withPhoneSample(message: ReactNode, sample: string): ReactNode {
   if (message == null || message === false || message === "") return message;
   return (
     <>
@@ -47,29 +47,85 @@ function withPhoneSample(message: ReactNode): ReactNode {
         className="inline-block whitespace-nowrap"
         style={{ unicodeBidi: "isolate" }}
       >
-        {UAE_PHONE_SAMPLE}
+        {sample}
       </bdi>
     </>
   );
 }
 
+function countNationalDigitsBefore(
+  rawValue: string,
+  rawCaret: number,
+  countryCode: string,
+) {
+  const before = rawValue.slice(0, Math.max(0, rawCaret));
+  return toNationalPhoneDigits(before, countryCode).length;
+}
+
+function caretAfterNationalDigits(
+  masked: string,
+  nationalDigitCount: number,
+  countryCode: string,
+) {
+  const prefixRe = new RegExp(
+    `^\\${countryCode.replace("+", "\\+")}\\s*`,
+  );
+  const prefix = masked.match(prefixRe);
+  const start = prefix ? prefix[0].length : 0;
+
+  if (nationalDigitCount <= 0) return start;
+
+  let seen = 0;
+  for (let index = start; index < masked.length; index++) {
+    const char = masked[index];
+    if (char < "0" || char > "9") continue;
+    seen++;
+    if (seen < nationalDigitCount) continue;
+
+    let caret = index + 1;
+    while (caret < masked.length && (masked[caret] < "0" || masked[caret] > "9")) {
+      caret++;
+    }
+    return caret;
+  }
+
+  return masked.length;
+}
+
 /**
- * UAE mobile input — same caret/mask behavior as EmiratesIdInput.
- * Digits only; formats as +971 XX XXX XXXX while typing.
- * Live EN/AR error when the number does not start with 5.
+ * International phone input with a fixed dialing-code prefix.
+ * Defaults to UAE (+971) mask behavior when countryCode is +971.
  */
 const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
-  ({ value, onChange, placeholder, maxLength, error, ...props }, ref) => {
+  (
+    {
+      value,
+      onChange,
+      countryCode = "+971",
+      placeholder,
+      maxLength,
+      error,
+      ...props
+    },
+    ref,
+  ) => {
     const { t } = useLocale();
     const inputRef = useRef<HTMLInputElement | null>(null);
     const pendingCaret = useRef<number | null>(null);
+    const requiresLeadingFive =
+      countryCode === "+971" || countryCode === "+966";
 
+    const nationalDigits = toNationalPhoneDigits(value, countryCode);
     const startError =
-      uaeMobileStartsWithFive(value) === false
+      requiresLeadingFive && nationalDigits.length > 0 && !nationalDigits.startsWith("5")
         ? t("common.mobile_must_start_with_5")
         : undefined;
 
     const rawError = error || startError;
+    const sample =
+      countryCode === "+971"
+        ? UAE_PHONE_SAMPLE
+        : `${countryCode} ${"5".padEnd(getPhoneLengthRule(countryCode).min, "0")}`;
     const showSample =
       typeof rawError === "string" &&
       (rawError === t("common.mobile_must_start_with_5") ||
@@ -78,7 +134,9 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
         rawError.includes("مثال") ||
         rawError.toLowerCase().includes("example"));
 
-    const displayError = showSample ? withPhoneSample(rawError) : rawError;
+    const displayError = showSample
+      ? withPhoneSample(rawError, sample)
+      : rawError;
 
     const setRefs = useCallback(
       (node: HTMLInputElement | null) => {
@@ -106,10 +164,11 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       rawValue: string,
       rawCaret: number,
     ) => {
-      const formatted = formatUaePhone(rawValue);
-      const caret = caretAfterUaeNationalDigits(
+      const formatted = formatPhoneWithCountryCode(rawValue, countryCode);
+      const caret = caretAfterNationalDigits(
         formatted,
-        countUaeNationalDigitsBefore(rawValue, rawCaret),
+        countNationalDigitsBefore(rawValue, rawCaret, countryCode),
+        countryCode,
       );
 
       pendingCaret.current = caret;
@@ -135,8 +194,10 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
 
       const current = input.value;
       let target = selectionStart;
-
-      const prefix = current.match(/^\+971\s*/);
+      const prefixRe = new RegExp(
+        `^\\${countryCode.replace("+", "\\+")}\\s*`,
+      );
+      const prefix = current.match(prefixRe);
       const nationalStart = prefix ? prefix[0].length : 0;
 
       if (event.key === "Backspace") {
@@ -178,10 +239,10 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
         dir="ltr"
         className={`!text-left [unicode-bidi:isolate] ${props.className ?? ""}`}
         value={value}
-        maxLength={maxLength ?? UAE_PHONE_MAX_LENGTH}
+        maxLength={maxLength ?? phoneMaxLengthForCode(countryCode)}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder ?? UAE_PHONE_PLACEHOLDER}
+        placeholder={placeholder ?? phonePlaceholderForCode(countryCode)}
         error={displayError}
       />
     );
