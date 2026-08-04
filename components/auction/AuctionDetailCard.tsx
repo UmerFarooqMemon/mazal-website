@@ -76,6 +76,8 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
           plateDesign={auction.plateDesign}
           crop="card"
           hideCode={Boolean(auction.hideCode)}
+          scaleFontToWidth
+          fontScaleMultiplier={2.3}
         />
       </div>
 

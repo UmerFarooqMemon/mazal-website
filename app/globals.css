@@ -29,10 +29,6 @@ html:has([data-locale-root][dir="rtl"]) *:not(.plate-text):not(.plate-overlay):n
   --font-fraunces: "Fraunces", serif;
   --font-almarai: "Almarai", sans-serif;
   --font-charleswright: "Charles Wright", "CharlesWright", sans-serif;
-  --font-mazal-plate-digits: "Mazal Plate Digits", "Charles Wright", "CharlesWright",
-    "Bahnschrift", "Arial Condensed", sans-serif;
-  --font-mazal-plate-alphabets: "Mazal Plate Alphabets", "Charles Wright",
-    "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif;
 }
 
 @font-face {
@@ -63,28 +59,6 @@ html:has([data-locale-root][dir="rtl"]) *:not(.plate-text):not(.plate-overlay):n
   font-family: "Almarai";
   src: url("/fonts/Almarai/Almarai-ExtraBold.ttf") format("truetype");
   font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Mazal Plate Digits";
-  src:
-    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.woff2") format("woff2"),
-    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.woff") format("woff"),
-    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Mazal Plate Alphabets";
-  src:
-    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.woff2") format("woff2"),
-    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.woff") format("woff"),
-    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.ttf") format("truetype");
-  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -158,7 +132,7 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 }
 
 .plate-text {
-  font-family: var(--font-mazal-plate-alphabets) !important;
+  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
   font-weight: 700 !important;
   direction: ltr;
   unicode-bidi: isolate;
@@ -194,35 +168,8 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   display: inline-block;
   line-height: 1;
   z-index: 3;
-  /* Default plate ink — digits font; code overlays override below */
-  font-family: var(--font-mazal-plate-digits) !important;
-  font-weight: 400 !important;
-  color: #050505;
-  letter-spacing: 0.02em;
-  text-shadow:
-    0.7px 0.7px 0 rgba(255, 255, 255, 0.82),
-    -0.7px -0.7px 0 rgba(0, 0, 0, 0.5),
-    1.2px 1.2px 1.2px rgba(0, 0, 0, 0.28),
-    1.8px 1.8px 2px rgba(0, 0, 0, 0.18);
-  filter: drop-shadow(0 1.1px 0.5px rgba(0, 0, 0, 0.24));
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Letter code (A, B, AA, …) */
-.plate-preview .plate-overlay.plate-overlay-code,
-.plate-preview .plate-overlay.plate-overlay-code .plate-digit-inner {
-  font-family: var(--font-mazal-plate-alphabets) !important;
+  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
   font-weight: 700 !important;
-  letter-spacing: 0.01em;
-}
-
-/* Numeric digits (Latin + Arabic-Indic overlays) */
-.plate-preview .plate-overlay.plate-overlay-digits,
-.plate-preview .plate-overlay.plate-overlay-digits .plate-digit-inner,
-.plate-preview .plate-overlay.plate-overlay-digits-ar,
-.plate-preview .plate-overlay.plate-overlay-digits-ar .plate-digit-inner {
-  font-family: var(--font-mazal-plate-digits) !important;
-  font-weight: 400 !important;
 }
 
 .plate-preview .plate-overlay .plate-digit-inner {
@@ -232,6 +179,8 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 .plate-preview .plate-overlay.metal-plate-text,
 .plate-preview .plate-overlay .plate-digit-inner.metal-plate-text,
 .metal-plate-text {
+  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
+  font-weight: 700 !important;
   color: #0a0a0a;
   letter-spacing: 0.05em;
   text-shadow:
@@ -247,6 +196,8 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 .plate-preview .plate-overlay.metal-plate-text-light,
 .plate-preview .plate-overlay .plate-digit-inner.metal-plate-text-light,
 .metal-plate-text-light {
+  font-family: "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif !important;
+  font-weight: 700 !important;
   letter-spacing: 0.05em;
   text-shadow:
     0.5px 0.5px 0 rgba(0, 0, 0, 0.55),

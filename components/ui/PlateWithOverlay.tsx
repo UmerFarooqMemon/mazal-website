@@ -34,8 +34,6 @@ interface PlateWithOverlayProps {
   scaleFontToWidth?: boolean;
   /** Extra multiplier applied with width-based font scaling (deal summary). */
   fontScaleMultiplier?: number;
-  /** Optional separate multiplier for code letters when width scaling is enabled. */
-  codeFontScaleMultiplier?: number;
 }
 
 function OverlaySpan({
@@ -101,7 +99,6 @@ export default function PlateWithOverlay({
   allowCodePlaceholder = false,
   scaleFontToWidth = false,
   fontScaleMultiplier = 1,
-  codeFontScaleMultiplier,
 }: PlateWithOverlayProps) {
   // API may send "?" for hidden letter codes, or omit the code entirely.
   // Blur stays on whenever hideCode is true — same as before, including "?".
@@ -120,7 +117,6 @@ export default function PlateWithOverlay({
           420,
           scaleFontToWidth,
           fontScaleMultiplier,
-        codeFontScaleMultiplier,
         )
       : null,
   );
@@ -134,7 +130,6 @@ export default function PlateWithOverlay({
       rootWidth,
       scaleFontToWidth,
       fontScaleMultiplier,
-      codeFontScaleMultiplier,
     );
     setRenderState(next);
   }, [
@@ -143,7 +138,6 @@ export default function PlateWithOverlay({
     plate_digits,
     scaleFontToWidth,
     fontScaleMultiplier,
-    codeFontScaleMultiplier,
   ]);
 
   useEffect(() => {

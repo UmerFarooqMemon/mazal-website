@@ -7,7 +7,7 @@ import {
   resolvePreviewFromLookup,
   usePlatePreviewLookup,
 } from "@/hooks/usePlatePreviewLookup";
-import { DEAL_SUMMARY_FONT_SCALE, PLATE_UNIFORM_FONT_SCALE } from "@/lib/number-plate-preview-render";
+import { DEAL_SUMMARY_FONT_SCALE } from "@/lib/number-plate-preview-render";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export type PlateCropVariant =
@@ -47,7 +47,6 @@ interface NumberPlateDisplayProps {
   width?: number;
   scaleFontToWidth?: boolean;
   fontScaleMultiplier?: number;
-  codeFontScaleMultiplier?: number;
 }
 
 export default function NumberPlateDisplay({
@@ -64,9 +63,8 @@ export default function NumberPlateDisplay({
   className = "",
   wrapperClassName = "w-full overflow-hidden",
   width,
-  scaleFontToWidth = true,
+  scaleFontToWidth = false,
   fontScaleMultiplier: fontScaleMultiplierProp,
-  codeFontScaleMultiplier,
 }: NumberPlateDisplayProps) {
   const { locale } = useLocale();
   const { lookup, variantsByKey } = usePlatePreviewLookup(locale);
@@ -92,12 +90,10 @@ export default function NumberPlateDisplay({
         : (variantMeta?.fields?.includes("plate_code") ?? true) &&
           (variantMeta?.has_code ?? (Boolean(plate_code) || hideCode));
 
+  const usesPlateWidthFont = crop === "deal-summary";
   const fontScaleMultiplier =
     fontScaleMultiplierProp ??
-    (crop === "deal-summary" ? DEAL_SUMMARY_FONT_SCALE : PLATE_UNIFORM_FONT_SCALE);
-  // Keep code letters and digits on the same visual size when scaling.
-  const resolvedCodeFontScaleMultiplier =
-    codeFontScaleMultiplier ?? fontScaleMultiplier;
+    (crop === "deal-summary" ? DEAL_SUMMARY_FONT_SCALE : 1);
 
   return (
     <div dir="ltr" lang="en" className={wrapperClassName}>
@@ -111,9 +107,8 @@ export default function NumberPlateDisplay({
           allowCodePlaceholder={showCodeField}
           width={width}
           className={className}
-          scaleFontToWidth={scaleFontToWidth}
+          scaleFontToWidth={scaleFontToWidth || usesPlateWidthFont}
           fontScaleMultiplier={fontScaleMultiplier}
-          codeFontScaleMultiplier={resolvedCodeFontScaleMultiplier}
         />
       </div>
     </div>

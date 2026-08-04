@@ -33,10 +33,9 @@ const ABU_DHABI_CLASSIC_CAR_FALLBACK = {
     top: "15.53%",
     height: "43.92%",
     layout_mode: "flex_cell" as const,
-    font_weight: "400",
+    font_weight: "700",
     color: "#000000",
-    font_family:
-      '"Mazal Plate Digits", "Charles Wright", "Bahnschrift", "Arial Condensed", sans-serif',
+    font_family: '"Segoe UI", Arial, Tahoma, sans-serif',
   },
   plate_digits: {
     left: "33.33%",
@@ -46,8 +45,7 @@ const ABU_DHABI_CLASSIC_CAR_FALLBACK = {
     layout_mode: "flex_cell" as const,
     font_weight: "700",
     color: "#000000",
-    font_family:
-      '"Mazal Plate Digits", "Charles Wright", "Bahnschrift", "Arial Condensed", sans-serif',
+    font_family: '"Segoe UI", Arial, Tahoma, sans-serif',
   },
 };
 
@@ -126,11 +124,8 @@ function abuDhabiClassicFontSize(rootWidth: number, digits: string): string {
 
 const PLATE_REFERENCE_WIDTH = 840;
 
-/** Shared plate text scale — digits and alphabets stay matched everywhere. */
-export const PLATE_UNIFORM_FONT_SCALE = 1.72;
-
 /** Extra bump for deal-summary sidebar plate (on top of width-based scaling). */
-export const DEAL_SUMMARY_FONT_SCALE = PLATE_UNIFORM_FONT_SCALE;
+export const DEAL_SUMMARY_FONT_SCALE = 1.7;
 
 function parseLengthToPx(value: string, basisWidth: number): number | null {
   const trimmed = value.trim().toLowerCase();
@@ -389,11 +384,7 @@ function buildOverlayState(
     if (!useMetallic) {
       style.color = config.color || "#000";
       style.fontWeight = config.font_weight || "700";
-      // Site-wide Mazal plate fonts are applied via CSS classes
-      // (plate-overlay-code / plate-overlay-digits); keep API family only as fallback.
-      style.fontFamily =
-        config.font_family ||
-        '"Mazal Plate Digits", "Charles Wright", sans-serif';
+      style.fontFamily = config.font_family || "Arial, sans-serif";
     } else if (isLightMetallicColor(config.color) && config.color) {
       style.color = config.color;
     }
@@ -442,9 +433,7 @@ function buildOverlayState(
     } else {
       innerStyle.color = config.color || "#000";
       innerStyle.fontWeight = config.font_weight || "700";
-      innerStyle.fontFamily =
-        config.font_family ||
-        '"Mazal Plate Digits", "Charles Wright", sans-serif';
+      innerStyle.fontFamily = config.font_family || "Arial, sans-serif";
     }
 
     if (config.font_size) {
@@ -561,7 +550,6 @@ export function computePlateRenderState(
   rootWidth = 420,
   scaleFontToWidth = false,
   fontScaleMultiplier = 1,
-  codeFontScaleMultiplier = fontScaleMultiplier,
 ): PlateRenderState | null {
   if (!previewConfig) return null;
 
@@ -603,10 +591,9 @@ export function computePlateRenderState(
 
   const scaleConfig = (
     config: PlateOverlayConfig | null | undefined,
-    multiplier = fontScaleMultiplier,
   ): PlateOverlayConfig | null | undefined =>
     scaleFontToWidth
-      ? withPlateWidthFontScale(config, rootWidth, multiplier)
+      ? withPlateWidthFontScale(config, rootWidth, fontScaleMultiplier)
       : config;
 
   const arConfig = scaleConfig(
@@ -615,7 +602,7 @@ export function computePlateRenderState(
   const enConfig = scaleConfig(
     scaledDigitsConfig(overlays.plate_digits, digitValue, layout, code),
   );
-  const codeConfig = scaleConfig(overlays.plate_code, codeFontScaleMultiplier);
+  const codeConfig = scaleConfig(overlays.plate_code);
 
   const digitsAr =
     overlays.plate_digits_ar && digitValue
