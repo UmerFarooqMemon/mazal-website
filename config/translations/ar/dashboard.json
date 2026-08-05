@@ -1,5 +1,7 @@
 {
   "trader_workspace": "مساحة التاجر",
+  "workspace": "مساحة العمل",
+  "workspace_user_fallback": "عبدالله",
   "export_pl": "تصدير الأرباح والخسائر",
   "new_listing": "قائمة جديدة",
   "deals_closed": "صفقة مغلقة",
@@ -29,5 +31,23 @@
   "trader_tag": "تاجر",
   "collector": "جامع",
   "deals": "صفقات",
-  "dashboard_label": "لوحة التحكم"
+  "dashboard_label": "لوحة التحكم",
+  "stat_listing": "القوائم",
+  "stat_valuation_certificate": "شهادة التقييم",
+  "stat_watchlist": "قائمة المتابعة",
+  "stat_collection": "المجموعة",
+  "stat_wallet": "المحفظة",
+  "tab_marketplace": "السوق",
+  "tab_private_deal": "صفقة خاصة",
+  "highest_offer": "أعلى عرض",
+  "accepted_offer": "عرض مقبول",
+  "see_all_offers": "عرض كل العروض",
+  "status_awaiting_offer": "بانتظار العرض",
+  "status_awaiting_payment": "بانتظار الدفع",
+  "status_in_transit": "قيد النقل",
+  "status_completed": "مكتمل",
+  "status_pending_transfer": "بانتظار النقل",
+  "status_pending_purchase": "بانتظار الشراء",
+  "plate_transfer": "نقل اللوحة",
+  "no_listings": "لا توجد قوائم بعد."
 }

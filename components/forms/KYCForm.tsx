@@ -480,7 +480,7 @@ export default function KYCForm() {
       );
 
       if (status === "approved") {
-        router.push(`/${locale}/dashboard-certificates`);
+        router.push(`/${locale}/profile`);
       }
     } catch (error) {
       handleApiError(error, t("kyc.submit_error"));

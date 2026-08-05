@@ -199,7 +199,7 @@ export default function Header() {
               {mounted && isAuthenticated ? (
                 <div className="flex items-center gap-3 ms-1">
                   <Link
-                    href={`/${locale}/dashboard-certificates`}
+                    href={`/${locale}/profile`}
                     className="flex items-center gap-3 group"
                   >
                     <div className="relative shrink-0">
@@ -302,7 +302,7 @@ export default function Header() {
               )}
               {mounted && isAuthenticated ? (
                 <Link
-                  href={`/${locale}/dashboard-certificates`}
+                  href={`/${locale}/profile`}
                   className="h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
                 >
                   <div

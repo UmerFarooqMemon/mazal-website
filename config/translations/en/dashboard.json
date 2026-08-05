@@ -1,5 +1,7 @@
 {
   "trader_workspace": "TRADER WORKSPACE",
+  "workspace": "WORKSPACE",
+  "workspace_user_fallback": "Abdullah",
   "export_pl": "Export P&L",
   "new_listing": "New listing",
   "deals_closed": "deals closed",
@@ -29,5 +31,23 @@
   "trader_tag": "TRADER",
   "collector": "COLLECTOR",
   "deals": "deals",
-  "dashboard_label": "DASHBOARD"
+  "dashboard_label": "DASHBOARD",
+  "stat_listing": "Listing",
+  "stat_valuation_certificate": "Valuation Certificate",
+  "stat_watchlist": "Watchlist",
+  "stat_collection": "Collection",
+  "stat_wallet": "Wallet",
+  "tab_marketplace": "Marketplace",
+  "tab_private_deal": "Private Deal",
+  "highest_offer": "Highest Offer",
+  "accepted_offer": "Accepted Offer",
+  "see_all_offers": "See all offers",
+  "status_awaiting_offer": "Awaiting Offer",
+  "status_awaiting_payment": "Awaiting Payment",
+  "status_in_transit": "In Transit",
+  "status_completed": "Completed",
+  "status_pending_transfer": "Pending Transfer",
+  "status_pending_purchase": "Pending Purchase",
+  "plate_transfer": "Plate Transfer",
+  "no_listings": "No listings yet."
 }

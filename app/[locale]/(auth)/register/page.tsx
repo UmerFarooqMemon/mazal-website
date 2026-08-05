@@ -54,7 +54,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(`/${locale}/dashboard-certificates`);
+      router.replace(`/${locale}/profile`);
     }
   }, [isAuthenticated, locale, router]);
 
@@ -142,7 +142,7 @@ export default function RegisterPage() {
       });
       toast.dismiss(loadingToast);
       toast.success(t("common.register_success"));
-      setTimeout(() => router.push(`/${locale}/dashboard-certificates`), 800);
+      setTimeout(() => router.push(`/${locale}/profile`), 800);
     } catch (err: any) {
       toast.dismiss(loadingToast);
       toast.error(t("common.register_failed"));

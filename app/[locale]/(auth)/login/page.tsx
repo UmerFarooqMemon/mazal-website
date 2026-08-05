@@ -35,7 +35,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(`/${locale}/dashboard-certificates`);
+      router.replace(`/${locale}/profile`);
     }
   }, [isAuthenticated, locale, router]);
 
@@ -74,7 +74,7 @@ export default function LoginPage() {
       await login({ login: formData.login, password: formData.password });
       toast.dismiss(loadingToast);
       toast.success(t("common.login_success"));
-      setTimeout(() => router.push(`/${locale}/dashboard-certificates`), 800);
+      setTimeout(() => router.push(`/${locale}/profile`), 800);
     } catch (err) {
       toast.dismiss(loadingToast);
       toast.error(t("common.invalid_credentials"));
@@ -94,7 +94,7 @@ export default function LoginPage() {
       await loginWithGoogle(idToken);
       toast.dismiss(loadingToast);
       toast.success(t("common.login_success"));
-      setTimeout(() => router.push(`/${locale}/dashboard-certificates`), 800);
+      setTimeout(() => router.push(`/${locale}/profile`), 800);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
       const message =
