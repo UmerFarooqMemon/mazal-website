@@ -679,6 +679,12 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   text-align: left;
 }
 
+/* Hide library floating error — we render the message under the field only */
+.mazal-country-phone .invalid-number-message,
+.mazal-country-phone .special-label {
+  display: none !important;
+}
+
 /*
   Arabic / RTL: flag+arrow button on the right.
   Number stays LTR; text/placeholder hug the flag (right side).

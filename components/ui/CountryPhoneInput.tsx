@@ -196,15 +196,6 @@ export default function CountryPhoneInput({
           color: getColor("primaryText"),
           ...(isRTL ? { left: "auto", right: 0 } : {}),
         }}
-        isValid={(inputNumber, countryObj) => {
-          if (!inputNumber) return true;
-          const data = countryObj as CountryData;
-          const dial = data?.dialCode ? `+${data.dialCode}` : "+971";
-          const iso = data?.countryCode || "ae";
-          if (!hasNationalPhoneDigits(inputNumber, dial)) return true;
-          if (isValidCountryPhoneNumber(inputNumber, iso)) return true;
-          return invalidPhoneMessage(iso, bloomErrorPrefix, exampleLabel);
-        }}
         onChange={(phone, data, _event, formattedValue) => {
           const meta: CountryPhoneChangeMeta = {
             dialCode: isCountryData(data) ? `+${data.dialCode}` : "+971",
