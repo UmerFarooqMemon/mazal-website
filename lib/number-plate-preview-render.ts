@@ -318,6 +318,7 @@ function adjustOverlaysForCode(
   layout: string | null,
   oldPlateStyle = false,
   oldMotorcycleStyle = false,
+  digits = "",
 ) {
   if (!overlays) return overlays;
 
@@ -334,7 +335,7 @@ function adjustOverlaysForCode(
   );
 
   // Digits keep their API-configured position when no alphabet is present.
-  if (!hasCode) {
+  if (!hasCode && !oldMotorcycleStyle) {
     return adjusted;
   }
 
@@ -342,10 +343,13 @@ function adjustOverlaysForCode(
     delete adjusted.plate_digits.right;
   }
 
-  // Motorcycle old plate: letter centered in the bay under the top-left Dubai crest.
+  // Motorcycle old plate: letter under crest; digits in the right bay.
+  // Font size matches car old plates — width-based scaling handles small cards.
   if (oldPlateStyle && oldMotorcycleStyle) {
     const codeLength = String(code || "").length;
-    if (adjusted.plate_code) {
+    const rowFontSize = "clamp(2.05rem, 8.8vw, 4rem)";
+
+    if (adjusted.plate_code && hasCode) {
       adjusted.plate_code.layout_mode = "point_center";
       adjusted.plate_code.left = "17.5%";
       adjusted.plate_code.top = "72%";
@@ -358,6 +362,20 @@ function adjustOverlaysForCode(
       delete adjusted.plate_code.height;
       delete adjusted.plate_code.right;
     }
+
+    const placeMotoDigits = (overlay: PlateOverlayConfig) => {
+      overlay.layout_mode = "point_center";
+      overlay.left = "64%";
+      overlay.top = "50%";
+      overlay.transform = "translate(-50%, -50%)";
+      overlay.font_size = rowFontSize;
+      overlay.letter_spacing = "0.09em";
+      delete overlay.height;
+      delete overlay.right;
+    };
+
+    if (adjusted.plate_digits) placeMotoDigits(adjusted.plate_digits);
+    if (adjusted.plate_digits_ar) placeMotoDigits(adjusted.plate_digits_ar);
   } else if (oldPlateStyle && layout === "split_top") {
     const codeLength = String(code || "").length;
     // Digits vertically centered in the plate frame; letter under Dubai logo.
@@ -699,6 +717,7 @@ export function computePlateRenderState(
     layout,
     oldPlateStyle,
     oldMotorcycleStyle,
+    digits,
   );
   const digitValue = sanitizePlateDigits(digits);
 
@@ -708,11 +727,11 @@ export function computePlateRenderState(
 
   const oldPlatePartMultiplier = (partScale: number) => {
     if (!oldPlateStyle) return fontScaleMultiplier;
-    // Old plate: keep alphabet/digit relative scales even on cards (scaleFontToWidth).
-    // Cards pass ~2.3 as a base; part scales are relative to the alphabet default.
-    if (scaleFontToWidth) {
-      return fontScaleMultiplier * (partScale / OLD_PLATE_ALPHABET_FONT_SCALE);
-    }
+    // Marketplace/cards: use the shared card multiplier only. Width-based scaling
+    // already shrinks fonts for small plates. Applying digit scale (e.g. 3.0) as a
+    // relative boost here made short numbers overflow tiny listing cards.
+    if (scaleFontToWidth) return fontScaleMultiplier;
+    // Full-size old plates: alphabet vs digits can differ (e.g. 1.5 vs 3.0).
     return partScale;
   };
 

@@ -306,6 +306,13 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   transform-origin: center center !important;
 }
 
+.plate-preview--old-moto .plate-overlay.plate-overlay-digits,
+.plate-preview--old-moto .plate-overlay.plate-overlay-digits-ar {
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-width: 58% !important;
+}
+
 .plate-preview--old .plate-overlay.plate-overlay-code .plate-digit-inner,
 .plate-preview--old .plate-overlay.plate-overlay-digits .plate-digit-inner,
 .plate-preview--old .plate-overlay.plate-overlay-digits-ar .plate-digit-inner {
