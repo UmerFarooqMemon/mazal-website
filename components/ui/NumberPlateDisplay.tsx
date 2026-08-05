@@ -47,6 +47,10 @@ interface NumberPlateDisplayProps {
   width?: number;
   scaleFontToWidth?: boolean;
   fontScaleMultiplier?: number;
+  /** Old plate only: scale for letter code (default from OLD_PLATE_ALPHABET_FONT_SCALE). */
+  oldPlateAlphabetScale?: number;
+  /** Old plate only: scale for digits (default from OLD_PLATE_DIGITS_FONT_SCALE). */
+  oldPlateDigitsScale?: number;
 }
 
 export default function NumberPlateDisplay({
@@ -65,6 +69,8 @@ export default function NumberPlateDisplay({
   width,
   scaleFontToWidth = false,
   fontScaleMultiplier: fontScaleMultiplierProp,
+  oldPlateAlphabetScale,
+  oldPlateDigitsScale,
 }: NumberPlateDisplayProps) {
   const { locale } = useLocale();
   const { lookup, variantsByKey } = usePlatePreviewLookup(locale);
@@ -103,12 +109,16 @@ export default function NumberPlateDisplay({
           plate_digits={plate_digits}
           emirate={emirate}
           preview={resolvedPreview || undefined}
+          plateVariant={plateVariant}
+          plateDesign={plateDesign || resolvedPreview?.design_key}
           hideCode={hideCode}
           allowCodePlaceholder={showCodeField}
           width={width}
           className={className}
           scaleFontToWidth={scaleFontToWidth || usesPlateWidthFont}
           fontScaleMultiplier={fontScaleMultiplier}
+          oldPlateAlphabetScale={oldPlateAlphabetScale}
+          oldPlateDigitsScale={oldPlateDigitsScale}
         />
       </div>
     </div>

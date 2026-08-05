@@ -93,6 +93,40 @@ export function buildPlatePreviewLookup(
   return { byKey, byTypeDesign, byType };
 }
 
+/**
+ * Dubai/private "old" metal plates (white plate with raised letter + digits).
+ * Detected from design key, variant key, or old-plate background artwork.
+ * Does not match Abu Dhabi "classic" or other non-old templates.
+ */
+export function isOldPlateStyle(data: {
+  plateDesign?: string | null;
+  plateVariant?: string | null;
+  preview?: PlatePreviewConfig | null;
+}): boolean {
+  const design = String(
+    data.plateDesign || data.preview?.design_key || "",
+  ).toLowerCase();
+  const variant = String(data.plateVariant || "").toLowerCase();
+  const bg = [
+    data.preview?.background_image?.url,
+    data.preview?.background_image?.path,
+    data.preview?.background_image_url,
+    data.preview?.background_image_path,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (design === "old") return true;
+  if (variant.includes("_old") || /(^|_)old$/.test(variant)) return true;
+  if (bg.includes("private-old") || bg.includes("old-plate")) return true;
+  // Dubai private "classic" reuses the same old-plate PNG as design "old"
+  if (design === "classic" && (bg.includes("private-old") || bg.includes("old-plate"))) {
+    return true;
+  }
+  return false;
+}
+
 export function resolvePlatePreview(
   lookup: PlatePreviewLookup,
   data: {

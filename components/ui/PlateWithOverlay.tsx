@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PlatePreviewConfig } from "@/lib/plate-preview";
+import { isOldPlateStyle, type PlatePreviewConfig } from "@/lib/plate-preview";
 import {
   computePlateRenderState,
   type OverlayRenderState,
@@ -20,6 +20,8 @@ interface PlateWithOverlayProps {
   className?: string;
   imageUrl?: string;
   preview?: PlatePreviewConfig;
+  plateVariant?: string;
+  plateDesign?: string;
   isRTL?: boolean;
   /**
    * When true, blurs only the plate code letter — digits stay sharp in their API position.
@@ -34,6 +36,10 @@ interface PlateWithOverlayProps {
   scaleFontToWidth?: boolean;
   /** Extra multiplier applied with width-based font scaling (deal summary). */
   fontScaleMultiplier?: number;
+  /** Old plate only: extra scale for the letter code (A, B, …). */
+  oldPlateAlphabetScale?: number;
+  /** Old plate only: extra scale for digits. */
+  oldPlateDigitsScale?: number;
 }
 
 function OverlaySpan({
@@ -95,10 +101,14 @@ export default function PlateWithOverlay({
   width,
   className = "",
   preview,
+  plateVariant,
+  plateDesign,
   hideCode = false,
   allowCodePlaceholder = false,
   scaleFontToWidth = false,
   fontScaleMultiplier = 1,
+  oldPlateAlphabetScale,
+  oldPlateDigitsScale,
 }: PlateWithOverlayProps) {
   // API may send "?" for hidden letter codes, or omit the code entirely.
   // Blur stays on whenever hideCode is true — same as before, including "?".
@@ -106,6 +116,19 @@ export default function PlateWithOverlay({
     hideCode && allowCodePlaceholder && !plate_code.trim()
       ? HIDDEN_CODE_PLACEHOLDER
       : plate_code;
+
+  const useOldPlateFonts = isOldPlateStyle({
+    plateDesign,
+    plateVariant,
+    preview,
+  });
+  const platePreviewClass = [
+    "relative mx-auto shrink-0 plate-preview",
+    useOldPlateFonts ? "plate-preview--old" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [renderState, setRenderState] = useState<PlateRenderState | null>(() =>
@@ -117,6 +140,9 @@ export default function PlateWithOverlay({
           420,
           scaleFontToWidth,
           fontScaleMultiplier,
+          useOldPlateFonts,
+          oldPlateAlphabetScale,
+          oldPlateDigitsScale,
         )
       : null,
   );
@@ -130,6 +156,9 @@ export default function PlateWithOverlay({
       rootWidth,
       scaleFontToWidth,
       fontScaleMultiplier,
+      useOldPlateFonts,
+      oldPlateAlphabetScale,
+      oldPlateDigitsScale,
     );
     setRenderState(next);
   }, [
@@ -138,6 +167,9 @@ export default function PlateWithOverlay({
     plate_digits,
     scaleFontToWidth,
     fontScaleMultiplier,
+    useOldPlateFonts,
+    oldPlateAlphabetScale,
+    oldPlateDigitsScale,
   ]);
 
   useEffect(() => {
@@ -170,7 +202,7 @@ export default function PlateWithOverlay({
     return (
       <div
         dir="ltr"
-        className={`relative mx-auto shrink-0 plate-preview ${className}`}
+        className={platePreviewClass}
         style={{
           width: width ? `${width}px` : "100%",
           maxWidth: "100%",
@@ -191,7 +223,7 @@ export default function PlateWithOverlay({
     <div
       ref={rootRef}
       dir="ltr"
-      className={`relative mx-auto shrink-0 plate-preview ${className}`}
+      className={platePreviewClass}
       style={{
         ...renderState?.rootStyle,
         width: width ? `${width}px` : renderState?.rootStyle.width || "100%",
@@ -206,7 +238,12 @@ export default function PlateWithOverlay({
             style: {},
           }
         }
-        overlayClass="plate-overlay-code"
+        overlayClass={[
+          "plate-overlay-code",
+          effectiveCode.trim().length >= 2 ? "plate-overlay-code--multi" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         blur={hideCode}
       />
       <OverlaySpan

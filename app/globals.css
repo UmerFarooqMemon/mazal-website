@@ -29,6 +29,10 @@ html:has([data-locale-root][dir="rtl"]) *:not(.plate-text):not(.plate-overlay):n
   --font-fraunces: "Fraunces", serif;
   --font-almarai: "Almarai", sans-serif;
   --font-charleswright: "Charles Wright", "CharlesWright", sans-serif;
+  --font-mazal-plate-digits: "Mazal Plate Alphabets", "Mazal Plate Digits",
+    "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif;
+  --font-mazal-plate-alphabets: "Mazal Plate Alphabets", "Charles Wright",
+    "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif;
 }
 
 @font-face {
@@ -59,6 +63,28 @@ html:has([data-locale-root][dir="rtl"]) *:not(.plate-text):not(.plate-overlay):n
   font-family: "Almarai";
   src: url("/fonts/Almarai/Almarai-ExtraBold.ttf") format("truetype");
   font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Mazal Plate Digits";
+  src:
+    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.woff2") format("woff2"),
+    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.woff") format("woff"),
+    url("/fonts/mazal-plate/Mazal-plate-font-digits-Normal.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Mazal Plate Alphabets";
+  src:
+    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.woff2") format("woff2"),
+    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.woff") format("woff"),
+    url("/fonts/mazal-plate/Mazal-plate-font-Alphabets-Bold.ttf") format("truetype");
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -207,6 +233,134 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
     0 0 1px rgba(255, 255, 255, 0.25);
   filter: drop-shadow(0 1px 0.5px rgba(0, 0, 0, 0.35));
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+  Old Dubai-style private plates only — Mazal English Alphabets for letter + digits.
+  Matches physical embossed white plates; all other designs keep Charles Wright.
+*/
+.plate-preview--old .plate-overlay,
+.plate-preview--old .plate-overlay .plate-digit-inner {
+  font-family: "Mazal Plate Alphabets", sans-serif !important;
+  font-weight: 700 !important;
+  font-synthesis: none;
+  color: #000000 !important;
+  letter-spacing: 0;
+  text-shadow:
+    0.35px 0.35px 0 rgba(255, 255, 255, 0.55),
+    -0.35px -0.35px 0 rgba(0, 0, 0, 0.38),
+    0.6px 0.6px 0.6px rgba(0, 0, 0, 0.14) !important;
+  filter: none !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Same midline for letter + digits — never clip letters (overflow visible). */
+.plate-preview--old .plate-overlay.plate-overlay-code,
+.plate-preview--old .plate-overlay.plate-overlay-digits,
+.plate-preview--old .plate-overlay.plate-overlay-digits-ar {
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  line-height: 1 !important;
+  display: block !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.plate-preview--old .plate-overlay.plate-overlay-code .plate-digit-inner,
+.plate-preview--old .plate-overlay.plate-overlay-digits .plate-digit-inner,
+.plate-preview--old .plate-overlay.plate-overlay-digits-ar .plate-digit-inner {
+  line-height: 1 !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.plate-preview--old .plate-overlay.plate-overlay-digits,
+.plate-preview--old .plate-overlay.plate-overlay-digits .plate-digit-inner,
+.plate-preview--old .plate-overlay.plate-overlay-digits-ar,
+.plate-preview--old .plate-overlay.plate-overlay-digits-ar .plate-digit-inner {
+  font-family: "Mazal Plate Alphabets", sans-serif !important;
+  font-weight: 700 !important;
+  font-synthesis: none !important;
+  letter-spacing: 0.09em;
+  -webkit-text-stroke: 0;
+  paint-order: normal;
+  text-shadow:
+    0.35px 0.35px 0 rgba(255, 255, 255, 0.55),
+    -0.35px -0.35px 0 rgba(0, 0, 0, 0.38),
+    0.6px 0.6px 0.6px rgba(0, 0, 0, 0.14) !important;
+}
+
+.plate-preview--old .plate-overlay.plate-overlay-code,
+.plate-preview--old .plate-overlay.plate-overlay-code .plate-digit-inner {
+  font-family: "Mazal Plate Alphabets", sans-serif !important;
+  font-weight: 700 !important;
+  font-synthesis: none !important;
+  letter-spacing: 0;
+  -webkit-text-stroke: 0;
+  paint-order: normal;
+}
+
+.plate-preview--old .plate-overlay.plate-overlay-code--multi,
+.plate-preview--old .plate-overlay.plate-overlay-code--multi .plate-digit-inner {
+  letter-spacing: 0.01em !important;
+}
+
+/*
+  Double letters: compress width only (height unchanged) so both glyphs
+  stay fully visible left of the Dubai crest — no clipping / no hide.
+*/
+.plate-preview--old .plate-overlay.plate-overlay-code--multi {
+  transform: translate(-50%, -50%) scaleX(0.78) !important;
+  transform-origin: center center !important;
+}
+
+.plate-preview--old .plate-overlay.metal-plate-text,
+.plate-preview--old .plate-overlay .plate-digit-inner.metal-plate-text,
+.plate-preview--old .metal-plate-text,
+.plate-preview--old .plate-overlay.metal-plate-text-light,
+.plate-preview--old .plate-overlay .plate-digit-inner.metal-plate-text-light,
+.plate-preview--old .metal-plate-text-light {
+  font-family: "Mazal Plate Alphabets", sans-serif !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+  letter-spacing: 0.09em;
+  text-shadow:
+    0.35px 0.35px 0 rgba(255, 255, 255, 0.55),
+    -0.35px -0.35px 0 rgba(0, 0, 0, 0.38),
+    0.6px 0.6px 0.6px rgba(0, 0, 0, 0.14) !important;
+  filter: none !important;
+}
+
+.plate-preview--old .plate-overlay.plate-overlay-code.metal-plate-text,
+.plate-preview--old .plate-overlay.plate-overlay-code .plate-digit-inner.metal-plate-text,
+.plate-preview--old .plate-overlay.plate-overlay-code.metal-plate-text-light,
+.plate-preview--old .plate-overlay.plate-overlay-code .plate-digit-inner.metal-plate-text-light {
+  font-family: "Mazal Plate Alphabets", sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0;
+}
+
+.plate-preview--old .plate-overlay.plate-overlay-digits.metal-plate-text,
+.plate-preview--old .plate-overlay.plate-overlay-digits .plate-digit-inner.metal-plate-text,
+.plate-preview--old .plate-overlay.plate-overlay-digits-ar.metal-plate-text,
+.plate-preview--old .plate-overlay.plate-overlay-digits-ar .plate-digit-inner.metal-plate-text,
+.plate-preview--old .plate-overlay.plate-overlay-digits.metal-plate-text-light,
+.plate-preview--old .plate-overlay.plate-overlay-digits .plate-digit-inner.metal-plate-text-light,
+.plate-preview--old .plate-overlay.plate-overlay-digits-ar.metal-plate-text-light,
+.plate-preview--old .plate-overlay.plate-overlay-digits-ar .plate-digit-inner.metal-plate-text-light {
+  font-family: "Mazal Plate Alphabets", sans-serif !important;
+  font-weight: 700 !important;
+  font-synthesis: none !important;
+  letter-spacing: 0.09em;
+  -webkit-text-stroke: 0;
+  paint-order: normal;
+  text-shadow:
+    0.35px 0.35px 0 rgba(255, 255, 255, 0.55),
+    -0.35px -0.35px 0 rgba(0, 0, 0, 0.38),
+    0.6px 0.6px 0.6px rgba(0, 0, 0, 0.14) !important;
 }
 
 /*

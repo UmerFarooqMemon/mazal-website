@@ -77,8 +77,13 @@ function isLightMetallicColor(color?: string): boolean {
   return LIGHT_METALLIC_COLORS.has(normalizeColor(color));
 }
 
-function usesMetallicText(config?: PlateOverlayConfig | null): boolean {
+function usesMetallicText(
+  config?: PlateOverlayConfig | null,
+  options?: { oldPlateStyle?: boolean },
+): boolean {
   if (!config) return false;
+  // Old Dubai plates use Mazal emboss via CSS — skip Charles Wright metal class.
+  if (options?.oldPlateStyle) return false;
   if (config.metal_plate_text === false) return false;
   if (config.metal_plate_text === true) return true;
 
@@ -123,6 +128,15 @@ function abuDhabiClassicFontSize(rootWidth: number, digits: string): string {
 }
 
 const PLATE_REFERENCE_WIDTH = 840;
+
+/** Width-based scale for old Dubai metal plate letter (A, B, …). */
+export const OLD_PLATE_ALPHABET_FONT_SCALE = 1.5;
+
+/** Width-based scale for old Dubai metal plate digits — same visual row as alphabet. */
+export const OLD_PLATE_DIGITS_FONT_SCALE = 1.7;
+
+/** @deprecated Use OLD_PLATE_ALPHABET_FONT_SCALE / OLD_PLATE_DIGITS_FONT_SCALE */
+export const OLD_PLATE_FONT_SCALE = OLD_PLATE_ALPHABET_FONT_SCALE;
 
 /** Extra bump for deal-summary sidebar plate (on top of width-based scaling). */
 export const DEAL_SUMMARY_FONT_SCALE = 1.7;
@@ -298,6 +312,7 @@ function adjustOverlaysForCode(
   overlays: ReturnType<typeof resolveOverlays>,
   code: string,
   layout: string | null,
+  oldPlateStyle = false,
 ) {
   if (!overlays) return overlays;
 
@@ -320,6 +335,43 @@ function adjustOverlaysForCode(
 
   if (layout === "split_top" && adjusted.plate_digits) {
     delete adjusted.plate_digits.right;
+  }
+
+  if (oldPlateStyle && layout === "split_top") {
+    const codeLength = String(code || "").length;
+    // Same midline + same font size for letter and digits (one packed row).
+    const sharedTop = "50%";
+    const sharedTransform = "translate(-50%, -50%)";
+    const rowFontSize = "clamp(2.05rem, 8.8vw, 4rem)";
+
+    const unifyOldPlateRow = (overlay: PlateOverlayConfig) => {
+      overlay.layout_mode = "point_center";
+      overlay.top = sharedTop;
+      overlay.transform = sharedTransform;
+      overlay.font_size = rowFontSize;
+      delete overlay.height;
+      delete overlay.right;
+    };
+
+    if (adjusted.plate_code) {
+      unifyOldPlateRow(adjusted.plate_code);
+      // Single letter near left bay center; double stays left of Dubai crest.
+      adjusted.plate_code.left = codeLength >= 2 ? "15.5%" : "12%";
+      // Almost no gap — wide spacing was pushing 2nd letter onto the logo.
+      adjusted.plate_code.letter_spacing =
+        codeLength >= 2 ? "0.01em" : "0.02em";
+    }
+    if (adjusted.plate_digits) {
+      unifyOldPlateRow(adjusted.plate_digits);
+      // Pull toward Dubai crest (same size as single/double alphabet).
+      adjusted.plate_digits.left = "69%";
+      adjusted.plate_digits.letter_spacing = "0.09em";
+    }
+    if (adjusted.plate_digits_ar) {
+      unifyOldPlateRow(adjusted.plate_digits_ar);
+      adjusted.plate_digits_ar.left = "69%";
+      adjusted.plate_digits_ar.letter_spacing = "0.09em";
+    }
   }
 
   if (layout === "sharjah_private" && adjusted.plate_digits) {
@@ -353,12 +405,16 @@ function emptyOverlay(): OverlayRenderState {
 function buildOverlayState(
   config: PlateOverlayConfig | null | undefined,
   value: string,
+  options?: {
+    oldPlateStyle?: boolean;
+    overlayRole?: "code" | "digits";
+  },
 ): OverlayRenderState {
   if (!config || !value) {
     return emptyOverlay();
   }
 
-  const useMetallic = usesMetallicText(config);
+  const useMetallic = usesMetallicText(config, options);
   const metalClass = metallicClassName(config);
   const baseClass = ["plate-overlay", metalClass].filter(Boolean).join(" ");
 
@@ -368,7 +424,7 @@ function buildOverlayState(
       zIndex: 3,
       display: "block",
       width: "max-content",
-      maxWidth: "62%",
+      maxWidth: options?.oldPlateStyle ? "none" : "62%",
       lineHeight: 1,
       margin: 0,
       padding: 0,
@@ -381,16 +437,20 @@ function buildOverlayState(
       whiteSpace: "nowrap",
     };
 
-    if (!useMetallic) {
+    if (!useMetallic && !options?.oldPlateStyle) {
       style.color = config.color || "#000";
       style.fontWeight = config.font_weight || "700";
       style.fontFamily = config.font_family || "Arial, sans-serif";
-    } else if (isLightMetallicColor(config.color) && config.color) {
+    } else if (!useMetallic && options?.oldPlateStyle && isLightMetallicColor(config.color) && config.color) {
       style.color = config.color;
     }
 
     if (config.font_size) {
       style.fontSize = config.font_size;
+    }
+
+    if (config.letter_spacing) {
+      style.letterSpacing = config.letter_spacing;
     }
 
     return {
@@ -430,7 +490,7 @@ function buildOverlayState(
 
     if (useMetallic) {
       innerStyle.position = "relative";
-    } else {
+    } else if (!options?.oldPlateStyle) {
       innerStyle.color = config.color || "#000";
       innerStyle.fontWeight = config.font_weight || "700";
       innerStyle.fontFamily = config.font_family || "Arial, sans-serif";
@@ -438,6 +498,10 @@ function buildOverlayState(
 
     if (config.font_size) {
       innerStyle.fontSize = config.font_size;
+    }
+
+    if (config.letter_spacing) {
+      innerStyle.letterSpacing = config.letter_spacing;
     }
 
     if (useMetallic && isLightMetallicColor(config.color) && config.color) {
@@ -482,6 +546,19 @@ function buildOverlayState(
 
     const cssKey = key.replace(/_/g, "-");
     if (useMetallic && metallicSkip.has(cssKey)) continue;
+    if (
+      options?.oldPlateStyle &&
+      ["font-family", "font-weight", "color"].includes(cssKey)
+    ) {
+      continue;
+    }
+    if (
+      options?.oldPlateStyle &&
+      cssKey === "letter-spacing" &&
+      options.overlayRole === "digits"
+    ) {
+      continue;
+    }
 
     switch (cssKey) {
       case "text-shadow":
@@ -550,6 +627,9 @@ export function computePlateRenderState(
   rootWidth = 420,
   scaleFontToWidth = false,
   fontScaleMultiplier = 1,
+  oldPlateStyle = false,
+  oldPlateAlphabetScale = OLD_PLATE_ALPHABET_FONT_SCALE,
+  oldPlateDigitsScale = OLD_PLATE_DIGITS_FONT_SCALE,
 ): PlateRenderState | null {
   if (!previewConfig) return null;
 
@@ -584,25 +664,64 @@ export function computePlateRenderState(
     resolveOverlays(previewConfig),
     code,
     layout,
+    oldPlateStyle,
   );
   const digitValue = sanitizePlateDigits(digits);
 
   const codeValue = codeForOverlay(code, overlays.plate_code || undefined);
 
-  const scaleConfig = (
+  const shouldScaleToPlateWidth = scaleFontToWidth || oldPlateStyle;
+
+  const oldPlatePartMultiplier = (partScale: number) => {
+    if (!oldPlateStyle) return fontScaleMultiplier;
+    // Old plate: keep alphabet/digit relative scales even on cards (scaleFontToWidth).
+    // Cards pass ~2.3 as a base; part scales are relative to the alphabet default.
+    if (scaleFontToWidth) {
+      return fontScaleMultiplier * (partScale / OLD_PLATE_ALPHABET_FONT_SCALE);
+    }
+    return partScale;
+  };
+
+  const scaleCodeConfig = (
     config: PlateOverlayConfig | null | undefined,
   ): PlateOverlayConfig | null | undefined =>
-    scaleFontToWidth
-      ? withPlateWidthFontScale(config, rootWidth, fontScaleMultiplier)
+    shouldScaleToPlateWidth
+      ? withPlateWidthFontScale(
+          config,
+          rootWidth,
+          oldPlatePartMultiplier(
+            oldPlateStyle ? oldPlateAlphabetScale : 1,
+          ),
+        )
       : config;
 
-  const arConfig = scaleConfig(
+  const scaleDigitsConfig = (
+    config: PlateOverlayConfig | null | undefined,
+  ): PlateOverlayConfig | null | undefined =>
+    shouldScaleToPlateWidth
+      ? withPlateWidthFontScale(
+          config,
+          rootWidth,
+          oldPlatePartMultiplier(oldPlateStyle ? oldPlateDigitsScale : 1),
+        )
+      : config;
+
+  const overlayOptions = oldPlateStyle ? { oldPlateStyle: true } : undefined;
+
+  const arConfig = scaleDigitsConfig(
     scaledDigitsConfig(overlays.plate_digits_ar, digitValue, layout, code),
   );
-  const enConfig = scaleConfig(
+  const enConfig = scaleDigitsConfig(
     scaledDigitsConfig(overlays.plate_digits, digitValue, layout, code),
   );
-  const codeConfig = scaleConfig(overlays.plate_code);
+  const codeConfig = scaleCodeConfig(overlays.plate_code);
+
+  const digitsOverlayOptions = oldPlateStyle
+    ? { oldPlateStyle: true, overlayRole: "digits" as const }
+    : undefined;
+  const codeOverlayOptions = oldPlateStyle
+    ? { oldPlateStyle: true, overlayRole: "code" as const }
+    : overlayOptions;
 
   const digitsAr =
     overlays.plate_digits_ar && digitValue
@@ -611,6 +730,7 @@ export function computePlateRenderState(
             ? withAbuDhabiClassicSizing(rootWidth, arConfig, digitValue)
             : arConfig,
           toArabicIndicDigits(digitValue),
+          digitsOverlayOptions,
         )
       : emptyOverlay();
 
@@ -619,11 +739,12 @@ export function computePlateRenderState(
       ? withAbuDhabiClassicSizing(rootWidth, enConfig, digitValue)
       : enConfig,
     digitValue,
+    digitsOverlayOptions,
   );
 
   return {
     rootStyle,
-    code: buildOverlayState(codeConfig, codeValue),
+    code: buildOverlayState(codeConfig, codeValue, codeOverlayOptions),
     digitsAr,
     digits: digitsEn,
     needsAbuDhabiClassicResize:
