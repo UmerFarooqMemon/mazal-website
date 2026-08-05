@@ -10,6 +10,8 @@ export interface KycIdentityData {
   phone: string;
   email: string;
   phoneCountryCode: string;
+  /** ISO2 for CountryPhoneInput (e.g. ae, pk) */
+  phoneCountryIso?: string;
 }
 
 /** API multipart field names for document uploads */
@@ -79,6 +81,7 @@ export const INITIAL_IDENTITY: KycIdentityData = {
   phone: "",
   email: "",
   phoneCountryCode: "+971",
+  phoneCountryIso: "ae",
 };
 
 export const INITIAL_KYC_STATE: KycFormState = {

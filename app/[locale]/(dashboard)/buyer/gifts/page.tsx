@@ -5,7 +5,7 @@ import { Gift, Mail } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input, PhoneInput } from "@/components/ui";
+import { Button, CountryPhoneInput, Input } from "@/components/ui";
 import {
   acceptGift,
   createGiftFromPurchase,
@@ -15,10 +15,11 @@ import {
   type MarketplacePurchase,
 } from "@/services/marketplace";
 import {
-  isValidUaeMobile,
-  toUaePhoneE164,
-  uaeMobileStartsWithFive,
-} from "@/lib/uae-phone";
+  hasNationalPhoneDigits,
+  invalidPhoneMessage,
+  isValidCountryPhoneNumber,
+  toE164FromPhoneDigits,
+} from "@/lib/phone-validation";
 
 type GiftTab = "received" | "sent" | "create" | "accept";
 
@@ -38,6 +39,8 @@ export default function BuyerGiftsPage() {
     recipientName: "",
     recipientEmail: "",
     recipientPhone: "",
+    recipientPhoneIso: "ae",
+    recipientPhoneDial: "+971",
     message: "",
   });
 
@@ -119,13 +122,25 @@ export default function BuyerGiftsPage() {
       );
       return;
     }
-    if (createForm.recipientPhone.trim()) {
-      if (uaeMobileStartsWithFive(createForm.recipientPhone) === false) {
-        toast.error(t("common.mobile_must_start_with_5"));
-        return;
-      }
-      if (!isValidUaeMobile(createForm.recipientPhone)) {
-        toast.error(t("common.mobile_invalid"));
+    if (
+      hasNationalPhoneDigits(
+        createForm.recipientPhone,
+        createForm.recipientPhoneDial,
+      )
+    ) {
+      if (
+        !isValidCountryPhoneNumber(
+          createForm.recipientPhone,
+          createForm.recipientPhoneIso,
+        )
+      ) {
+        toast.error(
+          invalidPhoneMessage(
+            createForm.recipientPhoneIso,
+            t("common.phone_invalid_short") || "Invalid phone number",
+            t("common.phone_example_label") || "Example",
+          ),
+        );
         return;
       }
     }
@@ -137,8 +152,11 @@ export default function BuyerGiftsPage() {
         {
           recipient_name: createForm.recipientName.trim(),
           recipient_email: createForm.recipientEmail.trim(),
-          recipient_phone: createForm.recipientPhone.trim()
-            ? toUaePhoneE164(createForm.recipientPhone) || undefined
+          recipient_phone: hasNationalPhoneDigits(
+            createForm.recipientPhone,
+            createForm.recipientPhoneDial,
+          )
+            ? toE164FromPhoneDigits(createForm.recipientPhone) || undefined
             : undefined,
           message: createForm.message.trim() || undefined,
         },
@@ -168,6 +186,8 @@ export default function BuyerGiftsPage() {
         recipientName: "",
         recipientEmail: "",
         recipientPhone: "",
+        recipientPhoneIso: "ae",
+        recipientPhoneDial: "+971",
         message: "",
       });
       setTab("sent");
@@ -467,13 +487,16 @@ export default function BuyerGiftsPage() {
               }
               placeholder="sara@example.com"
             />
-            <PhoneInput
+            <CountryPhoneInput
               label={t("marketplace.gift_recipient_phone") || "Phone (optional)"}
+              country={createForm.recipientPhoneIso}
               value={createForm.recipientPhone}
-              onChange={(recipientPhone) =>
+              onChange={(recipientPhone, meta) =>
                 setCreateForm((prev) => ({
                   ...prev,
                   recipientPhone,
+                  recipientPhoneIso: meta.countryIso,
+                  recipientPhoneDial: meta.dialCode,
                 }))
               }
             />

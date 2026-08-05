@@ -560,3 +560,88 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   animation: home-v2-marquee 28s linear infinite;
   width: max-content;
 }
+
+/* Bloom-style country phone (react-phone-input-2) — Mazal theme */
+.mazal-country-phone .react-tel-input {
+  width: 100%;
+  font-family: inherit;
+}
+
+.mazal-country-phone .mazal-phone-input {
+  width: 100% !important;
+  height: 48px !important;
+  padding-left: 52px !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  background: #fff !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.mazal-country-phone .mazal-phone-input:focus {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+.mazal-country-phone .mazal-phone-error .mazal-phone-input,
+.mazal-country-phone .mazal-phone-error .mazal-phone-button {
+  border-color: #fca5a5 !important;
+}
+
+.mazal-country-phone .mazal-phone-button {
+  border-radius: 0.75rem 0 0 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  background: #fff !important;
+}
+
+.mazal-country-phone .mazal-phone-button:hover,
+.mazal-country-phone .mazal-phone-button.open {
+  background: #f9fafb !important;
+}
+
+.mazal-country-phone .mazal-phone-button .selected-flag {
+  border-radius: 0.75rem 0 0 0.75rem !important;
+  padding: 0 0 0 10px !important;
+  width: 52px !important;
+}
+
+.mazal-country-phone .flag-dropdown.open,
+.mazal-country-phone .flag-dropdown.open .selected-flag {
+  background: #f9fafb !important;
+  border-radius: 0.75rem 0 0 0 !important;
+}
+
+.mazal-country-phone .mazal-phone-dropdown {
+  border-radius: 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+  margin-top: 4px !important;
+  width: 280px !important;
+  max-height: 240px !important;
+  z-index: 50 !important;
+  left: 0 !important;
+}
+
+.mazal-country-phone .mazal-phone-dropdown .country {
+  padding: 8px 12px !important;
+}
+
+.mazal-country-phone .mazal-phone-dropdown .country:hover,
+.mazal-country-phone .mazal-phone-dropdown .country.highlight {
+  background: #f3f4f6 !important;
+}
+
+.mazal-country-phone .mazal-phone-search {
+  width: calc(100% - 16px) !important;
+  margin: 8px !important;
+  padding: 8px 10px !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Keep library placeholder visible (country mask e.g. ...-....... for PK) */
+.mazal-country-phone .mazal-phone-input::placeholder {
+  color: #9ca3af !important;
+  opacity: 1;
+}

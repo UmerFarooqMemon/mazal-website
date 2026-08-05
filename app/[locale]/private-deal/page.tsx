@@ -28,10 +28,11 @@ import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProce
 import GiftNoPaymentBanner from "@/components/private-deal/GiftNoPaymentBanner";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import {
-  isValidUaeMobile,
-  toUaePhoneE164,
-  uaeMobileStartsWithFive,
-} from "@/lib/uae-phone";
+  hasNationalPhoneDigits,
+  invalidPhoneMessage,
+  isValidCountryPhoneNumber,
+  toE164FromPhoneDigits,
+} from "@/lib/phone-validation";
 import {
   createPrivateDeal,
   createPrivateDealCheckout,
@@ -89,12 +90,16 @@ export default function PrivateDealPage() {
   const [details, setDetails] = useState<ConfirmDetailsData>({
     fullName: "",
     mobile: "",
+    mobileCountryIso: "ae",
+    mobileDialCode: "+971",
     email: "",
     emiratesId: "",
     personType: "individual",
     identification: "emirates_id",
     identificationValue: "",
     secondaryMobile: "",
+    secondaryMobileCountryIso: "ae",
+    secondaryMobileDialCode: "+971",
     licenseSource: "mbr",
     giftPlate: false,
     giftEmail: "",
@@ -318,9 +323,9 @@ export default function PrivateDealPage() {
   };
 
   const getPartyPayload = () => {
-    const mobile = toUaePhoneE164(details.mobile) || details.mobile;
+    const mobile = toE164FromPhoneDigits(details.mobile) || details.mobile;
     const secondaryMobile =
-      toUaePhoneE164(details.secondaryMobile) || details.secondaryMobile;
+      toE164FromPhoneDigits(details.secondaryMobile) || details.secondaryMobile;
     const isCompany = details.personType === "organization";
     if (isCompany) {
       return {
@@ -402,24 +407,33 @@ export default function PrivateDealPage() {
 
   const handleSavePartyDetails = async (variant: "seller" | "buyer") => {
     await withSubmit(async () => {
-      if (!details.mobile.trim()) {
+      const mobileIso = details.mobileCountryIso || "ae";
+      const mobileDial = details.mobileDialCode || "+971";
+      const secondaryIso = details.secondaryMobileCountryIso || "ae";
+      const secondaryDial = details.secondaryMobileDialCode || "+971";
+
+      if (!hasNationalPhoneDigits(details.mobile, mobileDial)) {
         throw new Error(t("common.email_or_mobile_required"));
       }
-      if (uaeMobileStartsWithFive(details.mobile) === false) {
-        throw new Error(t("common.mobile_must_start_with_5"));
-      }
-      if (!isValidUaeMobile(details.mobile)) {
-        throw new Error(t("common.mobile_invalid"));
+      if (!isValidCountryPhoneNumber(details.mobile, mobileIso)) {
+        throw new Error(
+          invalidPhoneMessage(
+            mobileIso,
+            t("common.phone_invalid_short") || "Invalid phone number",
+            t("common.phone_example_label") || "Example",
+          ),
+        );
       }
       if (
-        details.secondaryMobile.trim() &&
-        (uaeMobileStartsWithFive(details.secondaryMobile) === false ||
-          !isValidUaeMobile(details.secondaryMobile))
+        hasNationalPhoneDigits(details.secondaryMobile, secondaryDial) &&
+        !isValidCountryPhoneNumber(details.secondaryMobile, secondaryIso)
       ) {
         throw new Error(
-          uaeMobileStartsWithFive(details.secondaryMobile) === false
-            ? t("common.mobile_must_start_with_5")
-            : t("common.mobile_invalid"),
+          invalidPhoneMessage(
+            secondaryIso,
+            t("common.phone_invalid_short") || "Invalid phone number",
+            t("common.phone_example_label") || "Example",
+          ),
         );
       }
 

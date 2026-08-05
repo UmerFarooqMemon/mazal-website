@@ -6,14 +6,13 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import AuthHero from "@/components/auth/AuthHero";
-import { EmiratesIdInput, PhoneInput } from "@/components/ui";
+import { CountryPhoneInput, EmiratesIdInput } from "@/components/ui";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 import {
   ShieldCheck,
   User,
-  Phone,
   Mail,
   Lock,
   Eye,
@@ -25,10 +24,11 @@ import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 import SiteLogo from "@/components/layout/SiteLogo";
 import { getPasswordValidationError } from "@/lib/password-validation";
 import {
-  isValidUaeMobile,
-  toUaePhoneE164,
-  uaeMobileStartsWithFive,
-} from "@/lib/uae-phone";
+  hasNationalPhoneDigits,
+  invalidPhoneMessage,
+  isValidCountryPhoneNumber,
+  toE164FromPhoneDigits,
+} from "@/lib/phone-validation";
 
 export default function RegisterPage() {
   const { t, locale, loading: localeLoading } = useLocale();
@@ -39,6 +39,9 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     full_name: "",
     mobile: "",
+    phone_dial_code: "+971",
+    phone_country_iso: "ae",
+    phone_format: "",
     email: "",
     emirates_id: "",
     password: "",
@@ -67,15 +70,20 @@ export default function RegisterPage() {
     if (!formData.full_name.trim()) {
       errors.full_name = t("common.name_required");
     }
-    if (!formData.email.trim() && !formData.mobile.trim()) {
+    const dial = formData.phone_dial_code || "+971";
+    const iso = formData.phone_country_iso || "ae";
+    const hasMobile = hasNationalPhoneDigits(formData.mobile, dial);
+    // Bloom: phone required. Mazal: email OR mobile (API login).
+    if (!formData.email.trim() && !hasMobile) {
       errors.email = t("common.email_or_mobile_required");
       errors.mobile = t("common.email_or_mobile_required");
-    } else if (formData.mobile.trim()) {
-      const startsWithFive = uaeMobileStartsWithFive(formData.mobile);
-      if (startsWithFive === false) {
-        errors.mobile = t("common.mobile_must_start_with_5");
-      } else if (!isValidUaeMobile(formData.mobile)) {
-        errors.mobile = t("common.mobile_invalid");
+    } else if (hasMobile) {
+      if (!isValidCountryPhoneNumber(formData.mobile, iso)) {
+        errors.mobile = invalidPhoneMessage(
+          iso,
+          t("common.phone_invalid_short") || "Invalid phone number",
+          t("common.phone_example_label") || "Example",
+        );
       }
     }
     const passwordError = getPasswordValidationError(formData.password);
@@ -122,12 +130,13 @@ export default function RegisterPage() {
     const loadingToast = toast.loading(t("common.creating_account"));
 
     try {
+      const dial = formData.phone_dial_code || "+971";
+      const phoneE164 = hasNationalPhoneDigits(formData.mobile, dial)
+        ? toE164FromPhoneDigits(formData.mobile)
+        : "";
       await register({
         name: formData.full_name,
-        login:
-          formData.email ||
-          toUaePhoneE164(formData.mobile) ||
-          formData.mobile,
+        login: formData.email || phoneE164 || formData.mobile,
         password: formData.password,
         password_confirmation: formData.password_confirmation,
       });
@@ -214,12 +223,27 @@ export default function RegisterPage() {
                     autoComplete="name"
                     error={fieldErrors.full_name}
                   />
-                  <PhoneInput
+                  <CountryPhoneInput
                     name="mobile"
                     label={t("common.mobile_number")}
-                    icon={<Phone size={20} strokeWidth={1.5} />}
+                    country="ae"
                     value={formData.mobile}
-                    onChange={(value) => handleFieldChange("mobile", value)}
+                    onChange={(value, meta) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        mobile: value,
+                        phone_dial_code: meta.dialCode,
+                        phone_country_iso: meta.countryIso,
+                        phone_format: meta.format,
+                      }));
+                      if (fieldErrors.mobile) {
+                        setFieldErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.mobile;
+                          return next;
+                        });
+                      }
+                    }}
                     error={fieldErrors.mobile}
                   />
                 </div>

@@ -7,23 +7,28 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { formatEmiratesId } from "@/components/kyc/types";
-import { Button, EmiratesIdInput, Input, PhoneInput } from "@/components/ui";
+import { Button, CountryPhoneInput, EmiratesIdInput, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import {
-  formatUaePhone,
-  isValidUaeMobile,
-  uaeMobileStartsWithFive,
-} from "@/lib/uae-phone";
+  ensurePhoneDigitsWithDial,
+  hasNationalPhoneDigits,
+  invalidPhoneMessage,
+  isValidCountryPhoneNumber,
+} from "@/lib/phone-validation";
 
 export interface ConfirmDetailsData {
   fullName: string;
   mobile: string;
+  mobileCountryIso?: string;
+  mobileDialCode?: string;
   email: string;
   emiratesId: string;
   personType: string;
   identification: string;
   identificationValue: string;
   secondaryMobile: string;
+  secondaryMobileCountryIso?: string;
+  secondaryMobileDialCode?: string;
   licenseSource: string;
   giftPlate?: boolean;
   giftEmail?: string;
@@ -74,7 +79,7 @@ export default function ConfirmDetailsStep({
         : "");
     const sessionPhone =
       typeof user.phone === "string" && user.phone.trim()
-        ? formatUaePhone(user.phone)
+        ? ensurePhoneDigitsWithDial(user.phone, "+971")
         : "";
     const sessionEmiratesId =
       typeof user.emirates_id === "string" && user.emirates_id.trim()
@@ -88,6 +93,8 @@ export default function ConfirmDetailsStep({
     }
     if (!data.mobile.trim() && sessionPhone) {
       patch.mobile = sessionPhone;
+      patch.mobileCountryIso = data.mobileCountryIso || "ae";
+      patch.mobileDialCode = data.mobileDialCode || "+971";
     }
     if (!data.email.trim() && sessionEmail) {
       patch.email = sessionEmail;
@@ -159,24 +166,47 @@ export default function ConfirmDetailsStep({
     });
   };
 
-  const validatePhone = (value: string, required: boolean) => {
-    if (!value.trim()) {
-      return required ? t("common.mobile_invalid") : undefined;
+  const validatePhone = (
+    value: string,
+    dialCode: string,
+    iso: string,
+    required: boolean,
+  ) => {
+    if (!hasNationalPhoneDigits(value, dialCode)) {
+      return required
+        ? invalidPhoneMessage(
+            iso,
+            t("common.phone_invalid_short") || "Invalid phone number",
+            t("common.phone_example_label") || "Example",
+          )
+        : undefined;
     }
-    if (uaeMobileStartsWithFive(value) === false) {
-      return t("common.mobile_must_start_with_5");
-    }
-    if (!isValidUaeMobile(value)) {
-      return t("common.mobile_invalid");
+    if (!isValidCountryPhoneNumber(value, iso)) {
+      return invalidPhoneMessage(
+        iso,
+        t("common.phone_invalid_short") || "Invalid phone number",
+        t("common.phone_example_label") || "Example",
+      );
     }
     return undefined;
   };
 
   const handleContinue = () => {
-    const mobileError = validatePhone(data.mobile, true);
+    const mobileIso = data.mobileCountryIso || "ae";
+    const mobileDial = data.mobileDialCode || "+971";
+    const secondaryIso = data.secondaryMobileCountryIso || "ae";
+    const secondaryDial = data.secondaryMobileDialCode || "+971";
+
+    const mobileError = validatePhone(data.mobile, mobileDial, mobileIso, true);
     const secondaryError =
-      variant === "buyer" && data.secondaryMobile.trim()
-        ? validatePhone(data.secondaryMobile, false)
+      variant === "buyer" &&
+      hasNationalPhoneDigits(data.secondaryMobile, secondaryDial)
+        ? validatePhone(
+            data.secondaryMobile,
+            secondaryDial,
+            secondaryIso,
+            false,
+          )
         : undefined;
 
     setPhoneErrors({
@@ -185,7 +215,12 @@ export default function ConfirmDetailsStep({
     });
 
     if (mobileError || secondaryError) {
-      toast.error(mobileError || secondaryError || t("common.mobile_invalid"));
+      toast.error(
+        mobileError ||
+          secondaryError ||
+          t("common.phone_invalid_short") ||
+          "Invalid phone number",
+      );
       return;
     }
 
@@ -299,16 +334,22 @@ export default function ConfirmDetailsStep({
           onChange={(e) => onChange({ fullName: e.target.value })}
           placeholder={t("private-deal.full_name_placeholder")}
         />
-        <PhoneInput
+        <CountryPhoneInput
           label={t("private-deal.mobile_number")}
+          country={data.mobileCountryIso || "ae"}
           value={data.mobile}
-          onChange={(mobile) => {
-            onChange({ mobile });
+          onChange={(mobile, meta) => {
+            onChange({
+              mobile,
+              mobileCountryIso: meta.countryIso,
+              mobileDialCode: meta.dialCode,
+            });
             if (phoneErrors.mobile) {
               setPhoneErrors((prev) => ({ ...prev, mobile: undefined }));
             }
           }}
           error={phoneErrors.mobile}
+          required
         />
         <Input
           label={t("private-deal.email")}
@@ -355,11 +396,16 @@ export default function ConfirmDetailsStep({
                 placeholder="88454"
               />
             )}
-            <PhoneInput
+            <CountryPhoneInput
               label={t("private-deal.mobile_number")}
+              country={data.secondaryMobileCountryIso || "ae"}
               value={data.secondaryMobile}
-              onChange={(secondaryMobile) => {
-                onChange({ secondaryMobile });
+              onChange={(secondaryMobile, meta) => {
+                onChange({
+                  secondaryMobile,
+                  secondaryMobileCountryIso: meta.countryIso,
+                  secondaryMobileDialCode: meta.dialCode,
+                });
                 if (phoneErrors.secondaryMobile) {
                   setPhoneErrors((prev) => ({
                     ...prev,

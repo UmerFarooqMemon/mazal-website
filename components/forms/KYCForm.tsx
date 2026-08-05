@@ -16,16 +16,17 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   dialCodeForCountry,
   formatEmiratesId,
-  formatPhoneWithCountryCode,
   INITIAL_IDENTITY,
   INITIAL_KYC_STATE,
-  toNationalPhoneDigits,
   type KycDocumentKey,
   type KycFormState,
   type KycProfileType,
   type KycUploadedDocument,
 } from "@/components/kyc/types";
-import { toUaeNationalDigits } from "@/lib/uae-phone";
+import {
+  ensurePhoneDigitsWithDial,
+  toNationalFromPhoneDigits,
+} from "@/lib/phone-validation";
 import {
   getCurrentKyc,
   getKycOptions,
@@ -148,10 +149,24 @@ function mapApplicationToForm(kyc: KycApplication | null | undefined): Partial<K
       passportNumber: kyc.passport_number || "",
       countryOfResidence: kyc.country_of_residence || "",
       phone: kyc.phone
-        ? formatPhoneWithCountryCode(String(kyc.phone), phoneCountryCode)
+        ? ensurePhoneDigitsWithDial(String(kyc.phone), phoneCountryCode)
         : "",
       email: kyc.email || "",
       phoneCountryCode,
+      phoneCountryIso:
+        phoneCountryCode === "+971"
+          ? "ae"
+          : phoneCountryCode === "+966"
+            ? "sa"
+            : phoneCountryCode === "+92"
+              ? "pk"
+              : phoneCountryCode === "+91"
+                ? "in"
+                : phoneCountryCode === "+1"
+                  ? "us"
+                  : phoneCountryCode === "+44"
+                    ? "gb"
+                    : "ae",
     },
     uploadedDocuments: parseUploadedDocuments(kyc.documents),
     custodyAgreed: Boolean(kyc.custody_agreement_accepted),
@@ -368,10 +383,7 @@ export default function KYCForm() {
         activeProfileType === "uae_resident"
           ? "+971"
           : form.identity.phoneCountryCode || "+971";
-      const phone =
-        dialCode === "+971"
-          ? toUaeNationalDigits(form.identity.phone)
-          : toNationalPhoneDigits(form.identity.phone, dialCode);
+      const phone = toNationalFromPhoneDigits(form.identity.phone, dialCode);
       const payload =
         activeProfileType === "uae_resident"
           ? {
