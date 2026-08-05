@@ -127,6 +127,89 @@ export function isOldPlateStyle(data: {
   return false;
 }
 
+/** Old motorcycle / left-crest plates — letter sits under the top-left Dubai logo. */
+export function isOldMotorcyclePlateStyle(data: {
+  plateVariant?: string | null;
+  plateType?: string | null;
+  preview?: PlatePreviewConfig | null;
+}): boolean {
+  const layout = String(data.preview?.overlay_layout || "").toLowerCase();
+  const variant = String(data.plateVariant || "").toLowerCase();
+  const type = String(
+    data.plateType || data.preview?.plate_type || "",
+  ).toLowerCase();
+  const typeLabel = String(data.preview?.plate_type_label || "").toLowerCase();
+  const bg = [
+    data.preview?.background_image?.url,
+    data.preview?.background_image?.path,
+    data.preview?.background_image_url,
+    data.preview?.background_image_path,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const haystack = [layout, variant, type, typeLabel, bg].join(" ");
+  if (/(motor|moto|bike|cycle|scoot)/.test(haystack)) return true;
+
+  // API already places the letter in the lower-left bay under the crest.
+  const codeTop = String(data.preview?.overlays?.plate_code?.top || "");
+  if (codeTop.includes("%")) {
+    const top = parseFloat(codeTop);
+    if (!Number.isNaN(top) && top >= 55) return true;
+  }
+
+  // flex_cell starting mid-plate with tall height → under-logo bay.
+  const code = data.preview?.overlays?.plate_code;
+  if (code?.layout_mode === "flex_cell" && code.top && code.height) {
+    const top = parseFloat(String(code.top));
+    const height = parseFloat(String(code.height));
+    if (
+      !Number.isNaN(top) &&
+      !Number.isNaN(height) &&
+      top >= 38 &&
+      top + height >= 80
+    ) {
+      return true;
+    }
+  }
+
+  // Wide digit bay starting left of center → left crest + under-logo letter.
+  const digitsLeftRaw = String(
+    data.preview?.overlays?.plate_digits?.left || "",
+  );
+  if (digitsLeftRaw.includes("%")) {
+    const digitsLeft = parseFloat(digitsLeftRaw);
+    if (!Number.isNaN(digitsLeft) && digitsLeft > 0 && digitsLeft <= 48) {
+      return true;
+    }
+  }
+
+  // Wide short canvas (≈ motorcycle plate) vs taller car private plates (~1.4:1).
+  const width =
+    data.preview?.background_image?.width || data.preview?.width || 0;
+  const height =
+    data.preview?.background_image?.height || data.preview?.height || 0;
+  if (width > 0 && height > 0 && width / height >= 1.85) {
+    return true;
+  }
+  const ratio = String(
+    data.preview?.background_image?.aspect_ratio ||
+      data.preview?.aspect_ratio ||
+      "",
+  );
+  const ratioMatch = ratio.match(/([\d.]+)\s*\/\s*([\d.]+)/);
+  if (ratioMatch) {
+    const rw = parseFloat(ratioMatch[1]);
+    const rh = parseFloat(ratioMatch[2]);
+    if (!Number.isNaN(rw) && !Number.isNaN(rh) && rh > 0 && rw / rh >= 1.85) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function resolvePlatePreview(
   lookup: PlatePreviewLookup,
   data: {

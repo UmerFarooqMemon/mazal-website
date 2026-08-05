@@ -1,5 +1,9 @@
 import type { CSSProperties } from "react";
-import type { PlateOverlayConfig, PlatePreviewConfig } from "@/lib/plate-preview";
+import {
+  isOldMotorcyclePlateStyle,
+  type PlateOverlayConfig,
+  type PlatePreviewConfig,
+} from "@/lib/plate-preview";
 
 const ARABIC_INDIC_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
 
@@ -313,6 +317,7 @@ function adjustOverlaysForCode(
   code: string,
   layout: string | null,
   oldPlateStyle = false,
+  oldMotorcycleStyle = false,
 ) {
   if (!overlays) return overlays;
 
@@ -337,16 +342,36 @@ function adjustOverlaysForCode(
     delete adjusted.plate_digits.right;
   }
 
-  if (oldPlateStyle && layout === "split_top") {
+  // Motorcycle old plate: letter centered in the bay under the top-left Dubai crest.
+  if (oldPlateStyle && oldMotorcycleStyle) {
     const codeLength = String(code || "").length;
-    // Same midline + same font size for letter and digits (one packed row).
-    const sharedTop = "50%";
+    if (adjusted.plate_code) {
+      adjusted.plate_code.layout_mode = "point_center";
+      adjusted.plate_code.left = "17.5%";
+      adjusted.plate_code.top = "72%";
+      adjusted.plate_code.transform = "translate(-50%, -50%)";
+      adjusted.plate_code.font_size =
+        codeLength >= 2
+          ? "clamp(1.55rem, 6.4vw, 3rem)"
+          : "clamp(1.75rem, 7.2vw, 3.35rem)";
+      adjusted.plate_code.letter_spacing = "0.02em";
+      delete adjusted.plate_code.height;
+      delete adjusted.plate_code.right;
+    }
+  } else if (oldPlateStyle && layout === "split_top") {
+    const codeLength = String(code || "").length;
+    // Digits vertically centered in the plate frame; letter under Dubai logo.
+    const digitsTop = "50%";
+    const codeTop = "54%";
     const sharedTransform = "translate(-50%, -50%)";
     const rowFontSize = "clamp(2.05rem, 8.8vw, 4rem)";
 
-    const unifyOldPlateRow = (overlay: PlateOverlayConfig) => {
+    const unifyOldPlateRow = (
+      overlay: PlateOverlayConfig,
+      top: string,
+    ) => {
       overlay.layout_mode = "point_center";
-      overlay.top = sharedTop;
+      overlay.top = top;
       overlay.transform = sharedTransform;
       overlay.font_size = rowFontSize;
       delete overlay.height;
@@ -354,21 +379,20 @@ function adjustOverlaysForCode(
     };
 
     if (adjusted.plate_code) {
-      unifyOldPlateRow(adjusted.plate_code);
-      // Single letter near left bay center; double stays left of Dubai crest.
-      adjusted.plate_code.left = codeLength >= 2 ? "15.5%" : "12%";
-      // Almost no gap — wide spacing was pushing 2nd letter onto the logo.
+      unifyOldPlateRow(adjusted.plate_code, codeTop);
+      // Center under Dubai logo (logo bay ≈ 11%–27%, midpoint ≈ 19.5%).
+      adjusted.plate_code.left = "19.5%";
       adjusted.plate_code.letter_spacing =
         codeLength >= 2 ? "0.01em" : "0.02em";
     }
     if (adjusted.plate_digits) {
-      unifyOldPlateRow(adjusted.plate_digits);
+      unifyOldPlateRow(adjusted.plate_digits, digitsTop);
       // Pull toward Dubai crest (same size as single/double alphabet).
       adjusted.plate_digits.left = "62%";
       adjusted.plate_digits.letter_spacing = "0.09em";
     }
     if (adjusted.plate_digits_ar) {
-      unifyOldPlateRow(adjusted.plate_digits_ar);
+      unifyOldPlateRow(adjusted.plate_digits_ar, digitsTop);
       adjusted.plate_digits_ar.left = "62%";
       adjusted.plate_digits_ar.letter_spacing = "0.09em";
     }
@@ -630,6 +654,8 @@ export function computePlateRenderState(
   oldPlateStyle = false,
   oldPlateAlphabetScale = OLD_PLATE_ALPHABET_FONT_SCALE,
   oldPlateDigitsScale = OLD_PLATE_DIGITS_FONT_SCALE,
+  plateVariant?: string,
+  plateType?: string,
 ): PlateRenderState | null {
   if (!previewConfig) return null;
 
@@ -660,11 +686,19 @@ export function computePlateRenderState(
   };
 
   const layout = previewConfig.overlay_layout || null;
+  const oldMotorcycleStyle =
+    oldPlateStyle &&
+    isOldMotorcyclePlateStyle({
+      preview: previewConfig,
+      plateVariant,
+      plateType,
+    });
   const overlays = adjustOverlaysForCode(
     resolveOverlays(previewConfig),
     code,
     layout,
     oldPlateStyle,
+    oldMotorcycleStyle,
   );
   const digitValue = sanitizePlateDigits(digits);
 

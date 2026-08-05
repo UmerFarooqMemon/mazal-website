@@ -110,6 +110,7 @@ export default function NumberPlateDisplay({
           emirate={emirate}
           preview={resolvedPreview || undefined}
           plateVariant={plateVariant}
+          plateType={plateType || resolvedPreview?.plate_type}
           plateDesign={plateDesign || resolvedPreview?.design_key}
           hideCode={hideCode}
           allowCodePlaceholder={showCodeField}

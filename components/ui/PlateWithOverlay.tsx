@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isOldPlateStyle, type PlatePreviewConfig } from "@/lib/plate-preview";
+import { isOldMotorcyclePlateStyle, isOldPlateStyle, type PlatePreviewConfig } from "@/lib/plate-preview";
 import {
   computePlateRenderState,
   type OverlayRenderState,
@@ -21,6 +21,7 @@ interface PlateWithOverlayProps {
   imageUrl?: string;
   preview?: PlatePreviewConfig;
   plateVariant?: string;
+  plateType?: string;
   plateDesign?: string;
   isRTL?: boolean;
   /**
@@ -102,6 +103,7 @@ export default function PlateWithOverlay({
   className = "",
   preview,
   plateVariant,
+  plateType,
   plateDesign,
   hideCode = false,
   allowCodePlaceholder = false,
@@ -122,9 +124,23 @@ export default function PlateWithOverlay({
     plateVariant,
     preview,
   });
+  const useOldMotoLayout =
+    useOldPlateFonts &&
+    isOldMotorcyclePlateStyle({
+      plateVariant,
+      plateType: plateType || preview?.plate_type,
+      preview,
+    });
+  const overlayLayout = String(preview?.overlay_layout || "").toLowerCase();
+  const oldPlateLayoutClass = useOldMotoLayout
+    ? "plate-preview--old-moto"
+    : useOldPlateFonts && overlayLayout === "split_top"
+      ? "plate-preview--old-split"
+      : "";
   const platePreviewClass = [
     "relative mx-auto shrink-0 plate-preview",
     useOldPlateFonts ? "plate-preview--old" : "",
+    oldPlateLayoutClass,
     className,
   ]
     .filter(Boolean)
@@ -143,6 +159,8 @@ export default function PlateWithOverlay({
           useOldPlateFonts,
           oldPlateAlphabetScale,
           oldPlateDigitsScale,
+          plateVariant,
+          plateType || preview?.plate_type,
         )
       : null,
   );
@@ -159,6 +177,8 @@ export default function PlateWithOverlay({
       useOldPlateFonts,
       oldPlateAlphabetScale,
       oldPlateDigitsScale,
+      plateVariant,
+      plateType || preview?.plate_type,
     );
     setRenderState(next);
   }, [
@@ -170,6 +190,8 @@ export default function PlateWithOverlay({
     useOldPlateFonts,
     oldPlateAlphabetScale,
     oldPlateDigitsScale,
+    plateVariant,
+    plateType,
   ]);
 
   useEffect(() => {

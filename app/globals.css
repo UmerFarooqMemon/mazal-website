@@ -254,18 +254,56 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Same midline for letter + digits — never clip letters (overflow visible). */
+/* Shared overlay box resets — positions come from JS / layout classes. */
 .plate-preview--old .plate-overlay.plate-overlay-code,
 .plate-preview--old .plate-overlay.plate-overlay-digits,
 .plate-preview--old .plate-overlay.plate-overlay-digits-ar {
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
   line-height: 1 !important;
   display: block !important;
   height: auto !important;
   margin: 0 !important;
   padding: 0 !important;
   overflow: visible !important;
+}
+
+/* Car split_top old plate: digits vertically centered in the plate frame. */
+.plate-preview--old-split .plate-overlay.plate-overlay-digits,
+.plate-preview--old-split .plate-overlay.plate-overlay-digits-ar {
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/*
+  Old car split only: letter sits in the bay under the Dubai logo (not on the
+  digit midline). Digits stay at 50%. Do not apply to moto / other designs.
+*/
+.plate-preview--old-split .plate-overlay.plate-overlay-code {
+  /* Horizontally centered under the Dubai logo (~11%–27% bay). */
+  left: 19.5% !important;
+  top: 54% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.plate-preview--old-split .plate-overlay.plate-overlay-code--multi {
+  left: 19.5% !important;
+  transform: translate(-50%, -50%) scaleX(0.78) !important;
+  transform-origin: center center !important;
+}
+
+/*
+  Motorcycle / left-crest old plate: alphabets in the bay under Dubai logo.
+  Do NOT force top:50% here — that overlaps the crest.
+*/
+.plate-preview--old-moto .plate-overlay.plate-overlay-code {
+  left: 17.5% !important;
+  top: 72% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.plate-preview--old-moto .plate-overlay.plate-overlay-code--multi {
+  letter-spacing: 0.02em !important;
+  transform: translate(-50%, -50%) scaleX(0.9) !important;
+  transform-origin: center center !important;
 }
 
 .plate-preview--old .plate-overlay.plate-overlay-code .plate-digit-inner,
@@ -310,15 +348,6 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 .plate-preview--old .plate-overlay.plate-overlay-code--multi,
 .plate-preview--old .plate-overlay.plate-overlay-code--multi .plate-digit-inner {
   letter-spacing: 0.01em !important;
-}
-
-/*
-  Double letters: compress width only (height unchanged) so both glyphs
-  stay fully visible left of the Dubai crest — no clipping / no hide.
-*/
-.plate-preview--old .plate-overlay.plate-overlay-code--multi {
-  transform: translate(-50%, -50%) scaleX(0.78) !important;
-  transform-origin: center center !important;
 }
 
 .plate-preview--old .plate-overlay.metal-plate-text,
