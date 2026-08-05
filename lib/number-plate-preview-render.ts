@@ -369,8 +369,7 @@ function adjustOverlaysForCode(
     delete adjusted.plate_digits.right;
   }
 
-  // Motorcycle old plate: letter under crest; digits in the right bay.
-  // Same base clamp as digits — bay fitting + width scale shrink alphabet on small plates.
+  // Motorcycle old plate: letter under crest only — digits keep API position.
   if (oldPlateStyle && oldMotorcycleStyle) {
     const codeLength = String(code || "").length;
     const rowFontSize = "clamp(2.05rem, 8.8vw, 4rem)";
@@ -386,57 +385,24 @@ function adjustOverlaysForCode(
       delete adjusted.plate_code.height;
       delete adjusted.plate_code.right;
     }
-
-    const placeMotoDigits = (overlay: PlateOverlayConfig) => {
-      overlay.layout_mode = "point_center";
-      overlay.left = "64%";
-      overlay.top = "50%";
-      overlay.transform = "translate(-50%, -50%)";
-      overlay.font_size = rowFontSize;
-      overlay.letter_spacing = "0.00em";
-      delete overlay.height;
-      delete overlay.right;
-    };
-
-    if (adjusted.plate_digits) placeMotoDigits(adjusted.plate_digits);
-    if (adjusted.plate_digits_ar) placeMotoDigits(adjusted.plate_digits_ar);
   } else if (oldPlateStyle && layout === "split_top") {
     const codeLength = String(code || "").length;
-    // Digits vertically centered in the plate frame; letter under Dubai logo.
-    const digitsTop = "50%";
+    // Letter under Dubai logo only — do not force digit top/left (API position).
     const codeTop = "54%";
     const sharedTransform = "translate(-50%, -50%)";
     const rowFontSize = "clamp(2.05rem, 8.8vw, 4rem)";
 
-    const unifyOldPlateRow = (
-      overlay: PlateOverlayConfig,
-      top: string,
-    ) => {
-      overlay.layout_mode = "point_center";
-      overlay.top = top;
-      overlay.transform = sharedTransform;
-      overlay.font_size = rowFontSize;
-      delete overlay.height;
-      delete overlay.right;
-    };
-
     if (adjusted.plate_code) {
-      unifyOldPlateRow(adjusted.plate_code, codeTop);
+      adjusted.plate_code.layout_mode = "point_center";
+      adjusted.plate_code.top = codeTop;
+      adjusted.plate_code.transform = sharedTransform;
+      adjusted.plate_code.font_size = rowFontSize;
+      delete adjusted.plate_code.height;
+      delete adjusted.plate_code.right;
       // Center under Dubai logo (logo bay ≈ 11%–27%, midpoint ≈ 19.5%).
       adjusted.plate_code.left = "19.5%";
       adjusted.plate_code.letter_spacing =
         codeLength >= 2 ? "0.01em" : "0.02em";
-    }
-    if (adjusted.plate_digits) {
-      unifyOldPlateRow(adjusted.plate_digits, digitsTop);
-      // Pull toward Dubai crest (same size as single/double alphabet).
-      adjusted.plate_digits.left = "62%";
-      adjusted.plate_digits.letter_spacing = "0.00em";
-    }
-    if (adjusted.plate_digits_ar) {
-      unifyOldPlateRow(adjusted.plate_digits_ar, digitsTop);
-      adjusted.plate_digits_ar.left = "62%";
-      adjusted.plate_digits_ar.letter_spacing = "0.00em";
     }
   }
 

@@ -266,16 +266,9 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   overflow: visible !important;
 }
 
-/* Car split_top old plate: digits vertically centered in the plate frame. */
-.plate-preview--old-split .plate-overlay.plate-overlay-digits,
-.plate-preview--old-split .plate-overlay.plate-overlay-digits-ar {
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
-
 /*
-  Old car split only: letter sits in the bay under the Dubai logo (not on the
-  digit midline). Digits stay at 50%. Do not apply to moto / other designs.
+  Old car split only: letter sits in the bay under the Dubai logo.
+  Digits keep API/admin top/left — do not force a shared midline.
 */
 .plate-preview--old-split .plate-overlay.plate-overlay-code {
   /* Horizontally centered under the Dubai logo (~11%–27% bay). */
@@ -293,7 +286,7 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 
 /*
   Motorcycle / left-crest old plate: alphabets in the bay under Dubai logo.
-  Do NOT force top:50% here — that overlaps the crest.
+  Digits keep API position (no forced top:50%).
 */
 .plate-preview--old-moto .plate-overlay.plate-overlay-code {
   left: 17.5% !important;
@@ -306,13 +299,6 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   letter-spacing: 0.02em !important;
   transform: translate(-50%, -50%) scaleX(0.9) !important;
   transform-origin: center center !important;
-}
-
-.plate-preview--old-moto .plate-overlay.plate-overlay-digits,
-.plate-preview--old-moto .plate-overlay.plate-overlay-digits-ar {
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  max-width: 58% !important;
 }
 
 .plate-preview--old .plate-overlay.plate-overlay-code .plate-digit-inner,
