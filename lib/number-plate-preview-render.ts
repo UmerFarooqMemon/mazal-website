@@ -248,6 +248,32 @@ function withAbuDhabiClassicSizing(
   };
 }
 
+/**
+ * Fit old-plate alphabet into the under-logo bay (same idea as digits
+ * shrinking with plate width). Bay is much narrower than the digit field.
+ */
+function fitOldPlateAlphabetToBay(
+  fontSize: string | undefined,
+  rootWidth: number,
+  codeLength: number,
+  motorcycle: boolean,
+): string | undefined {
+  if (!fontSize) return fontSize;
+  const current = parseFloat(fontSize);
+  if (!Number.isFinite(current) || current <= 0) return fontSize;
+
+  const bayWidthPct = motorcycle ? 18 : 15.5;
+  const bayPx = (Math.max(rootWidth, 1) * bayWidthPct) / 100;
+  const len = Math.max(codeLength, 1);
+  // Mazal Alphabets Bold advance width ≈ 0.7–0.78em per glyph.
+  const glyphFactor = len >= 2 ? 0.78 : 0.7;
+  const maxByWidth = (bayPx * 0.94) / (len * glyphFactor);
+  // Under-crest vertical room is tighter than the digit bay.
+  const maxByHeight = rootWidth * (motorcycle ? 0.105 : 0.12);
+  const fitted = Math.min(current, maxByWidth, maxByHeight);
+  return `${Math.max(8, Math.round(fitted))}px`;
+}
+
 function scaledDigitsConfig(
   baseConfig: PlateOverlayConfig | null | undefined,
   digits: string,
@@ -344,7 +370,7 @@ function adjustOverlaysForCode(
   }
 
   // Motorcycle old plate: letter under crest; digits in the right bay.
-  // Font size matches car old plates — width-based scaling handles small cards.
+  // Same base clamp as digits — bay fitting + width scale shrink alphabet on small plates.
   if (oldPlateStyle && oldMotorcycleStyle) {
     const codeLength = String(code || "").length;
     const rowFontSize = "clamp(2.05rem, 8.8vw, 4rem)";
@@ -354,11 +380,9 @@ function adjustOverlaysForCode(
       adjusted.plate_code.left = "17.5%";
       adjusted.plate_code.top = "72%";
       adjusted.plate_code.transform = "translate(-50%, -50%)";
-      adjusted.plate_code.font_size =
-        codeLength >= 2
-          ? "clamp(1.55rem, 6.4vw, 3rem)"
-          : "clamp(1.75rem, 7.2vw, 3.35rem)";
-      adjusted.plate_code.letter_spacing = "0.02em";
+      adjusted.plate_code.font_size = rowFontSize;
+      adjusted.plate_code.letter_spacing =
+        codeLength >= 2 ? "0.01em" : "0.02em";
       delete adjusted.plate_code.height;
       delete adjusted.plate_code.right;
     }
@@ -767,7 +791,19 @@ export function computePlateRenderState(
   const enConfig = scaleDigitsConfig(
     scaledDigitsConfig(overlays.plate_digits, digitValue, layout, code),
   );
-  const codeConfig = scaleCodeConfig(overlays.plate_code);
+  let codeConfig = scaleCodeConfig(overlays.plate_code);
+  // Alphabet: same width pipeline as digits, then shrink to under-logo bay.
+  if (oldPlateStyle && codeConfig?.font_size && codeValue) {
+    codeConfig = {
+      ...codeConfig,
+      font_size: fitOldPlateAlphabetToBay(
+        codeConfig.font_size,
+        rootWidth,
+        String(codeValue).length,
+        !!oldMotorcycleStyle,
+      ),
+    };
+  }
 
   const digitsOverlayOptions = oldPlateStyle
     ? { oldPlateStyle: true, overlayRole: "digits" as const }

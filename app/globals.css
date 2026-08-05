@@ -282,6 +282,7 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   left: 19.5% !important;
   top: 54% !important;
   transform: translate(-50%, -50%) !important;
+  max-width: 16% !important;
 }
 
 .plate-preview--old-split .plate-overlay.plate-overlay-code--multi {
@@ -298,6 +299,7 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   left: 17.5% !important;
   top: 72% !important;
   transform: translate(-50%, -50%) !important;
+  max-width: 18% !important;
 }
 
 .plate-preview--old-moto .plate-overlay.plate-overlay-code--multi {
