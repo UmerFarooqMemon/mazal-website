@@ -393,7 +393,7 @@ function adjustOverlaysForCode(
       overlay.top = "50%";
       overlay.transform = "translate(-50%, -50%)";
       overlay.font_size = rowFontSize;
-      overlay.letter_spacing = "0.09em";
+      overlay.letter_spacing = "0.00em";
       delete overlay.height;
       delete overlay.right;
     };
@@ -431,12 +431,12 @@ function adjustOverlaysForCode(
       unifyOldPlateRow(adjusted.plate_digits, digitsTop);
       // Pull toward Dubai crest (same size as single/double alphabet).
       adjusted.plate_digits.left = "62%";
-      adjusted.plate_digits.letter_spacing = "0.09em";
+      adjusted.plate_digits.letter_spacing = "0.00em";
     }
     if (adjusted.plate_digits_ar) {
       unifyOldPlateRow(adjusted.plate_digits_ar, digitsTop);
       adjusted.plate_digits_ar.left = "62%";
-      adjusted.plate_digits_ar.letter_spacing = "0.09em";
+      adjusted.plate_digits_ar.letter_spacing = "0.00em";
     }
   }
 
