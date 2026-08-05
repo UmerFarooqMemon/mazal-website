@@ -108,6 +108,9 @@ export function clampPhoneToCountryMax(
 /**
  * Bloom-style message:
  * "Invalid phone number. Example: +256 712 345678"
+ *
+ * Phone example is wrapped in Unicode LTR isolates so Arabic/RTL
+ * layouts don't reorder "+971 50 123 4567".
  */
 export function invalidPhoneMessage(
   countryIso: string,
@@ -115,9 +118,9 @@ export function invalidPhoneMessage(
   exampleLabel = "Example",
 ) {
   const example = phoneExampleForIso(countryIso);
-  return example
-    ? `${prefix}. ${exampleLabel}: ${example}`
-    : `${prefix}.`;
+  if (!example) return `${prefix}.`;
+  // U+2066 LRI … U+2069 PDI — keeps the sample visually LTR in RTL UIs
+  return `${prefix}. ${exampleLabel}: \u2066${example}\u2069`;
 }
 
 /** True when digits include more than just the dialing code. */

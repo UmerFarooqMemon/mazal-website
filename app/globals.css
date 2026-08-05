@@ -565,12 +565,15 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 .mazal-country-phone .react-tel-input {
   width: 100%;
   font-family: inherit;
+  direction: ltr;
+  position: relative;
 }
 
 .mazal-country-phone .mazal-phone-input {
   width: 100% !important;
   height: 48px !important;
-  padding-left: 52px !important;
+  padding-left: 58px !important;
+  padding-right: 14px !important;
   border-radius: 0.75rem !important;
   border: 1px solid #e5e7eb !important;
   background: #fff !important;
@@ -578,6 +581,9 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   line-height: 1.25rem !important;
   outline: none !important;
   box-shadow: none !important;
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  text-align: left !important;
 }
 
 .mazal-country-phone .mazal-phone-input:focus {
@@ -590,6 +596,13 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 }
 
 .mazal-country-phone .mazal-phone-button {
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 58px !important;
+  left: 0 !important;
+  right: auto !important;
+  z-index: 2 !important;
   border-radius: 0.75rem 0 0 0.75rem !important;
   border: 1px solid #e5e7eb !important;
   background: #fff !important;
@@ -601,9 +614,40 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 }
 
 .mazal-country-phone .mazal-phone-button .selected-flag {
+  position: relative !important;
+  width: 58px !important;
+  height: 100% !important;
+  padding: 0 !important;
   border-radius: 0.75rem 0 0 0.75rem !important;
-  padding: 0 0 0 10px !important;
-  width: 52px !important;
+  box-sizing: border-box !important;
+}
+
+/* Flag + caret stay inside the button (library defaults restored) */
+.mazal-country-phone .mazal-phone-button .selected-flag .flag {
+  position: absolute !important;
+  top: 50% !important;
+  margin-top: -5px !important;
+  left: 12px !important;
+  right: auto !important;
+}
+
+.mazal-country-phone .mazal-phone-button .selected-flag .arrow {
+  position: absolute !important;
+  top: 50% !important;
+  margin-top: -2px !important;
+  left: 32px !important;
+  right: auto !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-left: 3px solid transparent !important;
+  border-right: 3px solid transparent !important;
+  border-top: 4px solid #555 !important;
+  border-bottom: none !important;
+}
+
+.mazal-country-phone .mazal-phone-button .selected-flag .arrow.up {
+  border-top: none !important;
+  border-bottom: 4px solid #555 !important;
 }
 
 .mazal-country-phone .flag-dropdown.open,
@@ -621,6 +665,9 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   max-height: 240px !important;
   z-index: 50 !important;
   left: 0 !important;
+  right: auto !important;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 .mazal-country-phone .mazal-phone-dropdown .country {
@@ -640,8 +687,58 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   border: 1px solid #e5e7eb !important;
 }
 
-/* Keep library placeholder visible (country mask e.g. ...-....... for PK) */
 .mazal-country-phone .mazal-phone-input::placeholder {
   color: #9ca3af !important;
   opacity: 1;
+  text-align: left;
+}
+
+/*
+  Arabic / RTL: flag+arrow button on the right.
+  Number stays LTR; text/placeholder hug the flag (right side).
+*/
+.mazal-country-phone--rtl .react-tel-input {
+  direction: ltr;
+}
+
+.mazal-country-phone--rtl .mazal-phone-input {
+  padding-left: 14px !important;
+  padding-right: 58px !important;
+  text-align: right !important;
+}
+
+.mazal-country-phone--rtl .mazal-phone-input::placeholder {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+.mazal-country-phone--rtl .mazal-phone-button {
+  left: auto !important;
+  right: 0 !important;
+  border-radius: 0 0.75rem 0.75rem 0 !important;
+}
+
+.mazal-country-phone--rtl .mazal-phone-button .selected-flag {
+  border-radius: 0 0.75rem 0.75rem 0 !important;
+}
+
+/* Keep flag then caret inside the right-side button */
+.mazal-country-phone--rtl .mazal-phone-button .selected-flag .flag {
+  left: 12px !important;
+  right: auto !important;
+}
+
+.mazal-country-phone--rtl .mazal-phone-button .selected-flag .arrow {
+  left: 32px !important;
+  right: auto !important;
+}
+
+.mazal-country-phone--rtl .flag-dropdown.open,
+.mazal-country-phone--rtl .flag-dropdown.open .selected-flag {
+  border-radius: 0 0.75rem 0 0 !important;
+}
+
+.mazal-country-phone--rtl .mazal-phone-dropdown {
+  left: auto !important;
+  right: 0 !important;
 }

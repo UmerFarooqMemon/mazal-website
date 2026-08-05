@@ -41,6 +41,26 @@ function isCountryData(
   return Boolean(data && "dialCode" in data && typeof data.dialCode === "string");
 }
 
+/** Keep "+971 50 …" LTR inside an RTL Arabic error sentence. */
+function PhoneErrorWithLtrExample({ text }: { text: string }) {
+  const match = text.match(
+    /^(.*?:)\s*[\u2066\u200E\u202A]*(\+[\d\s\-().]+)[\u2069\u200E\u202C]*\s*$/,
+  );
+  if (!match) return <>{text}</>;
+  return (
+    <>
+      {match[1]}{" "}
+      <bdi
+        dir="ltr"
+        className="inline-block whitespace-nowrap"
+        style={{ unicodeBidi: "isolate" }}
+      >
+        {match[2].trim()}
+      </bdi>
+    </>
+  );
+}
+
 /**
  * Dynamic per-country phone field:
  * - mask + max digits from libphonenumber for the selected country
@@ -107,12 +127,15 @@ export default function CountryPhoneInput({
   );
 
   return (
-    <div className="w-full mazal-country-phone" dir="ltr">
+    <div
+      className={`w-full mazal-country-phone${isRTL ? " mazal-country-phone--rtl" : ""}`}
+    >
       {label && (
         <label
           htmlFor={inputId}
           className={`block text-[11px] font-medium leading-none mb-2 ${isRTL ? "text-right" : "text-left"}`}
           style={{ color: getColor("secondaryText") }}
+          dir={isRTL ? "rtl" : "ltr"}
         >
           {label}
           {required ? " *" : ""}
@@ -120,7 +143,7 @@ export default function CountryPhoneInput({
       )}
 
       <PhoneInputLib
-        key={activeIso}
+        key={`${activeIso}-${isRTL ? "rtl" : "ltr"}`}
         country={activeIso || country}
         value={value}
         preferredCountries={preferredCountries}
@@ -142,6 +165,7 @@ export default function CountryPhoneInput({
             maxNational > 0
               ? activeDial.length + 1 + maxNational + 8
               : undefined,
+          dir: "ltr",
         }}
         containerClass={`mazal-phone-container${displayError ? " mazal-phone-error" : ""}`}
         inputClass="mazal-phone-input"
@@ -157,16 +181,20 @@ export default function CountryPhoneInput({
           color: getColor("primaryText"),
           backgroundColor: "#ffffff",
           fontSize: "0.8125rem",
+          direction: "ltr",
+          textAlign: isRTL ? "right" : "left",
         }}
         buttonStyle={{
-          borderRadius: "0.75rem 0 0 0.75rem",
+          borderRadius: isRTL ? "0 0.75rem 0.75rem 0" : "0.75rem 0 0 0.75rem",
           borderColor: displayError ? "#fca5a5" : getColor("border"),
           backgroundColor: "#ffffff",
+          zIndex: 2,
         }}
         dropdownStyle={{
           borderRadius: "0.75rem",
           borderColor: getColor("border"),
           color: getColor("primaryText"),
+          ...(isRTL ? { left: "auto", right: 0 } : {}),
         }}
         isValid={(inputNumber, countryObj) => {
           if (!inputNumber) return true;
@@ -208,8 +236,13 @@ export default function CountryPhoneInput({
         <p
           className={`text-[10px] mt-1.5 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}
           style={{ color: getColor("error") }}
+          dir={isRTL ? "rtl" : "ltr"}
         >
-          {displayError}
+          {typeof displayError === "string" ? (
+            <PhoneErrorWithLtrExample text={displayError} />
+          ) : (
+            displayError
+          )}
         </p>
       )}
     </div>

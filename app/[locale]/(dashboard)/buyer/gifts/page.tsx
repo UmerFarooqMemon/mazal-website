@@ -34,6 +34,7 @@ export default function BuyerGiftsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [acceptCode, setAcceptCode] = useState("");
+  const [phoneFieldError, setPhoneFieldError] = useState<string | undefined>();
   const [createForm, setCreateForm] = useState({
     purchaseId: "",
     recipientName: "",
@@ -134,16 +135,17 @@ export default function BuyerGiftsPage() {
           createForm.recipientPhoneIso,
         )
       ) {
-        toast.error(
-          invalidPhoneMessage(
-            createForm.recipientPhoneIso,
-            t("common.phone_invalid_short") || "Invalid phone number",
-            t("common.phone_example_label") || "Example",
-          ),
+        const phoneError = invalidPhoneMessage(
+          createForm.recipientPhoneIso,
+          t("common.phone_invalid_short") || "Invalid phone number",
+          t("common.phone_example_label") || "Example",
         );
+        setPhoneFieldError(phoneError);
+        toast.error(phoneError);
         return;
       }
     }
+    setPhoneFieldError(undefined);
 
     setSubmitting(true);
     try {
@@ -190,6 +192,7 @@ export default function BuyerGiftsPage() {
         recipientPhoneDial: "+971",
         message: "",
       });
+      setPhoneFieldError(undefined);
       setTab("sent");
       await load();
     } catch (err) {
@@ -491,14 +494,16 @@ export default function BuyerGiftsPage() {
               label={t("marketplace.gift_recipient_phone") || "Phone (optional)"}
               country={createForm.recipientPhoneIso}
               value={createForm.recipientPhone}
-              onChange={(recipientPhone, meta) =>
+              onChange={(recipientPhone, meta) => {
+                setPhoneFieldError(undefined);
                 setCreateForm((prev) => ({
                   ...prev,
                   recipientPhone,
                   recipientPhoneIso: meta.countryIso,
                   recipientPhoneDial: meta.dialCode,
-                }))
-              }
+                }));
+              }}
+              error={phoneFieldError}
             />
             <div>
               <label
