@@ -133,7 +133,7 @@ const PLATE_REFERENCE_WIDTH = 840;
 export const OLD_PLATE_ALPHABET_FONT_SCALE = 1.5;
 
 /** Width-based scale for old Dubai metal plate digits — same visual row as alphabet. */
-export const OLD_PLATE_DIGITS_FONT_SCALE = 1.7;
+export const OLD_PLATE_DIGITS_FONT_SCALE = 3.0;
 
 /** @deprecated Use OLD_PLATE_ALPHABET_FONT_SCALE / OLD_PLATE_DIGITS_FONT_SCALE */
 export const OLD_PLATE_FONT_SCALE = OLD_PLATE_ALPHABET_FONT_SCALE;
@@ -364,12 +364,12 @@ function adjustOverlaysForCode(
     if (adjusted.plate_digits) {
       unifyOldPlateRow(adjusted.plate_digits);
       // Pull toward Dubai crest (same size as single/double alphabet).
-      adjusted.plate_digits.left = "69%";
+      adjusted.plate_digits.left = "62%";
       adjusted.plate_digits.letter_spacing = "0.09em";
     }
     if (adjusted.plate_digits_ar) {
       unifyOldPlateRow(adjusted.plate_digits_ar);
-      adjusted.plate_digits_ar.left = "69%";
+      adjusted.plate_digits_ar.left = "62%";
       adjusted.plate_digits_ar.letter_spacing = "0.09em";
     }
   }

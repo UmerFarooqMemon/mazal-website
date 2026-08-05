@@ -29,8 +29,8 @@ html:has([data-locale-root][dir="rtl"]) *:not(.plate-text):not(.plate-overlay):n
   --font-fraunces: "Fraunces", serif;
   --font-almarai: "Almarai", sans-serif;
   --font-charleswright: "Charles Wright", "CharlesWright", sans-serif;
-  --font-mazal-plate-digits: "Mazal Plate Alphabets", "Mazal Plate Digits",
-    "Charles Wright", "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif;
+  --font-mazal-plate-digits: "Mazal Plate Digits", "Charles Wright", "CharlesWright",
+    "Bahnschrift", "Arial Condensed", sans-serif;
   --font-mazal-plate-alphabets: "Mazal Plate Alphabets", "Charles Wright",
     "CharlesWright", "Bahnschrift", "Arial Condensed", sans-serif;
 }
@@ -236,13 +236,13 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 }
 
 /*
-  Old Dubai-style private plates only — Mazal English Alphabets for letter + digits.
+  Old Dubai-style private plates only — Mazal Alphabets (letter) + Digits fonts.
   Matches physical embossed white plates; all other designs keep Charles Wright.
 */
 .plate-preview--old .plate-overlay,
 .plate-preview--old .plate-overlay .plate-digit-inner {
-  font-family: "Mazal Plate Alphabets", sans-serif !important;
-  font-weight: 700 !important;
+  font-family: "Mazal Plate Digits", sans-serif !important;
+  font-weight: 400 !important;
   font-synthesis: none;
   color: #000000 !important;
   letter-spacing: 0;
@@ -281,13 +281,17 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 .plate-preview--old .plate-overlay.plate-overlay-digits .plate-digit-inner,
 .plate-preview--old .plate-overlay.plate-overlay-digits-ar,
 .plate-preview--old .plate-overlay.plate-overlay-digits-ar .plate-digit-inner {
-  font-family: "Mazal Plate Alphabets", sans-serif !important;
-  font-weight: 700 !important;
+  font-family: "Mazal Plate Digits", sans-serif !important;
+  font-weight: 400 !important;
   font-synthesis: none !important;
   letter-spacing: 0.09em;
-  -webkit-text-stroke: 0;
-  paint-order: normal;
+  -webkit-text-stroke: 1.1px #000000;
+  paint-order: stroke fill;
   text-shadow:
+    0.45px 0 0 #000000,
+    -0.45px 0 0 #000000,
+    0 0.45px 0 #000000,
+    0 -0.45px 0 #000000,
     0.35px 0.35px 0 rgba(255, 255, 255, 0.55),
     -0.35px -0.35px 0 rgba(0, 0, 0, 0.38),
     0.6px 0.6px 0.6px rgba(0, 0, 0, 0.14) !important;
@@ -323,11 +327,15 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 .plate-preview--old .plate-overlay.metal-plate-text-light,
 .plate-preview--old .plate-overlay .plate-digit-inner.metal-plate-text-light,
 .plate-preview--old .metal-plate-text-light {
-  font-family: "Mazal Plate Alphabets", sans-serif !important;
-  font-weight: 700 !important;
+  font-family: "Mazal Plate Digits", sans-serif !important;
+  font-weight: 400 !important;
   color: #000000 !important;
   letter-spacing: 0.09em;
   text-shadow:
+    0.45px 0 0 #000000,
+    -0.45px 0 0 #000000,
+    0 0.45px 0 #000000,
+    0 -0.45px 0 #000000,
     0.35px 0.35px 0 rgba(255, 255, 255, 0.55),
     -0.35px -0.35px 0 rgba(0, 0, 0, 0.38),
     0.6px 0.6px 0.6px rgba(0, 0, 0, 0.14) !important;
@@ -351,13 +359,17 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
 .plate-preview--old .plate-overlay.plate-overlay-digits .plate-digit-inner.metal-plate-text-light,
 .plate-preview--old .plate-overlay.plate-overlay-digits-ar.metal-plate-text-light,
 .plate-preview--old .plate-overlay.plate-overlay-digits-ar .plate-digit-inner.metal-plate-text-light {
-  font-family: "Mazal Plate Alphabets", sans-serif !important;
-  font-weight: 700 !important;
+  font-family: "Mazal Plate Digits", sans-serif !important;
+  font-weight: 400 !important;
   font-synthesis: none !important;
   letter-spacing: 0.09em;
-  -webkit-text-stroke: 0;
-  paint-order: normal;
+  -webkit-text-stroke: 1.1px #000000;
+  paint-order: stroke fill;
   text-shadow:
+    0.45px 0 0 #000000,
+    -0.45px 0 0 #000000,
+    0 0.45px 0 #000000,
+    0 -0.45px 0 #000000,
     0.35px 0.35px 0 rgba(255, 255, 255, 0.55),
     -0.35px -0.35px 0 rgba(0, 0, 0, 0.38),
     0.6px 0.6px 0.6px rgba(0, 0, 0, 0.14) !important;
