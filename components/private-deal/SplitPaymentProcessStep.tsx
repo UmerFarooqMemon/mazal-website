@@ -16,11 +16,13 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme, type ThemeColors } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import BankSelect from "@/components/ui/BankSelect";
 import { resolveBankLabel } from "@/lib/uae-banks";
 import type { PaymentMethod, SplitPaymentEntry } from "./PaymentMethodStep";
+
+type GetColor = (key: keyof ThemeColors) => string;
 
 interface SplitPaymentProcessStepProps {
   payment: SplitPaymentEntry;
@@ -65,7 +67,7 @@ function ReadOnlyAmountField({
 }: {
   label: string;
   amount: number;
-  getColor: (key: "border" | "primaryText" | "secondaryText") => string;
+  getColor: GetColor;
 }) {
   return (
     <div className="w-full">
@@ -95,7 +97,7 @@ function InstructionsBox({
 }: {
   title: string;
   body: string;
-  getColor: (key: string) => string;
+  getColor: GetColor;
 }) {
   return (
     <div
@@ -134,7 +136,7 @@ function ReadOnlyField({
   label: string;
   value: string;
   icon?: React.ReactNode;
-  getColor: (key: string) => string;
+  getColor: GetColor;
 }) {
   if (!value) return null;
   return (
