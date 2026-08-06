@@ -176,5 +176,12 @@
   "collection_time": "وقت التحصيل",
   "full_street_address": "العنوان الكامل",
   "pickup_address": "عنوان الاستلام",
-  "pickup_address_required": "عنوان الاستلام مطلوب للتحصيل النقدي أو بالشيك."
+  "pickup_address_required": "عنوان الاستلام مطلوب للتحصيل النقدي أو بالشيك.",
+  "error_payment_reference_required": "مرجع الدفع مطلوب.",
+  "error_evidence_required": "إثبات الدفع مطلوب.",
+  "error_account_last4": "يجب أن يتضمن رقم الحساب 4 أرقام على الأقل.",
+  "error_check_number_required": "رقم الشيك مطلوب.",
+  "error_collection_date_required": "تاريخ التحصيل مطلوب.",
+  "error_collection_date_future": "يجب أن يكون تاريخ التحصيل اليوم أو لاحقاً.",
+  "error_collection_time_required": "وقت التحصيل مطلوب."
 }

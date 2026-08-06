@@ -176,5 +176,12 @@
   "pickup_address_required": "Pickup address is required for cash and cheque collection.",
   "collection_date": "Collection Date",
   "collection_time": "Collection Time",
-  "full_street_address": "Full street address"
+  "full_street_address": "Full street address",
+  "error_payment_reference_required": "Payment reference is required.",
+  "error_evidence_required": "Payment evidence is required.",
+  "error_account_last4": "Account number must include at least 4 digits.",
+  "error_check_number_required": "Check number is required.",
+  "error_collection_date_required": "Collection date is required.",
+  "error_collection_date_future": "Collection date must be today or later.",
+  "error_collection_time_required": "Collection time is required."
 }
