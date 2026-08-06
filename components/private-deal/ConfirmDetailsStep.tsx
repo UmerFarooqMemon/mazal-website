@@ -14,6 +14,7 @@ import {
   hasNationalPhoneDigits,
   isValidCountryPhoneNumber,
 } from "@/lib/phone-validation";
+import { PRIVATE_DEAL_LICENSE_SOURCES } from "@/config/license-sources";
 
 export interface ConfirmDetailsData {
   fullName: string;
@@ -44,6 +45,7 @@ interface ConfirmDetailsStepProps {
   /** Seller-only: show gift Yes/No + recipient email for private deals. */
   showGiftOptions?: boolean;
   submitting?: boolean;
+  licenseSources?: { key: string; label: string }[];
 }
 
 export default function ConfirmDetailsStep({
@@ -55,6 +57,7 @@ export default function ConfirmDetailsStep({
   continueLabel,
   showGiftOptions = false,
   submitting = false,
+  licenseSources,
 }: ConfirmDetailsStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -67,6 +70,14 @@ export default function ConfirmDetailsStep({
     mobile?: string;
     secondaryMobile?: string;
   }>({});
+  const licenseSourceOptions =
+    licenseSources && licenseSources.length > 0
+      ? licenseSources
+      : PRIVATE_DEAL_LICENSE_SOURCES;
+  const defaultLicenseSource =
+    licenseSourceOptions.find((opt) => opt.key === "mbr")?.key ||
+    licenseSourceOptions[0]?.key ||
+    "mbr";
 
   useEffect(() => {
     if (!user || didPrefill.current) return;
@@ -153,7 +164,9 @@ export default function ConfirmDetailsStep({
       emiratesId: personType === "organization" ? "" : data.emiratesId,
       secondaryMobile: "",
       licenseSource:
-        personType === "organization" ? data.licenseSource || "mbr" : "",
+        personType === "organization"
+          ? data.licenseSource || defaultLicenseSource
+          : "",
     });
   };
 
@@ -411,14 +424,10 @@ export default function ConfirmDetailsStep({
               <div className="sm:col-span-2">
                 <Select
                   label={t("private-deal.license_source")}
-                  options={[
-                    {
-                      key: "mbr",
-                      label: t("private-deal.license_source_default"),
-                    },
-                  ]}
-                  value={data.licenseSource || "mbr"}
+                  options={licenseSourceOptions}
+                  value={data.licenseSource || defaultLicenseSource}
                   onChange={(v) => onChange({ licenseSource: v })}
+                  placeholder={t("private-deal.license_source")}
                 />
               </div>
             )}

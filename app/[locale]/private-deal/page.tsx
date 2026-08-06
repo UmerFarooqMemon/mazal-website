@@ -32,6 +32,7 @@ import {
   isValidCountryPhoneNumber,
   toE164FromPhoneDigits,
 } from "@/lib/phone-validation";
+import { resolveLicenseSourceOptions } from "@/config/license-sources";
 import {
   createPrivateDeal,
   createPrivateDealCheckout,
@@ -212,6 +213,11 @@ export default function PrivateDealPage() {
     buyerPaymentRequired: !buyerPaymentRequired ? false : undefined,
   };
 
+  const licenseSourceOptions = useMemo(
+    () => resolveLicenseSourceOptions(options?.license_sources),
+    [options?.license_sources],
+  );
+
   const splitAllocated = useMemo(() => {
     if (paymentMode !== "split") return 0;
     if (step === 4 && processingSplitId) {
@@ -337,8 +343,8 @@ export default function PrivateDealPage() {
             : details.emiratesId,
         license_source:
           details.licenseSource ||
-          Object.keys(options?.license_sources || {})[0] ||
-          "dubai_det",
+          licenseSourceOptions[0]?.key ||
+          "mbr",
         authorized_mobile: secondaryMobile || mobile,
         email: details.email,
         accept_terms: true,
@@ -724,6 +730,7 @@ export default function PrivateDealPage() {
             variant="seller"
             showGiftOptions
             submitting={submitting}
+            licenseSources={licenseSourceOptions}
           />
         );
       }
@@ -768,6 +775,7 @@ export default function PrivateDealPage() {
             variant="buyer"
             continueLabel={t("private-deal.confirm")}
             submitting={submitting}
+            licenseSources={licenseSourceOptions}
           />
         );
       }
