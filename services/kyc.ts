@@ -30,9 +30,29 @@ export interface KycOptions {
   [key: string]: unknown;
 }
 
+export interface KycDocumentMeta {
+  id?: number;
+  type?: string;
+  document_type?: string;
+  name?: string;
+  original_name?: string;
+  label?: string;
+  uploaded?: boolean;
+  download_url?: string;
+  mime_type?: string;
+  size?: number;
+  uploaded_at?: string;
+  [key: string]: unknown;
+}
+
 export interface KycApplication {
   id?: number;
   status?: KycStatus;
+  status_label?: string | null;
+  is_rejected?: boolean;
+  rejection_reason?: string | null;
+  can_edit?: boolean;
+  can_submit?: boolean;
   profile_type?: KycProfileTypeValue | null;
   full_legal_name?: string | null;
   date_of_birth?: string | null;
@@ -44,13 +64,7 @@ export interface KycApplication {
   phone?: string | null;
   email?: string | null;
   custody_agreement_accepted?: boolean | null;
-  documents?: Array<{
-    id?: number;
-    type?: string;
-    document_type?: string;
-    name?: string;
-    [key: string]: unknown;
-  }> | Record<string, unknown>;
+  documents?: KycDocumentMeta[] | Record<string, unknown>;
   [key: string]: unknown;
 }
 

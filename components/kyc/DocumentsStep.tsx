@@ -127,7 +127,8 @@ export default function DocumentsStep({
   const uploadedLabelFor = (key: KycDocumentKey) => {
     if (documents[key]) return null;
     const match = uploadedDocuments.find((doc) => doc.type === key);
-    return match?.name || (match ? t("kyc.file_selected") : null);
+    if (!match) return null;
+    return match.name || t("kyc.file_selected");
   };
 
   const validate = () => {
@@ -182,6 +183,19 @@ export default function DocumentsStep({
       >
         {t("kyc.documents_subtitle")}
       </p>
+
+      {uploadedDocuments.length > 0 && (
+        <p
+          className="mb-5 rounded-xl border px-3.5 py-3 text-xs leading-relaxed text-start"
+          style={{
+            backgroundColor: `${getColor("primary")}08`,
+            borderColor: `${getColor("primary")}22`,
+            color: getColor("secondaryText"),
+          }}
+        >
+          {t("kyc.documents_keep_helper")}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {docs.map((doc) => (

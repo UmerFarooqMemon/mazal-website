@@ -57,6 +57,7 @@
   "kyc_short": "KYC",
   "kyc_verified": "KYC",
   "kyc_pending": "KYC Pending",
+  "kyc_rejected": "KYC Rejected",
   "platform": "Platform",
   "trust": "Trust",
   "escrow_custody": "Escrow Custody",

@@ -34,6 +34,9 @@ interface User {
   emirates_id_verified?: boolean;
   identity_verified?: boolean;
   kyc_profile_type?: "uae_resident" | "international" | null;
+  kyc_status?: string | null;
+  kyc_status_label?: string | null;
+  kyc_rejection_reason?: string | null;
 }
 
 function normalizeUser(user: AuthUser): User {
@@ -50,6 +53,9 @@ function normalizeUser(user: AuthUser): User {
     emirates_id_verified: Boolean(user.emirates_id_verified),
     identity_verified: Boolean(user.identity_verified),
     kyc_profile_type: user.kyc_profile_type ?? null,
+    kyc_status: user.kyc_status ?? null,
+    kyc_status_label: user.kyc_status_label ?? null,
+    kyc_rejection_reason: user.kyc_rejection_reason ?? null,
   };
 }
 
@@ -323,6 +329,22 @@ export function useAuth() {
     [token],
   );
 
+  /** Patch persisted user (e.g. KYC status) and notify other hook instances via auth-changed. */
+  const updateUser = useCallback((patch: Partial<User>) => {
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) return;
+
+    try {
+      const current = JSON.parse(savedUser) as User;
+      const next = { ...current, ...patch };
+      localStorage.setItem("user", JSON.stringify(next));
+      setUser(next);
+      window.dispatchEvent(new Event("auth-changed"));
+    } catch {
+      // ignore malformed user JSON
+    }
+  }, []);
+
   return {
     user,
     token,
@@ -337,5 +359,6 @@ export function useAuth() {
     forgotPassword,
     resetPassword,
     changePassword,
+    updateUser,
   };
 }

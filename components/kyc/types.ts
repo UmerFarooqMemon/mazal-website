@@ -31,6 +31,7 @@ export interface KycUploadedDocument {
   id?: number;
   type: string;
   name?: string;
+  downloadUrl?: string;
 }
 
 export interface KycFormState {
@@ -40,6 +41,8 @@ export interface KycFormState {
   uploadedDocuments: KycUploadedDocument[];
   custodyAgreed: boolean;
   status: string | null;
+  statusLabel: string | null;
+  rejectionReason: string | null;
   verified: boolean;
 }
 
@@ -91,6 +94,8 @@ export const INITIAL_KYC_STATE: KycFormState = {
   uploadedDocuments: [],
   custodyAgreed: false,
   status: null,
+  statusLabel: null,
+  rejectionReason: null,
   verified: false,
 };
 

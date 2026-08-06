@@ -10,6 +10,7 @@ import { Button } from "@/components/ui";
 import SiteLogo from "@/components/layout/SiteLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { featureFlags } from "@/config/featureFlags";
+import { getCurrentKyc } from "@/services/kyc";
 import {
   User,
   Menu,
@@ -23,6 +24,7 @@ import {
   FileBadge,
   CheckCircle2,
   Clock,
+  XCircle,
 } from "lucide-react";
 
 export default function Header() {
@@ -35,12 +37,54 @@ export default function Header() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
+  const { user, isAuthenticated, logout, isLoggingOut, updateUser } = useAuth();
   const isKycVerified = Boolean(user?.kyc_verified);
+  const isKycRejected =
+    !isKycVerified &&
+    (user?.kyc_status === "rejected" ||
+      user?.kyc_status_label?.toLowerCase() === "rejected" ||
+      Boolean(user?.kyc_rejection_reason));
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Keep header KYC badge in sync (e.g. after admin rejection without re-login).
+  useEffect(() => {
+    if (!featureFlags.kyc || !isAuthenticated) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getCurrentKyc(locale);
+        if (cancelled || !res?.data) return;
+
+        const kyc = res.data.kyc;
+        const verified = Boolean(
+          res.data.verified || res.data.kyc_verified || kyc?.status === "approved",
+        );
+        const status = verified ? "approved" : kyc?.status || null;
+
+        updateUser({
+          kyc_verified: verified,
+          kyc_status: status,
+          kyc_status_label: verified
+            ? "Approved"
+            : kyc?.status_label || null,
+          kyc_rejection_reason:
+            status === "rejected" ? kyc?.rejection_reason || null : null,
+          kyc_profile_type:
+            kyc?.profile_type || res.data.kyc_profile_type || null,
+        });
+      } catch {
+        // Badge falls back to cached auth user fields.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, locale, updateUser]);
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -121,14 +165,23 @@ export default function Header() {
         borderColor: "#A7E1BF",
         color: "#138A52",
       }
-    : {
-        label: t("common.kyc_pending"),
-        shortLabel: t("common.kyc_short"),
-        icon: Clock,
-        backgroundColor: "#FFF4E3",
-        borderColor: "#F4C98A",
-        color: "#B7791F",
-      };
+    : isKycRejected
+      ? {
+          label: t("common.kyc_rejected"),
+          shortLabel: t("common.kyc_short"),
+          icon: XCircle,
+          backgroundColor: "#FEF2F2",
+          borderColor: "#FECACA",
+          color: "#DC2626",
+        }
+      : {
+          label: t("common.kyc_pending"),
+          shortLabel: t("common.kyc_short"),
+          icon: Clock,
+          backgroundColor: "#FFF4E3",
+          borderColor: "#F4C98A",
+          color: "#B7791F",
+        };
 
   const KycIcon = kycBadgeConfig.icon;
 
@@ -434,12 +487,19 @@ export default function Header() {
                     onClick={closeMenu}
                     className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ isActive("/kyc") ? "font-medium" : "" } text-start`}
                     style={{
-                      backgroundColor: isActive("/kyc")
-                        ? `${getColor("primary")}10`
-                        : "transparent",
-                      color: isActive("/kyc")
-                        ? getColor("primary")
-                        : getColor("primaryText"),
+                      backgroundColor: isAuthenticated
+                        ? kycBadgeConfig.backgroundColor
+                        : isActive("/kyc")
+                          ? `${getColor("primary")}10`
+                          : "transparent",
+                      color: isAuthenticated
+                        ? kycBadgeConfig.color
+                        : isActive("/kyc")
+                          ? getColor("primary")
+                          : getColor("primaryText"),
+                      border: isAuthenticated
+                        ? `1px solid ${kycBadgeConfig.borderColor}`
+                        : undefined,
                     }}
                   >
                     <span
@@ -460,7 +520,11 @@ export default function Header() {
                     {isActive("/kyc") && (
                       <span
                         className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: getColor("primary") }}
+                        style={{
+                          backgroundColor: isAuthenticated
+                            ? kycBadgeConfig.color
+                            : getColor("primary"),
+                        }}
                       />
                     )}
                   </Link>

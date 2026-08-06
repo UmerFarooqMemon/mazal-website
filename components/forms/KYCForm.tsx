@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Shield } from "lucide-react";
+import { CheckCircle2, Shield, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -104,10 +104,18 @@ function parseUploadedDocuments(
     for (const doc of documents) {
       const type = String(doc.type || doc.document_type || "");
       if (!type) continue;
+      const originalName =
+        typeof doc.original_name === "string"
+          ? doc.original_name
+          : typeof doc.name === "string"
+            ? doc.name
+            : undefined;
       parsed.push({
         id: typeof doc.id === "number" ? doc.id : undefined,
         type,
-        name: typeof doc.name === "string" ? doc.name : undefined,
+        name: originalName,
+        downloadUrl:
+          typeof doc.download_url === "string" ? doc.download_url : undefined,
       });
     }
     return parsed;
@@ -116,10 +124,20 @@ function parseUploadedDocuments(
   return Object.entries(documents).map(([type, value]) => {
     if (value && typeof value === "object") {
       const record = value as Record<string, unknown>;
+      const originalName =
+        typeof record.original_name === "string"
+          ? record.original_name
+          : typeof record.name === "string"
+            ? record.name
+            : undefined;
       return {
         id: typeof record.id === "number" ? record.id : undefined,
         type,
-        name: typeof record.name === "string" ? record.name : undefined,
+        name: originalName,
+        downloadUrl:
+          typeof record.download_url === "string"
+            ? record.download_url
+            : undefined,
       };
     }
     return { type, name: typeof value === "string" ? value : undefined };
@@ -171,6 +189,8 @@ function mapApplicationToForm(kyc: KycApplication | null | undefined): Partial<K
     uploadedDocuments: parseUploadedDocuments(kyc.documents),
     custodyAgreed: Boolean(kyc.custody_agreement_accepted),
     status: kyc.status || null,
+    statusLabel: kyc.status_label || null,
+    rejectionReason: kyc.rejection_reason || null,
   };
 }
 
@@ -194,7 +214,7 @@ export default function KYCForm() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -227,18 +247,34 @@ export default function KYCForm() {
         }
 
         const mapped = mapApplicationToForm(currentRes.data.kyc);
+        const verified = Boolean(
+          currentRes.data.verified || currentRes.data.kyc_verified,
+        );
         setForm((prev) => ({
           ...prev,
           ...mapped,
           identity: mapped.identity || prev.identity,
-          verified: Boolean(
-            currentRes.data.verified || currentRes.data.kyc_verified,
-          ),
+          verified,
           profileType:
             mapped.profileType ||
             currentRes.data.kyc_profile_type ||
             prev.profileType,
         }));
+
+        const kyc = currentRes.data.kyc;
+        if (kyc?.status || verified) {
+          updateUser({
+            kyc_verified: verified || kyc?.status === "approved",
+            kyc_status: verified ? "approved" : kyc?.status || null,
+            kyc_status_label:
+              verified
+                ? "Approved"
+                : kyc?.status_label || null,
+            kyc_rejection_reason:
+              kyc?.status === "rejected" ? kyc.rejection_reason || null : null,
+            kyc_profile_type: kyc?.profile_type || currentRes.data.kyc_profile_type || null,
+          });
+        }
 
         if (
           currentRes.data.kyc?.status === "pending_review" ||
@@ -273,7 +309,7 @@ export default function KYCForm() {
     return () => {
       cancelled = true;
     };
-  }, [locale, t]);
+  }, [locale, t, updateUser]);
 
   const setProfileType = (profileType: KycProfileType) => {
     setForm((prev) => ({
@@ -332,6 +368,9 @@ export default function KYCForm() {
     form.verified ||
     form.status === "approved";
   const isPendingReview = !isVerified && form.status === "pending_review";
+  const isRejected =
+    !isVerified &&
+    (form.status === "rejected" || Boolean(form.rejectionReason));
   const isLocked =
     isVerified || isPendingReview;
 
@@ -423,13 +462,16 @@ export default function KYCForm() {
         if (file) payload.append(key, file);
       });
 
-      if (activeProfileType === "international") {
-        payload.append("custody_agreement_accepted", "true");
-      }
-
       // Only call upload when there is something new to send
       const hasNewFiles = Object.values(form.documents).some(Boolean);
-      if (hasNewFiles || activeProfileType === "international") {
+      const needsCustodyPost =
+        activeProfileType === "international" && !form.custodyAgreed;
+
+      if (hasNewFiles || needsCustodyPost) {
+        if (activeProfileType === "international") {
+          payload.append("custody_agreement_accepted", "true");
+        }
+
         const response = await uploadKycDocuments(payload, locale);
         const uploaded = parseUploadedDocuments(response.data.kyc?.documents);
         setForm((prev) => ({
@@ -439,6 +481,10 @@ export default function KYCForm() {
             uploaded.length > 0 ? uploaded : prev.uploadedDocuments,
           custodyAgreed:
             activeProfileType === "international" ? true : prev.custodyAgreed,
+          rejectionReason:
+            response.data.kyc?.rejection_reason ?? prev.rejectionReason,
+          status: response.data.kyc?.status || prev.status,
+          statusLabel: response.data.kyc?.status_label || prev.statusLabel,
         }));
       }
 
@@ -466,12 +512,22 @@ export default function KYCForm() {
     setFieldErrors({});
     try {
       const response = await submitKyc(locale);
-      const status = response.data.kyc?.status;
+      const kyc = response.data.kyc;
+      const status = kyc?.status;
       setForm((prev) => ({
         ...prev,
         status: status || prev.status,
+        statusLabel: kyc?.status_label || prev.statusLabel,
+        rejectionReason: null,
         verified: status === "approved" ? true : prev.verified,
       }));
+
+      updateUser({
+        kyc_verified: status === "approved",
+        kyc_status: status || "pending_review",
+        kyc_status_label: kyc?.status_label || null,
+        kyc_rejection_reason: null,
+      });
 
       toast.success(
         status === "approved"
@@ -541,6 +597,45 @@ export default function KYCForm() {
                 ? t("kyc.already_verified")
                 : t("kyc.pending_review_note")}
             </p>
+          )}
+
+          {isRejected && (
+            <div
+              className="mt-5 w-full rounded-2xl border p-4 text-start"
+              style={{
+                backgroundColor: "#FEF2F2",
+                borderColor: "#FECACA",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <XCircle
+                  className="mt-0.5 h-5 w-5 shrink-0"
+                  style={{ color: "#DC2626" }}
+                />
+                <div>
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "#B91C1C" }}
+                  >
+                    {form.statusLabel || t("kyc.rejected_title")}
+                  </p>
+                  {form.rejectionReason && (
+                    <p
+                      className="mt-1 text-sm leading-relaxed"
+                      style={{ color: "#991B1B" }}
+                    >
+                      {form.rejectionReason}
+                    </p>
+                  )}
+                  <p
+                    className="mt-2 text-xs leading-relaxed"
+                    style={{ color: "#7F1D1D" }}
+                  >
+                    {t("kyc.rejected_helper")}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
           <Stepper steps={stepperSteps} />

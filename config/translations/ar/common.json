@@ -57,6 +57,7 @@
   "kyc_short": "توثيق",
   "kyc_verified": "توثيق",
   "kyc_pending": "توثيق قيد المراجعة",
+  "kyc_rejected": "توثيق مرفوض",
   "platform": "المنصة",
   "trust": "الثقة",
   "escrow_custody": "حفظ الضمان",

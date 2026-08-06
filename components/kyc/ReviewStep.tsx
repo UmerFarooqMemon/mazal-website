@@ -152,7 +152,9 @@ export default function ReviewStep({
             ? t("kyc.submit_verified")
             : state.status === "pending_review"
               ? t("kyc.submit_pending")
-              : t("kyc.submit")}
+              : state.status === "rejected"
+                ? t("kyc.resubmit")
+                : t("kyc.submit")}
         </Button>
       </div>
     </div>

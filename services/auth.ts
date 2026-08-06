@@ -43,6 +43,9 @@ export interface AuthUser {
   kyc_verified?: boolean;
   kyc_verified_at?: string | null;
   kyc_profile_type?: "uae_resident" | "international" | null;
+  kyc_status?: string | null;
+  kyc_status_label?: string | null;
+  kyc_rejection_reason?: string | null;
   identity_verified?: boolean;
   is_active?: boolean;
 }
