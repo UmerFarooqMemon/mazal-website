@@ -131,9 +131,11 @@ const EmiratesIdInput = forwardRef<HTMLInputElement, EmiratesIdInputProps>(
       rawCaret: number,
     ) => {
       const formatted = formatEmiratesId(rawValue);
+      const enforcedDigitCount = countDigits(formatted);
+      const rawDigitCountBefore = countDigits(rawValue.slice(0, rawCaret));
       const caret = caretAfterDigits(
         formatted,
-        countDigits(rawValue.slice(0, rawCaret)),
+        Math.min(rawDigitCountBefore, enforcedDigitCount),
       );
 
       pendingCaret.current = caret;

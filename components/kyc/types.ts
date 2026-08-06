@@ -95,7 +95,8 @@ export const INITIAL_KYC_STATE: KycFormState = {
 };
 
 /** Visual mask: 3-4-7-1 digit groups (784-XXXX-XXXXXXX-X) */
-export const EMIRATES_ID_PLACEHOLDER = "--- - ---- - ------- -";
+export const EMIRATES_ID_PREFIX = "784";
+export const EMIRATES_ID_PLACEHOLDER = "784 - ---- - ------- -";
 export const EMIRATES_ID_MAX_LENGTH = 18;
 
 /** Digits only; Emirates ID must be 15 digits starting with 784 */
@@ -103,8 +104,22 @@ export function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
 }
 
+/** First 3 digits must be 784 — user types manually; wrong digits are rejected */
+export function enforceEmiratesIdPrefix(digits: string) {
+  let result = "";
+  for (let i = 0; i < digits.length && i < 15; i++) {
+    if (i < EMIRATES_ID_PREFIX.length) {
+      if (digits[i] !== EMIRATES_ID_PREFIX[i]) break;
+      result += digits[i];
+    } else {
+      result += digits[i];
+    }
+  }
+  return result;
+}
+
 export function formatEmiratesId(value: string) {
-  const digits = digitsOnly(value).slice(0, 15);
+  const digits = enforceEmiratesIdPrefix(digitsOnly(value));
   if (!digits) return "";
 
   const seg1 = digits.slice(0, 3);
