@@ -16,7 +16,6 @@ import {
 } from "@/services/marketplace";
 import {
   hasNationalPhoneDigits,
-  invalidPhoneMessage,
   isValidCountryPhoneNumber,
   toE164FromPhoneDigits,
 } from "@/lib/phone-validation";
@@ -135,11 +134,9 @@ export default function BuyerGiftsPage() {
           createForm.recipientPhoneIso,
         )
       ) {
-        const phoneError = invalidPhoneMessage(
-          createForm.recipientPhoneIso,
-          t("common.phone_invalid_short") || "Invalid phone number",
-          t("common.phone_example_label") || "Example",
-        );
+        const phoneError =
+          t("common.phone_length_invalid") ||
+          "Enter the full phone number for the selected country.";
         setPhoneFieldError(phoneError);
         toast.error(phoneError);
         return;

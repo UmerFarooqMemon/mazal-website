@@ -585,24 +585,47 @@ export default function SplitPaymentProcessStep({
                 placeholder="eg. 000123"
                 error={fieldErrors.checkNumber}
               />
-              <ReadOnlyField
+              <Input
                 label={t("private-deal.collection_location")}
                 value={custodyLocation}
+                readOnly
+                placeholder="eg. 000123"
                 icon={<MapPin className="w-4 h-4" />}
-                getColor={getColor}
               />
-              <Input
-                label={t("private-deal.collection_address")}
-                value={check.pickupAddress}
-                onChange={(e) =>
-                  setCheck({ ...check, pickupAddress: e.target.value })
-                }
-                placeholder={
-                  custodyAddress || t("private-deal.full_street_address")
-                }
-                icon={<MapPin className="w-4 h-4" />}
-                error={fieldErrors.pickupAddress}
-              />
+              <div>
+                <label
+                  className="block text-[11px] font-medium mb-1.5 text-start"
+                  style={{ color: getColor("secondaryText") }}
+                >
+                  {t("private-deal.collection_address")}
+                </label>
+                <textarea
+                  value={check.pickupAddress}
+                  onChange={(e) =>
+                    setCheck({ ...check, pickupAddress: e.target.value })
+                  }
+                  rows={3}
+                  placeholder={
+                    custodyAddress || t("private-deal.full_street_address")
+                  }
+                  className="w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 text-start"
+                  style={{
+                    borderColor: fieldErrors.pickupAddress
+                      ? getColor("error")
+                      : getColor("border"),
+                    backgroundColor: getColor("surface"),
+                    color: getColor("primaryText"),
+                  }}
+                />
+                {fieldErrors.pickupAddress && (
+                  <p
+                    className="text-[10px] mt-1.5 text-start"
+                    style={{ color: getColor("error") }}
+                  >
+                    {fieldErrors.pickupAddress}
+                  </p>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
                   label={t("private-deal.collection_date")}
@@ -659,24 +682,47 @@ export default function SplitPaymentProcessStep({
                 body={t("private-deal.cash_collection_instructions")}
                 getColor={getColor}
               />
-              <ReadOnlyField
+              <Input
                 label={t("private-deal.collection_location")}
                 value={custodyLocation}
+                readOnly
+                placeholder="eg. 000123"
                 icon={<MapPin className="w-4 h-4" />}
-                getColor={getColor}
               />
-              <Input
-                label={t("private-deal.collection_address")}
-                value={cash.pickupAddress}
-                onChange={(e) =>
-                  setCash({ ...cash, pickupAddress: e.target.value })
-                }
-                placeholder={
-                  custodyAddress || t("private-deal.full_street_address")
-                }
-                icon={<MapPin className="w-4 h-4" />}
-                error={fieldErrors.pickupAddress}
-              />
+              <div>
+                <label
+                  className="block text-[11px] font-medium mb-1.5 text-start"
+                  style={{ color: getColor("secondaryText") }}
+                >
+                  {t("private-deal.collection_address")}
+                </label>
+                <textarea
+                  value={cash.pickupAddress}
+                  onChange={(e) =>
+                    setCash({ ...cash, pickupAddress: e.target.value })
+                  }
+                  rows={3}
+                  placeholder={
+                    custodyAddress || t("private-deal.full_street_address")
+                  }
+                  className="w-full rounded-xl border py-3 px-4 text-sm focus:outline-none focus:ring-2 text-start"
+                  style={{
+                    borderColor: fieldErrors.pickupAddress
+                      ? getColor("error")
+                      : getColor("border"),
+                    backgroundColor: getColor("surface"),
+                    color: getColor("primaryText"),
+                  }}
+                />
+                {fieldErrors.pickupAddress && (
+                  <p
+                    className="text-[10px] mt-1.5 text-start"
+                    style={{ color: getColor("error") }}
+                  >
+                    {fieldErrors.pickupAddress}
+                  </p>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
                   label={t("private-deal.collection_date")}

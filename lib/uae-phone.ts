@@ -63,7 +63,7 @@ export function toUaePhoneE164(value: string) {
 
 export function isValidUaeMobile(value: string) {
   const national = toUaeNationalDigits(value);
-  return national.length === 9 && national.startsWith("5");
+  return national.length === 9;
 }
 
 /**

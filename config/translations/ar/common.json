@@ -99,6 +99,7 @@
   "mobile_invalid": "أدخل رقم جوال إماراتي صالح. مثال:",
   "phone_invalid": "أدخل رقم هاتف صالح",
   "phone_invalid_short": "رقم الهاتف غير صالح",
+  "phone_length_invalid": "أدخل رقم الهاتف كاملاً للدولة المحددة.",
   "phone_example_label": "مثال",
   "password_min_length": "كلمة المرور يجب أن تكون 10 أحرف على الأقل",
   "password_requires_letter": "كلمة المرور يجب أن تحتوي على حرف واحد على الأقل",

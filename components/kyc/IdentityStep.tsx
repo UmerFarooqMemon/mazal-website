@@ -16,7 +16,6 @@ import {
 } from "@/components/kyc/types";
 import {
   hasNationalPhoneDigits,
-  invalidPhoneMessage,
   isValidCountryPhoneNumber,
   ensurePhoneDigitsWithDial,
   toNationalFromPhoneDigits,
@@ -106,11 +105,9 @@ export default function IdentityStep({
       if (!hasNationalPhoneDigits(identity.phone, dial)) {
         next.phone = t("kyc.fill_required");
       } else if (!isValidCountryPhoneNumber(identity.phone, iso)) {
-        next.phone = invalidPhoneMessage(
-          iso,
-          t("common.phone_invalid_short") || "Invalid phone number",
-          t("common.phone_example_label") || "Example",
-        );
+        next.phone =
+          t("common.phone_length_invalid") ||
+          "Enter the full phone number for the selected country.";
       }
     }
     if (!identity.email.trim()) {
@@ -153,11 +150,8 @@ export default function IdentityStep({
         !isValidCountryPhoneNumber(identity.phone, iso);
       toast.error(
         phoneInvalid
-          ? invalidPhoneMessage(
-              iso,
-              t("common.phone_invalid_short") || "Invalid phone number",
-              t("common.phone_example_label") || "Example",
-            )
+          ? t("common.phone_length_invalid") ||
+              "Enter the full phone number for the selected country."
           : t("kyc.fill_required"),
       );
       return;

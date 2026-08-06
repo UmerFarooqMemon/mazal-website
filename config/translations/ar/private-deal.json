@@ -170,7 +170,7 @@
   "instructions": "تعليمات",
   "managers_check_instructions": "جهّز شيك المدير وحدد موعد التحصيل. أدخل رقم الشيك واختر الموقع والتاريخ والوقت للاستلام.",
   "cash_collection_instructions": "حدد موعد تحصيل نقدي. اختر الموقع والتاريخ والوقت ليقوم مندوبنا بتحصيل المبلغ.",
-  "collection_location": "موقع التحصيل",
+  "collection_location": "موقع رمز التحصيل",
   "collection_address": "عنوان التحصيل",
   "collection_date": "تاريخ التحصيل",
   "collection_time": "وقت التحصيل",

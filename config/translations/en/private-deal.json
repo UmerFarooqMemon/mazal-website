@@ -170,7 +170,7 @@
   "instructions": "Instructions",
   "managers_check_instructions": "Prepare the manager's check and schedule a collection. Enter the check number and choose a location, date, and time for pickup.",
   "cash_collection_instructions": "Schedule a cash collection. Choose a location, date, and time for our agent to collect the payment.",
-  "collection_location": "Collection Location",
+  "collection_location": "Collection Pin Location",
   "collection_address": "Collection Address",
   "pickup_address": "Pickup address",
   "pickup_address_required": "Pickup address is required for cash and cheque collection.",

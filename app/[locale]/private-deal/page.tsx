@@ -29,7 +29,6 @@ import GiftNoPaymentBanner from "@/components/private-deal/GiftNoPaymentBanner";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import {
   hasNationalPhoneDigits,
-  invalidPhoneMessage,
   isValidCountryPhoneNumber,
   toE164FromPhoneDigits,
 } from "@/lib/phone-validation";
@@ -417,11 +416,8 @@ export default function PrivateDealPage() {
       }
       if (!isValidCountryPhoneNumber(details.mobile, mobileIso)) {
         throw new Error(
-          invalidPhoneMessage(
-            mobileIso,
-            t("common.phone_invalid_short") || "Invalid phone number",
-            t("common.phone_example_label") || "Example",
-          ),
+          t("common.phone_length_invalid") ||
+            "Enter the full phone number for the selected country.",
         );
       }
       if (
@@ -429,11 +425,8 @@ export default function PrivateDealPage() {
         !isValidCountryPhoneNumber(details.secondaryMobile, secondaryIso)
       ) {
         throw new Error(
-          invalidPhoneMessage(
-            secondaryIso,
-            t("common.phone_invalid_short") || "Invalid phone number",
-            t("common.phone_example_label") || "Example",
-          ),
+          t("common.phone_length_invalid") ||
+            "Enter the full phone number for the selected country.",
         );
       }
 

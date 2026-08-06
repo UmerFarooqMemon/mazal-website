@@ -99,6 +99,7 @@
   "mobile_invalid": "Enter a valid UAE mobile number. Example:",
   "phone_invalid": "Enter a valid phone number",
   "phone_invalid_short": "Invalid phone number",
+  "phone_length_invalid": "Enter the full phone number for the selected country.",
   "phone_example_label": "Example",
   "password_min_length": "Password must be at least 10 characters",
   "password_requires_letter": "Password must contain at least one letter",

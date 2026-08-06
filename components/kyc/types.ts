@@ -210,13 +210,6 @@ export function isValidPhone(value: string, countryCode: string) {
   if (!digits) return false;
   const { min, max } = getPhoneLengthRule(countryCode);
   if (digits.length < min || digits.length > max) return false;
-  // UAE / Saudi mobiles start with 5
-  if (
-    (countryCode === "+971" || countryCode === "+966") &&
-    !digits.startsWith("5")
-  ) {
-    return false;
-  }
   return true;
 }
 

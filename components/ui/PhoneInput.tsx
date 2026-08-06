@@ -18,7 +18,6 @@ import {
   phonePlaceholderForCode,
   toNationalPhoneDigits,
 } from "@/components/kyc/types";
-import { UAE_PHONE_SAMPLE } from "@/lib/uae-phone";
 import Input from "./Input";
 
 interface PhoneInputProps
@@ -37,21 +36,6 @@ interface PhoneInputProps
 const isDigit = (char: string | undefined) =>
   char !== undefined && char >= "0" && char <= "9";
 
-function withPhoneSample(message: ReactNode, sample: string): ReactNode {
-  if (message == null || message === false || message === "") return message;
-  return (
-    <>
-      {message}{" "}
-      <bdi
-        dir="ltr"
-        className="inline-block whitespace-nowrap"
-        style={{ unicodeBidi: "isolate" }}
-      >
-        {sample}
-      </bdi>
-    </>
-  );
-}
 
 function countNationalDigitsBefore(
   rawValue: string,
@@ -112,31 +96,17 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
     const { t } = useLocale();
     const inputRef = useRef<HTMLInputElement | null>(null);
     const pendingCaret = useRef<number | null>(null);
-    const requiresLeadingFive =
-      countryCode === "+971" || countryCode === "+966";
 
     const nationalDigits = toNationalPhoneDigits(value, countryCode);
-    const startError =
-      requiresLeadingFive && nationalDigits.length > 0 && !nationalDigits.startsWith("5")
-        ? t("common.mobile_must_start_with_5")
+    const { min, max } = getPhoneLengthRule(countryCode);
+    const lengthError =
+      nationalDigits.length > 0 &&
+      (nationalDigits.length < min || nationalDigits.length > max)
+        ? t("common.phone_length_invalid") || t("common.mobile_invalid")
         : undefined;
 
-    const rawError = error || startError;
-    const sample =
-      countryCode === "+971"
-        ? UAE_PHONE_SAMPLE
-        : `${countryCode} ${"5".padEnd(getPhoneLengthRule(countryCode).min, "0")}`;
-    const showSample =
-      typeof rawError === "string" &&
-      (rawError === t("common.mobile_must_start_with_5") ||
-        rawError === t("common.mobile_invalid") ||
-        rawError === t("kyc.invalid_phone") ||
-        rawError.includes("مثال") ||
-        rawError.toLowerCase().includes("example"));
-
-    const displayError = showSample
-      ? withPhoneSample(rawError, sample)
-      : rawError;
+    const rawError = error || lengthError;
+    const displayError = rawError;
 
     const setRefs = useCallback(
       (node: HTMLInputElement | null) => {

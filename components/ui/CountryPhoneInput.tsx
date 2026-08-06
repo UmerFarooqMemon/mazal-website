@@ -11,6 +11,7 @@ import {
   hasNationalPhoneDigits,
   invalidPhoneMessage,
   isValidCountryPhoneNumber,
+  isValidPhoneByLength,
   nationalMaskForIso,
 } from "@/lib/phone-validation";
 
@@ -33,6 +34,11 @@ interface CountryPhoneInputProps {
   disabled?: boolean;
   enableSearch?: boolean;
   required?: boolean;
+  /**
+   * `length` — dial + expected national digit count (default; keeps masking/max length).
+   * `strict` — same length rules (legacy alias; prefix checks are not used).
+   */
+  validationMode?: "strict" | "length";
 }
 
 function isCountryData(
@@ -64,7 +70,7 @@ function PhoneErrorWithLtrExample({ text }: { text: string }) {
 /**
  * Dynamic per-country phone field:
  * - mask + max digits from libphonenumber for the selected country
- * - live invalid error with that country's example
+ * - live length validation (no start-digit / mobile-prefix rules)
  */
 export default function CountryPhoneInput({
   value,
@@ -90,6 +96,7 @@ export default function CountryPhoneInput({
   disabled,
   enableSearch = true,
   required = false,
+  validationMode = "length",
 }: CountryPhoneInputProps) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
@@ -101,14 +108,29 @@ export default function CountryPhoneInput({
   const [activeIso, setActiveIso] = useState(country);
 
   const bloomErrorPrefix =
-    t("common.phone_invalid_short") || "Invalid phone number";
+    t("common.phone_length_invalid") ||
+    t("common.phone_invalid_short") ||
+    "Invalid phone number";
   const exampleLabel = t("common.phone_example_label") || "Example";
 
   const liveError = useMemo(() => {
     if (!hasNationalPhoneDigits(value, activeDial)) return undefined;
+
+    if (validationMode === "length") {
+      if (isValidPhoneByLength(value, activeDial, activeIso)) return undefined;
+      return bloomErrorPrefix;
+    }
+
     if (isValidCountryPhoneNumber(value, activeIso)) return undefined;
     return invalidPhoneMessage(activeIso, bloomErrorPrefix, exampleLabel);
-  }, [value, activeDial, activeIso, bloomErrorPrefix, exampleLabel]);
+  }, [
+    value,
+    activeDial,
+    activeIso,
+    bloomErrorPrefix,
+    exampleLabel,
+    validationMode,
+  ]);
 
   const displayError = error || liveError;
 

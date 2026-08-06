@@ -1,6 +1,6 @@
 import {
+  getCountryCallingCode,
   getExampleNumber,
-  isValidPhoneNumber,
   parsePhoneNumberFromString,
   type CountryCode,
 } from "libphonenumber-js/max";
@@ -106,21 +106,15 @@ export function clampPhoneToCountryMax(
 }
 
 /**
- * Bloom-style message:
- * "Invalid phone number. Example: +256 712 345678"
- *
- * Phone example is wrapped in Unicode LTR isolates so Arabic/RTL
- * layouts don't reorder "+971 50 123 4567".
+ * Bloom-style message prefix (no country mobile-prefix example).
+ * Prefix/start-digit rules are not enforced anywhere in the app.
  */
 export function invalidPhoneMessage(
-  countryIso: string,
+  _countryIso: string,
   prefix = "Invalid phone number",
-  exampleLabel = "Example",
+  _exampleLabel = "Example",
 ) {
-  const example = phoneExampleForIso(countryIso);
-  if (!example) return `${prefix}.`;
-  // U+2066 LRI … U+2069 PDI — keeps the sample visually LTR in RTL UIs
-  return `${prefix}. ${exampleLabel}: \u2066${example}\u2069`;
+  return prefix.endsWith(".") ? prefix : `${prefix}.`;
 }
 
 /** True when digits include more than just the dialing code. */
@@ -158,25 +152,50 @@ export function isPhoneEntryComplete(
 }
 
 /**
- * Strict country + mobile validity (libphonenumber /max metadata).
+ * True when national digit count matches the selected country's expected length.
+ * Does not enforce mobile prefix rules (e.g. UAE starting with 5).
+ */
+export function isValidPhoneByLength(
+  value: string,
+  dialCode: string,
+  countryIso: string,
+) {
+  const digits = value.replace(/\D/g, "");
+  const dial = dialCode.replace(/\D/g, "");
+  if (!digits || digits.length <= dial.length) return false;
+
+  const nationalLen = digits.length - dial.length;
+  const expected = expectedNationalLength(countryIso);
+  if (expected > 0) return nationalLen === expected;
+
+  try {
+    const parsed = parsePhoneNumberFromString(
+      toE164FromPhoneDigits(value),
+      countryIso.toUpperCase() as CountryCode,
+    );
+    return Boolean(parsed?.isPossible());
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Phone validity for forms: length/mask only (no start-digit / mobile-type rules).
  */
 export function isValidCountryPhoneNumber(
   value: string,
   countryIso?: string,
 ) {
-  const e164 = toE164FromPhoneDigits(value);
-  if (!e164 || e164.length < 5) return false;
+  const digits = value.replace(/\D/g, "");
+  if (!digits || digits.length < 5) return false;
+
+  if (!countryIso) {
+    return digits.length >= 8 && digits.length <= 15;
+  }
+
   try {
-    if (countryIso) {
-      const iso = countryIso.toUpperCase() as CountryCode;
-      if (!isValidPhoneNumber(e164, iso)) return false;
-      const parsed = parsePhoneNumberFromString(e164, iso);
-      if (!parsed) return false;
-      const type = parsed.getType();
-      if (type == null) return parsed.isValid();
-      return type === "MOBILE" || type === "FIXED_LINE_OR_MOBILE";
-    }
-    return isValidPhoneNumber(e164);
+    const dial = `+${getCountryCallingCode(countryIso.toUpperCase() as CountryCode)}`;
+    return isValidPhoneByLength(value, dial, countryIso);
   } catch {
     return false;
   }

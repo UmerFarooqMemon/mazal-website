@@ -12,7 +12,6 @@ import Select from "@/components/ui/Select";
 import {
   ensurePhoneDigitsWithDial,
   hasNationalPhoneDigits,
-  invalidPhoneMessage,
   isValidCountryPhoneNumber,
 } from "@/lib/phone-validation";
 
@@ -172,21 +171,14 @@ export default function ConfirmDetailsStep({
     iso: string,
     required: boolean,
   ) => {
+    const lengthMsg =
+      t("common.phone_length_invalid") ||
+      "Enter the full phone number for the selected country.";
     if (!hasNationalPhoneDigits(value, dialCode)) {
-      return required
-        ? invalidPhoneMessage(
-            iso,
-            t("common.phone_invalid_short") || "Invalid phone number",
-            t("common.phone_example_label") || "Example",
-          )
-        : undefined;
+      return required ? lengthMsg : undefined;
     }
     if (!isValidCountryPhoneNumber(value, iso)) {
-      return invalidPhoneMessage(
-        iso,
-        t("common.phone_invalid_short") || "Invalid phone number",
-        t("common.phone_example_label") || "Example",
-      );
+      return lengthMsg;
     }
     return undefined;
   };
@@ -218,8 +210,8 @@ export default function ConfirmDetailsStep({
       toast.error(
         mobileError ||
           secondaryError ||
-          t("common.phone_invalid_short") ||
-          "Invalid phone number",
+          t("common.phone_length_invalid") ||
+          "Enter the full phone number for the selected country.",
       );
       return;
     }

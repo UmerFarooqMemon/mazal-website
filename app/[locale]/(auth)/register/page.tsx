@@ -25,7 +25,6 @@ import SiteLogo from "@/components/layout/SiteLogo";
 import { getPasswordValidationError } from "@/lib/password-validation";
 import {
   hasNationalPhoneDigits,
-  invalidPhoneMessage,
   isValidCountryPhoneNumber,
   toE164FromPhoneDigits,
 } from "@/lib/phone-validation";
@@ -79,11 +78,9 @@ export default function RegisterPage() {
       errors.mobile = t("common.email_or_mobile_required");
     } else if (hasMobile) {
       if (!isValidCountryPhoneNumber(formData.mobile, iso)) {
-        errors.mobile = invalidPhoneMessage(
-          iso,
-          t("common.phone_invalid_short") || "Invalid phone number",
-          t("common.phone_example_label") || "Example",
-        );
+        errors.mobile =
+          t("common.phone_length_invalid") ||
+          "Enter the full phone number for the selected country.";
       }
     }
     const passwordError = getPasswordValidationError(formData.password);
