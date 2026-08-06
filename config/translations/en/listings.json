@@ -149,5 +149,12 @@
   "reveal_card_payment_desc": "Secure online payment.",
   "reveal_card_form_title": "Credit/Debit card to reveal code",
   "watchlist_added": "Added to watchlist.",
-  "watchlist_removed": "Removed from watchlist."
+  "watchlist_removed": "Removed from watchlist.",
+  "status_sold": "Sold",
+  "status_reserved": "Reserved",
+  "status_previously_sold": "Previously sold",
+  "listing_reserved_message": "This plate is reserved.",
+  "listing_sold_message": "This plate has been sold.",
+  "listing_not_available": "This listing is no longer available for purchase.",
+  "listing_reserved_toast": "This plate is reserved. Listing updated."
 }

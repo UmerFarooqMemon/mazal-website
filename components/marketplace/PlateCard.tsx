@@ -5,10 +5,14 @@ import { useLocale } from "../../context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DiamondTierBadge, DirhamAmount } from "@/components/ui";
+import { ListingInlineStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
+import { type MarketplaceListingStatus } from "@/services/marketplace";
 
 interface PlateCardProps {
   id: string | number;
+  /** Listing lifecycle status from API — used for grid QA (reserved/sold stay visible). */
+  status?: MarketplaceListingStatus | string;
   emirate: string;
   code: string;
   price: number;
@@ -34,6 +38,7 @@ interface PlateCardProps {
 
 export default function PlateCard({
   id,
+  status,
   emirate,
   code,
   price,
@@ -72,24 +77,13 @@ export default function PlateCard({
   return (
     <Link
       href={`/${locale}/listings/${id}`}
+      data-listing-status={status}
       className="group relative block rounded-2xl border p-5 transition-all duration-300 hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)] hover:-translate-y-0.5"
       style={{
         backgroundColor: getColor("surface"),
         borderColor: getColor("border"),
       }}
     >
-      {previouslySold && (
-        <span
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
-          style={{
-            backgroundColor: "#F5E6D3",
-            color: "#8B5E2B",
-          }}
-        >
-          Previously sold
-        </span>
-      )}
-
       <div
         className={`flex justify-between items-center mb-4`}
       >
@@ -115,7 +109,7 @@ export default function PlateCard({
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="relative mb-4">
         <NumberPlateDisplay
           plate_code={letterCode}
           plate_digits={digits}
@@ -127,6 +121,13 @@ export default function PlateCard({
           hideCode={hideCode}
           scaleFontToWidth={fitPlateFont}
           fontScaleMultiplier={fitPlateFont ? 2.3 : undefined}
+        />
+      </div>
+
+      <div className="mb-4 min-h-6">
+        <ListingInlineStatusBadge
+          status={status}
+          previouslySold={previouslySold}
         />
       </div>
 

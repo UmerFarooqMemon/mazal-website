@@ -160,6 +160,7 @@ export function mapListingToAuctionListing(
       ? formatCountdown(resolvedAuction.ends_at)
       : undefined,
     hideCode: plate.hideCode,
+    marketplaceStatus: listing.status,
   };
 }
 
@@ -213,4 +214,13 @@ export function mapToAuctionSummary(
     currentPrice,
     checkAmount: depositAmount > 0 ? depositAmount * 3 : undefined,
   };
+}
+
+/** Maps auction browse results without filtering reserved/sold listings. */
+export function mapListingsToAuctionListings(
+  listings: MarketplaceListingCard[] | null | undefined,
+): AuctionListing[] {
+  return (listings ?? []).map((listing) =>
+    mapListingToAuctionListing(listing, listing.auction),
+  );
 }

@@ -4,18 +4,21 @@ import Link from "next/link";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DiamondTierBadge, DirhamAmount } from "@/components/ui";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
+import { ListingInlineStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import { useLocale } from "@/context/LocaleContext";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 import {
   mapListingToPlateCard,
   toMarketplaceNumber,
   type MarketplaceListingCard,
+  type MarketplaceListingStatus,
 } from "@/services/marketplace";
 
 export type PlateTier = "diamond" | "gold" | "silver" | "verified";
 
 export type HomeV2Plate = {
   id: string | number;
+  status?: MarketplaceListingStatus | string;
   code: string;
   digits: string;
   emirate?: string;
@@ -42,6 +45,7 @@ export function mapListingToHomeV2Plate(
 
   return {
     id: listing.id,
+    status: card.status,
     code: card.plate_code || "",
     digits: card.plate_digits || listing.display_plate || "",
     emirate: card.emirate,
@@ -59,6 +63,13 @@ export function mapListingToHomeV2Plate(
     hideCode: card.hideCode,
     href: `/listings/${listing.id}`,
   };
+}
+
+/** Maps homepage listing payloads without filtering reserved/sold rows. */
+export function mapListingsToHomeV2Plates(
+  listings: MarketplaceListingCard[] | null | undefined,
+): HomeV2Plate[] {
+  return (listings ?? []).map(mapListingToHomeV2Plate);
 }
 
 const TIER_STYLES: Record<
@@ -89,7 +100,8 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
   return (
     <Link
       href={`/${locale}${plate.href ?? `/home-v2/plates/${plate.id}`}`}
-      className="flex flex-col gap-4 rounded-xl border border-[#d9dee6] bg-white p-5 shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)] transition-shadow hover:shadow-[0_8px_28px_-10px_rgba(21,46,43,0.2)]"
+      data-listing-status={plate.status}
+      className="relative flex flex-col gap-4 rounded-xl border border-[#d9dee6] bg-white p-5 shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)] transition-shadow hover:shadow-[0_8px_28px_-10px_rgba(21,46,43,0.2)]"
     >
       <div className="flex items-center justify-between">
         {tier ? (
@@ -113,23 +125,29 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
         </div>
       </div>
 
-      <NumberPlateDisplay
-        plate_code={plate.code}
-        plate_digits={plate.digits}
-        emirate={plate.emirate ?? "DUBAI"}
-        preview={plate.preview}
-        plateType={plate.plateType}
-        plateDesign={plate.plateDesign}
-        plateVariant={
-          plate.preview || plate.plateType || plate.plateDesign
-            ? undefined
-            : "private_new_colorful"
-        }
-        crop="card"
-        hideCode={plate.hideCode}
-        scaleFontToWidth
-        fontScaleMultiplier={2.3}
-      />
+      <div className="relative">
+        <NumberPlateDisplay
+          plate_code={plate.code}
+          plate_digits={plate.digits}
+          emirate={plate.emirate ?? "DUBAI"}
+          preview={plate.preview}
+          plateType={plate.plateType}
+          plateDesign={plate.plateDesign}
+          plateVariant={
+            plate.preview || plate.plateType || plate.plateDesign
+              ? undefined
+              : "private_new_colorful"
+          }
+          crop="card"
+          hideCode={plate.hideCode}
+          scaleFontToWidth
+          fontScaleMultiplier={2.3}
+        />
+      </div>
+
+      <div className="min-h-6">
+        <ListingInlineStatusBadge status={plate.status} />
+      </div>
 
       <div className="flex flex-col gap-1">
         <div className="font-serif text-2xl font-semibold tracking-tight text-[#081123]">

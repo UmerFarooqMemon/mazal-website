@@ -23,9 +23,12 @@ import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import {
+  canTransactListing,
   getListingDetail,
   getPurchase,
   isHiddenPlateCode,
+  isListingReserved,
+  isListingSold,
   payPurchaseWithWallet,
   resolvePlateParts,
   type MarketplaceListingDetail,
@@ -260,6 +263,45 @@ export default function MarketplaceCheckout({
   const showSidebar = step < 3;
   const showAllocation =
     paymentMode === "split" && (step === 1 || step === 2);
+
+  const listingBlocked =
+    listing != null &&
+    initialRole === "buyer" &&
+    !purchaseId &&
+    !canTransactListing(listing.status);
+
+  const blockedMessage = isListingReserved(listing?.status)
+    ? t("listings.listing_reserved_message")
+    : isListingSold(listing?.status)
+      ? t("listings.listing_sold_message")
+      : t("listings.listing_not_available");
+
+  if (listingBlocked) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ backgroundColor: getColor("background") }}
+      >
+        <div
+          className="max-w-md w-full rounded-2xl border p-8 text-center"
+          style={{
+            backgroundColor: getColor("surface"),
+            borderColor: getColor("border"),
+          }}
+        >
+          <p
+            className="text-lg font-semibold mb-2"
+            style={{ color: getColor("primaryText") }}
+          >
+            {blockedMessage}
+          </p>
+          <p className="text-sm" style={{ color: getColor("mutedText") }}>
+            {t("listings.listing_not_available")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

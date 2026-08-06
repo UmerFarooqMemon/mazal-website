@@ -7,6 +7,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
+import { ListingStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import { formatCountdown } from "./mappers";
 import type { AuctionListing, AuctionListingStatus } from "./types";
 
@@ -55,9 +56,16 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
   return (
     <Link
       href={`/${locale}/auctions/${auction.id}`}
-      className="block bg-white rounded-[18px] border p-4 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_36px_rgba(0,0,0,0.07)] transition-shadow"
+      data-listing-status={auction.marketplaceStatus}
+      className="relative block bg-white rounded-[18px] border p-4 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_36px_rgba(0,0,0,0.07)] transition-shadow"
       style={{ borderColor: getColor("border") }}
     >
+      <ListingStatusBadge
+        status={auction.marketplaceStatus}
+        showSold
+        className="absolute top-3 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+      />
+
       <div
         className="flex items-center justify-end gap-1.5 mb-3 text-[12px]"
         style={{ color: getColor("mutedText") }}
@@ -66,7 +74,7 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
         <span>{auction.views.toLocaleString()}</span>
       </div>
 
-      <div className="mb-4">
+      <div className="relative mb-4">
         <NumberPlateDisplay
           plate_code={auction.code}
           plate_digits={auction.digits}

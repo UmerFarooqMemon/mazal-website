@@ -5,14 +5,13 @@ import { useLocale } from "../../context/LocaleContext";
 import PlateCard from "../marketplace/PlateCard";
 import {
   getTrendingListings,
-  mapListingToPlateCard,
+  mapListingsToPlateCards,
+  type MarketplacePlateCard,
 } from "@/services/marketplace";
 
 export default function TrendingSection() {
   const { t, locale } = useLocale();
-  const [plates, setPlates] = useState<
-    ReturnType<typeof mapListingToPlateCard>[]
-  >([]);
+  const [plates, setPlates] = useState<MarketplacePlateCard[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,7 +21,7 @@ export default function TrendingSection() {
     getTrendingListings(locale)
       .then((response) => {
         if (!active) return;
-        setPlates((response.data.listings || []).map(mapListingToPlateCard));
+        setPlates(mapListingsToPlateCards(response.data.listings));
       })
       .catch(() => {
         if (active) setPlates([]);
@@ -83,6 +82,7 @@ export default function TrendingSection() {
             <PlateCard
               key={plate.id}
               id={plate.id}
+              status={plate.status}
               emirate={plate.emirate}
               code={plate.code}
               price={plate.price}

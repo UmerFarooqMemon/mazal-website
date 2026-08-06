@@ -14,7 +14,11 @@ import type { AuctionListing } from "@/components/auction/types";
 import {
   getAuctionState,
   getListingDetail,
+  canTransactListing,
+  isListingReserved,
+  isListingSold,
   type MarketplaceAuction,
+  type MarketplaceListingStatus,
 } from "@/services/marketplace";
 
 export default function AuctionDetailPage({
@@ -29,6 +33,8 @@ export default function AuctionDetailPage({
   const [auctionState, setAuctionState] = useState<MarketplaceAuction | null>(
     null,
   );
+  const [listingStatus, setListingStatus] =
+    useState<MarketplaceListingStatus | string>("active");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +55,7 @@ export default function AuctionDetailPage({
           auctionResponse?.data.auction ?? listing.auction ?? null;
 
         setAuctionState(apiAuction);
+        setListingStatus(listing.status);
         setAuction(mapDetailToAuctionListing(listing));
       })
       .catch((err) => {
@@ -58,6 +65,7 @@ export default function AuctionDetailPage({
         );
         setAuction(null);
         setAuctionState(null);
+        setListingStatus("active");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -91,6 +99,12 @@ export default function AuctionDetailPage({
   }
 
   const isBiddingOpen = auctionState?.is_bidding_open === true;
+  const canBid = canTransactListing(listingStatus);
+  const bidDisabledReason = isListingReserved(listingStatus)
+    ? t("listings.listing_reserved_message")
+    : isListingSold(listingStatus)
+      ? t("listings.listing_sold_message")
+      : undefined;
 
   return (
     <div
@@ -121,6 +135,8 @@ export default function AuctionDetailPage({
                 auctionState,
                 auctionState.viewer_registration,
               )}
+              canBid={canBid}
+              bidDisabledReason={bidDisabledReason}
             />
           )}
 

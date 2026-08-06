@@ -11,6 +11,7 @@ import { Button } from "@/components/ui";
 import OfferDealSummary from "./OfferDealSummary";
 import {
   acceptOffer,
+  canTransactListing,
   counterOffer,
   endNegotiation,
   finalOffer,
@@ -18,6 +19,9 @@ import {
   getListingOffers,
   getMyOffers,
   isHiddenPlateCode,
+  isListingReserved,
+  isListingSold,
+  MarketplaceRequestError,
   rejectOffer,
   resolveListingPreview,
   resolvePlateParts,
@@ -64,6 +68,14 @@ export default function OfferNegotiation() {
 
   const isOwner = Boolean(listing?.is_owner);
   const askingPrice = Number(listing?.asking_price) || 0;
+  const canTransact = canTransactListing(listing?.status);
+  const reserved = isListingReserved(listing?.status);
+  const sold = isListingSold(listing?.status);
+  const unavailableMessage = reserved
+    ? t("listings.listing_reserved_message")
+    : sold
+      ? t("listings.listing_sold_message")
+      : t("listings.listing_not_available");
 
   const deriveQuota = useCallback(
     (nextOffers: MarketplaceOffer[], limit: number) => {
@@ -137,6 +149,15 @@ export default function OfferNegotiation() {
     }
   }, [counterOfferLimit, deriveQuota, locale, params.id]);
 
+  const handleListingConflict = async (error: unknown) => {
+    if (error instanceof MarketplaceRequestError && error.status === 422) {
+      toast.error(t("listings.listing_reserved_toast"));
+      await load();
+      return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
     load();
   }, [load]);
@@ -188,6 +209,7 @@ export default function OfferNegotiation() {
 
   const canBuyerStartNegotiation =
     !isOwner &&
+    canTransact &&
     listing?.can_make_offer !== false &&
     !latestPending &&
     !acceptedOffer &&
@@ -261,12 +283,14 @@ export default function OfferNegotiation() {
             purchaseId ? `&purchaseId=${purchaseId}` : ""
           }`,
         );
-      } catch {
+      } catch (purchaseError) {
+        if (await handleListingConflict(purchaseError)) return;
         router.push(
           `/${locale}/listings/${params.id}/checkout?role=buyer&price=${offerAmount(offer)}`,
         );
       }
     } catch (error) {
+      if (await handleListingConflict(error)) return;
       toast.error(
         error instanceof Error ? error.message : "Failed to accept offer.",
       );
@@ -307,6 +331,7 @@ export default function OfferNegotiation() {
       setBuyerFinal(false);
       await load();
     } catch (error) {
+      if (await handleListingConflict(error)) return;
       toast.error(
         error instanceof Error ? error.message : "Failed to submit offer.",
       );
@@ -482,6 +507,19 @@ export default function OfferNegotiation() {
               : t("offer.subtitle")}
           </p>
         </div>
+
+        {!canTransact && !isOwner && (
+          <p
+            className="mb-8 rounded-xl border px-4 py-3 text-sm leading-relaxed text-center"
+            style={{
+              borderColor: getColor("border"),
+              backgroundColor: getColor("surface"),
+              color: getColor("secondaryText"),
+            }}
+          >
+            {unavailableMessage}
+          </p>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
           <div className="lg:col-span-3 space-y-4">
@@ -988,6 +1026,8 @@ export default function OfferNegotiation() {
           <div className="lg:col-span-2 sticky top-24">
             <OfferDealSummary
               askingPrice={askingPrice}
+              status={listing?.status}
+              previouslySold={listing?.previously_sold}
               plate_code={resolvePlateParts(listing).code}
               plate_digits={resolvePlateParts(listing).digits}
               emirate={

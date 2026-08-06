@@ -12,7 +12,7 @@ import {
   createWatchlistCategory,
   deleteWatchlistCategory,
   getWatchlist,
-  mapListingToPlateCard,
+  mapListingsToPlateCards,
   removeFromWatchlist,
   type MarketplaceWatchlistCategory,
   type MarketplaceWatchlistItem,
@@ -113,11 +113,12 @@ export default function BuyerWatchlistPage() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {items.map((item) => {
-          const plate = mapListingToPlateCard(item.listing);
+          const plate = mapListingsToPlateCards([item.listing])[0];
           return (
             <div key={item.id} className="relative group">
               <PlateCard
                 id={plate.id}
+                status={plate.status}
                 emirate={plate.emirate}
                 code={plate.code}
                 price={plate.price}

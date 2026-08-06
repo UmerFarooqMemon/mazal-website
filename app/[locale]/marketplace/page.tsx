@@ -11,8 +11,9 @@ import MarketplaceFilters, {
 import PlateCard from "../../../components/marketplace/PlateCard";
 import {
   mapEmirateToApi,
-  mapListingToPlateCard,
+  mapListingsToPlateCards,
   searchListings,
+  type MarketplacePlateCard,
 } from "@/services/marketplace";
 
 const INITIAL_FILTERS: MarketplaceFilterState = {
@@ -40,9 +41,7 @@ export default function MarketplacePage() {
     useState<MarketplaceFilterState>(INITIAL_FILTERS);
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
-  const [listings, setListings] = useState<
-    ReturnType<typeof mapListingToPlateCard>[]
-  >([]);
+  const [listings, setListings] = useState<MarketplacePlateCard[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -70,7 +69,7 @@ export default function MarketplacePage() {
           locale,
         );
 
-        const mapped = (response.data.listings || []).map(mapListingToPlateCard);
+        const mapped = mapListingsToPlateCards(response.data.listings);
         setListings((prev) => (append ? [...prev, ...mapped] : mapped));
         setTotalCount(response.data.pagination?.total ?? mapped.length);
         setLastPage(response.data.pagination?.last_page ?? 1);
@@ -211,6 +210,7 @@ export default function MarketplacePage() {
                     key={plate.id}
                     fitPlateFont
                     id={plate.id}
+                    status={plate.status}
                     emirate={plate.emirate}
                     code={plate.code}
                     price={plate.price}

@@ -12,6 +12,9 @@ interface BidInputProps {
   listingId: string | number;
   auction: MarketplaceAuction;
   onBidPlaced?: (auction: MarketplaceAuction) => void;
+  /** When false, bidding is blocked (e.g. listing reserved/sold). */
+  canBid?: boolean;
+  disabledReason?: string;
 }
 
 function toNumber(value: number | string | null | undefined): number {
@@ -29,6 +32,8 @@ export default function BidInput({
   listingId,
   auction,
   onBidPlaced,
+  canBid = true,
+  disabledReason,
 }: BidInputProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -48,6 +53,7 @@ export default function BidInput({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canBid) return;
     setSubmitting(true);
     setError(null);
 
@@ -95,7 +101,8 @@ export default function BidInput({
             }
           }}
           onChange={(e) => setAmountInput(formatPriceInput(e.target.value))}
-          className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none"
+          disabled={!canBid}
+          className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none disabled:opacity-60"
           style={{
             borderColor: getColor("border"),
             color: getColor("primaryText"),
@@ -106,7 +113,7 @@ export default function BidInput({
           type="submit"
           variant="primary"
           size="md"
-          disabled={submitting || !auction.is_bidding_open}
+          disabled={submitting || !auction.is_bidding_open || !canBid}
           className="rounded-xl shrink-0"
         >
           {submitting
@@ -114,6 +121,11 @@ export default function BidInput({
             : t("auctions.add_deposit_cta")}
         </Button>
       </div>
+      {disabledReason && !canBid && (
+        <p className="text-xs" style={{ color: getColor("mutedText") }}>
+          {disabledReason}
+        </p>
+      )}
       {error && (
         <p className="text-sm" style={{ color: "#DC2626" }}>
           {error}

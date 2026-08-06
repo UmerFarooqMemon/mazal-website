@@ -4,10 +4,18 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
+import {
+  getListingDetailCardBackground,
+  hasListingDetailStatus,
+  ListingDetailStatusBadge,
+} from "@/components/marketplace/ListingStatusBadge";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
+import { type MarketplaceListingStatus } from "@/services/marketplace";
 
 interface OfferDealSummaryProps {
   askingPrice: number;
+  status?: MarketplaceListingStatus | string | null;
+  previouslySold?: boolean;
   plate_code?: string;
   plate_digits?: string;
   emirate?: string;
@@ -19,6 +27,8 @@ interface OfferDealSummaryProps {
 
 export default function OfferDealSummary({
   askingPrice,
+  status,
+  previouslySold,
   plate_code = "A",
   plate_digits = "777",
   emirate = "DUBAI",
@@ -27,8 +37,13 @@ export default function OfferDealSummary({
   preview,
   hideCode = false,
 }: OfferDealSummaryProps) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { getColor } = useTheme();
+  const showDetailStatus = hasListingDetailStatus(status, previouslySold);
+  const detailCardBackground = getListingDetailCardBackground(
+    status,
+    previouslySold,
+  );
 
   const escrow = Math.round(askingPrice * 0.01);
   const platform = Math.round(askingPrice * 0.04);
@@ -57,18 +72,30 @@ export default function OfferDealSummary({
     <div
       className="marketplace-checkout-summary rounded-2xl border shadow-[0_8px_30px_rgba(0,0,0,0.06)] p-6"
       style={{
-        backgroundColor: getColor("surface"),
+        backgroundColor: showDetailStatus ? undefined : getColor("surface"),
+        background: detailCardBackground,
         borderColor: getColor("border"),
       }}
     >
       <div
-        className="relative z-10 text-[10px] font-bold uppercase tracking-wider mb-3 text-start"
+        className="text-[10px] font-bold uppercase tracking-wider mb-3 text-start"
         style={{ color: getColor("mutedText") }}
       >
-        {t("offer.summary_title")}
+        {showDetailStatus ? (
+          <div className="flex items-center justify-between gap-3">
+            <ListingDetailStatusBadge
+              status={status}
+              previouslySold={previouslySold}
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"
+            />
+            <span>{t("offer.summary_title")}</span>
+          </div>
+        ) : (
+          t("offer.summary_title")
+        )}
       </div>
 
-      <div className="deal-summary-plate-frame mb-1">
+      <div className="relative deal-summary-plate-frame mb-1 rounded-[20px] bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
         <NumberPlateDisplay
           plate_code={plate_code}
           plate_digits={plate_digits}

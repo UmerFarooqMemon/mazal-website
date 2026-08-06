@@ -196,11 +196,55 @@ export interface MarketplaceRevealScreen {
 
 export type MarketplaceBoostTier = "diamond" | "gold" | "silver";
 
+/** Public marketplace browse includes active, reserved, and sold listings. */
+export type MarketplaceListingStatus = "active" | "reserved" | "sold";
+
+export function isListingActive(
+  status?: MarketplaceListingStatus | string | null,
+): boolean {
+  return status === "active";
+}
+
+export function isListingReserved(
+  status?: MarketplaceListingStatus | string | null,
+): boolean {
+  return status === "reserved";
+}
+
+export function isListingSold(
+  status?: MarketplaceListingStatus | string | null,
+): boolean {
+  return status === "sold";
+}
+
+/** Buyers may purchase, offer, or bid only while the listing is active. */
+export function canTransactListing(
+  status?: MarketplaceListingStatus | string | null,
+): boolean {
+  return isListingActive(status);
+}
+
+export class MarketplaceRequestError extends Error {
+  status: number;
+  errors?: Record<string, unknown>;
+
+  constructor(
+    message: string,
+    status: number,
+    errors?: Record<string, unknown>,
+  ) {
+    super(message);
+    this.name = "MarketplaceRequestError";
+    this.status = status;
+    this.errors = errors;
+  }
+}
+
 export interface MarketplaceListingCard {
   id: number;
   listing_type: string;
   listing_type_label: string;
-  status: string;
+  status: MarketplaceListingStatus | (string & {});
   status_label?: string;
   title: string;
   emirate: string;
@@ -507,6 +551,7 @@ export interface MarketplaceSearchParams {
   sort?: string;
   per_page?: number;
   page?: number;
+  /** Intentionally omitted: do not send `status` — browse must include reserved/sold. */
 }
 
 export interface MarketplaceNotificationSettings {
@@ -612,7 +657,11 @@ async function marketplaceRequest<T>(
 
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(payload?.message || payload?.error || "Request failed.");
+    throw new MarketplaceRequestError(
+      payload?.message || payload?.error || "Request failed.",
+      response.status,
+      payload?.errors,
+    );
   }
 
   return payload;
@@ -799,6 +848,7 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
 
   return {
     id: listing.id,
+    status: listing.status,
     emirate: listing.emirate_label?.toUpperCase() || listing.emirate,
     emirateKey: listing.emirate,
     code,
@@ -817,6 +867,18 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     preview: resolveListingPreview(listing),
     imageUrl: listing.preview?.image_url,
   };
+}
+
+export type MarketplacePlateCard = ReturnType<typeof mapListingToPlateCard>;
+
+/**
+ * Maps browse API listings to grid cards. Does not filter by status — active,
+ * reserved, and sold listings from the backend all stay visible in grids.
+ */
+export function mapListingsToPlateCards(
+  listings: MarketplaceListingCard[] | null | undefined,
+): MarketplacePlateCard[] {
+  return (listings ?? []).map(mapListingToPlateCard);
 }
 
 // 1. Search Listings

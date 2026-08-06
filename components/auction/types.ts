@@ -31,7 +31,8 @@ export interface AuctionListing {
   startsIn?: string;
   currentBids?: number;
   timeLeft?: string;
-  /** When true, the plate code letter is blurred on the plate preview. */
+  /** Marketplace lifecycle — reserved/sold badges use this, not auction.outcome. */
+  marketplaceStatus?: string;
   hideCode?: boolean;
 }
 

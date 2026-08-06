@@ -10,6 +10,9 @@ import { Button, DirhamAmount } from "@/components/ui";
 import type { MarketplaceListingDetail } from "@/services/marketplace";
 import {
   addToWatchlist,
+  canTransactListing,
+  isListingReserved,
+  isListingSold,
   removeFromWatchlist,
 } from "@/services/marketplace";
 
@@ -21,11 +24,14 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const { isAuthenticated } = useAuth();
-  const isRTL = locale === "ar";
   const [watchlisted, setWatchlisted] = useState(
     listing.is_watchlisted ?? false,
   );
   const [watchlistLoading, setWatchlistLoading] = useState(false);
+
+  const canTransact = canTransactListing(listing.status);
+  const reserved = isListingReserved(listing.status);
+  const sold = isListingSold(listing.status);
 
   const plateCode = listing.code_hidden
     ? listing.plate_code && /^\?+$/.test(String(listing.plate_code))
@@ -92,6 +98,12 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
     }
   };
 
+  const unavailableMessage = reserved
+    ? t("listings.listing_reserved_message")
+    : sold
+      ? t("listings.listing_sold_message")
+      : t("listings.listing_not_available");
+
   return (
     <div
       className="rounded-2xl border shadow-sm p-[29px] sticky top-24"
@@ -121,22 +133,46 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
         </div>
       </div>
 
+      {!canTransact && !listing.is_owner && (
+        <p
+          className="mb-4 rounded-xl border px-3 py-2.5 text-xs leading-relaxed text-center"
+          style={{
+            borderColor: getColor("border"),
+            backgroundColor: getColor("background"),
+            color: getColor("secondaryText"),
+          }}
+        >
+          {unavailableMessage}
+        </p>
+      )}
+
       <div className="flex flex-col gap-3 mb-4">
-        {!listing.is_owner && (
-          <Link
-            href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
-            className="block"
-          >
+        {!listing.is_owner &&
+          (canTransact ? (
+            <Link
+              href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
+              className="block"
+            >
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                className="shadow-md !h-11"
+              >
+                {t("listings.buy_escrow")}
+              </Button>
+            </Link>
+          ) : (
             <Button
               variant="primary"
               size="lg"
               fullWidth
+              disabled
               className="shadow-md !h-11"
             >
               {t("listings.buy_escrow")}
             </Button>
-          </Link>
-        )}
+          ))}
 
         {listing.is_owner && (
           <Link
@@ -154,15 +190,32 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           </Link>
         )}
 
-        {listing.can_make_offer !== false && !listing.is_owner && (
-          <Link
-            href={`/${locale}/listings/${listing.id}/offer`}
-            className="block"
-          >
+        {listing.can_make_offer !== false &&
+          !listing.is_owner &&
+          (canTransact ? (
+            <Link
+              href={`/${locale}/listings/${listing.id}/offer`}
+              className="block"
+            >
+              <Button
+                variant="outline"
+                size="lg"
+                fullWidth
+                className="!h-[46px]"
+                style={{
+                  borderColor: getColor("border"),
+                  color: getColor("primaryText"),
+                }}
+              >
+                {t("listings.make_offer")}
+              </Button>
+            </Link>
+          ) : (
             <Button
               variant="outline"
               size="lg"
               fullWidth
+              disabled
               className="!h-[46px]"
               style={{
                 borderColor: getColor("border"),
@@ -171,18 +224,34 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
             >
               {t("listings.make_offer")}
             </Button>
-          </Link>
-        )}
+          ))}
 
-        {listing.code_hidden && !listing.is_owner && (
-          <Link
-            href={`/${locale}/listings/${listing.id}/reveal`}
-            className="block"
-          >
+        {listing.code_hidden &&
+          !listing.is_owner &&
+          (canTransact ? (
+            <Link
+              href={`/${locale}/listings/${listing.id}/reveal`}
+              className="block"
+            >
+              <Button
+                variant="outline"
+                size="lg"
+                fullWidth
+                className="!h-[46px]"
+                style={{
+                  borderColor: getColor("primary"),
+                  color: getColor("primary"),
+                }}
+              >
+                {t("listings.reveal_code")}
+              </Button>
+            </Link>
+          ) : (
             <Button
               variant="outline"
               size="lg"
               fullWidth
+              disabled
               className="!h-[46px]"
               style={{
                 borderColor: getColor("primary"),
@@ -191,13 +260,10 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
             >
               {t("listings.reveal_code")}
             </Button>
-          </Link>
-        )}
+          ))}
       </div>
 
-      <div
-        className="grid grid-cols-2 gap-2 mb-6"
-      >
+      <div className="grid grid-cols-2 gap-2 mb-6">
         <Button
           variant="outline"
           size="md"
@@ -235,10 +301,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
         style={{ borderColor: getColor("border") }}
       >
         {rows.map((row) => (
-          <div
-            key={row.label}
-            className={`flex justify-between text-sm py-1`}
-          >
+          <div key={row.label} className={`flex justify-between text-sm py-1`}>
             <span style={{ color: getColor("mutedText") }}>{row.label}</span>
             <span
               className="font-medium"

@@ -5,7 +5,8 @@ import { useTheme } from "@/context/ThemeContext";
 import PlateCard from "../marketplace/PlateCard";
 import {
   getSimilarListings,
-  mapListingToPlateCard,
+  mapListingsToPlateCards,
+  type MarketplacePlateCard,
 } from "@/services/marketplace";
 
 interface SimilarPlatesProps {
@@ -16,9 +17,7 @@ export default function SimilarPlates({ listingId }: SimilarPlatesProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
-  const [plates, setPlates] = useState<
-    ReturnType<typeof mapListingToPlateCard>[]
-  >([]);
+  const [plates, setPlates] = useState<MarketplacePlateCard[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +27,7 @@ export default function SimilarPlates({ listingId }: SimilarPlatesProps) {
     getSimilarListings(listingId, locale)
       .then((response) => {
         if (!active) return;
-        setPlates((response.data.listings || []).map(mapListingToPlateCard));
+        setPlates(mapListingsToPlateCards(response.data.listings));
       })
       .catch(() => {
         if (active) setPlates([]);
@@ -68,6 +67,7 @@ export default function SimilarPlates({ listingId }: SimilarPlatesProps) {
             <PlateCard
               key={plate.id}
               id={plate.id}
+              status={plate.status}
               emirate={plate.emirate}
               code={plate.code}
               price={plate.price}

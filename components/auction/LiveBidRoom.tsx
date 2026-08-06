@@ -16,12 +16,16 @@ interface LiveBidRoomProps {
   listingId: string | number;
   auction: MarketplaceAuction;
   summary: AuctionSummaryData;
+  canBid?: boolean;
+  bidDisabledReason?: string;
 }
 
 export default function LiveBidRoom({
   listingId,
   auction: initialAuction,
   summary,
+  canBid = true,
+  bidDisabledReason,
 }: LiveBidRoomProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -74,6 +78,8 @@ export default function LiveBidRoom({
         listingId={listingId}
         auction={auction}
         onBidPlaced={handleBidPlaced}
+        canBid={canBid}
+        disabledReason={bidDisabledReason}
       />
 
       <div>

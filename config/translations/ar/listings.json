@@ -149,5 +149,12 @@
   "reveal_card_payment_desc": "دفع آمن عبر الإنترنت.",
   "reveal_card_form_title": "بطاقة ائتمان/خصم لكشف الكود",
   "watchlist_added": "تمت الإضافة إلى قائمة المتابعة.",
-  "watchlist_removed": "تمت الإزالة من قائمة المتابعة."
+  "watchlist_removed": "تمت الإزالة من قائمة المتابعة.",
+  "status_sold": "مُباع",
+  "status_reserved": "محجوز",
+  "status_previously_sold": "بِيع سابقاً",
+  "listing_reserved_message": "هذه اللوحة محجوزة.",
+  "listing_sold_message": "تم بيع هذه اللوحة.",
+  "listing_not_available": "هذا الإدراج لم يعد متاحاً للشراء.",
+  "listing_reserved_toast": "هذه اللوحة محجوزة. تم تحديث الإدراج."
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Clock, Gavel } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { ListingStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { Button, DirhamAmount } from "@/components/ui";
 import DirhamSymbolIcon from "@/components/ui/DirhamSymbolIcon";
@@ -65,7 +66,12 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
         </span>
       </div>
 
-      <div className="bg-white rounded-[20px] p-4 sm:p-8 mb-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
+      <div className="relative bg-white rounded-[20px] p-4 sm:p-8 mb-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
+        <ListingStatusBadge
+          status={auction.marketplaceStatus}
+          showSold
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+        />
         <NumberPlateDisplay
           plate_code={auction.code}
           plate_digits={auction.digits}

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
 import {
   default as HomeV2PlateCard,
-  mapListingToHomeV2Plate,
+  mapListingsToHomeV2Plates,
 } from "@/components/home-v2/HomeV2PlateCard";
 import { useLocale } from "@/context/LocaleContext";
 import type { HomeV2Plate } from "@/components/home-v2/HomeV2PlateCard";
@@ -27,9 +27,7 @@ function useHomepageListings(loader: typeof getMarketWatchingListings) {
       .then((response) => {
         if (!active) return;
         setHasError(false);
-        setPlates(
-          (response.data.listings || []).map(mapListingToHomeV2Plate),
-        );
+        setPlates(mapListingsToHomeV2Plates(response.data.listings));
       })
       .catch(() => {
         if (!active) return;

@@ -8,7 +8,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import AuctionPageHero from "@/components/auction/AuctionPageHero";
 import AuctionListingCard from "@/components/auction/AuctionListingCard";
-import { mapListingToAuctionListing } from "@/components/auction/mappers";
+import { mapListingsToAuctionListings } from "@/components/auction/mappers";
 import type { AuctionListing } from "@/components/auction/types";
 import { searchListings } from "@/services/marketplace";
 
@@ -35,9 +35,7 @@ export default function AuctionsPage() {
         locale,
       );
 
-      const mapped = (response.data.listings || []).map((listing) =>
-        mapListingToAuctionListing(listing, listing.auction),
-      );
+      const mapped = mapListingsToAuctionListings(response.data.listings);
       setAuctions(mapped);
     } catch (err) {
       setError(
