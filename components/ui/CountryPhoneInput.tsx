@@ -183,6 +183,8 @@ export default function CountryPhoneInput({
         onlyCountries={onlyCountries}
         disableDropdown={disableDropdown || hideFlag}
         enableSearch={onlyCountries?.length === 1 ? false : enableSearch}
+        disableSearchIcon
+        searchPlaceholder=""
         disabled={disabled}
         autoFormat
         enableLongNumbers={false}
@@ -237,6 +239,19 @@ export default function CountryPhoneInput({
           borderColor: getColor("border"),
           color: getColor("primaryText"),
           ...(isRTL ? { left: "auto", right: 0 } : {}),
+        }}
+        searchStyle={{
+          width: "100%",
+          margin: 0,
+          padding: "8px 10px",
+          border: "1px solid #111827",
+          borderRadius: "2px",
+          outline: "none",
+          boxSizing: "border-box",
+          fontSize: "0.8125rem",
+          lineHeight: "1.25rem",
+          backgroundColor: "#ffffff",
+          color: getColor("primaryText"),
         }}
         onChange={(phone, data, _event, formattedValue) => {
           const rawIso = isCountryData(data) ? data.countryCode : "ae";

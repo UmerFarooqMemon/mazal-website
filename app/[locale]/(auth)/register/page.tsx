@@ -152,10 +152,10 @@ export default function RegisterPage() {
       style={{ backgroundColor: getColor("background") }}
     >
       <div className="w-full max-w-6xl">
-        <div className="rounded-3xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-2">
-          {/* Form Side */}
+        <div className="rounded-3xl shadow-2xl grid grid-cols-1 lg:grid-cols-2 overflow-visible">
+          {/* Form Side — overflow visible so country phone dropdown isn't clipped */}
           <div
-            className="flex items-center justify-center p-6 sm:p-8 lg:p-12"
+            className="relative z-10 flex items-center justify-center p-6 sm:p-8 lg:p-12 rounded-t-3xl lg:rounded-tr-none lg:rounded-l-3xl"
             style={{ backgroundColor: getColor("surface") }}
             dir={isRTL ? "rtl" : "ltr"}
           >
@@ -400,7 +400,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Auth Hero - right for AR, left for EN */}
-          <div className="">
+          <div className="overflow-hidden rounded-b-3xl lg:rounded-bl-none lg:rounded-r-3xl">
             <AuthHero
               titleKey="auth.register_hero_title"
               subtitleKey="auth.register_hero_subtitle"

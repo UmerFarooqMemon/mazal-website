@@ -118,10 +118,10 @@ export default function LoginPage() {
       className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8"
       style={{ backgroundColor: getColor("background") }}
     >
-      <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-hidden shadow-2xl">
+      <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch gap-0 rounded-3xl overflow-visible shadow-2xl">
         {/* AuthHero - right for AR, left for EN */}
         <div
-          className="hidden lg:flex w-full lg:w-1/2"
+          className="hidden lg:flex w-full lg:w-1/2 overflow-hidden rounded-l-3xl"
         >
           <AuthHero
             titleKey="auth.hero_title"
@@ -133,7 +133,7 @@ export default function LoginPage() {
 
         {/* Form - left for AR, right for EN */}
           <div
-            className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12"
+            className="relative z-10 w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 rounded-3xl lg:rounded-l-none lg:rounded-r-3xl"
             style={{ backgroundColor: getColor("surface") }}
             dir={isRTL ? "rtl" : "ltr"}
           >
