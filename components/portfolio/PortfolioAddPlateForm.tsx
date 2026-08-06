@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { FolderPlus, Layers, LineChart, ShieldCheck } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
@@ -9,6 +9,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import PortfolioPlateForm from "@/components/portfolio/PortfolioPlateForm";
 import CertificatesRequestSkeleton from "@/components/skeletons/dashboard/valuation-certificates/CertificatesRequestSkeleton";
+import { getLoginHref } from "@/lib/auth-redirect";
 
 interface PortfolioAddPlateFormProps {
   onSuccess?: () => void;
@@ -18,6 +19,7 @@ export default function PortfolioAddPlateForm({
   onSuccess,
 }: PortfolioAddPlateFormProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { t, locale, loading: localeLoading } = useLocale();
   const isRTL = locale === "ar";
   const { getColor, loading: themeLoading } = useTheme();
@@ -36,7 +38,7 @@ export default function PortfolioAddPlateForm({
     if (isSubmitting) return;
     if (!isAuthenticated || !token) {
       toast.error(t("common.login_required"));
-      router.push(`/${locale}/login`);
+      router.push(getLoginHref(locale, pathname));
       return;
     }
 

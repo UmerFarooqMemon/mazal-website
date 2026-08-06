@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -11,6 +11,7 @@ import SiteLogo from "@/components/layout/SiteLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { featureFlags } from "@/config/featureFlags";
 import { getCurrentKyc } from "@/services/kyc";
+import { getLoginHref } from "@/lib/auth-redirect";
 import {
   User,
   Menu,
@@ -29,6 +30,7 @@ import {
 
 export default function Header() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { locale, t } = useLocale();
   const isRTL = locale === "ar";
@@ -38,6 +40,11 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
 
   const { user, isAuthenticated, logout, isLoggingOut, updateUser } = useAuth();
+  const search = searchParams.toString();
+  const loginHref = getLoginHref(
+    locale,
+    `${pathname}${search ? `?${search}` : ""}`,
+  );
   const isKycVerified = Boolean(user?.kyc_verified);
   const isKycRejected =
     !isKycVerified &&
@@ -304,7 +311,7 @@ export default function Header() {
                   </button>
                 </div>
               ) : (
-                <Link href={`/${locale}/login`}>
+                <Link href={loginHref}>
                   <Button
                     variant="primary"
                     size="sm"
@@ -366,7 +373,7 @@ export default function Header() {
                   </div>
                 </Link>
               ) : (
-                <Link href={`/${locale}/login`}>
+                <Link href={loginHref}>
                   <Button
                     variant="primary"
                     size="sm"
@@ -563,7 +570,7 @@ export default function Header() {
                     <span>{t("common.sign_out")}</span>
                   </button>
                 ) : (
-                  <Link href={`/${locale}/login`} onClick={closeMenu}>
+                  <Link href={loginHref} onClick={closeMenu}>
                     <Button
                       variant="primary"
                       size="lg"

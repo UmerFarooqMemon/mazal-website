@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -10,9 +10,11 @@ import CertificateFAQ from "@/components/certificates/CertificateFAQ";
 import { BadgeCheck, ShieldCheck, Sparkles, Stamp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import CertificatesRequestSkeleton from "@/components/skeletons/dashboard/valuation-certificates/CertificatesRequestSkeleton";
+import { getLoginHref } from "@/lib/auth-redirect";
 
 export default function CertificateRequestPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { t, locale, loading: localeLoading } = useLocale();
   const isRTL = locale === "ar";
   const { getColor, loading: themeLoading } = useTheme();
@@ -31,7 +33,7 @@ export default function CertificateRequestPage() {
     if (isSubmitting) return;
     if (!isAuthenticated || !token) {
       toast.error(t("common.login_required"));
-      router.push(`/${locale}/login`);
+      router.push(getLoginHref(locale, pathname));
       return;
     }
 

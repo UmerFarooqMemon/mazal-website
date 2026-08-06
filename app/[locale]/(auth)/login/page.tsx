@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -13,10 +13,12 @@ import { useAuth } from "@/hooks/useAuth";
 import AuthSkeleton from "@/components/skeletons/auth/AuthSkeleton";
 import SiteLogo from "@/components/layout/SiteLogo";
 import { requestGoogleIdToken } from "@/lib/google-auth";
+import { getPostLoginRedirect } from "@/lib/auth-redirect";
 
 export default function LoginPage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isRTL = locale === "ar";
   const { getColor, loading: themeLoading } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
@@ -32,12 +34,16 @@ export default function LoginPage() {
   }>({});
 
   const { login, loginWithGoogle, loading, isAuthenticated } = useAuth();
+  const postLoginRedirect = getPostLoginRedirect(
+    locale,
+    searchParams.get("redirect"),
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(`/${locale}/profile`);
+      router.replace(postLoginRedirect);
     }
-  }, [isAuthenticated, locale, router]);
+  }, [isAuthenticated, postLoginRedirect, router]);
 
   // Show skeleton while theme & locale are loading
   if (themeLoading || localeLoading) {
@@ -74,7 +80,7 @@ export default function LoginPage() {
       await login({ login: formData.login, password: formData.password });
       toast.dismiss(loadingToast);
       toast.success(t("common.login_success"));
-      setTimeout(() => router.push(`/${locale}/profile`), 800);
+      setTimeout(() => router.push(postLoginRedirect), 800);
     } catch (err) {
       toast.dismiss(loadingToast);
       toast.error(t("common.invalid_credentials"));
@@ -94,7 +100,7 @@ export default function LoginPage() {
       await loginWithGoogle(idToken);
       toast.dismiss(loadingToast);
       toast.success(t("common.login_success"));
-      setTimeout(() => router.push(`/${locale}/profile`), 800);
+      setTimeout(() => router.push(postLoginRedirect), 800);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
       const message =
