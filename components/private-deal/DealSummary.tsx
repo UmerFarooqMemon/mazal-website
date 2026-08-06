@@ -22,6 +22,13 @@ export interface DealData {
   price: number;
   /** When true, blur the plate code letter (hide_code / code_hidden). */
   hideCode?: boolean;
+  /** Seller step: number plate vs other item. */
+  sellingType?: "plate" | "other";
+  itemTitle?: string;
+  itemDescription?: string;
+  /** Object URL or remote URL for Other-item preview in deal summary. */
+  itemImageUrl?: string;
+  itemSerial?: string;
 }
 
 export interface DealSummaryPricing {
@@ -149,23 +156,55 @@ export default function DealSummary({
             : "mb-5"
         }
       >
-        <NumberPlateDisplay
-          plate_code={showCodeField ? data.code : ""}
-          plate_digits={data.digit}
-          emirate={emirateLabel}
-          preview={selectedVariant?.preview}
-          plateVariant={data.plateVariant}
-          plateType={data.plateType}
-          plateDesign={data.plateDesign}
-          crop={plateCrop}
-          showCode={showCodeField}
-          hideCode={hideCode}
-          wrapperClassName={
-            plateCrop === "deal-summary"
-              ? "deal-summary-plate w-full"
-              : "w-full overflow-hidden"
-          }
-        />
+        {data.sellingType === "other" ? (
+          <div
+            className={
+              plateCrop === "deal-summary"
+                ? "deal-summary-plate w-full overflow-hidden rounded-xl"
+                : "w-full overflow-hidden rounded-xl"
+            }
+            style={{
+              backgroundColor: getColor("primaryLight"),
+              aspectRatio: "16 / 10",
+            }}
+          >
+            {data.itemImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={data.itemImageUrl}
+                alt={data.itemTitle || t("private-deal.item_preview")}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center px-4 text-center">
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: getColor("mutedText") }}
+                >
+                  {data.itemTitle?.trim() || t("private-deal.item_preview")}
+                </span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <NumberPlateDisplay
+            plate_code={showCodeField ? data.code : ""}
+            plate_digits={data.digit}
+            emirate={emirateLabel}
+            preview={selectedVariant?.preview}
+            plateVariant={data.plateVariant}
+            plateType={data.plateType}
+            plateDesign={data.plateDesign}
+            crop={plateCrop}
+            showCode={showCodeField}
+            hideCode={hideCode}
+            wrapperClassName={
+              plateCrop === "deal-summary"
+                ? "deal-summary-plate w-full"
+                : "w-full overflow-hidden"
+            }
+          />
+        )}
       </div>
 
       <div className="space-y-3 text-sm">

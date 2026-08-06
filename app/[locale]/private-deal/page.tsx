@@ -86,6 +86,11 @@ export default function PrivateDealPage() {
     code: "",
     digit: "",
     price: 0,
+    sellingType: "plate",
+    itemTitle: "",
+    itemDescription: "",
+    itemImageUrl: "",
+    itemSerial: "",
   });
   const [details, setDetails] = useState<ConfirmDetailsData>({
     fullName: "",
@@ -101,6 +106,7 @@ export default function PrivateDealPage() {
     secondaryMobileCountryIso: "ae",
     secondaryMobileDialCode: "+971",
     licenseSource: "mbr",
+    custodyIntent: "hold",
     giftPlate: false,
     giftEmail: "",
     giftMessage: "",
@@ -331,6 +337,25 @@ export default function PrivateDealPage() {
     const mobile = toE164FromPhoneDigits(details.mobile) || details.mobile;
     const secondaryMobile =
       toE164FromPhoneDigits(details.secondaryMobile) || details.secondaryMobile;
+    const isHoldCustody = details.custodyIntent === "hold";
+
+    // Hold custody: personal details only — same individual party payload shape.
+    if (isHoldCustody) {
+      return {
+        intent: "complete",
+        party_type: "individual",
+        full_name: details.fullName,
+        mobile_number: mobile,
+        email: details.email,
+        emirates_id: details.emiratesId || undefined,
+        identification_type: "emirates_id",
+        accept_terms: true,
+        role_details: {
+          notes: "",
+        },
+      };
+    }
+
     const isCompany = details.personType === "organization";
     if (isCompany) {
       return {
@@ -412,6 +437,14 @@ export default function PrivateDealPage() {
 
   const handleSavePartyDetails = async (variant: "seller" | "buyer") => {
     await withSubmit(async () => {
+      if (variant === "seller" && deal.sellingType === "other") {
+        toast.error(
+          t("private-deal.other_api_unavailable") ||
+            "Other items are not available for escrow yet. Please use Number plate.",
+        );
+        return;
+      }
+
       const mobileIso = details.mobileCountryIso || "ae";
       const mobileDial = details.mobileDialCode || "+971";
       const secondaryIso = details.secondaryMobileCountryIso || "ae";
@@ -427,6 +460,7 @@ export default function PrivateDealPage() {
         );
       }
       if (
+        details.custodyIntent !== "hold" &&
         hasNationalPhoneDigits(details.secondaryMobile, secondaryDial) &&
         !isValidCountryPhoneNumber(details.secondaryMobile, secondaryIso)
       ) {
@@ -773,6 +807,7 @@ export default function PrivateDealPage() {
             onBack={() => setStep(1)}
             onContinue={() => void handleSavePartyDetails("buyer")}
             variant="buyer"
+            showCustodyOptions
             continueLabel={t("private-deal.confirm")}
             submitting={submitting}
             licenseSources={licenseSourceOptions}

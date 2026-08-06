@@ -16,6 +16,8 @@ import {
 } from "@/lib/phone-validation";
 import { PRIVATE_DEAL_LICENSE_SOURCES } from "@/config/license-sources";
 
+export type CustodyIntent = "hold" | "transfer";
+
 export interface ConfirmDetailsData {
   fullName: string;
   mobile: string;
@@ -30,6 +32,8 @@ export interface ConfirmDetailsData {
   secondaryMobileCountryIso?: string;
   secondaryMobileDialCode?: string;
   licenseSource: string;
+  /** Buyer private-deal: hold custody vs transfer plate into buyer's name. */
+  custodyIntent?: CustodyIntent;
   giftPlate?: boolean;
   giftEmail?: string;
   giftMessage?: string;
@@ -44,6 +48,8 @@ interface ConfirmDetailsStepProps {
   continueLabel?: string;
   /** Seller-only: show gift Yes/No + recipient email for private deals. */
   showGiftOptions?: boolean;
+  /** Buyer private-deal: Hold the custody / Transfer on my name tabs. */
+  showCustodyOptions?: boolean;
   submitting?: boolean;
   licenseSources?: { key: string; label: string }[];
 }
@@ -56,6 +62,7 @@ export default function ConfirmDetailsStep({
   variant,
   continueLabel,
   showGiftOptions = false,
+  showCustodyOptions = false,
   submitting = false,
   licenseSources,
 }: ConfirmDetailsStepProps) {
@@ -78,6 +85,10 @@ export default function ConfirmDetailsStep({
     licenseSourceOptions.find((opt) => opt.key === "mbr")?.key ||
     licenseSourceOptions[0]?.key ||
     "mbr";
+  const custodyIntent: CustodyIntent = data.custodyIntent || "hold";
+  const showTransferFields =
+    variant === "buyer" &&
+    (!showCustodyOptions || custodyIntent === "transfer");
 
   useEffect(() => {
     if (!user || didPrefill.current) return;
@@ -204,7 +215,7 @@ export default function ConfirmDetailsStep({
 
     const mobileError = validatePhone(data.mobile, mobileDial, mobileIso, true);
     const secondaryError =
-      variant === "buyer" &&
+      showTransferFields &&
       hasNationalPhoneDigits(data.secondaryMobile, secondaryDial)
         ? validatePhone(
             data.secondaryMobile,
@@ -332,6 +343,59 @@ export default function ConfirmDetailsStep({
         {t("private-deal.confirm_subtitle")}
       </p>
 
+      {showCustodyOptions && variant === "buyer" && (
+        <div className="mb-5">
+          <p
+            className="text-sm mb-2.5 text-start"
+            style={{ color: getColor("secondaryText") }}
+          >
+            {t("private-deal.custody_intent_label")}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onChange({ custodyIntent: "hold" })}
+              className="rounded-full px-3.5 py-[5px] text-sm font-medium transition-colors border"
+              style={
+                custodyIntent === "hold"
+                  ? {
+                      backgroundColor: getColor("primary"),
+                      borderColor: getColor("primary"),
+                      color: "#FFFFFF",
+                    }
+                  : {
+                      backgroundColor: getColor("surface"),
+                      borderColor: getColor("border"),
+                      color: getColor("secondaryText"),
+                    }
+              }
+            >
+              {t("private-deal.custody_hold")}
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ custodyIntent: "transfer" })}
+              className="rounded-full px-3.5 py-[5px] text-sm font-medium transition-colors border"
+              style={
+                custodyIntent === "transfer"
+                  ? {
+                      backgroundColor: getColor("primary"),
+                      borderColor: getColor("primary"),
+                      color: "#FFFFFF",
+                    }
+                  : {
+                      backgroundColor: getColor("surface"),
+                      borderColor: getColor("border"),
+                      color: getColor("secondaryText"),
+                    }
+              }
+            >
+              {t("private-deal.custody_transfer")}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <Input
           label={t("private-deal.full_name")}
@@ -368,9 +432,19 @@ export default function ConfirmDetailsStep({
           value={data.emiratesId}
           onChange={(value) => onChange({ emiratesId: value })}
         />
+      </div>
 
-        {variant === "buyer" && (
-          <>
+      {showTransferFields && (
+        <div className="mb-4">
+          {showCustodyOptions && (
+            <p
+              className="text-sm font-medium mb-3 text-start"
+              style={{ color: getColor("primaryText") }}
+            >
+              {t("private-deal.plate_transfer_info")}
+            </p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label={t("private-deal.type")}
               options={typeOptions}
@@ -403,13 +477,15 @@ export default function ConfirmDetailsStep({
             )}
             <CountryPhoneInput
               label={t("private-deal.mobile_number")}
-              country={data.secondaryMobileCountryIso || "ae"}
+              country="ae"
+              onlyCountries={["ae"]}
+              enableSearch={false}
               value={data.secondaryMobile}
-              onChange={(secondaryMobile, meta) => {
+              onChange={(secondaryMobile) => {
                 onChange({
                   secondaryMobile,
-                  secondaryMobileCountryIso: meta.countryIso,
-                  secondaryMobileDialCode: meta.dialCode,
+                  secondaryMobileCountryIso: "ae",
+                  secondaryMobileDialCode: "+971",
                 });
                 if (phoneErrors.secondaryMobile) {
                   setPhoneErrors((prev) => ({
@@ -431,9 +507,9 @@ export default function ConfirmDetailsStep({
                 />
               </div>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
 
       <div
         className={`flex gap-3 rounded-2xl border p-4 mb-6 text-start`}

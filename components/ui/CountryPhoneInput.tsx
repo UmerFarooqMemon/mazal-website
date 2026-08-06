@@ -31,6 +31,12 @@ interface CountryPhoneInputProps {
   name?: string;
   country?: string;
   preferredCountries?: string[];
+  /** Restrict selectable countries (e.g. `["ae"]` for UAE only). */
+  onlyCountries?: string[];
+  /** Disable the country picker; dial code stays fixed. */
+  disableDropdown?: boolean;
+  /** Hide the flag button entirely (use with `onlyCountries` / locked UAE). */
+  hideFlag?: boolean;
   disabled?: boolean;
   enableSearch?: boolean;
   required?: boolean;
@@ -93,6 +99,9 @@ export default function CountryPhoneInput({
     "us",
     "ug",
   ],
+  onlyCountries,
+  disableDropdown = false,
+  hideFlag = false,
   disabled,
   enableSearch = true,
   required = false,
@@ -104,8 +113,10 @@ export default function CountryPhoneInput({
   const generatedId = useId();
   const inputId = name || generatedId;
 
+  const lockedIso =
+    onlyCountries?.length === 1 ? onlyCountries[0] : undefined;
   const [activeDial, setActiveDial] = useState("+971");
-  const [activeIso, setActiveIso] = useState(country);
+  const [activeIso, setActiveIso] = useState(lockedIso || country);
 
   const bloomErrorPrefix =
     t("common.phone_length_invalid") ||
@@ -150,7 +161,7 @@ export default function CountryPhoneInput({
 
   return (
     <div
-      className={`w-full mazal-country-phone${isRTL ? " mazal-country-phone--rtl" : ""}`}
+      className={`w-full mazal-country-phone${isRTL ? " mazal-country-phone--rtl" : ""}${hideFlag ? " mazal-country-phone--no-flag" : ""}`}
     >
       {label && (
         <label
@@ -165,11 +176,13 @@ export default function CountryPhoneInput({
       )}
 
       <PhoneInputLib
-        key={`${activeIso}-${isRTL ? "rtl" : "ltr"}`}
-        country={activeIso || country}
+        key={`${activeIso}-${isRTL ? "rtl" : "ltr"}-${hideFlag ? "nf" : "f"}`}
+        country={lockedIso || activeIso || country}
         value={value}
-        preferredCountries={preferredCountries}
-        enableSearch={enableSearch}
+        preferredCountries={onlyCountries || preferredCountries}
+        onlyCountries={onlyCountries}
+        disableDropdown={disableDropdown || hideFlag}
+        enableSearch={onlyCountries?.length === 1 ? false : enableSearch}
         disabled={disabled}
         autoFormat
         enableLongNumbers={false}
@@ -205,12 +218,19 @@ export default function CountryPhoneInput({
           fontSize: "0.8125rem",
           direction: "ltr",
           textAlign: isRTL ? "right" : "left",
+          ...(hideFlag
+            ? {
+                paddingLeft: isRTL ? undefined : "14px",
+                paddingRight: isRTL ? "14px" : undefined,
+              }
+            : {}),
         }}
         buttonStyle={{
           borderRadius: isRTL ? "0 0.75rem 0.75rem 0" : "0.75rem 0 0 0.75rem",
           borderColor: displayError ? "#fca5a5" : getColor("border"),
           backgroundColor: "#ffffff",
           zIndex: 2,
+          ...(hideFlag ? { display: "none" } : {}),
         }}
         dropdownStyle={{
           borderRadius: "0.75rem",
@@ -219,9 +239,11 @@ export default function CountryPhoneInput({
           ...(isRTL ? { left: "auto", right: 0 } : {}),
         }}
         onChange={(phone, data, _event, formattedValue) => {
+          const rawIso = isCountryData(data) ? data.countryCode : "ae";
+          const rawDial = isCountryData(data) ? `+${data.dialCode}` : "+971";
           const meta: CountryPhoneChangeMeta = {
-            dialCode: isCountryData(data) ? `+${data.dialCode}` : "+971",
-            countryIso: isCountryData(data) ? data.countryCode : "ae",
+            dialCode: lockedIso === "ae" ? "+971" : rawDial,
+            countryIso: lockedIso || rawIso,
             formattedValue,
             format: isCountryData(data) ? data.format || "" : "",
           };

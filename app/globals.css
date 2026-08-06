@@ -572,6 +572,21 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   text-align: left !important;
 }
 
+/* UAE-locked fields: no flag button, normal input padding */
+.mazal-country-phone--no-flag .mazal-phone-button {
+  display: none !important;
+}
+
+.mazal-country-phone--no-flag .mazal-phone-input {
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
+
+.mazal-country-phone--no-flag.mazal-country-phone--rtl .mazal-phone-input {
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
+
 .mazal-country-phone .mazal-phone-input:focus {
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06) !important;
 }
