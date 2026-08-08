@@ -7,17 +7,19 @@ import { useTheme } from "@/context/ThemeContext";
 import type { StepItem } from "@/components/private-deal/Stepper";
 import toast from "react-hot-toast";
 import DepositFlowHeader from "@/components/auction/DepositFlowHeader";
-import DepositMethodStep from "@/components/auction/DepositMethodStep";
-import DepositPaymentStep from "@/components/auction/DepositPaymentStep";
 import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
 import DepositStatusStep from "@/components/auction/DepositStatusStep";
 import AuctionSummaryCard from "@/components/auction/AuctionSummaryCard";
 import AuctionBenefitsCard from "@/components/auction/AuctionBenefitsCard";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
+import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
+import PaymentMethodStep, {
+  type PaymentMethod,
+  type SplitPaymentEntry,
+} from "@/components/private-deal/PaymentMethodStep";
 import { mapToAuctionSummary } from "@/components/auction/mappers";
 import type {
   AuctionSummaryData,
-  DepositPaymentMethod,
   DepositPaymentSubmitPayload,
 } from "@/components/auction/types";
 import {
@@ -55,14 +57,13 @@ function isPendingVerification(
   );
 }
 
-function mapApiMethodToUi(
-  method?: string | null,
-): DepositPaymentMethod | null {
+function mapApiMethodToUi(method?: string | null): PaymentMethod | null {
   if (!method) return null;
   if (method === "bank_transfer") return "bank";
   if (method === "cash_collection") return "cash";
   if (method === "managers_check") return "managers_check";
   if (method === "card") return "card";
+  if (method === "wallet") return "wallet";
   return null;
 }
 
@@ -78,7 +79,8 @@ export default function AuctionRegisterPage({
   const searchParams = useSearchParams();
 
   const [step, setStep] = useState(0);
-  const [method, setMethod] = useState<DepositPaymentMethod>("bank");
+  const [method, setMethod] = useState<PaymentMethod>("bank");
+  const [splitPayments, setSplitPayments] = useState<SplitPaymentEntry[]>([]);
   const [summary, setSummary] = useState<AuctionSummaryData | null>(null);
   const [registration, setRegistration] =
     useState<MarketplaceAuctionRegistration | null>(null);
@@ -121,7 +123,7 @@ export default function AuctionRegisterPage({
   const loadDepositInstructions = useCallback(
     async (
       nextRegistration: MarketplaceAuctionRegistration,
-      selectedMethod: DepositPaymentMethod,
+      selectedMethod: PaymentMethod,
     ) => {
       setInstructionsLoading(true);
       try {
@@ -416,6 +418,85 @@ export default function AuctionRegisterPage({
     }
   };
 
+  const depositProcessPayment: SplitPaymentEntry | null =
+    method === "wallet"
+      ? null
+      : {
+          id: "auction-deposit",
+          method,
+          amount: summary?.minimumDeposit ?? 0,
+          notes: "",
+          status: "awaiting",
+          createdAt: new Date().toISOString(),
+        };
+
+  const depositCustodyInstructions: Record<string, unknown> = {
+    ...(custodyInstructions || {}),
+    iban: bankInstructions?.iban || custodyInstructions?.iban,
+    bank_name: bankInstructions?.bank_name || custodyInstructions?.bank_name,
+    account_holder_name:
+      bankInstructions?.account_holder_name ||
+      custodyInstructions?.account_holder_name,
+    collection_location: custodyInstructions?.collection_location,
+    collection_address: custodyInstructions?.collection_address,
+  };
+
+  const handleProcessComplete = async (payload: {
+    paymentReference?: string;
+    senderBankName?: string;
+    senderAccountLast4?: string;
+    notes?: string;
+    evidence?: File | null;
+    checkNumber?: string;
+    collectionDate?: string;
+    collectionTime?: string;
+    pickupAddress?: string;
+  }) => {
+    if (method === "wallet") return;
+
+    if (method === "card") {
+      await handlePaymentContinue({ method: "card" });
+      return;
+    }
+
+    if (method === "bank") {
+      if (!payload.evidence) {
+        setError(
+          t("private-deal.error_evidence_required") ||
+            "Payment evidence is required.",
+        );
+        return;
+      }
+      await handlePaymentContinue({
+        method: "bank",
+        payment_reference: payload.paymentReference || "",
+        notes: payload.notes,
+        evidence: payload.evidence,
+      });
+      return;
+    }
+
+    if (method === "managers_check") {
+      await handlePaymentContinue({
+        method: "managers_check",
+        check_number: payload.checkNumber || "",
+        collection_date: payload.collectionDate || "",
+        collection_time: payload.collectionTime || "",
+        pickup_address: payload.pickupAddress || "",
+        notes: payload.notes,
+      });
+      return;
+    }
+
+    await handlePaymentContinue({
+      method: "cash",
+      collection_date: payload.collectionDate || "",
+      collection_time: payload.collectionTime || "",
+      pickup_address: payload.pickupAddress || "",
+      notes: payload.notes,
+    });
+  };
+
   if (loading) {
     return (
       <div
@@ -465,26 +546,30 @@ export default function AuctionRegisterPage({
             )}
 
             {step === 0 && (
-              <DepositMethodStep
+              <PaymentMethodStep
                 method={method}
+                mode="single"
+                allowSplit={false}
+                totalAmount={summary?.minimumDeposit ?? 0}
+                splitPayments={splitPayments}
                 onMethodChange={setMethod}
+                onModeChange={() => undefined}
+                onSplitPaymentsChange={setSplitPayments}
                 onBack={() => router.back()}
                 onContinue={handleMethodContinue}
                 onOpenWallet={openWalletModule}
-                submitting={submitting}
+                onProcessSplit={() => undefined}
+                saving={submitting}
               />
             )}
 
-            {step === 1 && method !== "wallet" && (
-              <DepositPaymentStep
-                method={method}
+            {step === 1 && method !== "wallet" && depositProcessPayment && (
+              <SplitPaymentProcessStep
+                payment={depositProcessPayment}
+                custodyInstructions={depositCustodyInstructions}
+                submitting={submitting || instructionsLoading}
                 onBack={() => setStep(0)}
-                onContinue={handlePaymentContinue}
-                depositAmount={summary?.minimumDeposit}
-                bankInstructions={bankInstructions}
-                custodyInstructions={custodyInstructions}
-                instructionsLoading={instructionsLoading}
-                submitting={submitting}
+                onComplete={handleProcessComplete}
               />
             )}
 

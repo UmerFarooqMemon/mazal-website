@@ -44,6 +44,8 @@ interface ConfirmDetailsStepProps {
   onChange: (patch: Partial<ConfirmDetailsData>) => void;
   onBack: () => void;
   onContinue: () => void;
+  /** Runs before form validation. Return false to stop (e.g. show a blocking modal). */
+  beforeContinue?: () => boolean;
   variant: "seller" | "buyer";
   continueLabel?: string;
   /** Seller-only: show gift Yes/No + recipient email for private deals. */
@@ -59,6 +61,7 @@ export default function ConfirmDetailsStep({
   onChange,
   onBack,
   onContinue,
+  beforeContinue,
   variant,
   continueLabel,
   showGiftOptions = false,
@@ -208,6 +211,8 @@ export default function ConfirmDetailsStep({
   };
 
   const handleContinue = () => {
+    if (beforeContinue && !beforeContinue()) return;
+
     const mobileIso = data.mobileCountryIso || "ae";
     const mobileDial = data.mobileDialCode || "+971";
     const secondaryIso = data.secondaryMobileCountryIso || "ae";

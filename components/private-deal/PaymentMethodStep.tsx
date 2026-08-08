@@ -73,6 +73,8 @@ interface PaymentMethodStepProps {
   /** Opens the wallet module when Wallet is selected / continued. */
   onOpenWallet?: () => void;
   saving?: boolean;
+  /** When false, hides single/split toggle and forces single-payment UI. */
+  allowSplit?: boolean;
 }
 
 const METHODS: {
@@ -126,6 +128,7 @@ export default function PaymentMethodStep({
   onProcessSplit,
   onOpenWallet,
   saving = false,
+  allowSplit = true,
 }: PaymentMethodStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -270,47 +273,49 @@ export default function PaymentMethodStep({
           </p>
         </div>
 
-        <div
-          className="inline-flex rounded-full border p-1 self-start"
-          style={{
-            borderColor: getColor("border"),
-            backgroundColor: getColor("primaryLight"),
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => handleModeChange("single")}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-            style={
-              mode === "single"
-                ? {
-                    backgroundColor: getColor("primary"),
-                    color: "#FFFFFF",
-                  }
-                : { color: getColor("secondaryText") }
-            }
+        {allowSplit ? (
+          <div
+            className="inline-flex rounded-full border p-1 self-start"
+            style={{
+              borderColor: getColor("border"),
+              backgroundColor: getColor("primaryLight"),
+            }}
           >
-            {t("private-deal.single_payment")}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleModeChange("split")}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-            style={
-              mode === "split"
-                ? {
-                    backgroundColor: getColor("primary"),
-                    color: "#FFFFFF",
-                  }
-                : { color: getColor("secondaryText") }
-            }
-          >
-            {t("private-deal.split_payment")}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => handleModeChange("single")}
+              className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+              style={
+                mode === "single"
+                  ? {
+                      backgroundColor: getColor("primary"),
+                      color: "#FFFFFF",
+                    }
+                  : { color: getColor("secondaryText") }
+              }
+            >
+              {t("private-deal.single_payment")}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModeChange("split")}
+              className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+              style={
+                mode === "split"
+                  ? {
+                      backgroundColor: getColor("primary"),
+                      color: "#FFFFFF",
+                    }
+                  : { color: getColor("secondaryText") }
+              }
+            >
+              {t("private-deal.split_payment")}
+            </button>
+          </div>
+        ) : null}
       </div>
 
-      {mode === "single" ? (
+      {!allowSplit || mode === "single" ? (
         <>
           <div className="space-y-3 mb-8">
             <WalletMethodOption

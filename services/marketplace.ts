@@ -377,8 +377,12 @@ export interface MarketplacePurchasePayment {
   status: string;
   status_label?: string;
   payment_reference?: string | null;
-  custody_instructions?: string | null;
+  details?: Record<string, unknown> | null;
+  custody_instructions?: Record<string, unknown> | string | null;
   has_evidence?: boolean;
+  can_paytabs_checkout?: boolean;
+  submitted_at?: string | null;
+  funded_at?: string | null;
 }
 
 export interface MarketplacePurchaseAddons {
@@ -1498,12 +1502,35 @@ export function payPurchaseWithWallet(
   });
 }
 
+// 28c. Create PayTabs checkout for a purchase custody payment
+export function createPurchaseCheckout(
+  purchaseId: string | number,
+  paymentId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    redirect_url: string;
+    transaction?: Record<string, unknown>;
+    purchase?: MarketplacePurchase;
+  }>(`/purchases/${purchaseId}/payments/${paymentId}/paytabs/checkout`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify({}),
+  });
+}
+
 // 29. Submit Bank Transfer Evidence / collection payment
 export function submitPurchasePaymentEvidence(
   purchaseId: string | number,
   paymentId: string | number,
   locale: string,
   payload: {
+    method:
+      | "bank_transfer"
+      | "managers_check"
+      | "cash_collection";
     payment_reference?: string;
     evidence?: File | Blob | null;
     check_number?: string;
@@ -1514,6 +1541,7 @@ export function submitPurchasePaymentEvidence(
   },
 ) {
   const formData = new FormData();
+  formData.append("method", payload.method);
   if (payload.payment_reference) {
     formData.append("payment_reference", payload.payment_reference);
   }

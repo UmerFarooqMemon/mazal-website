@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Shield } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Handshake, Shield } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import DealSummary, { type DealData } from "@/components/private-deal/DealSummary";
 import EscrowBenefits from "@/components/private-deal/EscrowBenefits";
-import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
+import BeneficiaryInformation, {
+  MAZAL_BENEFICIARY_DEFAULTS,
+} from "@/components/ui/BeneficiaryInformation";
 import ConfirmDetailsStep, {
   type ConfirmDetailsData,
 } from "@/components/private-deal/ConfirmDetailsStep";
@@ -18,12 +20,14 @@ import PaymentMethodStep, {
   type PaymentMode,
   type SplitPaymentEntry,
 } from "@/components/private-deal/PaymentMethodStep";
-import PaymentDetailsStep from "@/components/private-deal/PaymentDetailsStep";
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
+import WalletDialog from "@/components/wallet/WalletDialog";
+import { Button } from "@/components/ui";
 import {
   canTransactListing,
+  createPurchaseCheckout,
   getListingDetail,
   getPurchase,
   isHiddenPlateCode,
@@ -31,9 +35,20 @@ import {
   isListingSold,
   payPurchaseWithWallet,
   resolvePlateParts,
+  submitPurchasePaymentEvidence,
   type MarketplaceListingDetail,
   type MarketplacePurchase,
 } from "@/services/marketplace";
+
+const PAYMENT_METHOD_MAP: Record<
+  Exclude<PaymentMethod, "wallet">,
+  "bank_transfer" | "card" | "managers_check" | "cash_collection"
+> = {
+  bank: "bank_transfer",
+  card: "card",
+  managers_check: "managers_check",
+  cash: "cash_collection",
+};
 
 interface MarketplaceCheckoutProps {
   listingId: string;
@@ -42,21 +57,73 @@ interface MarketplaceCheckoutProps {
   purchaseId?: string;
 }
 
+function asCustodyRecord(
+  value: unknown,
+): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  return value as Record<string, unknown>;
+}
+
+/** Same buyer total as DealSummary sidebar (agreed + fees, or API total_due). */
+function resolvePayableTotal(
+  agreedPrice: number,
+  purchase?: MarketplacePurchase | null,
+): { totalDue: number; totalFees: number } {
+  const paymentAmount = Number(
+    purchase?.payments?.find((payment) =>
+      ["pending", "awaiting", "unpaid", "rejected", "processing"].includes(
+        String(payment.status || "").toLowerCase(),
+      ),
+    )?.amount ?? purchase?.payments?.[0]?.amount,
+  );
+  const apiDue = Number(purchase?.total_due);
+  const apiFees = Number(purchase?.total_fees);
+  const fallbackFees = Math.round(agreedPrice * 0.08);
+
+  if (Number.isFinite(paymentAmount) && paymentAmount > 0) {
+    const fees =
+      Number.isFinite(apiFees) && apiFees >= 0
+        ? apiFees
+        : Math.max(0, paymentAmount - agreedPrice);
+    return { totalDue: paymentAmount, totalFees: fees };
+  }
+
+  if (Number.isFinite(apiDue) && apiDue > 0) {
+    return {
+      totalDue: apiDue,
+      totalFees:
+        Number.isFinite(apiFees) && apiFees >= 0
+          ? apiFees
+          : Math.max(0, apiDue - agreedPrice),
+    };
+  }
+
+  return {
+    totalDue: agreedPrice + fallbackFees,
+    totalFees: fallbackFees,
+  };
+}
+
 export default function MarketplaceCheckout({
   listingId,
   initialRole,
   agreedPrice,
-  purchaseId,
+  purchaseId: purchaseIdProp,
 }: MarketplaceCheckoutProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
+
+  const purchaseId =
+    purchaseIdProp || searchParams.get("purchaseId") || undefined;
 
   const [step, setStep] = useState(0);
   const [listing, setListing] = useState<MarketplaceListingDetail | null>(null);
   const [purchase, setPurchase] = useState<MarketplacePurchase | null>(null);
   const [resolvedPrice, setResolvedPrice] = useState(agreedPrice);
+  const [submitting, setSubmitting] = useState(false);
   const [details, setDetails] = useState<ConfirmDetailsData>({
     fullName: "",
     mobile: "",
@@ -76,13 +143,25 @@ export default function MarketplaceCheckout({
     giftMessage: "",
   });
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank");
-  const [paymentMode, setPaymentMode] = useState<PaymentMode>("single");
+  const [paymentMode] = useState<PaymentMode>("single");
   const [splitPayments, setSplitPayments] = useState<SplitPaymentEntry[]>([]);
-  const [splitAllocated, setSplitAllocated] = useState(0);
   const [processingSplitId, setProcessingSplitId] = useState<string | null>(
     null,
   );
   const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [offerRequiredModalOpen, setOfferRequiredModalOpen] = useState(false);
+
+  const refreshPurchase = async (id: string) => {
+    const response = await getPurchase(id, locale);
+    const next = response.data.purchase;
+    setPurchase(next);
+    // Keep agreed price separate from payable total (fees).
+    const agreed = Number(next.agreed_price);
+    if (Number.isFinite(agreed) && agreed > 0) {
+      setResolvedPrice(agreed);
+    }
+    return next;
+  };
 
   useEffect(() => {
     getListingDetail(listingId, locale)
@@ -99,24 +178,90 @@ export default function MarketplaceCheckout({
 
   useEffect(() => {
     if (!purchaseId) return;
-    getPurchase(purchaseId, locale)
-      .then((response) => {
-        setPurchase(response.data.purchase);
-        const due = Number(response.data.purchase.total_due);
-        if (Number.isFinite(due) && due > 0) {
-          setResolvedPrice(due);
-        }
-      })
-      .catch(() => {
-        // Purchase may still be optional for UI-only checkout paths.
-      });
+    refreshPurchase(purchaseId).catch(() => {
+      // Purchase may still be optional for UI-only checkout paths.
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once when purchaseId/locale change
   }, [locale, purchaseId]);
+
+  // PayTabs browser return lands on purchases page; also support checkout query.
+  useEffect(() => {
+    const isReturn =
+      searchParams.get("purchase_return") === "1" ||
+      searchParams.get("paytabs_return") === "1";
+    if (!isReturn || !purchaseId) return;
+
+    const failed = searchParams.get("paytabs_failed") === "1";
+    if (failed) {
+      toast.error(
+        t("offer.paytabs_failed") ||
+          "Payment was not completed. Please try again.",
+      );
+      setPaymentMethod("card");
+      setStep(2);
+      return;
+    }
+
+    let cancelled = false;
+    let tries = 0;
+
+    const poll = async () => {
+      try {
+        const next = await refreshPurchase(purchaseId);
+        if (cancelled) return;
+        const funded = next.payments?.some((payment) =>
+          ["funded", "confirmed", "paid", "completed"].includes(
+            String(payment.status || "").toLowerCase(),
+          ),
+        );
+        if (funded || String(next.status).toLowerCase().includes("fund")) {
+          setStep(3);
+          toast.success(
+            t("offer.payment_success") || "Payment completed successfully.",
+          );
+          return;
+        }
+      } catch {
+        // keep polling
+      }
+
+      tries += 1;
+      if (tries >= 15) {
+        if (!cancelled) {
+          toast(
+            t("offer.payment_pending") ||
+              "Payment received. Verification is still processing.",
+          );
+          setStep(3);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        window.setTimeout(poll, 2000);
+      }
+    };
+
+    setPaymentMethod("card");
+    setStep(2);
+    poll();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [purchaseId, searchParams, t]);
 
   const plateType = listing?.plate_type || "private";
   const plateDesign = listing?.plate_design || "new_colorful";
   const plateVariant = `${plateType}_${plateDesign}`;
   const hideCode = isHiddenPlateCode(listing);
   const plate = resolvePlateParts(listing);
+
+  const { totalDue: payableTotal, totalFees: payableFees } = resolvePayableTotal(
+    resolvedPrice,
+    purchase,
+  );
 
   const deal: DealData = {
     role: initialRole,
@@ -128,6 +273,11 @@ export default function MarketplaceCheckout({
     digit: plate.digits,
     price: resolvedPrice,
     hideCode,
+  };
+
+  const dealPricing = {
+    totalDue: payableTotal,
+    totalFees: payableFees,
   };
 
   const steps: StepItem[] = useMemo(() => {
@@ -159,30 +309,174 @@ export default function MarketplaceCheckout({
     ? splitPayments.find((payment) => payment.id === processingSplitId) || null
     : null;
 
-  const completeSplitPayment = () => {
-    if (!processingSplitId) return;
-
-    const nextPayments = splitPayments.map((payment) =>
-      payment.id === processingSplitId
-        ? { ...payment, status: "completed" as const }
-        : payment,
-    );
-    setSplitPayments(nextPayments);
-    setProcessingSplitId(null);
-
-    if (nextPayments.every((payment) => payment.status === "completed")) {
-      setStep(3);
-    } else {
-      setStep(1);
-    }
-  };
-
-  const pendingPurchasePaymentId =
+  const pendingPurchasePayment =
     purchase?.payments?.find((payment) =>
-      ["pending", "awaiting", "unpaid"].includes(
+      ["pending", "awaiting", "unpaid", "rejected", "processing"].includes(
         String(payment.status || "").toLowerCase(),
       ),
-    )?.id || purchase?.payments?.[0]?.id;
+    ) || purchase?.payments?.[0];
+
+  const pendingPurchasePaymentId = pendingPurchasePayment?.id;
+
+  const custodyFromPayment = asCustodyRecord(
+    pendingPurchasePayment?.custody_instructions,
+  );
+
+  // Purchase rows default to card until offline submit; bank IBAN still shown via defaults.
+  const custodyInstructions: Record<string, unknown> = {
+    ...custodyFromPayment,
+    iban:
+      (typeof custodyFromPayment?.iban === "string" &&
+        custodyFromPayment.iban) ||
+      (paymentMethod === "bank" ? MAZAL_BENEFICIARY_DEFAULTS.iban : ""),
+    bank_name: custodyFromPayment?.bank_name,
+    account_holder_name:
+      custodyFromPayment?.account_holder_name ||
+      MAZAL_BENEFICIARY_DEFAULTS.beneficiaryName,
+    collection_location: custodyFromPayment?.collection_location,
+    collection_address: custodyFromPayment?.collection_address,
+  };
+
+  const requirePurchaseOrPrompt = (): {
+    purchaseId: string;
+    paymentId: number;
+  } | null => {
+    if (!purchaseId || !pendingPurchasePaymentId) {
+      setOfferRequiredModalOpen(true);
+      return null;
+    }
+    return {
+      purchaseId,
+      paymentId: pendingPurchasePaymentId,
+    };
+  };
+
+  const goToOfferPage = () => {
+    setOfferRequiredModalOpen(false);
+    router.push(`/${locale}/listings/${listingId}/offer`);
+  };
+
+  const handleSinglePaymentContinue = async () => {
+    if (!requirePurchaseOrPrompt()) return;
+
+    if (paymentMethod === "wallet") {
+      setWalletModalOpen(true);
+      return;
+    }
+
+    const entry: SplitPaymentEntry = {
+      id: "single-payment",
+      method: paymentMethod,
+      amount: payableTotal,
+      notes: "",
+      status: "awaiting",
+      createdAt: new Date().toISOString(),
+      backendPaymentId: pendingPurchasePaymentId,
+    };
+
+    setSplitPayments([entry]);
+    setProcessingSplitId("single-payment");
+    setStep(2);
+  };
+
+  const handleSubmitPayment = async (payload: {
+    paymentReference?: string;
+    senderBankName?: string;
+    senderAccountLast4?: string;
+    notes?: string;
+    evidence?: File | null;
+    checkNumber?: string;
+    collectionDate?: string;
+    collectionTime?: string;
+    pickupAddress?: string;
+  }) => {
+    if (!processingPayment) return;
+
+    setSubmitting(true);
+    try {
+      const ready = requirePurchaseOrPrompt();
+      if (!ready) return;
+      const { purchaseId: activePurchaseId, paymentId } = ready;
+
+      if (processingPayment.method === "card") {
+        const checkout = await createPurchaseCheckout(
+          activePurchaseId,
+          paymentId,
+          locale,
+        );
+        const redirectUrl = checkout.data.redirect_url;
+        if (!redirectUrl) {
+          throw new Error("Missing checkout URL.");
+        }
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      const apiMethod = PAYMENT_METHOD_MAP[processingPayment.method];
+
+      if (processingPayment.method === "bank") {
+        if (!payload.evidence) {
+          throw new Error(
+            t("private-deal.error_evidence_required") ||
+              "Payment evidence is required.",
+          );
+        }
+        const response = await submitPurchasePaymentEvidence(
+          activePurchaseId,
+          paymentId,
+          locale,
+          {
+            method: apiMethod as "bank_transfer",
+            payment_reference: payload.paymentReference,
+            evidence: payload.evidence,
+            collection_notes: payload.notes,
+          },
+        );
+        setPurchase(response.data.purchase);
+      } else if (processingPayment.method === "managers_check") {
+        const response = await submitPurchasePaymentEvidence(
+          activePurchaseId,
+          paymentId,
+          locale,
+          {
+            method: "managers_check",
+            check_number: payload.checkNumber,
+            collection_date: payload.collectionDate,
+            collection_time: payload.collectionTime,
+            pickup_address: payload.pickupAddress,
+            collection_notes: payload.notes,
+          },
+        );
+        setPurchase(response.data.purchase);
+      } else {
+        const response = await submitPurchasePaymentEvidence(
+          activePurchaseId,
+          paymentId,
+          locale,
+          {
+            method: "cash_collection",
+            collection_date: payload.collectionDate,
+            collection_time: payload.collectionTime,
+            pickup_address: payload.pickupAddress,
+            collection_notes: payload.notes,
+          },
+        );
+        setPurchase(response.data.purchase);
+      }
+
+      toast.success(
+        t("offer.payment_submitted") ||
+          "Payment submitted for Mazal verification.",
+      );
+      setStep(3);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to submit payment.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const renderMain = () => {
     if (step === 0) {
@@ -191,6 +485,7 @@ export default function MarketplaceCheckout({
           data={details}
           onChange={patchDetails}
           onBack={() => router.push(`/${locale}/listings/${listingId}`)}
+          beforeContinue={() => Boolean(requirePurchaseOrPrompt())}
           onContinue={() => setStep(1)}
           variant="buyer"
           continueLabel={t("private-deal.confirm")}
@@ -203,52 +498,32 @@ export default function MarketplaceCheckout({
         <PaymentMethodStep
           method={paymentMethod}
           mode={paymentMode}
-          totalAmount={resolvedPrice}
+          totalAmount={payableTotal}
           splitPayments={splitPayments}
+          allowSplit={false}
           onMethodChange={setPaymentMethod}
-          onModeChange={(mode) => {
-            setPaymentMode(mode);
-            setProcessingSplitId(null);
-          }}
+          onModeChange={() => undefined}
           onSplitPaymentsChange={setSplitPayments}
-          onAllocatedChange={setSplitAllocated}
           onBack={() => setStep(0)}
-          onContinue={() => {
-            if (paymentMethod === "wallet") {
-              setWalletModalOpen(true);
-              return;
-            }
-            setStep(2);
-          }}
+          onContinue={handleSinglePaymentContinue}
           onOpenWallet={() => router.push(`/${locale}/wallet`)}
-          onProcessSplit={(paymentId) => {
-            setProcessingSplitId(paymentId);
-            setStep(2);
-          }}
+          onProcessSplit={() => undefined}
+          saving={submitting}
         />
       );
     }
 
-    if (step === 2) {
-      if (paymentMode === "split" && processingPayment) {
-        return (
-          <SplitPaymentProcessStep
-            payment={processingPayment}
-            onBack={() => {
-              setProcessingSplitId(null);
-              setStep(1);
-            }}
-            onComplete={completeSplitPayment}
-          />
-        );
-      }
-
+    if (step === 2 && processingPayment) {
       return (
-        <PaymentDetailsStep
-          method={paymentMethod === "wallet" ? "bank" : paymentMethod}
-          amount={resolvedPrice}
-          onBack={() => setStep(1)}
-          onContinue={() => setStep(3)}
+        <SplitPaymentProcessStep
+          payment={{ ...processingPayment, amount: payableTotal }}
+          custodyInstructions={custodyInstructions}
+          submitting={submitting}
+          onBack={() => {
+            setProcessingSplitId(null);
+            setStep(1);
+          }}
+          onComplete={handleSubmitPayment}
         />
       );
     }
@@ -261,8 +536,6 @@ export default function MarketplaceCheckout({
   };
 
   const showSidebar = step < 3;
-  const showAllocation =
-    paymentMode === "split" && (step === 1 || step === 2);
 
   const listingBlocked =
     listing != null &&
@@ -353,13 +626,25 @@ export default function MarketplaceCheckout({
               <div className="marketplace-checkout-summary">
                 <DealSummary
                   data={deal}
-                  showAllocation={showAllocation}
-                  allocatedAmount={splitAllocated}
+                  pricing={dealPricing}
                   plateCrop="deal-summary"
                 />
               </div>
               {paymentMethod === "bank" && step >= 1 && (
-                <BeneficiaryInformation />
+                <BeneficiaryInformation
+                  beneficiaryName={
+                    typeof custodyInstructions?.account_holder_name === "string"
+                      ? custodyInstructions.account_holder_name
+                      : typeof custodyInstructions?.recipient === "string"
+                        ? custodyInstructions.recipient
+                        : undefined
+                  }
+                  iban={
+                    typeof custodyInstructions?.iban === "string"
+                      ? custodyInstructions.iban
+                      : undefined
+                  }
+                />
               )}
               <EscrowBenefits />
             </div>
@@ -369,21 +654,46 @@ export default function MarketplaceCheckout({
         )}
       </section>
 
+      <WalletDialog
+        isOpen={offerRequiredModalOpen}
+        onClose={() => setOfferRequiredModalOpen(false)}
+        title="Offer not accepted yet"
+        icon={<Handshake className="w-5 h-5" />}
+        maxWidth="max-w-[440px]"
+      >
+        <div
+          className="rounded-2xl px-4 py-3.5 mb-6 text-sm leading-relaxed"
+          style={{
+            backgroundColor: getColor("primaryLight"),
+            color: getColor("secondaryText"),
+          }}
+        >
+          You have not accepted an offer yet. Please accept an offer first, then
+          come back here to complete your payment.
+        </div>
+        <Button
+          variant="primary"
+          size="md"
+          fullWidth
+          onClick={goToOfferPage}
+        >
+          Go to Offer Page
+        </Button>
+      </WalletDialog>
+
       <WalletPaymentModal
         isOpen={walletModalOpen}
         onClose={() => setWalletModalOpen(false)}
-        amountDue={resolvedPrice}
+        amountDue={payableTotal}
         reference={t("private-deal.payment_title")}
         onPaid={async () => {
-          if (!purchaseId || !pendingPurchasePaymentId) {
-            throw new Error(
-              t("wallet.purchase_not_ready") ||
-                "Purchase payment is not ready yet.",
-            );
+          const ready = requirePurchaseOrPrompt();
+          if (!ready) {
+            throw new Error("Offer not accepted yet.");
           }
           await payPurchaseWithWallet(
-            purchaseId,
-            pendingPurchasePaymentId,
+            ready.purchaseId,
+            ready.paymentId,
             locale,
           );
           toast.success(t("wallet.paid_from_wallet"));
