@@ -374,7 +374,7 @@ export default function WorkspaceProfile() {
               className="text-[11px] font-bold uppercase leading-4 tracking-[0.12em]"
               style={{ color: muted }}
             >
-              {t("dashboard.workspace") || "WORKSPACE"}
+              {t("dashboard.workspace") || "USER DASHBOARD"}
             </p>
             <h1
               className="mt-2 font-serif text-[40px] font-bold leading-10 tracking-tight"

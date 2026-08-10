@@ -8,11 +8,13 @@ import {
   forgotPassword as forgotPasswordApi,
   resetPassword as resetPasswordApi,
   changePassword as changePasswordApi,
+  updateProfile as updateProfileApi,
   LoginRequest,
   RegisterRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
+  UpdateProfileRequest,
   AuthUser,
   AuthResponse,
 } from "@/services/auth";
@@ -329,6 +331,51 @@ export function useAuth() {
     [token],
   );
 
+  const updateProfile = useCallback(
+    async (data: UpdateProfileRequest) => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (!token) throw new Error("Not authenticated");
+        const response = await updateProfileApi(data, token);
+        const nextUser = response.data?.user
+          ? normalizeUser(response.data.user)
+          : null;
+        if (nextUser) {
+          localStorage.setItem("user", JSON.stringify(nextUser));
+          setUser(nextUser);
+          window.dispatchEvent(new Event("auth-changed"));
+        } else {
+          // Fallback: persist submitted fields locally if API omits user payload.
+          const savedUser = localStorage.getItem("user");
+          if (savedUser) {
+            const current = JSON.parse(savedUser) as User;
+            const patched = {
+              ...current,
+              name: data.name,
+              email: data.email ?? current.email,
+              phone: data.phone ?? current.phone,
+              login:
+                data.email ||
+                data.phone ||
+                current.login,
+            };
+            localStorage.setItem("user", JSON.stringify(patched));
+            setUser(patched);
+            window.dispatchEvent(new Event("auth-changed"));
+          }
+        }
+        return response;
+      } catch (err: any) {
+        setError(err.message || "Profile update failed");
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token],
+  );
+
   /** Patch persisted user (e.g. KYC status) and notify other hook instances via auth-changed. */
   const updateUser = useCallback((patch: Partial<User>) => {
     const savedUser = localStorage.getItem("user");
@@ -359,6 +406,7 @@ export function useAuth() {
     forgotPassword,
     resetPassword,
     changePassword,
+    updateProfile,
     updateUser,
   };
 }

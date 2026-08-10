@@ -536,7 +536,7 @@ export default function KYCForm() {
       );
 
       if (status === "approved") {
-        router.push(`/${locale}/profile`);
+        router.push(`/${locale}/user-dashboard`);
       }
     } catch (error) {
       handleApiError(error, t("kyc.submit_error"));

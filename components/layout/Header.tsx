@@ -28,6 +28,9 @@ import {
   Clock,
   XCircle,
   Bell,
+  UserRound,
+  Lock,
+  Pencil,
 } from "lucide-react";
 
 export default function Header() {
@@ -143,15 +146,15 @@ export default function Header() {
       icon: Gavel,
     },
     featureFlags.valuationCertificate && {
-      href: `/${locale}/certificates/request`,
+      href: `/${locale}/dashboard-certificates`,
       label: t("common.valuation_certificate"),
-      match: "/certificates",
+      match: "/dashboard-certificates",
       icon: FileBadge,
     },
     {
-      href: `/${locale}/dashboard-certificates`,
+      href: `/${locale}/user-dashboard`,
       label: t("common.dashboard"),
-      match: "/dashboard-certificates",
+      match: "/user-dashboard",
       icon: LayoutDashboard,
     },
   ].filter(Boolean) as {
@@ -424,22 +427,22 @@ export default function Header() {
 
             <div className="px-6 pb-6">
               {isAuthenticated && (
-                <div
-                  className="mb-4 p-4 rounded-xl"
+                <Link
+                  href={`/${locale}/profile`}
+                  onClick={closeMenu}
+                  className="mb-4 p-4 rounded-xl block"
                   style={{ backgroundColor: getColor("primaryLight") }}
                 >
-                  <div
-                    className={`flex items-center gap-3 text-start`}
-                  >
+                  <div className="flex items-center gap-3 text-start">
                     <div
                       className="h-10 w-10 rounded-full text-white flex items-center justify-center text-sm font-medium"
                       style={{ background: getGradient("primaryButton") }}
                     >
                       {user?.name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div
-                        className="font-medium text-sm"
+                        className="font-medium text-sm truncate"
                         style={{ color: getColor("primaryText") }}
                       >
                         {user?.name}
@@ -452,10 +455,77 @@ export default function Header() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               )}
 
               <nav className="space-y-1">
+                {isAuthenticated && (
+                  <>
+                    {(
+                      [
+                        {
+                          href: `/${locale}/user-dashboard`,
+                          match: "/user-dashboard",
+                          label: t("common.dashboard"),
+                          icon: LayoutDashboard,
+                        },
+                        {
+                          href: `/${locale}/profile`,
+                          match: "/profile",
+                          label: t("common.profile"),
+                          icon: UserRound,
+                        },
+                        {
+                          href: `/${locale}/profile/edit`,
+                          match: "/profile/edit",
+                          label: t("profile.edit_profile"),
+                          icon: Pencil,
+                        },
+                        {
+                          href: `/${locale}/profile/change-password`,
+                          match: "/profile/change-password",
+                          label: t("profile.change_password"),
+                          icon: Lock,
+                        },
+                      ] as const
+                    ).map((item) => {
+                      const Icon = item.icon;
+                      const active =
+                        item.match === "/profile"
+                          ? pathname === `/${locale}/profile` ||
+                            pathname === `/${locale}/profile/`
+                          : isActive(item.match);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={closeMenu}
+                          className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${active ? "font-medium" : ""} text-start`}
+                          style={{
+                            backgroundColor: active
+                              ? `${getColor("primary")}10`
+                              : "transparent",
+                            color: active
+                              ? getColor("primary")
+                              : getColor("primaryText"),
+                          }}
+                        >
+                          <span className="flex items-center gap-3">
+                            <Icon className="w-5 h-5" strokeWidth={2} />
+                            {item.label}
+                          </span>
+                          {active && (
+                            <span
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: getColor("primary") }}
+                            />
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </>
+                )}
+
                 {navLinks.map((link) => {
                   const Icon = link.icon;
                   const active = isActive(link.match);

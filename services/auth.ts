@@ -30,6 +30,20 @@ export interface ChangePasswordRequest {
   password_confirmation: string;
 }
 
+export interface UpdateProfileRequest {
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+}
+
+export interface UpdateProfileResponse {
+  status: boolean;
+  message?: string;
+  data?: {
+    user?: AuthUser;
+  };
+}
+
 export interface AuthUser {
   id: number;
   name: string;
@@ -140,6 +154,18 @@ export async function changePassword(
 ): Promise<AuthResponse> {
   return apiRequest<AuthResponse>("/v1/auth/change-password", {
     method: "POST",
+    body: JSON.stringify(data),
+    token,
+  });
+}
+
+// Update Profile (Requires token)
+export async function updateProfile(
+  data: UpdateProfileRequest,
+  token: string,
+): Promise<UpdateProfileResponse> {
+  return apiRequest<UpdateProfileResponse>("/v1/auth/profile", {
+    method: "PUT",
     body: JSON.stringify(data),
     token,
   });

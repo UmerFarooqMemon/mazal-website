@@ -23,13 +23,13 @@ export function getLoginHref(
 
 /**
  * Resolve where to send the user after login.
- * Uses a validated `redirect` query value, otherwise profile.
+ * Uses a validated `redirect` query value, otherwise user dashboard.
  */
 export function getPostLoginRedirect(
   locale: string,
   redirectParam?: string | null,
 ): string {
-  return sanitizeReturnPath(redirectParam, locale) ?? `/${locale}/profile`;
+  return sanitizeReturnPath(redirectParam, locale) ?? `/${locale}/user-dashboard`;
 }
 
 /** Only allow same-origin relative paths; never auth pages or open redirects. */
