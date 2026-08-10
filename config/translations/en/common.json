@@ -166,5 +166,6 @@
   "iban": "IBAN",
   "account_number": "Account Number",
   "copied": "Copied",
-  "copy_failed": "Copy failed"
+  "copy_failed": "Copy failed",
+  "select": "Select"
 }

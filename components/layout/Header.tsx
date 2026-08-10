@@ -8,6 +8,7 @@ import { useTheme } from "@/context/ThemeContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Button } from "@/components/ui";
 import SiteLogo from "@/components/layout/SiteLogo";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import { useAuth } from "@/hooks/useAuth";
 import { featureFlags } from "@/config/featureFlags";
 import { getCurrentKyc } from "@/services/kyc";
@@ -26,6 +27,7 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  Bell,
 } from "lucide-react";
 
 export default function Header() {
@@ -223,6 +225,7 @@ export default function Header() {
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-2 shrink-0">
               <LanguageSwitcher />
+              {mounted && isAuthenticated && <NotificationBell />}
               {featureFlags.kyc && (
                 isAuthenticated ? (
                   <Link
@@ -236,7 +239,6 @@ export default function Header() {
                     aria-label={kycBadgeConfig.label}
                     title={kycBadgeConfig.label}
                   >
-                    <ShieldCheck className="w-3.5 h-3.5" strokeWidth={2} />
                     <span>{kycBadgeConfig.shortLabel}</span>
                     <KycIcon className="w-3.5 h-3.5" strokeWidth={2.2} />
                   </Link>
@@ -325,13 +327,14 @@ export default function Header() {
             </div>
 
             {/* Mobile Actions */}
-            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 lg:hidden">
+            <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0 lg:hidden">
               <LanguageSwitcher />
+              {mounted && isAuthenticated && <NotificationBell />}
               {featureFlags.kyc && (
                 isAuthenticated ? (
                   <Link
                     href={`/${locale}/kyc`}
-                    className="inline-flex h-8 max-w-[9.5rem] items-center gap-1 rounded-full border px-2.5 text-[10px] font-semibold tracking-wide transition-colors"
+                    className="inline-flex h-8 max-w-[4.75rem] sm:max-w-[9.5rem] items-center gap-1 rounded-full border px-2 sm:px-2.5 text-[10px] font-semibold tracking-wide transition-colors"
                     style={{
                       backgroundColor: kycBadgeConfig.backgroundColor,
                       borderColor: kycBadgeConfig.borderColor,
@@ -340,7 +343,6 @@ export default function Header() {
                     aria-label={kycBadgeConfig.label}
                     title={kycBadgeConfig.label}
                   >
-                    <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
                     <span className="truncate">{kycBadgeConfig.shortLabel}</span>
                     <KycIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.2} />
                   </Link>
@@ -532,6 +534,33 @@ export default function Header() {
                             ? kycBadgeConfig.color
                             : getColor("primary"),
                         }}
+                      />
+                    )}
+                  </Link>
+                )}
+
+                {isAuthenticated && (
+                  <Link
+                    href={`/${locale}/notifications`}
+                    onClick={closeMenu}
+                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ isActive("/notifications") ? "font-medium" : "" } text-start`}
+                    style={{
+                      backgroundColor: isActive("/notifications")
+                        ? `${getColor("primary")}10`
+                        : "transparent",
+                      color: isActive("/notifications")
+                        ? getColor("primary")
+                        : getColor("primaryText"),
+                    }}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Bell className="w-5 h-5" strokeWidth={2} />
+                      {t("common.notifications")}
+                    </span>
+                    {isActive("/notifications") && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: getColor("primary") }}
                       />
                     )}
                   </Link>

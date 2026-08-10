@@ -16,6 +16,7 @@ import enPortfolio from "@/config/translations/en/portfolio.json";
 import enKyc from "@/config/translations/en/kyc.json";
 import enPartners from "@/config/translations/en/partners.json";
 import enWallet from "@/config/translations/en/wallet.json";
+import enNotifications from "@/config/translations/en/notifications.json";
 
 import arCommon from "@/config/translations/ar/common.json";
 import arAuth from "@/config/translations/ar/auth.json";
@@ -33,6 +34,7 @@ import arPortfolio from "@/config/translations/ar/portfolio.json";
 import arKyc from "@/config/translations/ar/kyc.json";
 import arPartners from "@/config/translations/ar/partners.json";
 import arWallet from "@/config/translations/ar/wallet.json";
+import arNotifications from "@/config/translations/ar/notifications.json";
 
 const translationsMap: Record<Locale, any> = {
   en: {
@@ -52,6 +54,7 @@ const translationsMap: Record<Locale, any> = {
     kyc: enKyc,
     partners: enPartners,
     wallet: enWallet,
+    notifications: enNotifications,
   },
   ar: {
     common: arCommon,
@@ -70,6 +73,7 @@ const translationsMap: Record<Locale, any> = {
     kyc: arKyc,
     partners: arPartners,
     wallet: arWallet,
+    notifications: arNotifications,
   },
 };
 

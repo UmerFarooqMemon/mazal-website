@@ -44,3 +44,5 @@ next-env.d.ts
 # local reference assets and docs
 Figma/
 docs/
+figma-dump/
+scripts/

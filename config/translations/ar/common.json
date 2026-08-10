@@ -166,5 +166,6 @@
   "iban": "رقم الآيبان",
   "account_number": "رقم الحساب",
   "copied": "تم النسخ",
-  "copy_failed": "فشل النسخ"
+  "copy_failed": "فشل النسخ",
+  "select": "اختر"
 }
