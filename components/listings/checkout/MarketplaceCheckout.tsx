@@ -35,11 +35,18 @@ import {
   isListingSold,
   payPurchaseWithWallet,
   resolvePlateParts,
+  savePurchaseParty,
   submitPurchasePaymentEvidence,
   type MarketplaceListingDetail,
   type MarketplacePurchase,
 } from "@/services/marketplace";
 import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
+import { resolveLicenseSourceOptions } from "@/config/license-sources";
+import {
+  hasNationalPhoneDigits,
+  isValidCountryPhoneNumber,
+  toE164FromPhoneDigits,
+} from "@/lib/phone-validation";
 
 const PAYMENT_METHOD_MAP: Record<
   Exclude<PaymentMethod, "wallet">,
@@ -139,6 +146,7 @@ export default function MarketplaceCheckout({
     secondaryMobileCountryIso: "ae",
     secondaryMobileDialCode: "+971",
     licenseSource: "mbr",
+    custodyIntent: "hold",
     giftPlate: false,
     giftEmail: "",
     giftMessage: "",
@@ -305,6 +313,126 @@ export default function MarketplaceCheckout({
 
   const patchDetails = (patch: Partial<ConfirmDetailsData>) =>
     setDetails((previous) => ({ ...previous, ...patch }));
+
+  const licenseSourceOptions = useMemo(
+    () => resolveLicenseSourceOptions(null),
+    [],
+  );
+
+  const getPartyPayload = () => {
+    const mobile = toE164FromPhoneDigits(details.mobile) || details.mobile;
+    const secondaryMobile =
+      toE164FromPhoneDigits(details.secondaryMobile) || details.secondaryMobile;
+    const isHoldCustody = details.custodyIntent === "hold";
+
+    if (isHoldCustody) {
+      return {
+        intent: "complete",
+        party_type: "individual",
+        full_name: details.fullName,
+        mobile_number: mobile,
+        email: details.email,
+        emirates_id: details.emiratesId || undefined,
+        identification_type: "emirates_id",
+        accept_terms: true,
+        role_details: {
+          notes: "",
+        },
+      };
+    }
+
+    const isCompany = details.personType === "organization";
+    if (isCompany) {
+      return {
+        intent: "complete",
+        party_type: "company",
+        full_name: details.fullName,
+        trade_license_number:
+          details.identification === "trade_license"
+            ? details.identificationValue
+            : details.emiratesId,
+        license_source:
+          details.licenseSource ||
+          licenseSourceOptions[0]?.key ||
+          "mbr",
+        authorized_mobile: secondaryMobile || mobile,
+        email: details.email,
+        accept_terms: true,
+      };
+    }
+
+    return {
+      intent: "complete",
+      party_type: "individual",
+      full_name: details.fullName,
+      mobile_number: mobile,
+      email: details.email,
+      emirates_id:
+        details.identification === "traffic"
+          ? undefined
+          : details.emiratesId || details.identificationValue,
+      identification_type:
+        details.identification === "traffic" ? "traffic_file" : "emirates_id",
+      traffic_file_number:
+        details.identification === "traffic"
+          ? details.identificationValue
+          : undefined,
+      accept_terms: true,
+      role_details: {
+        notes: "",
+      },
+    };
+  };
+
+  const handleSavePartyDetails = async () => {
+    const ready = requirePurchaseOrPrompt();
+    if (!ready) return;
+
+    const mobileIso = details.mobileCountryIso || "ae";
+    const mobileDial = details.mobileDialCode || "+971";
+    const secondaryIso = details.secondaryMobileCountryIso || "ae";
+    const secondaryDial = details.secondaryMobileDialCode || "+971";
+
+    if (!hasNationalPhoneDigits(details.mobile, mobileDial)) {
+      toast.error(t("common.email_or_mobile_required"));
+      return;
+    }
+    if (!isValidCountryPhoneNumber(details.mobile, mobileIso)) {
+      toast.error(
+        t("common.phone_length_invalid") ||
+          "Enter the full phone number for the selected country.",
+      );
+      return;
+    }
+    if (
+      details.custodyIntent !== "hold" &&
+      hasNationalPhoneDigits(details.secondaryMobile, secondaryDial) &&
+      !isValidCountryPhoneNumber(details.secondaryMobile, secondaryIso)
+    ) {
+      toast.error(
+        t("common.phone_length_invalid") ||
+          "Enter the full phone number for the selected country.",
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await savePurchaseParty(
+        ready.purchaseId,
+        getPartyPayload(),
+        locale,
+      );
+      setPurchase(response.data.purchase);
+      setStep(1);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save your details.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const processingPayment = processingSplitId
     ? splitPayments.find((payment) => payment.id === processingSplitId) || null
@@ -541,9 +669,12 @@ export default function MarketplaceCheckout({
           onChange={patchDetails}
           onBack={() => router.push(`/${locale}/listings/${listingId}`)}
           beforeContinue={() => Boolean(requirePurchaseOrPrompt())}
-          onContinue={() => setStep(1)}
+          onContinue={() => void handleSavePartyDetails()}
           variant="buyer"
+          showCustodyOptions
           continueLabel={t("private-deal.confirm")}
+          submitting={submitting}
+          licenseSources={licenseSourceOptions}
         />
       );
     }

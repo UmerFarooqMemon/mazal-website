@@ -1479,6 +1479,24 @@ export function getPurchase(purchaseId: string | number, locale: string) {
   );
 }
 
+// 26b. Save purchase buyer party details (confirm details step)
+export function savePurchaseParty(
+  purchaseId: string | number,
+  payload: Record<string, unknown>,
+  locale: string,
+) {
+  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
+    `/purchases/${purchaseId}/party`,
+    {
+      method: "PUT",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
 // 27. My Purchases / Sales
 export function getMyPurchases(
   locale: string,
