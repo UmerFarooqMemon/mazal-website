@@ -455,14 +455,12 @@ export default function ConfirmDetailsStep({
 
       {showCustodyOptions && variant === "buyer" && (
         <div className="mb-5">
-          {!isGifting && (
-            <p
-              className="text-sm mb-2.5 text-start"
-              style={{ color: getColor("secondaryText") }}
-            >
-              {t("private-deal.custody_intent_label")}
-            </p>
-          )}
+          <p
+            className="text-sm mb-2.5 text-start"
+            style={{ color: getColor("secondaryText") }}
+          >
+            {t("private-deal.custody_intent_label")}
+          </p>
           <div className="flex flex-wrap items-center gap-2">
             {(
               [
