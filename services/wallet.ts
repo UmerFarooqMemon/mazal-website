@@ -319,14 +319,22 @@ export function createWalletPayTabsCheckout(
   depositId: string | number,
   paymentId: string | number,
   locale: string,
+  options: { payment_token?: string } = {},
 ) {
+  const body =
+    options.payment_token != null
+      ? { payment_token: options.payment_token }
+      : {};
+
   return walletRequest<{
-    redirect_url: string;
+    redirect_url: string | null;
     transaction?: Record<string, unknown>;
     deposit?: WalletDeposit;
   }>(`/deposits/${depositId}/payments/${paymentId}/paytabs/checkout`, {
     method: "POST",
     locale,
+    contentType: "application/json",
+    body: JSON.stringify(body),
   });
 }
 

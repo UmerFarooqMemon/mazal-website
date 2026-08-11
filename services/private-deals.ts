@@ -255,13 +255,21 @@ export function createPrivateDealCheckout(
   id: string | number,
   paymentId: string | number,
   locale: string,
+  options: { payment_token?: string } = {},
 ) {
+  const body =
+    options.payment_token != null
+      ? { payment_token: options.payment_token }
+      : {};
+
   return privateDealsRequest<{
-    redirect_url: string;
+    redirect_url: string | null;
     transaction: Record<string, unknown>;
   }>(`/${id}/payments/${paymentId}/paytabs/checkout`, {
     method: "POST",
     locale,
+    contentType: "application/json",
+    body: JSON.stringify(body),
   });
 }
 

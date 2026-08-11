@@ -32,6 +32,9 @@ import {
   type WalletDepositMethod,
   type WalletDepositPayment,
 } from "@/services/wallet";
+import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
+import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
+import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
 
 type TopUpStep = 0 | 1 | 2;
 
@@ -51,6 +54,7 @@ export default function WalletTopUpPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const wallet = useWallet();
+  const paytabs = usePayTabsConfig(locale);
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -209,16 +213,32 @@ export default function WalletTopUpPage() {
       setActivePayment(payment);
 
       if (method === "card" && payment) {
+        if (paytabs.managedFormEnabled && paytabs.clientKey) {
+          setStep(1);
+          setSubmitting(false);
+          return;
+        }
+
         const checkout = await createWalletPayTabsCheckout(
           nextDeposit.id,
           payment.id,
           locale,
         );
-        const redirectUrl = checkout.data.redirect_url;
-        if (!redirectUrl) {
-          throw new Error("Missing PayTabs checkout URL.");
-        }
-        window.location.href = redirectUrl;
+        handlePayTabsCheckoutResult(checkout.data, {
+          onRedirect: () => {
+            toast.success(
+              t("listings.redirecting_paytabs") ||
+                "Redirecting to secure payment…",
+            );
+          },
+          onImmediateSuccess: async () => {
+            setDone(true);
+            setDonePending(false);
+            setStep(2);
+            await refreshWallet();
+            toast.success(t("wallet.topup_funded"));
+          },
+        });
         return;
       }
 
@@ -314,6 +334,86 @@ export default function WalletTopUpPage() {
     }
   };
 
+  const handleCardPay = async (paymentToken: string) => {
+    if (!deposit || !activePayment) {
+      setError(t("wallet.topup_failed"));
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+    try {
+      const checkout = await createWalletPayTabsCheckout(
+        deposit.id,
+        activePayment.id,
+        locale,
+        { payment_token: paymentToken },
+      );
+
+      handlePayTabsCheckoutResult(checkout.data, {
+        onImmediateSuccess: async () => {
+          if (checkout.data.deposit) {
+            setDeposit(checkout.data.deposit);
+          }
+          setDone(true);
+          setDonePending(false);
+          setStep(2);
+          await refreshWallet();
+          toast.success(t("wallet.topup_funded"));
+        },
+        onRedirect: () => {
+          toast.success(
+            t("listings.redirecting_paytabs") ||
+              "Redirecting to secure payment…",
+          );
+        },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("wallet.topup_failed"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleHostedCardCheckout = async () => {
+    if (!deposit || !activePayment) {
+      setError(t("wallet.topup_failed"));
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+    try {
+      const checkout = await createWalletPayTabsCheckout(
+        deposit.id,
+        activePayment.id,
+        locale,
+      );
+      handlePayTabsCheckoutResult(checkout.data, {
+        onImmediateSuccess: async () => {
+          if (checkout.data.deposit) {
+            setDeposit(checkout.data.deposit);
+          }
+          setDone(true);
+          setDonePending(false);
+          setStep(2);
+          await refreshWallet();
+          toast.success(t("wallet.topup_funded"));
+        },
+        onRedirect: () => {
+          toast.success(
+            t("listings.redirecting_paytabs") ||
+              "Redirecting to secure payment…",
+          );
+        },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("wallet.topup_failed"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const goNext = () => {
     setError("");
     if (step === 0) {
@@ -321,9 +421,19 @@ export default function WalletTopUpPage() {
       return;
     }
     if (step === 1) {
+      if (activePayment?.method === "card") {
+        void handleHostedCardCheckout();
+        return;
+      }
       void submitOffline();
     }
   };
+
+  const showManagedCardForm =
+    step === 1 &&
+    activePayment?.method === "card" &&
+    paytabs.managedFormEnabled &&
+    Boolean(paytabs.clientKey);
 
   const methodTile = (
     key: string,
@@ -509,171 +619,208 @@ export default function WalletTopUpPage() {
                       className="text-2xl font-serif mb-1"
                       style={{ color: getColor("primaryText") }}
                     >
-                      {t("wallet.topup_details_title")}
+                      {activePayment.method === "card"
+                        ? t("wallet.card_payment_title") || t("wallet.topup_details_title")
+                        : t("wallet.topup_details_title")}
                     </h2>
                     <p
                       className="text-sm mb-6"
                       style={{ color: getColor("secondaryText") }}
                     >
-                      {t("wallet.topup_details_subtitle")}
+                      {activePayment.method === "card"
+                        ? t("wallet.card_payment_subtitle") ||
+                          t("wallet.topup_details_subtitle")
+                        : t("wallet.topup_details_subtitle")}
                     </p>
 
-                    {activePayment.method === "bank_transfer" ? (
-                      <BeneficiaryInformation
-                        className="mb-5"
-                        beneficiaryName={custody?.account_holder_name}
-                        iban={custody?.iban}
-                        accountNumber={custody?.account_number}
+                    {activePayment.method === "card" &&
+                    paytabs.managedFormEnabled &&
+                    paytabs.clientKey ? (
+                      <PayTabsManagedForm
+                        clientKey={paytabs.clientKey}
+                        submitLabel={
+                          t("wallet.continue_to_paytabs") ||
+                          t("listings.pay_with_paytabs")
+                        }
+                        loading={submitting}
+                        onToken={handleCardPay}
                       />
+                    ) : activePayment.method === "card" ? (
+                      <p
+                        className="text-sm leading-relaxed mb-2"
+                        style={{ color: getColor("secondaryText") }}
+                      >
+                        {paytabs.loading
+                          ? t("listings.loading_payment_form") ||
+                            "Loading secure payment form…"
+                          : t("listings.paytabs_hint") ||
+                            "You will be redirected to PayTabs to complete payment securely."}
+                      </p>
                     ) : (
-                      custody && (
-                        <div
-                          className="rounded-2xl border px-4 py-4 mb-5 space-y-2 text-sm"
-                          style={{ borderColor: getColor("border") }}
-                        >
-                          <p
-                            className="font-medium"
-                            style={{ color: getColor("primaryText") }}
+                      <>
+                        {activePayment.method === "bank_transfer" ? (
+                          <BeneficiaryInformation
+                            className="mb-5"
+                            beneficiaryName={custody?.account_holder_name}
+                            iban={custody?.iban}
+                            accountNumber={custody?.account_number}
+                          />
+                        ) : (
+                          custody && (
+                            <div
+                              className="rounded-2xl border px-4 py-4 mb-5 space-y-2 text-sm"
+                              style={{ borderColor: getColor("border") }}
+                            >
+                              <p
+                                className="font-medium"
+                                style={{ color: getColor("primaryText") }}
+                              >
+                                {t("wallet.custody_instructions")}
+                              </p>
+                              {custody.account_holder_name && (
+                                <p style={{ color: getColor("secondaryText") }}>
+                                  {custody.account_holder_name}
+                                </p>
+                              )}
+                              {custody.bank_name && (
+                                <p style={{ color: getColor("secondaryText") }}>
+                                  {custody.bank_name}
+                                </p>
+                              )}
+                              {custody.iban && (
+                                <p style={{ color: getColor("secondaryText") }}>
+                                  IBAN: {custody.iban}
+                                </p>
+                              )}
+                              {custody.cheque_payee && (
+                                <p style={{ color: getColor("secondaryText") }}>
+                                  {custody.cheque_payee}
+                                </p>
+                              )}
+                              {(custody.collection_location ||
+                                custody.collection_address) && (
+                                <p style={{ color: getColor("secondaryText") }}>
+                                  {custody.collection_location ||
+                                    custody.collection_address}
+                                </p>
+                              )}
+                              {custody.note && (
+                                <p style={{ color: getColor("mutedText") }}>
+                                  {custody.note}
+                                </p>
+                              )}
+                            </div>
+                          )
+                        )}
+
+                        <div className="space-y-3.5">
+                          {activePayment.method === "bank_transfer" && (
+                            <>
+                              <Input
+                                label={t("wallet.payment_reference")}
+                                value={paymentReference}
+                                onChange={(event) =>
+                                  setPaymentReference(event.target.value)
+                                }
+                              />
+                              <Input
+                                label={t("wallet.sender_bank_name")}
+                                value={senderBankName}
+                                onChange={(event) =>
+                                  setSenderBankName(event.target.value)
+                                }
+                              />
+                              <Input
+                                label={t("wallet.sender_account_last4")}
+                                value={senderAccountLast4}
+                                onChange={(event) =>
+                                  setSenderAccountLast4(
+                                    event.target.value
+                                      .replace(/\D/g, "")
+                                      .slice(0, 4),
+                                  )
+                                }
+                                placeholder="1234"
+                              />
+                            </>
+                          )}
+
+                          {activePayment.method === "managers_check" && (
+                            <Input
+                              label={t("wallet.check_number")}
+                              value={checkNumber}
+                              onChange={(event) =>
+                                setCheckNumber(event.target.value)
+                              }
+                            />
+                          )}
+
+                          {(activePayment.method === "managers_check" ||
+                            activePayment.method === "cash_collection") && (
+                            <>
+                              <Input
+                                label={t("wallet.pickup_address")}
+                                value={pickupAddress}
+                                onChange={(event) =>
+                                  setPickupAddress(event.target.value)
+                                }
+                              />
+                              <div className="grid grid-cols-2 gap-3">
+                                <Input
+                                  label={t("wallet.collection_date")}
+                                  type="date"
+                                  value={collectionDate}
+                                  onChange={(event) =>
+                                    setCollectionDate(event.target.value)
+                                  }
+                                />
+                                <Input
+                                  label={t("wallet.collection_time")}
+                                  type="time"
+                                  value={collectionTime}
+                                  onChange={(event) =>
+                                    setCollectionTime(event.target.value)
+                                  }
+                                />
+                              </div>
+                              <Input
+                                label={t("wallet.field_notes")}
+                                value={collectionNotes}
+                                onChange={(event) =>
+                                  setCollectionNotes(event.target.value)
+                                }
+                              />
+                            </>
+                          )}
+
+                          <label
+                            className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 cursor-pointer text-center"
+                            style={{
+                              borderColor: getColor("border"),
+                              backgroundColor: getColor("primaryLight"),
+                              color: getColor("secondaryText"),
+                            }}
                           >
-                            {t("wallet.custody_instructions")}
-                          </p>
-                          {custody.account_holder_name && (
-                            <p style={{ color: getColor("secondaryText") }}>
-                              {custody.account_holder_name}
-                            </p>
-                          )}
-                          {custody.bank_name && (
-                            <p style={{ color: getColor("secondaryText") }}>
-                              {custody.bank_name}
-                            </p>
-                          )}
-                          {custody.iban && (
-                            <p style={{ color: getColor("secondaryText") }}>
-                              IBAN: {custody.iban}
-                            </p>
-                          )}
-                          {custody.cheque_payee && (
-                            <p style={{ color: getColor("secondaryText") }}>
-                              {custody.cheque_payee}
-                            </p>
-                          )}
-                          {(custody.collection_location ||
-                            custody.collection_address) && (
-                            <p style={{ color: getColor("secondaryText") }}>
-                              {custody.collection_location ||
-                                custody.collection_address}
-                            </p>
-                          )}
-                          {custody.note && (
-                            <p style={{ color: getColor("mutedText") }}>
-                              {custody.note}
-                            </p>
-                          )}
+                            <Upload
+                              className="w-5 h-5"
+                              style={{ color: getColor("primary") }}
+                            />
+                            <span className="text-sm font-medium">
+                              {evidence?.name || t("wallet.upload_payment_proof")}
+                            </span>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/jpeg,image/png,image/webp,application/pdf"
+                              onChange={(event) =>
+                                setEvidence(event.target.files?.[0] || null)
+                              }
+                            />
+                          </label>
                         </div>
-                      )
+                      </>
                     )}
 
-                    <div className="space-y-3.5">
-                      {activePayment.method === "bank_transfer" && (
-                        <>
-                          <Input
-                            label={t("wallet.payment_reference")}
-                            value={paymentReference}
-                            onChange={(event) =>
-                              setPaymentReference(event.target.value)
-                            }
-                          />
-                          <Input
-                            label={t("wallet.sender_bank_name")}
-                            value={senderBankName}
-                            onChange={(event) =>
-                              setSenderBankName(event.target.value)
-                            }
-                          />
-                          <Input
-                            label={t("wallet.sender_account_last4")}
-                            value={senderAccountLast4}
-                            onChange={(event) =>
-                              setSenderAccountLast4(
-                                event.target.value.replace(/\D/g, "").slice(0, 4),
-                              )
-                            }
-                            placeholder="1234"
-                          />
-                        </>
-                      )}
-
-                      {activePayment.method === "managers_check" && (
-                        <Input
-                          label={t("wallet.check_number")}
-                          value={checkNumber}
-                          onChange={(event) => setCheckNumber(event.target.value)}
-                        />
-                      )}
-
-                      {(activePayment.method === "managers_check" ||
-                        activePayment.method === "cash_collection") && (
-                        <>
-                          <Input
-                            label={t("wallet.pickup_address")}
-                            value={pickupAddress}
-                            onChange={(event) =>
-                              setPickupAddress(event.target.value)
-                            }
-                          />
-                          <div className="grid grid-cols-2 gap-3">
-                            <Input
-                              label={t("wallet.collection_date")}
-                              type="date"
-                              value={collectionDate}
-                              onChange={(event) =>
-                                setCollectionDate(event.target.value)
-                              }
-                            />
-                            <Input
-                              label={t("wallet.collection_time")}
-                              type="time"
-                              value={collectionTime}
-                              onChange={(event) =>
-                                setCollectionTime(event.target.value)
-                              }
-                            />
-                          </div>
-                          <Input
-                            label={t("wallet.field_notes")}
-                            value={collectionNotes}
-                            onChange={(event) =>
-                              setCollectionNotes(event.target.value)
-                            }
-                          />
-                        </>
-                      )}
-
-                      <label
-                        className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 cursor-pointer text-center"
-                        style={{
-                          borderColor: getColor("border"),
-                          backgroundColor: getColor("primaryLight"),
-                          color: getColor("secondaryText"),
-                        }}
-                      >
-                        <Upload
-                          className="w-5 h-5"
-                          style={{ color: getColor("primary") }}
-                        />
-                        <span className="text-sm font-medium">
-                          {evidence?.name || t("wallet.upload_payment_proof")}
-                        </span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/jpeg,image/png,image/webp,application/pdf"
-                          onChange={(event) =>
-                            setEvidence(event.target.files?.[0] || null)
-                          }
-                        />
-                      </label>
-                    </div>
                   </>
                 )}
 
@@ -701,15 +848,18 @@ export default function WalletTopUpPage() {
                     size="md"
                     onClick={goNext}
                     rightIcon={<NextIcon className="w-4 h-4" />}
-                    disabled={submitting}
+                    disabled={submitting || (step === 1 && activePayment?.method === "card" && paytabs.loading)}
+                    className={showManagedCardForm ? "hidden" : undefined}
                   >
                     {submitting
                       ? t("wallet.processing")
-                      : step === 1
-                        ? t("wallet.submit_topup")
-                        : method === "card"
+                      : step === 0
+                        ? t("wallet.continue")
+                        : step === 1 && activePayment?.method === "card"
                           ? t("wallet.continue_to_paytabs")
-                          : t("wallet.continue")}
+                          : step === 1
+                            ? t("wallet.submit_topup")
+                            : t("wallet.continue")}
                   </Button>
                 </div>
               </>

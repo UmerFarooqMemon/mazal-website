@@ -19,6 +19,8 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
+import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
+import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
 import type { MarketplaceAuctionBankInstructions } from "@/services/marketplace";
 import type {
   DepositPaymentMethod,
@@ -34,6 +36,7 @@ interface DepositPaymentStepProps {
   custodyInstructions?: MarketplaceAuctionBankInstructions | null;
   instructionsLoading?: boolean;
   submitting?: boolean;
+  onCardPay?: (paymentToken: string) => void | Promise<void>;
 }
 
 const METHOD_META: Record<
@@ -55,9 +58,11 @@ export default function DepositPaymentStep({
   custodyInstructions,
   instructionsLoading = false,
   submitting = false,
+  onCardPay,
 }: DepositPaymentStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const paytabs = usePayTabsConfig(locale);
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -159,6 +164,12 @@ export default function DepositPaymentStep({
     method === "card"
       ? t("auctions.pay_with_paytabs") || "Pay with PayTabs"
       : t("auctions.continue");
+
+  const showManagedCardForm =
+    method === "card" &&
+    paytabs.managedFormEnabled &&
+    Boolean(paytabs.clientKey) &&
+    Boolean(onCardPay);
 
   const handleContinue = () => {
     setFormError(null);
@@ -432,7 +443,18 @@ export default function DepositPaymentStep({
         </div>
       )}
 
-      {method === "card" && (
+      {method === "card" && showManagedCardForm && (
+        <div className="space-y-4 mb-6">
+          <PayTabsManagedForm
+            clientKey={paytabs.clientKey!}
+            submitLabel={continueLabel}
+            loading={submitting}
+            onToken={(token) => onCardPay!(token)}
+          />
+        </div>
+      )}
+
+      {method === "card" && !showManagedCardForm && (
         <div className="space-y-4 mb-6">
           <div
             className="flex items-start gap-3 rounded-xl px-4 py-3.5"
@@ -446,13 +468,13 @@ export default function DepositPaymentStep({
               style={{ color: getColor("primary") }}
             />
             <p className="text-sm leading-relaxed">
-              {t("auctions.paytabs_checkout_desc") ||
-                "You will be redirected to PayTabs to pay your refundable auction deposit securely."}
+              {paytabs.loading
+                ? t("listings.loading_payment_form") ||
+                  "Loading secure payment form…"
+                : t("auctions.paytabs_checkout_desc") ||
+                  "You will be redirected to PayTabs to pay your refundable auction deposit securely."}
             </p>
           </div>
-          <p className="text-xs" style={{ color: getColor("mutedText") }}>
-            {t("auctions.card_fields_hint")}
-          </p>
         </div>
       )}
 
@@ -637,15 +659,21 @@ export default function DepositPaymentStep({
         >
           {t("auctions.back")}
         </Button>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={handleContinue}
-          rightIcon={<NextIcon className="w-4 h-4" />}
-          disabled={submitting || (method === "bank" && instructionsLoading)}
-        >
-          {continueLabel}
-        </Button>
+        {!showManagedCardForm && (
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleContinue}
+            rightIcon={<NextIcon className="w-4 h-4" />}
+            disabled={
+              submitting ||
+              (method === "bank" && instructionsLoading) ||
+              (method === "card" && paytabs.loading)
+            }
+          >
+            {continueLabel}
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -115,6 +115,7 @@
   "paytabs_checkout_desc": "You will be redirected to PayTabs to pay your refundable auction deposit securely.",
   "pay_with_paytabs": "Pay with PayTabs",
   "paytabs_failed": "Payment was not completed. Please try again.",
+  "deposit_success": "Auction deposit paid successfully.",
   "deposit_pending_verification": "Payment received. Deposit verification is still processing — refresh shortly.",
   "awaiting_card_title": "Verifying Payment",
   "card_fields_hint": "Card details are collected securely on PayTabs. Continue to open the hosted checkout.",

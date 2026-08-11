@@ -76,6 +76,15 @@ export interface SiteSettingsResponse {
       sentence?: string;
       copyright?: string;
     };
+    payments?: {
+      paytabs?: {
+        client_key?: string;
+        region?: string;
+        currency?: string;
+        base_url?: string;
+        managed_form_enabled?: boolean;
+      };
+    };
   };
 }
 

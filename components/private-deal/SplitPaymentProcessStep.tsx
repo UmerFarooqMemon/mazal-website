@@ -17,8 +17,10 @@ import {
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme, type ThemeColors } from "@/context/ThemeContext";
+import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import BankSelect from "@/components/ui/BankSelect";
+import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
 import { resolveBankLabel } from "@/lib/uae-banks";
 import type { PaymentMethod, SplitPaymentEntry } from "./PaymentMethodStep";
 
@@ -40,6 +42,7 @@ interface SplitPaymentProcessStepProps {
   }) => void;
   submitting?: boolean;
   custodyInstructions?: Record<string, unknown>;
+  onCardPay?: (paymentToken: string) => void | Promise<void>;
 }
 
 const METHOD_META: Record<
@@ -175,9 +178,11 @@ export default function SplitPaymentProcessStep({
   onComplete,
   submitting = false,
   custodyInstructions,
+  onCardPay,
 }: SplitPaymentProcessStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const paytabs = usePayTabsConfig(locale);
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -355,6 +360,12 @@ export default function SplitPaymentProcessStep({
       : payment.method === "bank"
         ? t("private-deal.transfer_completed")
         : t("private-deal.pay_now");
+
+  const showManagedCardForm =
+    payment.method === "card" &&
+    paytabs.managedFormEnabled &&
+    Boolean(paytabs.clientKey) &&
+    Boolean(onCardPay);
 
   return (
     <div
@@ -549,7 +560,18 @@ export default function SplitPaymentProcessStep({
             </>
           )}
 
-          {payment.method === "card" && (
+          {payment.method === "card" && showManagedCardForm && (
+            <PayTabsManagedForm
+              clientKey={paytabs.clientKey!}
+              submitLabel={
+                t("private-deal.pay_now") || t("listings.pay_with_paytabs")
+              }
+              loading={submitting}
+              onToken={(token) => onCardPay!(token)}
+            />
+          )}
+
+          {payment.method === "card" && !showManagedCardForm && (
             <div
               className="rounded-xl border p-4"
               style={{
@@ -561,7 +583,10 @@ export default function SplitPaymentProcessStep({
                 className="text-sm leading-relaxed text-start"
                 style={{ color: getColor("secondaryText") }}
               >
-                {t("private-deal.card_redirect_notice")}
+                {paytabs.loading
+                  ? t("listings.loading_payment_form") ||
+                    "Loading secure payment form…"
+                  : t("private-deal.card_redirect_notice")}
               </p>
             </div>
           )}
@@ -781,16 +806,18 @@ export default function SplitPaymentProcessStep({
         >
           {t("private-deal.back")}
         </Button>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={handleSubmit}
-          disabled={submitting}
-          rightIcon={<NextIcon className="w-4 h-4" />}
-          className="w-full sm:w-auto"
-        >
-          {submitting ? t("private-deal.processing") : ctaLabel}
-        </Button>
+        {!showManagedCardForm && (
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleSubmit}
+            disabled={submitting || (payment.method === "card" && paytabs.loading)}
+            rightIcon={<NextIcon className="w-4 h-4" />}
+            className="w-full sm:w-auto"
+          >
+            {submitting ? t("private-deal.processing") : ctaLabel}
+          </Button>
+        )}
       </div>
     </div>
   );

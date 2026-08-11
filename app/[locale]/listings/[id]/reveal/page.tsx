@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -11,11 +11,9 @@ import { Button, DirhamAmount } from "@/components/ui";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import ListingSidebar from "@/components/listings/ListingSidebar";
 import RevealPaymentMethodStep from "@/components/listings/reveal/RevealPaymentMethodStep";
-import RevealCardFormStep, {
-  type RevealCardFormData,
-} from "@/components/listings/reveal/RevealCardFormStep";
+import RevealCardFormStep from "@/components/listings/reveal/RevealCardFormStep";
 import {
-  confirmRevealPayment,
+  createRevealPayTabsCheckout,
   getListingDetail,
   getRevealStatus,
   initiateReveal,
@@ -27,12 +25,14 @@ import {
   type MarketplaceListingDetail,
   type MarketplaceReveal,
 } from "@/services/marketplace";
+import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
 
 type RevealStep = "method" | "card" | "done";
 
 export default function RevealPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
   const { isAuthenticated } = useAuth();
@@ -47,12 +47,6 @@ export default function RevealPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cardForm, setCardForm] = useState<RevealCardFormData>({
-    cardNumber: "",
-    cardExpiry: "",
-    cardCvc: "",
-    cardName: "",
-  });
 
   const loadData = async () => {
     setLoading(true);
@@ -89,8 +83,147 @@ export default function RevealPage() {
     loadData();
   }, [isAuthenticated, locale, params.id]);
 
-  const patchCard = (patch: Partial<RevealCardFormData>) =>
-    setCardForm((previous) => ({ ...previous, ...patch }));
+  // PayTabs browser return — poll until reveal is confirmed.
+  useEffect(() => {
+    const isReturn =
+      searchParams.get("reveal_return") === "1" ||
+      searchParams.get("paytabs_return") === "1";
+    if (!isReturn || !isAuthenticated) return;
+
+    const failed = searchParams.get("paytabs_failed") === "1";
+    if (failed) {
+      toast.error(
+        t("listings.paytabs_failed") ||
+          "Payment was not completed. Please try again.",
+      );
+      router.replace(`/${locale}/listings/${params.id}/reveal`);
+      return;
+    }
+
+    let cancelled = false;
+    let tries = 0;
+
+    const poll = async () => {
+      try {
+        const response = await getRevealStatus(params.id, locale);
+        if (cancelled) return;
+
+        if (
+          response.data.reveal?.status === "revealed" ||
+          response.data.code_screen?.unlocked ||
+          !response.data.code_hidden
+        ) {
+          setFeeAmount(Number(response.data.reveal_fee_amount));
+          setCodeHidden(false);
+          setReveal(response.data.reveal);
+          setStep("done");
+          toast.success(t("listings.reveal_confirmed"));
+          router.replace(`/${locale}/listings/${params.id}/reveal`);
+          return;
+        }
+      } catch {
+        // keep polling
+      }
+
+      tries += 1;
+      if (tries >= 15) {
+        if (!cancelled) {
+          toast(
+            t("listings.plan_payment_pending") ||
+              "Payment received. Status is still updating — check back shortly.",
+          );
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        window.setTimeout(poll, 2000);
+      }
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, locale, params.id, router, searchParams, t]);
+
+  const handleCardPay = async (paymentToken: string) => {
+    setActionLoading(true);
+    try {
+      if (!reveal) {
+        const response = await initiateReveal(params.id, locale);
+        setReveal(response.data.reveal);
+        setFeeAmount(Number(response.data.reveal_fee_amount));
+      }
+
+      const response = await createRevealPayTabsCheckout(params.id, locale, {
+        payment_token: paymentToken,
+      });
+
+      handlePayTabsCheckoutResult(
+        {
+          redirect_url: response.data.redirect_url ?? null,
+          transaction: response.data.transaction,
+        },
+        {
+          onImmediateSuccess: () => {
+            applyRevealConfirm(response);
+            toast.success(t("listings.reveal_confirmed"));
+          },
+          onRedirect: () => {
+            toast.success(
+              t("listings.redirecting_paytabs") ||
+                "Redirecting to secure payment…",
+            );
+          },
+        },
+      );
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to confirm reveal payment.",
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleHostedRevealCheckout = async () => {
+    setActionLoading(true);
+    try {
+      if (!reveal) {
+        const response = await initiateReveal(params.id, locale);
+        setReveal(response.data.reveal);
+        setFeeAmount(Number(response.data.reveal_fee_amount));
+      }
+
+      const response = await createRevealPayTabsCheckout(params.id, locale);
+      handlePayTabsCheckoutResult(
+        {
+          redirect_url: response.data.redirect_url ?? null,
+          transaction: response.data.transaction,
+        },
+        {
+          onImmediateSuccess: () => {
+            applyRevealConfirm(response);
+            toast.success(t("listings.reveal_confirmed"));
+          },
+          onRedirect: () => {
+            toast.success(
+              t("listings.redirecting_paytabs") ||
+                "Redirecting to secure payment…",
+            );
+          },
+        },
+      );
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to confirm reveal payment.",
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleContinueToCard = async () => {
     if (!isAuthenticated) {
@@ -176,22 +309,6 @@ export default function RevealPage() {
         err instanceof Error ? err.message : "Failed to confirm reveal payment.",
       );
       throw err;
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleConfirmPayment = async () => {
-    setActionLoading(true);
-    try {
-      const reference = `card-${cardForm.cardNumber.replace(/\D/g, "").slice(-4)}-${Date.now()}`;
-      const response = await confirmRevealPayment(params.id, locale, reference);
-      applyRevealConfirm(response);
-      toast.success(t("listings.reveal_confirmed"));
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to confirm reveal payment.",
-      );
     } finally {
       setActionLoading(false);
     }
@@ -323,11 +440,10 @@ export default function RevealPage() {
               />
             ) : step === "card" ? (
               <RevealCardFormStep
-                data={cardForm}
-                onChange={patchCard}
                 loading={actionLoading}
                 onBack={() => setStep("method")}
-                onProceed={handleConfirmPayment}
+                onPay={handleCardPay}
+                onHostedFallback={handleHostedRevealCheckout}
               />
             ) : (
               <div

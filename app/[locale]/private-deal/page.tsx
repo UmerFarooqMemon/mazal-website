@@ -49,6 +49,7 @@ import {
   type PrivateDeal,
   type PrivateDealOptions,
 } from "@/services/private-deals";
+import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
 
 const STICKY_HEADER_OFFSET = 69;
 
@@ -642,6 +643,38 @@ export default function PrivateDealPage() {
     });
   };
 
+  const handleCardPay = async (paymentToken: string) => {
+    await withSubmit(async () => {
+      const activeDealId = resolveDealId();
+      if (!activeDealId || !processingPayment?.backendPaymentId) {
+        throw new Error("Payment is not ready yet.");
+      }
+
+      const checkout = await createPrivateDealCheckout(
+        activeDealId,
+        processingPayment.backendPaymentId,
+        locale,
+        { payment_token: paymentToken },
+      );
+
+      handlePayTabsCheckoutResult(checkout.data, {
+        onImmediateSuccess: () => {
+          toast.success(
+            t("private-deal.payment_success_title") ||
+              "Payment completed successfully.",
+          );
+          completeSplitPayment();
+        },
+        onRedirect: () => {
+          toast.success(
+            t("listings.redirecting_paytabs") ||
+              "Redirecting to secure payment…",
+          );
+        },
+      });
+    });
+  };
+
   const handleSubmitPayment = async (payload: {
     paymentReference?: string;
     senderBankName?: string;
@@ -665,11 +698,21 @@ export default function PrivateDealPage() {
           processingPayment.backendPaymentId,
           locale,
         );
-        const redirectUrl = checkout.data.redirect_url;
-        if (!redirectUrl) {
-          throw new Error("Missing checkout URL.");
-        }
-        window.location.href = redirectUrl;
+        handlePayTabsCheckoutResult(checkout.data, {
+          onImmediateSuccess: () => {
+            toast.success(
+              t("private-deal.payment_success_title") ||
+                "Payment completed successfully.",
+            );
+            completeSplitPayment();
+          },
+          onRedirect: () => {
+            toast.success(
+              t("listings.redirecting_paytabs") ||
+                "Redirecting to secure payment…",
+            );
+          },
+        });
         return;
       }
 
@@ -861,6 +904,7 @@ export default function PrivateDealPage() {
                 setStep(3);
               }}
               onComplete={(payload) => void handleSubmitPayment(payload)}
+              onCardPay={(token) => void handleCardPay(token)}
               submitting={submitting}
               custodyInstructions={
                 apiDeal?.payments?.find(

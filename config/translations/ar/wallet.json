@@ -101,6 +101,8 @@
   "method_cash": "تحصيل نقدي",
   "secure_online": "دفع آمن عبر الإنترنت",
   "continue_to_paytabs": "المتابعة إلى PayTabs",
+  "card_payment_title": "الدفع بالبطاقة",
+  "card_payment_subtitle": "أدخل بيانات بطاقتك أدناه. تتم معالجة الدفع بأمان عبر PayTabs.",
   "custody_instructions": "ادفع إلى عهدة مزال",
   "payment_reference": "مرجع الدفع",
   "payment_reference_required": "مرجع الدفع مطلوب.",

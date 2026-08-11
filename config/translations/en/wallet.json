@@ -101,6 +101,8 @@
   "method_cash": "Cash collection",
   "secure_online": "Secure online payment",
   "continue_to_paytabs": "Continue to PayTabs",
+  "card_payment_title": "Pay with card",
+  "card_payment_subtitle": "Enter your card details below. Payment is processed securely by PayTabs.",
   "custody_instructions": "Pay to Mazal custody",
   "payment_reference": "Payment reference",
   "payment_reference_required": "Payment reference is required.",

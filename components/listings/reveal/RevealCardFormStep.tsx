@@ -3,45 +3,28 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Button, Input } from "@/components/ui";
-import {
-  formatCardExpiry,
-  formatCardNumber,
-} from "@/lib/card-input";
-
-export interface RevealCardFormData {
-  cardNumber: string;
-  cardExpiry: string;
-  cardCvc: string;
-  cardName: string;
-}
+import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
+import { Button } from "@/components/ui";
+import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
 
 interface RevealCardFormStepProps {
-  data: RevealCardFormData;
-  onChange: (patch: Partial<RevealCardFormData>) => void;
   onBack: () => void;
-  onProceed: () => void;
+  onPay: (paymentToken: string) => void | Promise<void>;
+  onHostedFallback: () => void | Promise<void>;
   loading?: boolean;
 }
 
 export default function RevealCardFormStep({
-  data,
-  onChange,
   onBack,
-  onProceed,
+  onPay,
+  onHostedFallback,
   loading = false,
 }: RevealCardFormStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const paytabs = usePayTabsConfig(locale);
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
-  const NextIcon = isRTL ? ArrowLeft : ArrowRight;
-
-  const canProceed =
-    data.cardNumber.replace(/\D/g, "").length >= 12 &&
-    data.cardExpiry.replace(/\D/g, "").length >= 4 &&
-    Boolean(data.cardCvc.trim()) &&
-    Boolean(data.cardName.trim());
 
   return (
     <div
@@ -52,56 +35,53 @@ export default function RevealCardFormStep({
       }}
     >
       <h2
-        className={`text-2xl font-serif font-bold mb-6 text-start`}
+        className="text-2xl font-serif font-bold mb-2 text-start"
         style={{ color: getColor("primaryText") }}
       >
         {t("listings.reveal_card_form_title")}
       </h2>
+      <p
+        className="text-sm mb-6 leading-relaxed text-start"
+        style={{ color: getColor("secondaryText") }}
+      >
+        {t("listings.reveal_card_payment_desc") ||
+          "Secure online payment."}
+      </p>
 
-      <div className="space-y-5">
-        <Input
-          label={t("listings.card_number")}
-          value={data.cardNumber}
-          onChange={(e) =>
-            onChange({ cardNumber: formatCardNumber(e.target.value) })
-          }
-          placeholder="2026 • 0000 • 0000 • 0000"
-          inputMode="numeric"
+      {paytabs.loading ? (
+        <p className="text-sm mb-6" style={{ color: getColor("mutedText") }}>
+          {t("listings.loading_payment_form") ||
+            "Loading secure payment form…"}
+        </p>
+      ) : paytabs.managedFormEnabled && paytabs.clientKey ? (
+        <PayTabsManagedForm
+          clientKey={paytabs.clientKey}
+          submitLabel={t("listings.confirm_reveal_payment") || t("listings.proceed")}
+          loading={loading}
+          onToken={onPay}
         />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label={t("listings.expiration_date")}
-            value={data.cardExpiry}
-            onChange={(e) =>
-              onChange({ cardExpiry: formatCardExpiry(e.target.value) })
-            }
-            placeholder="MM / YY"
-            inputMode="numeric"
-          />
-          <Input
-            label={t("listings.security_code")}
-            value={data.cardCvc}
-            onChange={(e) =>
-              onChange({
-                cardCvc: e.target.value.replace(/\D/g, "").slice(0, 4),
-              })
-            }
-            placeholder="CVC"
-            inputMode="numeric"
-          />
+      ) : (
+        <div className="space-y-4 mb-2">
+          <p
+            className="text-sm leading-relaxed text-start"
+            style={{ color: getColor("secondaryText") }}
+          >
+            {t("listings.paytabs_hint") ||
+              "You will be redirected to PayTabs to complete payment securely."}
+          </p>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => void onHostedFallback()}
+            loading={loading}
+          >
+            {t("listings.pay_with_paytabs") || "Pay with PayTabs"}
+          </Button>
         </div>
-
-        <Input
-          label={t("listings.cardholder_name")}
-          value={data.cardName}
-          onChange={(e) => onChange({ cardName: e.target.value })}
-          placeholder={t("listings.cardholder_placeholder")}
-        />
-      </div>
+      )}
 
       <div
-        className={`flex items-center justify-between border-t mt-8 pt-5`}
+        className="flex items-center justify-between border-t mt-8 pt-5"
         style={{ borderColor: getColor("border") }}
       >
         <Button
@@ -109,18 +89,9 @@ export default function RevealCardFormStep({
           variant="outline"
           onClick={onBack}
           leftIcon={<BackIcon className="w-4 h-4" />}
+          disabled={loading}
         >
           {t("listings.back")}
-        </Button>
-        <Button
-          type="button"
-          variant="primary"
-          onClick={onProceed}
-          disabled={!canProceed}
-          loading={loading}
-          rightIcon={<NextIcon className="w-4 h-4" />}
-        >
-          {t("listings.proceed")}
         </Button>
       </div>
     </div>

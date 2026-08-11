@@ -1044,9 +1044,15 @@ export function getListingPlans(locale: string) {
 export function createListingPlanCheckout(
   listingId: string | number,
   locale: string,
+  options: { payment_token?: string } = {},
 ) {
+  const body =
+    options.payment_token != null
+      ? { payment_token: options.payment_token }
+      : {};
+
   return marketplaceRequest<{
-    redirect_url: string;
+    redirect_url: string | null;
     transaction?: MarketplaceListingPlanTransaction;
     listing?: MarketplaceListingDetail;
   }>(`/listings/${listingId}/listing-plan/paytabs/checkout`, {
@@ -1054,7 +1060,7 @@ export function createListingPlanCheckout(
     locale,
     auth: "required",
     contentType: "application/json",
-    body: JSON.stringify({}),
+    body: JSON.stringify(body),
   });
 }
 
@@ -1248,6 +1254,31 @@ export function confirmRevealPayment(
       }),
     },
   );
+}
+
+/** PayTabs checkout for reveal fee (Managed Form or hosted fallback). */
+export function createRevealPayTabsCheckout(
+  listingId: string | number,
+  locale: string,
+  options: { payment_token?: string } = {},
+) {
+  const body =
+    options.payment_token != null
+      ? { payment_token: options.payment_token }
+      : {};
+
+  return marketplaceRequest<
+    MarketplaceRevealScreen & {
+      redirect_url?: string | null;
+      transaction?: MarketplaceAuctionProviderTransaction;
+    }
+  >(`/listings/${listingId}/reveal/paytabs/checkout`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(body),
+  });
 }
 
 // 17b. Pay reveal fee from Mazal wallet
@@ -1507,9 +1538,15 @@ export function createPurchaseCheckout(
   purchaseId: string | number,
   paymentId: string | number,
   locale: string,
+  options: { payment_token?: string } = {},
 ) {
+  const body =
+    options.payment_token != null
+      ? { payment_token: options.payment_token }
+      : {};
+
   return marketplaceRequest<{
-    redirect_url: string;
+    redirect_url: string | null;
     transaction?: Record<string, unknown>;
     purchase?: MarketplacePurchase;
   }>(`/purchases/${purchaseId}/payments/${paymentId}/paytabs/checkout`, {
@@ -1517,7 +1554,7 @@ export function createPurchaseCheckout(
     locale,
     auth: "required",
     contentType: "application/json",
-    body: JSON.stringify({}),
+    body: JSON.stringify(body),
   });
 }
 
@@ -1771,9 +1808,15 @@ export function createAuctionDepositCheckout(
   listingId: string | number,
   registrationId: string | number,
   locale: string,
+  options: { payment_token?: string } = {},
 ) {
+  const body =
+    options.payment_token != null
+      ? { payment_token: options.payment_token }
+      : {};
+
   return marketplaceRequest<{
-    redirect_url: string;
+    redirect_url: string | null;
     transaction?: MarketplaceAuctionProviderTransaction;
     registration?: MarketplaceAuctionRegistration;
   }>(
@@ -1783,7 +1826,7 @@ export function createAuctionDepositCheckout(
       locale,
       auth: "required",
       contentType: "application/json",
-      body: JSON.stringify({}),
+      body: JSON.stringify(body),
     },
   );
 }

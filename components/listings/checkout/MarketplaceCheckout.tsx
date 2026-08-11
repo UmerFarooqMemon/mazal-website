@@ -39,6 +39,7 @@ import {
   type MarketplaceListingDetail,
   type MarketplacePurchase,
 } from "@/services/marketplace";
+import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
 
 const PAYMENT_METHOD_MAP: Record<
   Exclude<PaymentMethod, "wallet">,
@@ -379,6 +380,48 @@ export default function MarketplaceCheckout({
     setStep(2);
   };
 
+  const handleCardPay = async (paymentToken: string) => {
+    if (!processingPayment) return;
+
+    setSubmitting(true);
+    try {
+      const ready = requirePurchaseOrPrompt();
+      if (!ready) return;
+      const { purchaseId: activePurchaseId, paymentId } = ready;
+
+      const checkout = await createPurchaseCheckout(
+        activePurchaseId,
+        paymentId,
+        locale,
+        { payment_token: paymentToken },
+      );
+
+      handlePayTabsCheckoutResult(checkout.data, {
+        onImmediateSuccess: () => {
+          if (checkout.data.purchase) {
+            setPurchase(checkout.data.purchase);
+          }
+          toast.success(
+            t("offer.payment_success") || "Payment completed successfully.",
+          );
+          setStep(3);
+        },
+        onRedirect: () => {
+          toast.success(
+            t("listings.redirecting_paytabs") ||
+              "Redirecting to secure payment…",
+          );
+        },
+      });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to submit payment.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmitPayment = async (payload: {
     paymentReference?: string;
     senderBankName?: string;
@@ -404,11 +447,23 @@ export default function MarketplaceCheckout({
           paymentId,
           locale,
         );
-        const redirectUrl = checkout.data.redirect_url;
-        if (!redirectUrl) {
-          throw new Error("Missing checkout URL.");
-        }
-        window.location.href = redirectUrl;
+        handlePayTabsCheckoutResult(checkout.data, {
+          onImmediateSuccess: () => {
+            if (checkout.data.purchase) {
+              setPurchase(checkout.data.purchase);
+            }
+            toast.success(
+              t("offer.payment_success") || "Payment completed successfully.",
+            );
+            setStep(3);
+          },
+          onRedirect: () => {
+            toast.success(
+              t("listings.redirecting_paytabs") ||
+                "Redirecting to secure payment…",
+            );
+          },
+        });
         return;
       }
 
@@ -524,6 +579,7 @@ export default function MarketplaceCheckout({
             setStep(1);
           }}
           onComplete={handleSubmitPayment}
+          onCardPay={handleCardPay}
         />
       );
     }

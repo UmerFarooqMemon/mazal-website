@@ -115,6 +115,7 @@
   "paytabs_checkout_desc": "سيتم توجيهك إلى PayTabs لدفع تأمين المزاد القابل للاسترداد بأمان.",
   "pay_with_paytabs": "الدفع عبر PayTabs",
   "paytabs_failed": "لم يكتمل الدفع. يرجى المحاولة مرة أخرى.",
+  "deposit_success": "تم دفع تأمين المزاد بنجاح.",
   "deposit_pending_verification": "تم استلام الدفع. جاري التحقق من التأمين — حدّث الصفحة قريباً.",
   "awaiting_card_title": "جاري التحقق من الدفع",
   "card_fields_hint": "يتم جمع بيانات البطاقة بأمان عبر PayTabs. تابع لفتح صفحة الدفع المستضافة.",

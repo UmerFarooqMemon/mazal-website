@@ -35,6 +35,7 @@ import {
   type MarketplaceAuctionBankInstructions,
   type MarketplaceAuctionRegistration,
 } from "@/services/marketplace";
+import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
 
 function isDepositHeld(registration?: MarketplaceAuctionRegistration | null) {
   if (!registration) return false;
@@ -334,17 +335,60 @@ export default function AuctionRegisterPage({
 
   const handlePaytabsCheckout = async (
     nextRegistration: MarketplaceAuctionRegistration,
+    paymentToken?: string,
   ) => {
     const response = await createAuctionDepositCheckout(
       auctionId,
       nextRegistration.id,
       locale,
+      paymentToken ? { payment_token: paymentToken } : {},
     );
-    const redirectUrl = response.data.redirect_url;
-    if (!redirectUrl) {
-      throw new Error("Missing PayTabs checkout URL.");
+
+    handlePayTabsCheckoutResult(response.data, {
+      onImmediateSuccess: async () => {
+        if (response.data.registration) {
+          setRegistration(response.data.registration);
+        }
+        await refreshAuction();
+        if (
+          isDepositHeld(response.data.registration) ||
+          response.data.registration?.deposit_status
+        ) {
+          setStep(2);
+          toast.success(
+            t("auctions.deposit_success") ||
+              "Auction deposit paid successfully.",
+          );
+        }
+      },
+      onRedirect: () => {
+        toast.success(
+          t("listings.redirecting_paytabs") ||
+            "Redirecting to secure payment…",
+        );
+      },
+    });
+  };
+
+  const handleCardPay = async (paymentToken: string) => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const nextRegistration = await ensureRegistration();
+      if (!nextRegistration?.id) {
+        throw new Error("Registration is required before paying the deposit.");
+      }
+      await handlePaytabsCheckout(nextRegistration, paymentToken);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("auctions.paytabs_failed") ||
+              "Payment was not completed. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
     }
-    window.location.href = redirectUrl;
   };
 
   const handlePaymentContinue = async (
@@ -570,6 +614,7 @@ export default function AuctionRegisterPage({
                 submitting={submitting || instructionsLoading}
                 onBack={() => setStep(0)}
                 onComplete={handleProcessComplete}
+                onCardPay={handleCardPay}
               />
             )}
 

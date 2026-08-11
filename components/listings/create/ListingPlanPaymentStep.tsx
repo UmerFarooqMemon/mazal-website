@@ -3,29 +3,34 @@
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
 import { Button, DirhamAmount } from "@/components/ui";
+import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
 import type { CreateListingData } from "./CreateListingWizard";
 
-interface GoLiveStepProps {
+interface ListingPlanPaymentStepProps {
   data: CreateListingData;
+  listingId: string | number;
   onBack: () => void;
-  onProceed: () => void;
+  onPay: (paymentToken: string) => Promise<void>;
+  onHostedFallback: () => Promise<void>;
   loading?: boolean;
 }
 
-export default function GoLiveStep({
+export default function ListingPlanPaymentStep({
   data,
+  listingId,
   onBack,
-  onProceed,
+  onPay,
+  onHostedFallback,
   loading = false,
-}: GoLiveStepProps) {
+}: ListingPlanPaymentStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const paytabs = usePayTabsConfig(locale);
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
-  const NextIcon = isRTL ? ArrowLeft : ArrowRight;
 
-  const isPaid = data.listingPlanRequiresPayment && data.listingPlanPrice > 0;
   const durationLabel = data.listingPlanDurationDays
     ? t("listings.days_n").replace(
         "{days}",
@@ -46,17 +51,14 @@ export default function GoLiveStep({
           className="text-2xl font-serif font-bold mb-2"
           style={{ color: getColor("primaryText") }}
         >
-          {t("listings.go_live_heading")}
+          {t("listings.listing_plan_payment_title") || "Pay listing plan fee"}
         </h2>
         <p
           className="text-sm mb-8 leading-relaxed"
           style={{ color: getColor("secondaryText") }}
         >
-          {isPaid
-            ? t("listings.go_live_managed_form_desc") ||
-              "Your listing will be created, then you'll pay the listing plan fee securely with your card on the next step."
-            : t("listings.go_live_free_desc") ||
-              "Submit your listing for admin approval. No listing fee is required for this plan."}
+          {t("listings.listing_plan_payment_desc") ||
+            "Your listing was created. Complete the listing plan payment below to submit it for admin approval."}
         </p>
 
         <div
@@ -81,10 +83,6 @@ export default function GoLiveStep({
           {[
             [t("listings.tier"), data.listingPlanName],
             [t("listings.duration"), durationLabel],
-            [
-              t("listings.ownership_doc"),
-              data.ownershipFileName || t("listings.upload_document"),
-            ],
             [t("listings.total"), data.listingPlanPrice] as const,
           ].map(([label, value]) => (
             <div
@@ -97,11 +95,7 @@ export default function GoLiveStep({
                 style={{ color: getColor("primaryText") }}
               >
                 {typeof value === "number" ? (
-                  value > 0 ? (
-                    <DirhamAmount amount={value} weight="semibold" />
-                  ) : (
-                    t("listings.plan_free") || "Free"
-                  )
+                  <DirhamAmount amount={value} weight="semibold" />
                 ) : (
                   value
                 )}
@@ -110,18 +104,42 @@ export default function GoLiveStep({
           ))}
         </div>
 
-        {isPaid && (
-          <p
-            className="text-xs mb-6 leading-relaxed"
-            style={{ color: getColor("mutedText") }}
-          >
-            {t("listings.go_live_managed_form_hint") ||
-              "Card details are collected securely via PayTabs. After payment, your listing moves to admin approval automatically."}
+        {paytabs.loading ? (
+          <p className="text-sm" style={{ color: getColor("mutedText") }}>
+            {t("listings.loading_payment_form") || "Loading secure payment form…"}
           </p>
+        ) : paytabs.managedFormEnabled && paytabs.clientKey ? (
+          <PayTabsManagedForm
+            clientKey={paytabs.clientKey}
+            submitLabel={
+              t("listings.pay_with_paytabs") || "Pay with PayTabs"
+            }
+            loading={loading}
+            onToken={onPay}
+          />
+        ) : (
+          <div className="space-y-4">
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: getColor("secondaryText") }}
+            >
+              {t("listings.paytabs_hint") ||
+                "You will be redirected to PayTabs. After payment, your listing moves to admin approval automatically."}
+            </p>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => void onHostedFallback()}
+              loading={loading}
+              className="!rounded-lg px-5"
+            >
+              {t("listings.pay_with_paytabs") || "Pay with PayTabs"}
+            </Button>
+          </div>
         )}
 
         <div
-          className="flex items-center justify-between border-t pt-5"
+          className="flex items-center justify-between border-t mt-8 pt-5"
           style={{ borderColor: getColor("border") }}
         >
           <Button
@@ -129,22 +147,17 @@ export default function GoLiveStep({
             variant="outline"
             onClick={onBack}
             leftIcon={<BackIcon className="w-4 h-4" />}
+            disabled={loading}
           >
             {t("listings.back")}
           </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={onProceed}
-            loading={loading}
-            rightIcon={<NextIcon className="w-4 h-4" />}
-            className="!rounded-lg px-5"
+          <span
+            className="text-xs"
+            style={{ color: getColor("mutedText") }}
           >
-            {isPaid
-              ? t("listings.create_and_continue_payment") ||
-                "Create listing & continue to payment"
-              : t("listings.proceed")}
-          </Button>
+            {t("listings.listing_ref")?.replace("{id}", String(listingId)) ||
+              `Listing #${listingId}`}
+          </span>
         </div>
       </div>
     </div>

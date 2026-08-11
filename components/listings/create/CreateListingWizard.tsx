@@ -9,11 +9,13 @@ import Stepper, { type StepItem } from "@/components/private-deal/Stepper";
 import PlatePriceFormStep from "./PlatePriceFormStep";
 import BoostStep from "./BoostStep";
 import GoLiveStep from "./GoLiveStep";
+import ListingPlanPaymentStep from "./ListingPlanPaymentStep";
 import {
   createListing,
   createListingPlanCheckout,
   type MarketplaceListingPlan,
 } from "@/services/marketplace";
+import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
 
 export interface CreateListingData {
   emirate: string;
@@ -55,7 +57,7 @@ const INITIAL: CreateListingData = {
   listingPlanDurationDays: null,
 };
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 interface CreateListingWizardProps {
   backHref?: string;
@@ -79,6 +81,9 @@ export default function CreateListingWizard({
     ...initialData,
   });
   const [loading, setLoading] = useState(false);
+  const [pendingListingId, setPendingListingId] = useState<
+    string | number | null
+  >(null);
   const cancelHref = backHref || `/${locale}/marketplace`;
   const doneHref = successHref || `/${locale}/marketplace`;
 
@@ -114,10 +119,21 @@ export default function CreateListingWizard({
       {
         key: "live",
         label: t("listings.step_go_live"),
-        status: step === 3 ? "current" : "upcoming",
+        status:
+          step > 3 ? "completed" : step === 3 ? "current" : "upcoming",
       },
+      ...(pendingListingId
+        ? [
+            {
+              key: "payment",
+              label:
+                t("listings.step_listing_plan_payment") || "Listing plan payment",
+              status: step === 4 ? ("current" as const) : ("upcoming" as const),
+            },
+          ]
+        : []),
     ],
-    [step, t],
+    [pendingListingId, step, t],
   );
 
   const eyebrow =
@@ -137,6 +153,56 @@ export default function CreateListingWizard({
   const description =
     step === 2 ? t("listings.boost_desc") : t("listings.publish_desc");
 
+  const submitListing = async () => {
+    const listingTitle =
+      `${data.emirate} ${data.code ? data.code + " " : ""}${data.digits}`.trim();
+
+    const response = await createListing(
+      {
+        listing_type: "direct",
+        title: listingTitle,
+        emirate: data.emirate,
+        plate_variant: data.plateVariant || undefined,
+        plate_type: data.plateType || undefined,
+        plate_code: data.code || undefined,
+        plate_digits: data.digits,
+        asking_price: Number(data.price.replace(/[^\d.]/g, "")) || 0,
+        description: data.notes || undefined,
+        hide_code: Boolean(data.code) && data.hideCode,
+        listing_plan_id: data.listingPlanId,
+        ownership_document: data.ownershipFile,
+      },
+      locale,
+    );
+
+    return response.data.listing;
+  };
+
+  const completeListingPlanCheckout = async (
+    listingId: string | number,
+    paymentToken?: string,
+  ) => {
+    const checkout = await createListingPlanCheckout(listingId, locale, {
+      payment_token: paymentToken,
+    });
+
+    handlePayTabsCheckoutResult(checkout.data, {
+      onImmediateSuccess: () => {
+        toast.success(
+          t("listings.plan_payment_success") ||
+            "Listing plan paid. Your listing is awaiting admin approval.",
+        );
+        router.push(doneHref);
+      },
+      onRedirect: () => {
+        toast.success(
+          t("listings.redirecting_paytabs") ||
+            "Redirecting to secure payment…",
+        );
+      },
+    });
+  };
+
   const handleProceed = async () => {
     if (!data.ownershipFile) {
       toast.error(
@@ -149,40 +215,12 @@ export default function CreateListingWizard({
 
     setLoading(true);
     try {
-      const listingTitle =
-        `${data.emirate} ${data.code ? data.code + " " : ""}${data.digits}`.trim();
-
-      const response = await createListing(
-        {
-          listing_type: "direct",
-          title: listingTitle,
-          emirate: data.emirate,
-          plate_variant: data.plateVariant || undefined,
-          plate_type: data.plateType || undefined,
-          plate_code: data.code || undefined,
-          plate_digits: data.digits,
-          asking_price: Number(data.price.replace(/[^\d.]/g, "")) || 0,
-          description: data.notes || undefined,
-          hide_code: Boolean(data.code) && data.hideCode,
-          listing_plan_id: data.listingPlanId,
-          ownership_document: data.ownershipFile,
-        },
-        locale,
-      );
-
-      const listing = response.data.listing;
+      const listing = await submitListing();
 
       if (listing.needs_plan_payment) {
-        const checkout = await createListingPlanCheckout(listing.id, locale);
-        const redirectUrl = checkout.data.redirect_url;
-        if (!redirectUrl) {
-          throw new Error("Missing PayTabs checkout URL.");
-        }
-        toast.success(
-          t("listings.redirecting_paytabs") ||
-            "Redirecting to secure payment…",
-        );
-        window.location.href = redirectUrl;
+        setPendingListingId(listing.id);
+        setStep(4);
+        setLoading(false);
         return;
       }
 
@@ -197,6 +235,62 @@ export default function CreateListingWizard({
         error instanceof Error
           ? error.message
           : t("common.error_submission") || "Something went wrong",
+      );
+      setLoading(false);
+    }
+  };
+
+  const handleManagedFormPayment = async (paymentToken: string) => {
+    if (!pendingListingId) return;
+
+    setLoading(true);
+    try {
+      await completeListingPlanCheckout(pendingListingId, paymentToken);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("listings.paytabs_failed") ||
+              "Payment was not completed. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHostedFallbackPayment = async () => {
+    if (!pendingListingId) return;
+
+    setLoading(true);
+    try {
+      const checkout = await createListingPlanCheckout(
+        pendingListingId,
+        locale,
+      );
+      const redirectUrl = checkout.data.redirect_url;
+      if (!redirectUrl) {
+        handlePayTabsCheckoutResult(checkout.data, {
+          onImmediateSuccess: () => {
+            toast.success(
+              t("listings.plan_payment_success") ||
+                "Listing plan paid. Your listing is awaiting admin approval.",
+            );
+            router.push(doneHref);
+          },
+        });
+        return;
+      }
+      toast.success(
+        t("listings.redirecting_paytabs") ||
+          "Redirecting to secure payment…",
+      );
+      window.location.href = redirectUrl;
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("listings.paytabs_failed") ||
+              "Payment was not completed. Please try again.",
       );
       setLoading(false);
     }
@@ -273,6 +367,16 @@ export default function CreateListingWizard({
             data={data}
             onBack={() => setStep(2)}
             onProceed={handleProceed}
+            loading={loading}
+          />
+        )}
+        {step === 4 && pendingListingId && (
+          <ListingPlanPaymentStep
+            data={data}
+            listingId={pendingListingId}
+            onBack={() => setStep(3)}
+            onPay={handleManagedFormPayment}
+            onHostedFallback={handleHostedFallbackPayment}
             loading={loading}
           />
         )}
