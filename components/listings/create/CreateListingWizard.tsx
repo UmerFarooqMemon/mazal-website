@@ -45,7 +45,7 @@ const INITIAL: CreateListingData = {
   code: "",
   digits: "",
   hideCode: false,
-  price: "68000",
+  price: "0",
   notes: "",
   ownershipFileName: "",
   ownershipFile: null,

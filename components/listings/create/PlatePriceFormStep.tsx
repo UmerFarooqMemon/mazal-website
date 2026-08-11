@@ -416,7 +416,7 @@ export default function PlatePriceFormStep({
                 price: formatPriceInput(e.target.value),
               })
             }
-            placeholder="68,000"
+            placeholder="0"
             inputMode="numeric"
           />
 

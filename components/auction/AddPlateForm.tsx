@@ -58,7 +58,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
     code: "",
     digits: "",
     notes: "",
-    price: 68000,
+    price: 0,
   });
   const [ownershipFile, setOwnershipFile] = useState<File | null>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
@@ -415,7 +415,7 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
                 price: Number(e.target.value.replace(/\D/g, "")) || 0,
               }))
             }
-            placeholder="68,000"
+            placeholder="0"
           />
         </div>
 

@@ -41,6 +41,7 @@ export default function MarketplaceFilters({
         { value: "2", label: t("marketplace.digit_2") },
         { value: "3", label: t("marketplace.digit_3") },
         { value: "4", label: t("marketplace.digit_4") },
+        { value: "5", label: t("marketplace.digit_5") },
       ],
     },
     {

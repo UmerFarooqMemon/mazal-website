@@ -16,7 +16,7 @@ export default function PortfolioListForSalePage() {
         emirate: "dubai",
         code: "AA",
         digits: "777",
-        price: "68000",
+        price: "0",
       }}
     />
   );
