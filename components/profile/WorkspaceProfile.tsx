@@ -400,14 +400,6 @@ export default function WorkspaceProfile() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="md"
-              leftIcon={<FileText className="h-4 w-4" />}
-              className="h-[38px] rounded-full border px-[17px] py-0 text-sm font-medium"
-            >
-              {t("dashboard.export_pl") || "Export P&L"}
-            </Button>
             <Link href={`/${locale}/listings/create`}>
               <Button
                 variant="primary"
