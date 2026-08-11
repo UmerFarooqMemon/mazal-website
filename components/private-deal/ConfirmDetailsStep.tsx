@@ -15,8 +15,12 @@ import {
   isValidCountryPhoneNumber,
 } from "@/lib/phone-validation";
 import { PRIVATE_DEAL_LICENSE_SOURCES } from "@/config/license-sources";
+import GiftFlowPanel, {
+  type GiftFlowStep,
+} from "@/components/private-deal/GiftFlowPanel";
+import type { GiftPackageId } from "@/components/private-deal/giftPackages";
 
-export type CustodyIntent = "hold" | "transfer";
+export type CustodyIntent = "hold" | "transfer" | "gift";
 
 export interface ConfirmDetailsData {
   fullName: string;
@@ -32,11 +36,18 @@ export interface ConfirmDetailsData {
   secondaryMobileCountryIso?: string;
   secondaryMobileDialCode?: string;
   licenseSource: string;
-  /** Buyer private-deal: hold custody vs transfer plate into buyer's name. */
+  /** Buyer private-deal: hold custody vs transfer plate into buyer's name vs gift. */
   custodyIntent?: CustodyIntent;
   giftPlate?: boolean;
   giftEmail?: string;
   giftMessage?: string;
+  giftPackageId?: GiftPackageId | "";
+  giftRecipientName?: string;
+  giftRecipientPhone?: string;
+  giftRecipientPhoneCountryIso?: string;
+  giftRecipientPhoneDialCode?: string;
+  giftRecipientAddress?: string;
+  giftRecipientNotes?: string;
 }
 
 interface ConfirmDetailsStepProps {
@@ -50,7 +61,7 @@ interface ConfirmDetailsStepProps {
   continueLabel?: string;
   /** Seller-only: show gift Yes/No + recipient email for private deals. */
   showGiftOptions?: boolean;
-  /** Buyer private-deal: Hold the custody / Transfer on my name tabs. */
+  /** Buyer private-deal: Hold the custody / Transfer on my name / Gifting tabs. */
   showCustodyOptions?: boolean;
   submitting?: boolean;
   licenseSources?: { key: string; label: string }[];
@@ -79,7 +90,9 @@ export default function ConfirmDetailsStep({
   const [phoneErrors, setPhoneErrors] = useState<{
     mobile?: string;
     secondaryMobile?: string;
+    giftRecipientPhone?: string;
   }>({});
+  const [giftStep, setGiftStep] = useState<GiftFlowStep>("package");
   const licenseSourceOptions =
     licenseSources && licenseSources.length > 0
       ? licenseSources
@@ -89,9 +102,17 @@ export default function ConfirmDetailsStep({
     licenseSourceOptions[0]?.key ||
     "mbr";
   const custodyIntent: CustodyIntent = data.custodyIntent || "hold";
+  const isGifting = showCustodyOptions && custodyIntent === "gift";
   const showTransferFields =
     variant === "buyer" &&
     (!showCustodyOptions || custodyIntent === "transfer");
+  const showStandardForm = !isGifting;
+
+  useEffect(() => {
+    if (!isGifting) {
+      setGiftStep("package");
+    }
+  }, [isGifting]);
 
   useEffect(() => {
     if (!user || didPrefill.current) return;
@@ -210,8 +231,85 @@ export default function ConfirmDetailsStep({
     return undefined;
   };
 
+  const clearGiftFields = () =>
+    onChange({
+      giftPackageId: "",
+      giftRecipientName: "",
+      giftRecipientPhone: "",
+      giftRecipientAddress: "",
+      giftRecipientNotes: "",
+    });
+
+  const handleCustodyChange = (intent: CustodyIntent) => {
+    if (intent === "gift") {
+      onChange({ custodyIntent: "gift" });
+      setGiftStep("package");
+      return;
+    }
+    onChange({ custodyIntent: intent });
+    if (custodyIntent === "gift") {
+      clearGiftFields();
+    }
+    setGiftStep("package");
+  };
+
+  const handleBack = () => {
+    if (isGifting && giftStep === "recipient") {
+      setGiftStep("package");
+      return;
+    }
+    onBack();
+  };
+
   const handleContinue = () => {
     if (beforeContinue && !beforeContinue()) return;
+
+    if (isGifting) {
+      if (giftStep === "package") {
+        if (!data.giftPackageId) {
+          toast.error(
+            t("private-deal.gift_package_required") ||
+              "Please select a gift package to continue.",
+          );
+          return;
+        }
+        setGiftStep("recipient");
+        return;
+      }
+
+      const recipientName = (data.giftRecipientName || "").trim();
+      if (!recipientName) {
+        toast.error(
+          t("private-deal.gift_recipient_name_required") ||
+            "Recipient name is required.",
+        );
+        return;
+      }
+
+      const giftIso = data.giftRecipientPhoneCountryIso || "ae";
+      const giftDial = data.giftRecipientPhoneDialCode || "+971";
+      const giftPhoneError = validatePhone(
+        data.giftRecipientPhone || "",
+        giftDial,
+        giftIso,
+        true,
+      );
+      setPhoneErrors((prev) => ({
+        ...prev,
+        giftRecipientPhone: giftPhoneError,
+      }));
+      if (giftPhoneError) {
+        toast.error(
+          giftPhoneError ||
+            t("private-deal.gift_recipient_phone_required") ||
+            "Recipient phone number is required.",
+        );
+        return;
+      }
+
+      onContinue();
+      return;
+    }
 
     const mobileIso = data.mobileCountryIso || "ae";
     const mobileDial = data.mobileDialCode || "+971";
@@ -247,6 +345,13 @@ export default function ConfirmDetailsStep({
 
     onContinue();
   };
+
+  const title = isGifting
+    ? t("private-deal.gift_flow_title")
+    : t("private-deal.confirm_title");
+  const subtitle = isGifting
+    ? t("private-deal.gift_flow_subtitle")
+    : t("private-deal.confirm_subtitle");
 
   return (
     <div
@@ -339,207 +444,223 @@ export default function ConfirmDetailsStep({
         className={`text-2xl font-serif mb-1 text-start`}
         style={{ color: getColor("primaryText") }}
       >
-        {t("private-deal.confirm_title")}
+        {title}
       </h2>
       <p
         className={`text-sm mb-6 text-start`}
         style={{ color: getColor("secondaryText") }}
       >
-        {t("private-deal.confirm_subtitle")}
+        {subtitle}
       </p>
 
       {showCustodyOptions && variant === "buyer" && (
         <div className="mb-5">
-          <p
-            className="text-sm mb-2.5 text-start"
-            style={{ color: getColor("secondaryText") }}
-          >
-            {t("private-deal.custody_intent_label")}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onChange({ custodyIntent: "hold" })}
-              className="rounded-full px-3.5 py-[5px] text-sm font-medium transition-colors border"
-              style={
-                custodyIntent === "hold"
-                  ? {
-                      backgroundColor: getColor("primary"),
-                      borderColor: getColor("primary"),
-                      color: "#FFFFFF",
-                    }
-                  : {
-                      backgroundColor: getColor("surface"),
-                      borderColor: getColor("border"),
-                      color: getColor("secondaryText"),
-                    }
-              }
-            >
-              {t("private-deal.custody_hold")}
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange({ custodyIntent: "transfer" })}
-              className="rounded-full px-3.5 py-[5px] text-sm font-medium transition-colors border"
-              style={
-                custodyIntent === "transfer"
-                  ? {
-                      backgroundColor: getColor("primary"),
-                      borderColor: getColor("primary"),
-                      color: "#FFFFFF",
-                    }
-                  : {
-                      backgroundColor: getColor("surface"),
-                      borderColor: getColor("border"),
-                      color: getColor("secondaryText"),
-                    }
-              }
-            >
-              {t("private-deal.custody_transfer")}
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <Input
-          label={t("private-deal.full_name")}
-          value={data.fullName}
-          onChange={(e) => onChange({ fullName: e.target.value })}
-          placeholder={t("private-deal.full_name_placeholder")}
-        />
-        <CountryPhoneInput
-          label={t("private-deal.mobile_number")}
-          country={data.mobileCountryIso || "ae"}
-          value={data.mobile}
-          onChange={(mobile, meta) => {
-            onChange({
-              mobile,
-              mobileCountryIso: meta.countryIso,
-              mobileDialCode: meta.dialCode,
-            });
-            if (phoneErrors.mobile) {
-              setPhoneErrors((prev) => ({ ...prev, mobile: undefined }));
-            }
-          }}
-          error={phoneErrors.mobile}
-          required
-        />
-        <Input
-          label={t("private-deal.email")}
-          type="email"
-          value={data.email}
-          onChange={(e) => onChange({ email: e.target.value })}
-          placeholder={t("private-deal.email_placeholder")}
-        />
-        <EmiratesIdInput
-          label={t("private-deal.emirates_id")}
-          value={data.emiratesId}
-          onChange={(value) => onChange({ emiratesId: value })}
-        />
-      </div>
-
-      {showTransferFields && (
-        <div className="mb-4">
-          {showCustodyOptions && (
+          {!isGifting && (
             <p
-              className="text-sm font-medium mb-3 text-start"
-              style={{ color: getColor("primaryText") }}
+              className="text-sm mb-2.5 text-start"
+              style={{ color: getColor("secondaryText") }}
             >
-              {t("private-deal.plate_transfer_info")}
+              {t("private-deal.custody_intent_label")}
             </p>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select
-              label={t("private-deal.type")}
-              options={typeOptions}
-              value={data.personType}
-              onChange={handlePersonTypeChange}
-            />
-            <Select
-              label={t("private-deal.select_identifications")}
-              options={idOptions}
-              value={data.identification}
-              onChange={handleIdentificationChange}
-            />
-            {data.identification === "emirates_id" ? (
-              <EmiratesIdInput
-                label={idValueLabel}
-                value={data.identificationValue}
-                onChange={(value) =>
-                  onChange({ identificationValue: value })
+          <div className="flex flex-wrap items-center gap-2">
+            {(
+              [
+                { key: "hold" as const, label: t("private-deal.custody_hold") },
+                {
+                  key: "transfer" as const,
+                  label: t("private-deal.custody_transfer"),
+                },
+                {
+                  key: "gift" as const,
+                  label: t("private-deal.custody_gifting"),
+                },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => handleCustodyChange(tab.key)}
+                className="rounded-full px-3.5 py-[5px] text-sm font-medium transition-colors border"
+                style={
+                  custodyIntent === tab.key
+                    ? {
+                        backgroundColor: getColor("primary"),
+                        borderColor: getColor("primary"),
+                        color: "#FFFFFF",
+                      }
+                    : {
+                        backgroundColor: getColor("surface"),
+                        borderColor: getColor("border"),
+                        color: getColor("secondaryText"),
+                      }
                 }
-              />
-            ) : (
-              <Input
-                label={idValueLabel}
-                value={data.identificationValue}
-                onChange={(e) =>
-                  onChange({ identificationValue: e.target.value })
-                }
-                placeholder="88454"
-              />
-            )}
-            <CountryPhoneInput
-              label={t("private-deal.mobile_number")}
-              country="ae"
-              onlyCountries={["ae"]}
-              enableSearch={false}
-              value={data.secondaryMobile}
-              onChange={(secondaryMobile) => {
-                onChange({
-                  secondaryMobile,
-                  secondaryMobileCountryIso: "ae",
-                  secondaryMobileDialCode: "+971",
-                });
-                if (phoneErrors.secondaryMobile) {
-                  setPhoneErrors((prev) => ({
-                    ...prev,
-                    secondaryMobile: undefined,
-                  }));
-                }
-              }}
-              error={phoneErrors.secondaryMobile}
-            />
-            {data.personType === "organization" && (
-              <div className="sm:col-span-2">
-                <Select
-                  label={t("private-deal.license_source")}
-                  options={licenseSourceOptions}
-                  value={data.licenseSource || defaultLicenseSource}
-                  onChange={(v) => onChange({ licenseSource: v })}
-                  placeholder={t("private-deal.license_source")}
-                />
-              </div>
-            )}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      <div
-        className={`flex gap-3 rounded-2xl border p-4 mb-6 text-start`}
-        style={{
-          borderColor: `${getColor("primary")}40`,
-          backgroundColor: `${getColor("primary")}0D`,
-        }}
-      >
-        <ShieldCheck
-          className="w-5 h-5 shrink-0 mt-0.5"
-          style={{ color: getColor("primary") }}
+      {isGifting ? (
+        <GiftFlowPanel
+          data={data}
+          step={giftStep}
+          onChange={onChange}
+          phoneError={phoneErrors.giftRecipientPhone}
+          onPhoneErrorClear={() =>
+            setPhoneErrors((prev) => ({
+              ...prev,
+              giftRecipientPhone: undefined,
+            }))
+          }
         />
-        <p
-          className="text-sm leading-relaxed"
-          style={{ color: getColor("secondaryText") }}
-        >
-          <span
-            className="font-medium"
-            style={{ color: getColor("primaryText") }}
+      ) : (
+        <>
+          {showStandardForm && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <Input
+                label={t("private-deal.full_name")}
+                value={data.fullName}
+                onChange={(e) => onChange({ fullName: e.target.value })}
+                placeholder={t("private-deal.full_name_placeholder")}
+              />
+              <CountryPhoneInput
+                label={t("private-deal.mobile_number")}
+                country={data.mobileCountryIso || "ae"}
+                value={data.mobile}
+                onChange={(mobile, meta) => {
+                  onChange({
+                    mobile,
+                    mobileCountryIso: meta.countryIso,
+                    mobileDialCode: meta.dialCode,
+                  });
+                  if (phoneErrors.mobile) {
+                    setPhoneErrors((prev) => ({ ...prev, mobile: undefined }));
+                  }
+                }}
+                error={phoneErrors.mobile}
+                required
+              />
+              <Input
+                label={t("private-deal.email")}
+                type="email"
+                value={data.email}
+                onChange={(e) => onChange({ email: e.target.value })}
+                placeholder={t("private-deal.email_placeholder")}
+              />
+              <EmiratesIdInput
+                label={t("private-deal.emirates_id")}
+                value={data.emiratesId}
+                onChange={(value) => onChange({ emiratesId: value })}
+              />
+            </div>
+          )}
+
+          {showTransferFields && (
+            <div className="mb-4">
+              {showCustodyOptions && (
+                <p
+                  className="text-sm font-medium mb-3 text-start"
+                  style={{ color: getColor("primaryText") }}
+                >
+                  {t("private-deal.plate_transfer_info")}
+                </p>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Select
+                  label={t("private-deal.type")}
+                  options={typeOptions}
+                  value={data.personType}
+                  onChange={handlePersonTypeChange}
+                />
+                <Select
+                  label={t("private-deal.select_identifications")}
+                  options={idOptions}
+                  value={data.identification}
+                  onChange={handleIdentificationChange}
+                />
+                {data.identification === "emirates_id" ? (
+                  <EmiratesIdInput
+                    label={idValueLabel}
+                    value={data.identificationValue}
+                    onChange={(value) =>
+                      onChange({ identificationValue: value })
+                    }
+                  />
+                ) : (
+                  <Input
+                    label={idValueLabel}
+                    value={data.identificationValue}
+                    onChange={(e) =>
+                      onChange({ identificationValue: e.target.value })
+                    }
+                    placeholder="88454"
+                  />
+                )}
+                <CountryPhoneInput
+                  label={t("private-deal.mobile_number")}
+                  country="ae"
+                  onlyCountries={["ae"]}
+                  enableSearch={false}
+                  value={data.secondaryMobile}
+                  onChange={(secondaryMobile) => {
+                    onChange({
+                      secondaryMobile,
+                      secondaryMobileCountryIso: "ae",
+                      secondaryMobileDialCode: "+971",
+                    });
+                    if (phoneErrors.secondaryMobile) {
+                      setPhoneErrors((prev) => ({
+                        ...prev,
+                        secondaryMobile: undefined,
+                      }));
+                    }
+                  }}
+                  error={phoneErrors.secondaryMobile}
+                />
+                {data.personType === "organization" && (
+                  <div className="sm:col-span-2">
+                    <Select
+                      label={t("private-deal.license_source")}
+                      options={licenseSourceOptions}
+                      value={data.licenseSource || defaultLicenseSource}
+                      onChange={(v) => onChange({ licenseSource: v })}
+                      placeholder={t("private-deal.license_source")}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div
+            className={`flex gap-3 rounded-2xl border p-4 mb-6 text-start`}
+            style={{
+              borderColor: `${getColor("primary")}40`,
+              backgroundColor: `${getColor("primary")}0D`,
+            }}
           >
-            {t("private-deal.verify_box_title")}{" "}
-          </span>
-          {t("private-deal.verify_box_desc")}
-        </p>
-      </div>
+            <ShieldCheck
+              className="w-5 h-5 shrink-0 mt-0.5"
+              style={{ color: getColor("primary") }}
+            />
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: getColor("secondaryText") }}
+            >
+              <span
+                className="font-medium"
+                style={{ color: getColor("primaryText") }}
+              >
+                {t("private-deal.verify_box_title")}{" "}
+              </span>
+              {t("private-deal.verify_box_desc")}
+            </p>
+          </div>
+        </>
+      )}
 
       <div
         className={`flex items-center justify-between border-t pt-6`}
@@ -548,7 +669,7 @@ export default function ConfirmDetailsStep({
         <Button
           variant="outline"
           size="md"
-          onClick={onBack}
+          onClick={handleBack}
           leftIcon={<BackIcon className="w-4 h-4" />}
           disabled={submitting}
         >
@@ -561,7 +682,9 @@ export default function ConfirmDetailsStep({
           rightIcon={<NextIcon className="w-4 h-4" />}
           disabled={submitting}
         >
-          {continueLabel || t("private-deal.continue")}
+          {isGifting
+            ? t("private-deal.continue")
+            : continueLabel || t("private-deal.continue")}
         </Button>
       </div>
     </div>

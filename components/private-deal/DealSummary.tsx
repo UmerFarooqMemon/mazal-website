@@ -43,6 +43,9 @@ export interface DealSummaryPricing {
   /** Gift deals: buyer pays 0 / seller net 0 per API guide. */
   isGift?: boolean;
   buyerPaymentRequired?: boolean;
+  /** Optional gift packaging line shown under fee rows. */
+  giftPackageLabel?: string | null;
+  giftPackageAmount?: number | null;
 }
 
 interface Variant {
@@ -264,13 +267,34 @@ export default function DealSummary({
           </>
         )}
 
+        {pricing?.giftPackageLabel &&
+          pricing.giftPackageAmount != null &&
+          pricing.giftPackageAmount > 0 && (
+            <Row
+              label={pricing.giftPackageLabel}
+              value={<DirhamAmount amount={pricing.giftPackageAmount} />}
+              isRTL={isRTL}
+              muted
+              getColor={getColor}
+            />
+          )}
+
         <div
           className="border-t pt-3"
           style={{ borderColor: getColor("border") }}
         >
           <Row
             label={t("private-deal.total_fees")}
-            value={<DirhamAmount amount={totalFees} />}
+            value={
+              <DirhamAmount
+                amount={
+                  totalFees +
+                  (pricing?.giftPackageAmount && pricing.giftPackageAmount > 0
+                    ? pricing.giftPackageAmount
+                    : 0)
+                }
+              />
+            }
             isRTL={isRTL}
             getColor={getColor}
           />
@@ -286,7 +310,14 @@ export default function DealSummary({
           </span>
           <span style={{ color: getColor("primary") }}>
             <DirhamAmount
-              amount={data.role === "buyer" ? totalDue : sellerNet}
+              amount={
+                data.role === "buyer"
+                  ? totalDue +
+                    (pricing?.giftPackageAmount && pricing.giftPackageAmount > 0
+                      ? pricing.giftPackageAmount
+                      : 0)
+                  : sellerNet
+              }
               weight="bold"
             />
           </span>

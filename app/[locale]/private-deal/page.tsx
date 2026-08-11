@@ -26,6 +26,7 @@ import PaymentMethodStep, {
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 import GiftNoPaymentBanner from "@/components/private-deal/GiftNoPaymentBanner";
+import { getGiftPackage } from "@/components/private-deal/giftPackages";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import {
   hasNationalPhoneDigits,
@@ -111,6 +112,13 @@ export default function PrivateDealPage() {
     giftPlate: false,
     giftEmail: "",
     giftMessage: "",
+    giftPackageId: "",
+    giftRecipientName: "",
+    giftRecipientPhone: "",
+    giftRecipientPhoneCountryIso: "ae",
+    giftRecipientPhoneDialCode: "+971",
+    giftRecipientAddress: "",
+    giftRecipientNotes: "",
   });
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank");
@@ -209,6 +217,19 @@ export default function PrivateDealPage() {
     apiDeal?.buyer_payment_required === false;
   const buyerPaymentRequired =
     !isGiftDeal && apiDeal?.buyer_payment_required !== false;
+  const selectedGiftPackage =
+    details.custodyIntent === "gift"
+      ? getGiftPackage(details.giftPackageId)
+      : undefined;
+  const giftPackageLabel = selectedGiftPackage
+    ? (
+        t("private-deal.gift_package_label") || "{name} Package"
+      ).replace(
+        "{name}",
+        t(`private-deal.${selectedGiftPackage.nameKey}`) ||
+          selectedGiftPackage.nameKey,
+      )
+    : null;
   const summaryPricing = {
     feeBreakdown: apiDeal?.fee_breakdown,
     totalFees: apiDeal?.total_fees,
@@ -218,6 +239,8 @@ export default function PrivateDealPage() {
       : apiDeal?.seller_net,
     isGift: isGiftDeal,
     buyerPaymentRequired: !buyerPaymentRequired ? false : undefined,
+    giftPackageLabel,
+    giftPackageAmount: selectedGiftPackage?.price ?? null,
   };
 
   const licenseSourceOptions = useMemo(
@@ -339,9 +362,15 @@ export default function PrivateDealPage() {
     const secondaryMobile =
       toE164FromPhoneDigits(details.secondaryMobile) || details.secondaryMobile;
     const isHoldCustody = details.custodyIntent === "hold";
+    const isGiftCustody = details.custodyIntent === "gift";
 
     // Hold custody: personal details only — same individual party payload shape.
-    if (isHoldCustody) {
+    // Gifting: buyer keeps personal details; recipient + package go in role_details.
+    if (isHoldCustody || isGiftCustody) {
+      const giftRecipientPhone =
+        toE164FromPhoneDigits(details.giftRecipientPhone || "") ||
+        details.giftRecipientPhone ||
+        "";
       return {
         intent: "complete",
         party_type: "individual",
@@ -352,7 +381,20 @@ export default function PrivateDealPage() {
         identification_type: "emirates_id",
         accept_terms: true,
         role_details: {
-          notes: "",
+          notes: isGiftCustody
+            ? details.giftRecipientNotes?.trim() || ""
+            : "",
+          ...(isGiftCustody
+            ? {
+                custody_intent: "gift",
+                gift_package_id: details.giftPackageId || undefined,
+                gift_recipient_name:
+                  details.giftRecipientName?.trim() || undefined,
+                gift_recipient_phone: giftRecipientPhone || undefined,
+                gift_recipient_address:
+                  details.giftRecipientAddress?.trim() || undefined,
+              }
+            : {}),
         },
       };
     }
@@ -461,7 +503,7 @@ export default function PrivateDealPage() {
         );
       }
       if (
-        details.custodyIntent !== "hold" &&
+        details.custodyIntent === "transfer" &&
         hasNationalPhoneDigits(details.secondaryMobile, secondaryDial) &&
         !isValidCountryPhoneNumber(details.secondaryMobile, secondaryIso)
       ) {
@@ -469,6 +511,32 @@ export default function PrivateDealPage() {
           t("common.phone_length_invalid") ||
             "Enter the full phone number for the selected country.",
         );
+      }
+
+      if (variant === "buyer" && details.custodyIntent === "gift") {
+        if (!details.giftPackageId) {
+          throw new Error(
+            t("private-deal.gift_package_required") ||
+              "Please select a gift package to continue.",
+          );
+        }
+        if (!(details.giftRecipientName || "").trim()) {
+          throw new Error(
+            t("private-deal.gift_recipient_name_required") ||
+              "Recipient name is required.",
+          );
+        }
+        const giftIso = details.giftRecipientPhoneCountryIso || "ae";
+        const giftDial = details.giftRecipientPhoneDialCode || "+971";
+        if (
+          !hasNationalPhoneDigits(details.giftRecipientPhone || "", giftDial) ||
+          !isValidCountryPhoneNumber(details.giftRecipientPhone || "", giftIso)
+        ) {
+          throw new Error(
+            t("private-deal.gift_recipient_phone_required") ||
+              "Recipient phone number is required.",
+          );
+        }
       }
 
       if (variant === "seller" && details.giftPlate) {
