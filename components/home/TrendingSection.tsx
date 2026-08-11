@@ -87,7 +87,7 @@ export default function TrendingSection() {
               code={plate.code}
               price={plate.price}
               type={plate.type}
-              tier={plate.tier}
+              listingPlan={plate.listingPlan}
               views={plate.views}
               rating={plate.rating}
               isFavorite={plate.isFavorite}

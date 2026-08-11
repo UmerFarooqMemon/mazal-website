@@ -276,6 +276,7 @@ export interface MarketplaceListingCard {
   end_date?: string | null;
   is_scheduled?: boolean;
   auction?: MarketplaceAuction | null;
+  listing_plan?: MarketplaceListingPlanSummary | null;
 }
 
 export interface MarketplaceListingPlan {
@@ -299,6 +300,8 @@ export interface MarketplaceListingPlanSummary {
   price: string | null;
   duration_days?: number | null;
   is_free?: boolean;
+  badge_image_url?: string | null;
+  slug?: string | null;
 }
 
 export interface MarketplaceListingDetail extends MarketplaceListingCard {
@@ -311,7 +314,6 @@ export interface MarketplaceListingDetail extends MarketplaceListingCard {
   sold_at?: string | null;
   created_at?: string;
   updated_at?: string;
-  listing_plan?: MarketplaceListingPlanSummary | null;
   plan_payment_status?:
     | "not_required"
     | "pending"
@@ -843,13 +845,6 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
       ? `${plateCode} | ${plateDigits}`
       : listing.display_plate;
 
-  // Figma marketplace cards show boost tier (Diamond / Gold / Silver), not listing type.
-  const tier =
-    normalizeBoostTier(listing.boost_tier) ||
-    normalizeBoostTier(listing.featured_tier) ||
-    normalizeBoostTier(listing.tier) ||
-    "diamond";
-
   return {
     id: listing.id,
     status: listing.status,
@@ -862,7 +857,7 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     plate_design: listing.plate_design || undefined,
     price: resolveListingAskingPrice(listing),
     type: listing.listing_type_label?.toUpperCase() || listing.listing_type,
-    tier,
+    listingPlan: listing.listing_plan ?? null,
     views: listing.view_count,
     rating: listing.seller?.rating ?? 0,
     previouslySold: listing.previously_sold,

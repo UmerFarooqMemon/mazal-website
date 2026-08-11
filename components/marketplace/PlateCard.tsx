@@ -4,10 +4,14 @@ import { Eye, Star } from "lucide-react";
 import { useLocale } from "../../context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
-import { DiamondTierBadge, DirhamAmount } from "@/components/ui";
+import { DirhamAmount } from "@/components/ui";
+import ListingPlanBadge from "@/components/marketplace/ListingPlanBadge";
 import { ListingInlineStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
-import { type MarketplaceListingStatus } from "@/services/marketplace";
+import {
+  type MarketplaceListingPlanSummary,
+  type MarketplaceListingStatus,
+} from "@/services/marketplace";
 
 interface PlateCardProps {
   id: string | number;
@@ -17,7 +21,7 @@ interface PlateCardProps {
   code: string;
   price: number;
   type?: "DIRECT" | "AUCTION" | "SPOT" | string;
-  tier?: "diamond" | "gold" | "silver";
+  listingPlan?: MarketplaceListingPlanSummary | null;
   views: number;
   seller?: string;
   rating: number;
@@ -42,7 +46,7 @@ export default function PlateCard({
   emirate,
   code,
   price,
-  tier = "diamond",
+  listingPlan,
   views,
   rating,
   previouslySold,
@@ -60,8 +64,6 @@ export default function PlateCard({
   const formattedViews = new Intl.NumberFormat(
     locale === "ar" ? "ar-AE" : "en-US",
   ).format(views);
-
-  const badgeLabel = t(`listings.tier_${tier}`) || tier;
 
   const digits =
     plate_digits ||
@@ -87,19 +89,7 @@ export default function PlateCard({
       <div
         className={`flex justify-between items-center mb-4`}
       >
-        {tier === "diamond" ? (
-          <DiamondTierBadge />
-        ) : (
-          <span
-            className="text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider"
-            style={{
-              backgroundColor: getColor("primaryLight"),
-              color: getColor("primary"),
-            }}
-          >
-            {badgeLabel}
-          </span>
-        )}
+        <ListingPlanBadge plan={listingPlan} />
         <div
           className={`flex items-center gap-1.5 text-xs`}
           style={{ color: getColor("mutedText") }}

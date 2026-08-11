@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
-import { DiamondTierBadge, DirhamAmount } from "@/components/ui";
+import { DirhamAmount } from "@/components/ui";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
+import ListingPlanBadge from "@/components/marketplace/ListingPlanBadge";
 import { ListingInlineStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import { useLocale } from "@/context/LocaleContext";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
@@ -11,10 +12,9 @@ import {
   mapListingToPlateCard,
   toMarketplaceNumber,
   type MarketplaceListingCard,
+  type MarketplaceListingPlanSummary,
   type MarketplaceListingStatus,
 } from "@/services/marketplace";
-
-export type PlateTier = "diamond" | "gold" | "silver" | "verified";
 
 export type HomeV2Plate = {
   id: string | number;
@@ -25,7 +25,7 @@ export type HomeV2Plate = {
   price: number;
   views: number;
   rating: number;
-  tier: PlateTier;
+  listingPlan?: MarketplaceListingPlanSummary | null;
   showHeart?: boolean;
   plateType?: string;
   plateDesign?: string;
@@ -55,7 +55,7 @@ export function mapListingToHomeV2Plate(
         : toMarketplaceNumber(auctionPrice),
     views: card.views,
     rating: card.rating,
-    tier: card.tier,
+    listingPlan: card.listingPlan,
     showHeart: Boolean(card.isFavorite),
     plateType: card.plate_type,
     plateDesign: card.plate_design,
@@ -72,30 +72,8 @@ export function mapListingsToHomeV2Plates(
   return (listings ?? []).map(mapListingToHomeV2Plate);
 }
 
-const TIER_STYLES: Record<
-  Exclude<PlateTier, "diamond">,
-  { labelKey: string; className: string; icon: string }
-> = {
-  gold: {
-    labelKey: "listings.tier_gold",
-    className: "bg-linear-to-br from-[#e0ae57] to-[#a77927]",
-    icon: "/home-v2/icon-crown.svg",
-  },
-  silver: {
-    labelKey: "listings.tier_silver",
-    className: "bg-linear-to-br from-[#cdcdcd] to-[#969696]",
-    icon: "/home-v2/icon-stars.svg",
-  },
-  verified: {
-    labelKey: "listings.tier_verified",
-    className: "bg-linear-to-r from-[#152e2b] to-[#00664e]",
-    icon: "/home-v2/icon-verified.svg",
-  },
-};
-
 export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
   const { locale, t } = useLocale();
-  const tier = plate.tier === "diamond" ? null : TIER_STYLES[plate.tier];
 
   return (
     <Link
@@ -104,16 +82,7 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
       className="relative flex flex-col gap-4 rounded-xl border border-[#d9dee6] bg-white p-5 shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)] transition-shadow hover:shadow-[0_8px_28px_-10px_rgba(21,46,43,0.2)]"
     >
       <div className="flex items-center justify-between">
-        {tier ? (
-          <span
-            className={`inline-flex items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.3px] text-white uppercase ${tier.className}`}
-          >
-            <HomeV2Icon src={tier.icon} size={12} />
-            {t(tier.labelKey)}
-          </span>
-        ) : (
-          <DiamondTierBadge />
-        )}
+        <ListingPlanBadge plan={plate.listingPlan} />
         <div className="flex items-center gap-2.5">
           <span className="flex items-center gap-1 text-xs text-[#545e6f]">
             <HomeV2Icon src="/home-v2/icon-eye.svg" size={14} />

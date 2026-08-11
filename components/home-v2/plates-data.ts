@@ -21,6 +21,15 @@ function enrich(
   };
 }
 
+function mockPlan(name: string) {
+  return {
+    id: null,
+    name,
+    price: null,
+    is_free: name === "Free",
+  };
+}
+
 export const WATCHING_PLATES: HomeV2PlateDetail[] = [
   enrich(
     {
@@ -30,7 +39,7 @@ export const WATCHING_PLATES: HomeV2PlateDetail[] = [
       price: 5_100_000,
       views: 6004,
       rating: 4.9,
-      tier: "diamond",
+      listingPlan: mockPlan("Diamond"),
       showHeart: true,
     },
     { watchers: 152, activeOffers: 8 },
@@ -42,7 +51,7 @@ export const WATCHING_PLATES: HomeV2PlateDetail[] = [
     price: 4_200_000,
     views: 6004,
     rating: 4.9,
-    tier: "diamond",
+    listingPlan: mockPlan("Diamond"),
   }),
   enrich({
     id: "w3",
@@ -51,7 +60,7 @@ export const WATCHING_PLATES: HomeV2PlateDetail[] = [
     price: 2_200_000,
     views: 6004,
     rating: 4.9,
-    tier: "diamond",
+    listingPlan: mockPlan("Diamond"),
   }),
   enrich({
     id: "w4",
@@ -60,7 +69,7 @@ export const WATCHING_PLATES: HomeV2PlateDetail[] = [
     price: 1_850_000,
     views: 4394,
     rating: 4.8,
-    tier: "diamond",
+    listingPlan: mockPlan("Diamond"),
   }),
   enrich({
     id: "w5",
@@ -69,7 +78,7 @@ export const WATCHING_PLATES: HomeV2PlateDetail[] = [
     price: 980_000,
     views: 3120,
     rating: 4.9,
-    tier: "gold",
+    listingPlan: mockPlan("Gold"),
   }),
   enrich({
     id: "w6",
@@ -78,7 +87,7 @@ export const WATCHING_PLATES: HomeV2PlateDetail[] = [
     price: 640_000,
     views: 2105,
     rating: 4.7,
-    tier: "silver",
+    listingPlan: mockPlan("Silver"),
   }),
 ];
 
@@ -90,7 +99,7 @@ export const TRENDING_PLATES: HomeV2PlateDetail[] = [
     price: 3_400_000,
     views: 5210,
     rating: 4.9,
-    tier: "diamond",
+    listingPlan: mockPlan("Diamond"),
   }),
   enrich({
     id: "t2",
@@ -99,7 +108,7 @@ export const TRENDING_PLATES: HomeV2PlateDetail[] = [
     price: 6_200_000,
     views: 8840,
     rating: 4.9,
-    tier: "verified",
+    listingPlan: mockPlan("Verified"),
   }),
   enrich({
     id: "t3",
@@ -108,7 +117,7 @@ export const TRENDING_PLATES: HomeV2PlateDetail[] = [
     price: 680_000,
     views: 2210,
     rating: 4.9,
-    tier: "gold",
+    listingPlan: mockPlan("Gold"),
   }),
   enrich({
     id: "t4",
@@ -117,7 +126,7 @@ export const TRENDING_PLATES: HomeV2PlateDetail[] = [
     price: 2_200_000,
     views: 4022,
     rating: 4.8,
-    tier: "diamond",
+    listingPlan: mockPlan("Diamond"),
   }),
   enrich({
     id: "t5",
@@ -126,7 +135,7 @@ export const TRENDING_PLATES: HomeV2PlateDetail[] = [
     price: 540_000,
     views: 1750,
     rating: 4.8,
-    tier: "silver",
+    listingPlan: mockPlan("Silver"),
   }),
   enrich({
     id: "t6",
@@ -135,7 +144,7 @@ export const TRENDING_PLATES: HomeV2PlateDetail[] = [
     price: 1_150_000,
     views: 2980,
     rating: 4.9,
-    tier: "gold",
+    listingPlan: mockPlan("Gold"),
   }),
 ];
 

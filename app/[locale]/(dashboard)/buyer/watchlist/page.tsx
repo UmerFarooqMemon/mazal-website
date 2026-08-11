@@ -122,7 +122,7 @@ export default function BuyerWatchlistPage() {
                 emirate={plate.emirate}
                 code={plate.code}
                 price={plate.price}
-                tier={plate.tier}
+                listingPlan={plate.listingPlan}
                 type={plate.type}
                 views={plate.views}
                 rating={plate.rating}

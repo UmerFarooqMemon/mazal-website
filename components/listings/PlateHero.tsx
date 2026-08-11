@@ -8,6 +8,7 @@ import {
   hasListingDetailStatus,
   ListingDetailStatusBadge,
 } from "@/components/marketplace/ListingStatusBadge";
+import ListingPlanBadge from "@/components/marketplace/ListingPlanBadge";
 import {
   isHiddenPlateCode,
   resolveListingPreview,
@@ -82,7 +83,7 @@ export default function PlateHero({ listing }: PlateHeroProps) {
         className={
           showDetailStatus
             ? "rounded-[24px] p-5 sm:p-7 md:p-8"
-            : "rounded-2xl border px-6 py-8 md:px-10 md:py-9 flex items-center justify-center shadow-sm min-h-[182px]"
+            : "rounded-2xl border px-6 py-8 md:px-10 md:py-9 flex flex-col items-center justify-center shadow-sm min-h-[182px]"
         }
         style={
           showDetailStatus
@@ -96,10 +97,13 @@ export default function PlateHero({ listing }: PlateHeroProps) {
         {showDetailStatus ? (
           <>
             <div className="flex items-center justify-between gap-3 mb-6">
-              <ListingDetailStatusBadge
-                status={listing?.status}
-                previouslySold={listing?.previously_sold}
-              />
+              <div className="flex items-center gap-2 flex-wrap">
+                <ListingPlanBadge plan={listing?.listing_plan} />
+                <ListingDetailStatusBadge
+                  status={listing?.status}
+                  previouslySold={listing?.previously_sold}
+                />
+              </div>
               <span
                 className="text-[13px] font-medium"
                 style={{ color: getColor("primaryText") }}
@@ -129,7 +133,13 @@ export default function PlateHero({ listing }: PlateHeroProps) {
             </div>
           </>
         ) : (
-          <div className="relative w-full max-w-xl rounded-[20px] bg-white p-4 sm:p-8 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
+          <>
+            {listing?.listing_plan ? (
+              <div className="mb-4 self-start">
+                <ListingPlanBadge plan={listing.listing_plan} />
+              </div>
+            ) : null}
+            <div className="relative w-full max-w-xl rounded-[20px] bg-white p-4 sm:p-8 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
             <NumberPlateDisplay
               plate_code={plateCode}
               plate_digits={plateDigits}
@@ -142,7 +152,8 @@ export default function PlateHero({ listing }: PlateHeroProps) {
               crop="hero"
               hideCode={hideCode}
             />
-          </div>
+            </div>
+          </>
         )}
       </div>
 
