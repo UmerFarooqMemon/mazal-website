@@ -65,9 +65,12 @@
   "hero_single_digit": "Single digit",
 
   "v2_hero_card_label": "most active · highest value plates",
+  "v2_hero_live_prefix": "LIVE AUCTION",
   "v2_hero_auction_label": "Live auction · 165 trades",
   "v2_hero_auctioning": "Total Auctioning : 45 Plates",
   "v2_hero_auction_value": "Total Value: AED 6,200,000",
+  "v2_hero_label_auctioning": "Total Auctioning",
+  "v2_hero_label_value": "Total Value",
   "v2_feature_onspot_title": "On Spot",
   "v2_feature_onspot_desc": "An exclusive new service is coming soon. Stay Tuned!",
   "v2_watching_badge": "Diamond plates",

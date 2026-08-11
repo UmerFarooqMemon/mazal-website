@@ -8,6 +8,10 @@ import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
 import { mapListingToHomeV2Plate } from "@/components/home-v2/HomeV2PlateCard";
 import { useLocale } from "@/context/LocaleContext";
 import {
+  fetchHomepageStatsClient,
+  type HomepageStats,
+} from "@/services/homepage";
+import {
   getFeaturedAuctionListings,
   type MarketplaceListingCard,
 } from "@/services/marketplace";
@@ -16,6 +20,7 @@ export default function HomeV2Hero() {
   const { locale, t } = useLocale();
   const isRTL = locale === "ar";
   const [listings, setListings] = useState<MarketplaceListingCard[]>([]);
+  const [stats, setStats] = useState<HomepageStats | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +38,14 @@ export default function HomeV2Hero() {
       })
       .finally(() => {
         if (active) setLoading(false);
+      });
+
+    fetchHomepageStatsClient(locale)
+      .then((data) => {
+        if (active) setStats(data);
+      })
+      .catch(() => {
+        if (active) setStats(null);
       });
 
     return () => {
@@ -103,18 +116,18 @@ export default function HomeV2Hero() {
           <div className="flex max-w-lg gap-6 border-t border-[#d9dee6]/80 pt-6 sm:gap-10">
             <div>
               <div className="font-serif text-2xl font-semibold tracking-tight text-[#152e2b]">
-                {locale === "ar" ? "مليار 2.4" : "AED 2.4B"}
+                {stats?.plates_transacted.display ?? "—"}
               </div>
               <div className="mt-1 text-xs text-[#545e6f]">
-                {t("home.hero_stats_plates")}
+                {stats?.plates_transacted.label || t("home.hero_stats_plates")}
               </div>
             </div>
             <div>
               <div className="font-serif text-2xl font-semibold tracking-tight text-[#152e2b]">
-                12,400+
+                {stats?.verified_bidders.display ?? "—"}
               </div>
               <div className="mt-1 text-xs text-[#545e6f]">
-                {t("home.hero_stats_bidders")}
+                {stats?.verified_bidders.label || t("home.hero_stats_bidders")}
               </div>
             </div>
           </div>
@@ -220,32 +233,30 @@ export default function HomeV2Hero() {
             )}
           </div>
 
-          <Link
-            href={featuredHref}
-            className="rounded-xl border border-[rgba(212,12,26,0.3)] bg-[#fff6f6] p-4 transition-opacity hover:opacity-90 sm:p-[17px]"
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#d40c1a] opacity-75" />
-                <span className="relative inline-flex size-2 rounded-full bg-[#d40c1a]" />
-              </span>
-              <span className="text-xs font-semibold tracking-[0.6px] text-[#2b1500] uppercase">
-                {t("home.v2_hero_auction_label")}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-serif text-lg font-semibold tracking-tight text-[#081123]">
-                {featuredListing?.title || t("home.v2_hero_auctioning")}
-              </span>
-              <span className="font-serif text-lg font-semibold tracking-tight text-[#152e2b]">
-                {featuredPlate ? (
-                  <DirhamAmount amount={featuredPlate.price} weight="bold" />
-                ) : (
-                  t("home.v2_hero_auction_value")
-                )}
-              </span>
-            </div>
-          </Link>
+          {stats?.live_auction.is_live ? (
+            <Link
+              href={`/${locale}/auctions`}
+              className="rounded-xl border border-[rgba(212,12,26,0.3)] bg-[#fff6f6] p-4 transition-opacity hover:opacity-90 sm:p-[17px]"
+            >
+              <div className="mb-2 flex items-center gap-2">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#d40c1a] opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-[#d40c1a]" />
+                </span>
+                <span className="text-xs font-semibold tracking-[0.6px] text-[#2b1500] uppercase">
+                  {`${t("home.v2_hero_live_prefix")} · ${stats.live_auction.trades_display}`}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-serif text-lg font-semibold tracking-tight text-[#081123]">
+                  {`${stats.live_auction.label_auctioning || t("home.v2_hero_label_auctioning")} : ${stats.live_auction.plates_display}`}
+                </span>
+                <span className="font-serif text-lg font-semibold tracking-tight text-[#152e2b]">
+                  {`${stats.live_auction.label_value || t("home.v2_hero_label_value")}: ${stats.live_auction.total_value_display}`}
+                </span>
+              </div>
+            </Link>
+          ) : null}
         </div>
       </div>
     </section>
