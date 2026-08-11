@@ -1,12 +1,16 @@
 "use client";
+
+import { Share2 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
-import { Button, DirhamAmount } from "@/components/ui";
+import { DirhamAmount } from "@/components/ui";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 
 const listings = [
   {
     id: 1,
     emirate: "DUBAI",
-    code: "M | 7",
+    plate_code: "M",
+    plate_digits: "7",
     title: "Dubai · M 7",
     status: "Active · 3 edits this week",
     price: "12,500,000",
@@ -15,7 +19,8 @@ const listings = [
   {
     id: 2,
     emirate: "ABU DHABI",
-    code: "1 | 88",
+    plate_code: "1",
+    plate_digits: "88",
     title: "Abu Dhabi · 1 88",
     status: "In escrow · 2 edits this week",
     price: "4,800,000",
@@ -24,7 +29,8 @@ const listings = [
   {
     id: 3,
     emirate: "DUBAI",
-    code: "AA | 999",
+    plate_code: "AA",
+    plate_digits: "999",
     title: "Dubai · AA 999",
     status: "Pending reveal · 1 edits this week",
     price: "1,850,000",
@@ -34,7 +40,8 @@ const listings = [
   {
     id: 4,
     emirate: "SHARJAH",
-    code: "1 | 5",
+    plate_code: "1",
+    plate_digits: "5",
     title: "Sharjah · 1 5",
     status: "Active · 3 edits this week",
     price: "920,000",
@@ -43,7 +50,8 @@ const listings = [
   {
     id: 5,
     emirate: "DUBAI",
-    code: "K | 55",
+    plate_code: "K",
+    plate_digits: "55",
     title: "Dubai · K 55",
     status: "Active · 2 edits this week",
     price: "680,000",
@@ -52,7 +60,8 @@ const listings = [
   {
     id: 6,
     emirate: "ABU DHABI",
-    code: "5 | 777",
+    plate_code: "5",
+    plate_digits: "777",
     title: "Abu Dhabi · 5 777",
     status: "Active · 1 edits this week",
     price: "540,000",
@@ -61,85 +70,58 @@ const listings = [
 ];
 
 export default function ActiveListings() {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-      <div
-        className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4`}
-      >
-        <div className={`text-start`}>
-          <h3 className="text-xl font-serif font-bold text-[#041443]">
+    <div className="rounded-2xl border border-[#d9dee6] bg-white">
+      <div className="flex flex-col gap-4 border-b border-[#d9dee6] px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-start">
+          <h2 className="font-serif text-2xl font-normal text-[#081123]">
             {t("dashboard.active_listings")}
-          </h3>
-          <p className="text-xs text-gray-400 mt-1">
+          </h2>
+          <p className="mt-1 text-sm text-[#545e6f]">
             {t("dashboard.edit_reflected")}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+        <button
+          type="button"
+          className="inline-flex h-[30px] items-center gap-1.5 rounded-full border border-[#d9dee6] px-3 text-xs text-[#081123] transition hover:bg-[#fbfaf7]"
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
+          <Share2 className="h-3.5 w-3.5" strokeWidth={2} />
           {t("dashboard.share_all")}
-        </Button>
+        </button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="divide-y divide-[#d9dee6]">
         {listings.map((item) => (
           <div
             key={item.id}
-            className={`flex flex-wrap lg:flex-nowrap items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0`}
+            className="flex flex-wrap items-center gap-4 px-6 py-4 lg:flex-nowrap"
           >
-            {/* Small card for the board */}
-            <div className="bg-[#F3F4F8] border border-gray-200 rounded-lg py-2 px-4 min-w-32.5 flex items-center justify-center gap-2">
-              <div className="text-center">
-                <div className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">
-                  {item.emirate}
-                </div>
-                <div
-                  className={`flex items-center gap-1.5 text-lg font-serif font-bold text-[#0A3B9E] leading-none ${item.blur ? "blur-[3px] opacity-60" : ""}`}
-                >
-                  {item.code.split("|").map((part, i) => (
-                    <span key={i} className="flex items-center gap-1.5">
-                      {part.trim()}
-                      {i === 0 && (
-                        <span className="text-gray-300 font-light text-sm">
-                          |
-                        </span>
-                      )}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <div className="w-[120px] shrink-0 overflow-hidden">
+              <NumberPlateDisplay
+                plate_code={item.plate_code}
+                plate_digits={item.plate_digits}
+                emirate={item.emirate}
+                crop="compact"
+                hideCode={item.blur}
+                wrapperClassName="w-[120px] overflow-hidden"
+                width={120}
+              />
             </div>
 
-            <div
-              className={`grow min-w-37.5 text-start`}
-            >
-              <div className="font-medium text-sm text-[#041443]">
+            <div className="min-w-[140px] flex-1 text-start">
+              <div className="text-sm font-medium text-[#081123]">
                 {item.title}
               </div>
-              <div className="text-xs text-gray-400">{item.status}</div>
+              <div className="mt-0.5 text-xs text-[#545e6f]">{item.status}</div>
             </div>
 
-            <div className={`min-w-25 text-end`}>
-              <div className="text-[10px] text-gray-500 font-medium">
+            <div className="min-w-[100px] text-end">
+              <div className="text-xs text-[#545e6f]">
                 {t("dashboard.listed")}
               </div>
-              <div className="font-bold text-sm text-[#041443]">
+              <div className="font-serif text-lg text-[#081123]">
                 <DirhamAmount
                   amount={Number(item.price.replace(/,/g, ""))}
                   weight="bold"
@@ -147,21 +129,21 @@ export default function ActiveListings() {
               </div>
             </div>
 
-            <div className={`min-w-20 text-end`}>
-              <div className="text-[10px] text-gray-500 font-medium">
+            <div className="min-w-[72px] text-end">
+              <div className="text-xs text-[#545e6f]">
                 {t("dashboard.margin")}
               </div>
-              <div className="font-semibold text-sm text-green-600">
+              <div className="font-serif text-lg text-[#0a2f94]">
                 {item.margin} ↗
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+
+            <button
+              type="button"
+              className="inline-flex h-[30px] shrink-0 items-center rounded-full border border-[#d9dee6] px-3 text-xs text-[#081123] transition hover:bg-[#fbfaf7]"
             >
               {t("dashboard.manage")}
-            </Button>
+            </button>
           </div>
         ))}
       </div>

@@ -1,4 +1,5 @@
 "use client";
+
 import { useLocale } from "@/context/LocaleContext";
 import { DirhamAmount } from "@/components/ui";
 
@@ -26,27 +27,26 @@ const stats = [
 ];
 
 export default function StatCards() {
-  const { t, locale } = useLocale();
-  const isRTL = locale === "ar";
+  const { t } = useLocale();
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {stats.map((stat, idx) => (
         <div
           key={idx}
-          className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm"
+          className="rounded-2xl border border-[#d9dee6] bg-white p-5"
         >
-          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+          <div className="text-xs uppercase text-[#545e6f]">
             {t(stat.labelKey)}
           </div>
-          <div className="text-2xl font-bold text-[#041443] mb-1">
+          <div className="mt-1 font-serif text-2xl font-semibold text-[#081123]">
             {"amount" in stat && stat.amount != null ? (
               <DirhamAmount amount={stat.amount} weight="bold" />
             ) : (
               stat.value
             )}
           </div>
-          <div className="text-xs text-[#0A3B9E]">
+          <div className="mt-1 text-xs text-[#0a2f94]">
             {"subAmount" in stat && stat.subAmount != null ? (
               <>
                 +<DirhamAmount amount={stat.subAmount} />

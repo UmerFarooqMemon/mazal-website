@@ -1,14 +1,43 @@
 "use client";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  Activity,
+  Download,
+  Plus,
+  Share2,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { Button, DirhamAmount } from "@/components/ui";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { getMyListings } from "@/services/marketplace";
+import type { MarketplaceListingPreview } from "@/services/marketplace";
 
-const FALLBACK_LISTINGS = [
+type DashboardListing = {
+  id: number;
+  emirate: string;
+  plate_code: string;
+  plate_digits: string;
+  code: string;
+  title: string;
+  status: string;
+  price: string;
+  margin: string;
+  isBlurred?: boolean;
+  preview?: MarketplaceListingPreview | null;
+  plate_type?: string | null;
+  plate_design?: string | null;
+};
+
+const FALLBACK_LISTINGS: DashboardListing[] = [
   {
     id: 1,
     emirate: "DUBAI",
+    plate_code: "M",
+    plate_digits: "7",
     code: "M | 7",
     title: "Dubai · M 7",
     status: "Active · 3 edits this week",
@@ -18,6 +47,8 @@ const FALLBACK_LISTINGS = [
   {
     id: 2,
     emirate: "ABU DHABI",
+    plate_code: "1",
+    plate_digits: "88",
     code: "1 | 88",
     title: "Abu Dhabi · 1 88",
     status: "In escrow · 2 edits this week",
@@ -27,6 +58,8 @@ const FALLBACK_LISTINGS = [
   {
     id: 3,
     emirate: "DUBAI",
+    plate_code: "AA",
+    plate_digits: "999",
     code: "AA | 999",
     title: "Dubai · AA 999",
     status: "Pending reveal · 1 edits this week",
@@ -37,6 +70,8 @@ const FALLBACK_LISTINGS = [
   {
     id: 4,
     emirate: "SHARJAH",
+    plate_code: "1",
+    plate_digits: "5",
     code: "1 | 5",
     title: "Sharjah · 1 5",
     status: "Active · 3 edits this week",
@@ -46,6 +81,8 @@ const FALLBACK_LISTINGS = [
   {
     id: 5,
     emirate: "DUBAI",
+    plate_code: "K",
+    plate_digits: "55",
     code: "K | 55",
     title: "Dubai · K 55",
     status: "Active · 2 edits this week",
@@ -55,6 +92,8 @@ const FALLBACK_LISTINGS = [
   {
     id: 6,
     emirate: "ABU DHABI",
+    plate_code: "5",
+    plate_digits: "777",
     code: "5 | 777",
     title: "Abu Dhabi · 5 777",
     status: "Active · 1 edits this week",
@@ -65,7 +104,7 @@ const FALLBACK_LISTINGS = [
 
 export default function TraderDashboardPage() {
   const { t, locale } = useLocale();
-  const [listings, setListings] = useState(FALLBACK_LISTINGS);
+  const [listings, setListings] = useState<DashboardListing[]>(FALLBACK_LISTINGS);
 
   useEffect(() => {
     let active = true;
@@ -77,6 +116,8 @@ export default function TraderDashboardPage() {
           response.data.listings.map((listing) => ({
             id: listing.id,
             emirate: listing.emirate_label?.toUpperCase() || listing.emirate,
+            plate_code: listing.plate_code || "",
+            plate_digits: listing.plate_digits || "",
             code:
               listing.plate_code && listing.plate_digits
                 ? `${listing.plate_code} | ${listing.plate_digits}`
@@ -86,6 +127,9 @@ export default function TraderDashboardPage() {
             price: listing.asking_price.toLocaleString("en-AE"),
             margin: "+—",
             isBlurred: listing.code_hidden,
+            preview: listing.preview,
+            plate_type: listing.plate_type,
+            plate_design: listing.plate_design,
           })),
         );
       })
@@ -98,7 +142,6 @@ export default function TraderDashboardPage() {
     };
   }, [locale]);
 
-  // Statistical data (we used translation keys)
   const stats = [
     {
       label: t("dashboard.plates_owned"),
@@ -122,82 +165,60 @@ export default function TraderDashboardPage() {
     },
   ];
 
-  // CRM data
   const clients = [
     {
       name: "Hamdan A.",
       deals: "4 deals · last Mar 2026",
       amount: 8_400_000,
-      tag: "VIP",
+      tag: t("dashboard.vip"),
     },
     {
       name: "Reem S.",
       deals: "12 deals · last Jun 2026",
       amount: 22_100_000,
-      tag: "TRADER",
+      tag: t("dashboard.trader_tag"),
     },
     {
       name: "Khalid M.",
       deals: "2 deals · last Jan 2026",
       amount: 1_450_000,
-      tag: "COLLECTOR",
+      tag: t("dashboard.collector"),
     },
     {
       name: "Yousef R.",
       deals: "7 deals · last May 2026",
       amount: 14_200_000,
-      tag: "VIP",
+      tag: t("dashboard.vip"),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* ========== Page Header ========== */}
-        <div
-          className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-gray-200 pb-6`}
-        >
-          <div
-            className={`flex flex-col items-start text-start`}
-          >
-            <div className="text-[10px] font-bold text-[#0A3B9E] uppercase tracking-wider mb-1">
+    <div className="min-h-screen bg-[#fbfaf7]">
+      {/* Page header — Figma 497:9755 */}
+      <section className="border-b border-[#d9dee6] bg-[#fbfaf7]">
+        <div className="mx-auto flex min-h-[181px] max-w-[1280px] flex-col gap-6 px-6 py-10 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-[294px] text-start">
+            <p className="text-xs font-medium uppercase tracking-wide text-[#0a2f94]">
               {t("dashboard.trader_workspace")}
-            </div>
-            <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#041443]">
+            </p>
+            <h1 className="mt-2 font-serif text-[36px] font-normal leading-10 tracking-[-0.02em] text-[#081123]">
               Al Marwan Plates
             </h1>
-            <div
-              className={`text-sm text-gray-500 mt-1 flex items-center gap-2`}
-            >
-              <span>32 {t("dashboard.deals_closed")}</span>
-              <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-              <span className="flex items-center gap-1">
-                <span className="text-[#D4AF37]">★</span> 4.9
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-5 text-[#545e6f]">
+              <span>
+                32 {t("dashboard.deals_closed")} · 4.9★ ·{" "}
+                {t("dashboard.verified_id")}
               </span>
-              <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-              <span>{t("dashboard.verified_id")}</span>
-            </div>
+            </p>
           </div>
-          <div
-            className={`flex gap-3 w-full sm:w-auto`}
-          >
+
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="md"
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 w-full sm:w-auto justify-center"
+              className="h-[38px] rounded-full border-[#d9dee6] bg-[#fbfaf7] px-4 text-sm font-normal text-[#081123] hover:bg-white"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
+              <Download className="h-4 w-4" strokeWidth={2} />
               {t("dashboard.export_pl")}
             </Button>
 
@@ -205,229 +226,178 @@ export default function TraderDashboardPage() {
               <Button
                 variant="primary"
                 size="md"
-                fullWidth
-                className="w-full sm:w-auto justify-center"
+                className="h-[38px] rounded-full px-5 text-sm font-medium"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
+                <Plus className="h-4 w-4" strokeWidth={2.5} />
                 {t("dashboard.new_listing")}
               </Button>
             </Link>
           </div>
         </div>
+      </section>
 
-        {/* ========== Content Network ========== */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left and middle columns */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* 1. Statistics cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {stats.map((stat, idx) => (
+      {/* Main content — Figma 497:9775 */}
+      <div className="mx-auto max-w-[1280px] space-y-6 px-6 py-10">
+        {/* Stat cards — Figma 497:9776 */}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {stats.map((stat, idx) => (
+            <div
+              key={idx}
+              className="rounded-2xl border border-[#d9dee6] bg-white p-5"
+            >
+              <div className="text-xs uppercase text-[#545e6f]">
+                {stat.label}
+              </div>
+              <div className="mt-1 font-serif text-2xl font-semibold text-[#081123]">
+                {"amount" in stat && stat.amount != null ? (
+                  <DirhamAmount amount={stat.amount} weight="bold" />
+                ) : (
+                  stat.value
+                )}
+              </div>
+              <div className="mt-1 text-xs text-[#0a2f94]">
+                {"subAmount" in stat && stat.subAmount != null ? (
+                  <>
+                    +<DirhamAmount amount={stat.subAmount} />
+                  </>
+                ) : (
+                  stat.sub
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_395px]">
+          {/* Active listings — Figma 497:9806 */}
+          <div className="rounded-2xl border border-[#d9dee6] bg-white">
+            <div className="flex flex-col gap-4 border-b border-[#d9dee6] px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-start">
+                <h2 className="font-serif text-2xl font-normal text-[#081123]">
+                  {t("dashboard.active_listings")}
+                </h2>
+                <p className="mt-1 text-sm text-[#545e6f]">
+                  {t("dashboard.edit_reflected")}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex h-[30px] items-center gap-1.5 rounded-full border border-[#d9dee6] px-3 text-xs text-[#081123] transition hover:bg-[#fbfaf7]"
+              >
+                <Share2 className="h-3.5 w-3.5" strokeWidth={2} />
+                {t("dashboard.share_all")}
+              </button>
+            </div>
+
+            <div className="divide-y divide-[#d9dee6]">
+              {listings.map((item) => (
                 <div
-                  key={idx}
-                  className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm"
+                  key={item.id}
+                  className="flex flex-wrap items-center gap-4 px-6 py-4 lg:flex-nowrap"
                 >
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    {stat.label}
+                  <div className="w-[120px] shrink-0 overflow-hidden">
+                    <NumberPlateDisplay
+                      plate_code={item.plate_code}
+                      plate_digits={item.plate_digits}
+                      emirate={item.emirate}
+                      preview={item.preview}
+                      plateType={item.plate_type || undefined}
+                      plateDesign={item.plate_design || undefined}
+                      crop="compact"
+                      hideCode={item.isBlurred}
+                      wrapperClassName="w-[120px] overflow-hidden"
+                      width={120}
+                    />
                   </div>
-                  <div className="text-2xl font-bold text-[#041443] mb-1">
-                    {"amount" in stat && stat.amount != null ? (
-                      <DirhamAmount amount={stat.amount} weight="bold" />
-                    ) : (
-                      stat.value
-                    )}
+
+                  <div className="min-w-[140px] flex-1 text-start">
+                    <div className="text-sm font-medium text-[#081123]">
+                      {item.title}
+                    </div>
+                    <div className="mt-0.5 text-xs text-[#545e6f]">
+                      {item.status}
+                    </div>
                   </div>
-                  <div className="text-xs text-[#0A3B9E]">
-                    {"subAmount" in stat && stat.subAmount != null ? (
-                      <>
-                        +<DirhamAmount amount={stat.subAmount} />
-                      </>
-                    ) : (
-                      stat.sub
-                    )}
+
+                  <div className="min-w-[100px] text-end">
+                    <div className="text-xs text-[#545e6f]">
+                      {t("dashboard.listed")}
+                    </div>
+                    <div className="font-serif text-lg text-[#081123]">
+                      <DirhamAmount
+                        amount={Number(item.price.replace(/,/g, ""))}
+                        weight="bold"
+                      />
+                    </div>
                   </div>
+
+                  <div className="min-w-[72px] text-end">
+                    <div className="text-xs text-[#545e6f]">
+                      {t("dashboard.margin")}
+                    </div>
+                    <div className="font-serif text-lg text-[#0a2f94]">
+                      {item.margin} ↗
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="inline-flex h-[30px] shrink-0 items-center rounded-full border border-[#d9dee6] px-3 text-xs text-[#081123] transition hover:bg-[#fbfaf7]"
+                  >
+                    {t("dashboard.manage")}
+                  </button>
                 </div>
               ))}
             </div>
-
-            {/* 2. Active Lists Table */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <div
-                className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4`}
-              >
-                <div className={`text-start`}>
-                  <h3 className="text-xl font-serif font-bold text-[#041443]">
-                    {t("dashboard.active_listings")}
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {t("dashboard.edit_reflected")}
-                  </p>
-                </div>
-                <button className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-full text-xs font-medium hover:bg-gray-50 transition flex items-center gap-2">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                    <polyline points="16 6 12 2 8 6" />
-                    <line x1="12" y1="2" x2="12" y2="15" />
-                  </svg>
-                  {t("dashboard.share_all")}
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {listings.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`flex flex-wrap lg:flex-nowrap items-center gap-4 border-b border-gray-100 pb-4 last:border-0 last:pb-0`}
-                  >
-                    {/* Small card for the board */}
-                    <div className="bg-[#F3F4F8] border border-gray-200 rounded-lg py-2 px-4 min-w-30 flex items-center justify-center gap-2">
-                      <div className="text-center">
-                        <div className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">
-                          {item.emirate}
-                        </div>
-                        <div
-                          className={`flex items-center gap-1.5 text-lg font-serif font-bold text-[#0A3B9E] leading-none ${item.isBlurred ? "blur-[3px] opacity-60" : ""}`}
-                        >
-                          {item.code.split("|").map((part, i) => (
-                            <span key={i} className="flex items-center gap-1.5">
-                              {part.trim()}
-                              {i === 0 && (
-                                <span className="text-gray-300 font-light text-sm">
-                                  |
-                                </span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Title and Status */}
-                    <div className="grow min-w-37.5">
-                      <div className="font-medium text-sm text-[#041443]">
-                        {item.title}
-                      </div>
-                      <div className="text-xs text-gray-400">{item.status}</div>
-                    </div>
-
-                    {/* Price and Margin */}
-                    <div
-                      className={`min-w-25 text-end`}
-                    >
-                      <div className="text-[10px] text-gray-500 font-medium">
-                        {t("dashboard.listed")}
-                      </div>
-                      <div className="font-bold text-sm text-[#041443]">
-                        <DirhamAmount
-                          amount={Number(item.price.replace(/,/g, ""))}
-                          weight="bold"
-                        />
-                      </div>
-                    </div>
-
-                    <div
-                      className={`min-w-20 text-end`}
-                    >
-                      <div className="text-[10px] text-gray-500 font-medium">
-                        {t("dashboard.margin")}
-                      </div>
-                      <div className="font-semibold text-sm text-green-600">
-                        {item.margin} ↗
-                      </div>
-                    </div>
-
-                    <button className="bg-white border border-gray-200 text-gray-600 px-4 py-1.5 rounded-full text-xs font-medium hover:bg-gray-50 transition whitespace-nowrap">
-                      {t("dashboard.manage")}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
-          {/* Right column */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* 3. Realized P&L Card */}
-            <div className="bg-[#041443] text-white rounded-xl p-6 shadow-lg border border-blue-900/50">
-              <div className="flex items-center gap-2 text-[#D4AF37] text-xs font-bold uppercase tracking-wider mb-2">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </svg>
+          {/* Right column — Figma 497:9992 */}
+          <div className="space-y-6">
+            {/* Realised P&L — Figma 497:9993 */}
+            <div className="rounded-2xl border border-[#d9dee6] bg-[#010f51] p-6 text-[#fbfaf6]">
+              <div className="flex items-center gap-2 text-xs uppercase text-[#e0ae57]">
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
                 {t("dashboard.realised_pl")}
               </div>
-              <div className="text-4xl font-bold mb-1">
+              <div className="mt-2 font-serif text-4xl font-semibold">
                 <DirhamAmount amount={7_320_000} weight="bold" />
               </div>
-              <div className="text-xs text-gray-400 mb-6">
+              <p className="mt-1 text-sm text-[#fbfaf6]/90">
                 {t("dashboard.net_fees")}
-              </div>
-              <div className="grid grid-cols-3 gap-4 border-t border-white/10 pt-4">
+              </p>
+              <div className="mt-4 grid grid-cols-3 gap-4 border-t border-white/10 pt-4">
                 <div>
-                  <div className="text-lg font-bold">14</div>
-                  <div className="text-[10px] text-gray-400 uppercase">
+                  <div className="font-serif text-base">14</div>
+                  <div className="text-xs text-[#fbfaf6]/80">
                     {t("dashboard.sold")}
                   </div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold">63%</div>
-                  <div className="text-[10px] text-gray-400 uppercase">
+                  <div className="font-serif text-base">63%</div>
+                  <div className="text-xs text-[#fbfaf6]/80">
                     {t("dashboard.win_rate")}
                   </div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold">8.4m</div>
-                  <div className="text-[10px] text-gray-400 uppercase">
+                  <div className="font-serif text-base">8.4m</div>
+                  <div className="text-xs text-[#fbfaf6]/80">
                     {t("dashboard.avg_hold")}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 4. CRM card */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <div
-                className={`flex justify-between items-center mb-4`}
-              >
-                <div className="flex items-center gap-2 font-medium text-[#041443]">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
+            {/* CRM — Figma 497:10021 */}
+            <div className="rounded-2xl border border-[#d9dee6] bg-white p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 font-serif text-xl text-[#081123]">
+                  <Users className="h-[18px] w-[18px]" strokeWidth={2} />
                   {t("dashboard.crm")}
                 </div>
-                <button className="text-xs text-[#0A3B9E] hover:underline">
+                <button
+                  type="button"
+                  className="text-xs text-[#0a2f94] hover:underline"
+                >
                   {t("dashboard.export")}
                 </button>
               </div>
@@ -435,21 +405,21 @@ export default function TraderDashboardPage() {
                 {clients.map((client, idx) => (
                   <div
                     key={idx}
-                    className={`flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0`}
+                    className="flex items-center justify-between border-b border-[#d9dee6] pb-3 last:border-0 last:pb-0"
                   >
-                    <div className={`text-start`}>
-                      <div className="text-sm font-medium text-[#041443]">
+                    <div className="text-start">
+                      <div className="text-sm font-medium text-[#081123]">
                         {client.name}
                       </div>
-                      <div className="text-[10px] text-gray-400">
+                      <div className="text-xs text-[#545e6f]">
                         {client.deals}
                       </div>
                     </div>
-                    <div className={`text-end`}>
-                      <div className="text-sm font-bold text-[#041443]">
+                    <div className="text-end">
+                      <div className="font-serif text-sm font-normal text-[#081123]">
                         <DirhamAmount amount={client.amount} weight="bold" />
                       </div>
-                      <div className="text-[8px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                      <div className="mt-0.5 text-[10px] uppercase text-[#0a2f94]">
                         {client.tag}
                       </div>
                     </div>
@@ -458,46 +428,29 @@ export default function TraderDashboardPage() {
               </div>
             </div>
 
-            {/* 5. Activity card*/}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <div className="flex items-center gap-2 font-medium text-[#041443] mb-4">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
+            {/* Activity — Figma 497:10073 */}
+            <div className="rounded-2xl border border-[#d9dee6] bg-white p-6">
+              <div className="mb-4 flex items-center gap-2 font-serif text-xl text-[#081123]">
+                <Activity className="h-[18px] w-[18px]" strokeWidth={2} />
                 {t("dashboard.activity")}
               </div>
-              <ul className="text-xs text-gray-500 space-y-3">
-                <li className="flex items-center gap-2">
+              <ul className="space-y-3 text-sm text-[#081123]">
+                <li>
                   · Hamdan A. watchlisted{" "}
-                  <span className="font-semibold text-[#041443]">
-                    Dubai M · 7
-                  </span>
+                  <span className="font-medium">Dubai M · 7</span>
                 </li>
-                <li className="flex items-center gap-2">
+                <li>
                   · Bid placed on{" "}
-                  <span className="font-semibold text-[#041443]">
-                    Auction AUC-a1
-                  </span>{" "}
-                  by Bidder #2241
+                  <span className="font-medium">Auction AUC-a1</span> by Bidder
+                  #2241
                 </li>
-                <li className="flex items-center gap-2">
+                <li>
                   · Invoice INV-0089 generated for{" "}
-                  <span className="font-semibold text-[#041443]">
-                    Sharjah 1 · 5
-                  </span>
+                  <span className="font-medium">Sharjah 1 · 5</span>
                 </li>
-                <li className="flex items-center gap-2">
+                <li>
                   · Reveal fee paid on{" "}
-                  <span className="font-semibold text-[#041443]">
-                    Dubai AA · 999
-                  </span>
+                  <span className="font-medium">Dubai AA · 999</span>
                 </li>
               </ul>
             </div>

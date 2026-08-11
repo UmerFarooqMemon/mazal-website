@@ -1,6 +1,8 @@
 "use client";
+
+import { Activity, Users } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
-import { Button, DirhamAmount } from "@/components/ui";
+import { DirhamAmount } from "@/components/ui";
 
 const clients = [
   {
@@ -30,56 +32,40 @@ const clients = [
 ];
 
 export default function RightSidebar() {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
 
   return (
     <div className="flex flex-col gap-6">
-      {/* CRM Card */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-        <div
-          className={`flex justify-between items-center mb-4`}
-        >
-          <div className="flex items-center gap-2 font-medium text-[#041443]">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
+      <div className="rounded-2xl border border-[#d9dee6] bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-serif text-xl text-[#081123]">
+            <Users className="h-[18px] w-[18px]" strokeWidth={2} />
             {t("dashboard.crm")}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[#0A3B9E] hover:bg-[#0A3B9E]/5 hover:text-[#0A3B9E] p-0 h-auto underline-offset-2"
+          <button
+            type="button"
+            className="text-xs text-[#0a2f94] hover:underline"
           >
             {t("dashboard.export")}
-          </Button>
+          </button>
         </div>
         <div className="flex flex-col gap-4">
           {clients.map((client, idx) => (
             <div
               key={idx}
-              className={`flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0`}
+              className="flex items-center justify-between border-b border-[#d9dee6] pb-3 last:border-0 last:pb-0"
             >
-              <div className={`text-start`}>
-                <div className="text-sm font-medium text-[#041443]">
+              <div className="text-start">
+                <div className="text-sm font-medium text-[#081123]">
                   {client.name}
                 </div>
-                <div className="text-[10px] text-gray-400">{client.deals}</div>
+                <div className="text-xs text-[#545e6f]">{client.deals}</div>
               </div>
-              <div className={`text-end`}>
-                <div className="text-sm font-bold text-[#041443]">
+              <div className="text-end">
+                <div className="font-serif text-sm font-normal text-[#081123]">
                   <DirhamAmount amount={client.amount} weight="bold" />
                 </div>
-                <div className="text-[8px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                <div className="mt-0.5 text-[10px] uppercase text-[#0a2f94]">
                   {t(client.tagKey)}
                 </div>
               </div>
@@ -88,38 +74,27 @@ export default function RightSidebar() {
         </div>
       </div>
 
-      {/* Activity Feed */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-        <div className="flex items-center gap-2 font-medium text-[#041443] mb-4">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
+      <div className="rounded-2xl border border-[#d9dee6] bg-white p-6">
+        <div className="mb-4 flex items-center gap-2 font-serif text-xl text-[#081123]">
+          <Activity className="h-[18px] w-[18px]" strokeWidth={2} />
           {t("dashboard.activity")}
         </div>
-        <ul className="text-xs text-gray-500 space-y-3">
-          <li className="flex items-center gap-2">
+        <ul className="space-y-3 text-sm text-[#081123]">
+          <li>
             · Hamdan A. watchlisted{" "}
-            <span className="font-semibold text-[#041443]">Dubai M · 7</span>
+            <span className="font-medium">Dubai M · 7</span>
           </li>
-          <li className="flex items-center gap-2">
+          <li>
             · Bid placed on{" "}
-            <span className="font-semibold text-[#041443]">Auction AUC-a1</span>{" "}
-            by Bidder #2241
+            <span className="font-medium">Auction AUC-a1</span> by Bidder #2241
           </li>
-          <li className="flex items-center gap-2">
+          <li>
             · Invoice INV-0089 generated for{" "}
-            <span className="font-semibold text-[#041443]">Sharjah 1 · 5</span>
+            <span className="font-medium">Sharjah 1 · 5</span>
           </li>
-          <li className="flex items-center gap-2">
+          <li>
             · Reveal fee paid on{" "}
-            <span className="font-semibold text-[#041443]">Dubai AA · 999</span>
+            <span className="font-medium">Dubai AA · 999</span>
           </li>
         </ul>
       </div>
