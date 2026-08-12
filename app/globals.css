@@ -516,6 +516,33 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   mix-blend-mode: normal;
 }
 
+/*
+  Listing detail hero — milder crop + visible overflow so the plate outer
+  border is not clipped inside the white preview frame (active listings).
+*/
+.plate-detail-frame {
+  overflow: visible;
+}
+
+.plate-detail-frame .plate-crop--hero {
+  margin-top: calc(-13% - 14px);
+  margin-bottom: calc(-13% - 22px);
+  overflow: visible;
+}
+
+.plate-detail-frame .plate-crop--card {
+  margin-top: -17%;
+  margin-bottom: -19%;
+  overflow: visible;
+}
+
+@media (min-width: 640px) {
+  .plate-detail-frame .plate-crop--card {
+    margin-top: -18%;
+    margin-bottom: -20%;
+  }
+}
+
 /* Auctions add sidebar — keep plate top/bottom borders visible */
 .plate-crop--auction-preview {
   margin-top: calc(-10% - 4px);

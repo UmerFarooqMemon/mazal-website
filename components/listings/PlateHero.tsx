@@ -9,6 +9,7 @@ import {
   ListingDetailStatusBadge,
 } from "@/components/marketplace/ListingStatusBadge";
 import ListingPlanBadge from "@/components/marketplace/ListingPlanBadge";
+import { usesCardCrop } from "@/lib/plate-preview";
 import {
   isHiddenPlateCode,
   resolveListingPreview,
@@ -76,6 +77,26 @@ export default function PlateHero({ listing }: PlateHeroProps) {
     listing?.status,
     listing?.previously_sold,
   );
+  const preview = resolveListingPreview(listing);
+  const plateCrop = usesCardCrop(preview) ? "card" : "hero";
+
+  const plateDisplay = (
+    <div className="plate-detail-frame relative w-full overflow-visible rounded-[20px] bg-white px-4 pt-5 pb-7 sm:px-8 sm:pt-7 sm:pb-9 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
+      <NumberPlateDisplay
+        plate_code={plateCode}
+        plate_digits={plateDigits}
+        emirate={
+          listing?.emirate_label?.toUpperCase() || listing?.emirate || ""
+        }
+        preview={preview}
+        plateType={listing?.plate_type || undefined}
+        plateDesign={listing?.plate_design || undefined}
+        crop={plateCrop}
+        hideCode={hideCode}
+        wrapperClassName="w-full overflow-visible"
+      />
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,7 +104,7 @@ export default function PlateHero({ listing }: PlateHeroProps) {
         className={
           showDetailStatus
             ? "rounded-[24px] p-5 sm:p-7 md:p-8"
-            : "rounded-2xl border px-6 py-8 md:px-10 md:py-9 flex flex-col items-center justify-center shadow-sm min-h-[182px]"
+            : "rounded-2xl border px-6 py-8 md:px-10 md:py-9 flex flex-col shadow-sm"
         }
         style={
           showDetailStatus
@@ -115,22 +136,7 @@ export default function PlateHero({ listing }: PlateHeroProps) {
               </span>
             </div>
 
-            <div className="relative rounded-[20px] bg-white p-4 sm:p-8 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
-              <NumberPlateDisplay
-                plate_code={plateCode}
-                plate_digits={plateDigits}
-                emirate={
-                  listing?.emirate_label?.toUpperCase() ||
-                  listing?.emirate ||
-                  ""
-                }
-                preview={resolveListingPreview(listing)}
-                plateType={listing?.plate_type || undefined}
-                plateDesign={listing?.plate_design || undefined}
-                crop="hero"
-                hideCode={hideCode}
-              />
-            </div>
+            {plateDisplay}
           </>
         ) : (
           <>
@@ -139,20 +145,7 @@ export default function PlateHero({ listing }: PlateHeroProps) {
                 <ListingPlanBadge plan={listing.listing_plan} />
               </div>
             ) : null}
-            <div className="relative w-full max-w-xl rounded-[20px] bg-white p-4 sm:p-8 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
-            <NumberPlateDisplay
-              plate_code={plateCode}
-              plate_digits={plateDigits}
-              emirate={
-                listing?.emirate_label?.toUpperCase() || listing?.emirate || ""
-              }
-              preview={resolveListingPreview(listing)}
-              plateType={listing?.plate_type || undefined}
-              plateDesign={listing?.plate_design || undefined}
-              crop="hero"
-              hideCode={hideCode}
-            />
-            </div>
+            {plateDisplay}
           </>
         )}
       </div>
