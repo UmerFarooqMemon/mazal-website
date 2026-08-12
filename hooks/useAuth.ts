@@ -8,6 +8,7 @@ import {
   forgotPassword as forgotPasswordApi,
   resetPassword as resetPasswordApi,
   changePassword as changePasswordApi,
+  getProfile as getProfileApi,
   updateProfile as updateProfileApi,
   LoginRequest,
   RegisterRequest,
@@ -17,11 +18,13 @@ import {
   UpdateProfileRequest,
   AuthUser,
   AuthResponse,
+  ProfileDocument,
 } from "@/services/auth";
 import {
   notifyNativeAuth,
   resetNativeAuthNotifyState,
 } from "@/lib/native/notifyNativeAuth";
+import { normalizePhoneE164 } from "@/lib/phone-validation";
 
 interface User {
   id: number;
@@ -30,6 +33,8 @@ interface User {
   role: string;
   email?: string | null;
   phone?: string | null;
+  image_url?: string | null;
+  email_verified_at?: string | null;
   emirates_id?: string | null;
   kyc_verified?: boolean;
   kyc_verified_at?: string | null;
@@ -41,6 +46,11 @@ interface User {
   kyc_rejection_reason?: string | null;
 }
 
+export interface ProfileData {
+  user: User;
+  documents: ProfileDocument[];
+}
+
 function normalizeUser(user: AuthUser): User {
   return {
     id: user.id,
@@ -49,6 +59,8 @@ function normalizeUser(user: AuthUser): User {
     role: user.role || "user",
     email: user.email ?? null,
     phone: user.phone ?? null,
+    image_url: user.image_url ?? null,
+    email_verified_at: user.email_verified_at ?? null,
     emirates_id: user.emirates_id ?? null,
     kyc_verified: Boolean(user.kyc_verified),
     kyc_verified_at: user.kyc_verified_at ?? null,
@@ -59,6 +71,18 @@ function normalizeUser(user: AuthUser): User {
     kyc_status_label: user.kyc_status_label ?? null,
     kyc_rejection_reason: user.kyc_rejection_reason ?? null,
   };
+}
+
+function clearSession(
+  setToken: (v: string | null) => void,
+  setUser: (v: User | null) => void,
+) {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("user");
+  resetNativeAuthNotifyState();
+  setToken(null);
+  setUser(null);
+  window.dispatchEvent(new Event("auth-changed"));
 }
 
 function persistSession(response: AuthResponse) {
@@ -320,6 +344,7 @@ export function useAuth() {
       try {
         if (!token) throw new Error("Not authenticated");
         const response = await changePasswordApi(data, token);
+        clearSession(setToken, setUser);
         return response;
       } catch (err: any) {
         setError(err.message || "Password change failed");
@@ -331,41 +356,73 @@ export function useAuth() {
     [token],
   );
 
+  const fetchProfile = useCallback(
+    async (locale?: string): Promise<ProfileData | null> => {
+      if (!token) throw new Error("Not authenticated");
+      const response = await getProfileApi(token, locale);
+      const nextUser = response.data?.user
+        ? normalizeUser(response.data.user)
+        : null;
+      if (nextUser) {
+        localStorage.setItem("user", JSON.stringify(nextUser));
+        setUser(nextUser);
+        window.dispatchEvent(new Event("auth-changed"));
+      }
+      return nextUser
+        ? { user: nextUser, documents: response.data?.documents ?? [] }
+        : null;
+    },
+    [token],
+  );
+
   const updateProfile = useCallback(
-    async (data: UpdateProfileRequest) => {
+    async (data: UpdateProfileRequest, locale?: string) => {
       setLoading(true);
       setError(null);
       try {
         if (!token) throw new Error("Not authenticated");
-        const response = await updateProfileApi(data, token);
+
+        const savedUser = localStorage.getItem("user");
+        const current = savedUser ? (JSON.parse(savedUser) as User) : user;
+        const emailChanged =
+          data.email !== undefined &&
+          (data.email ?? "") !== (current?.email ?? "");
+        const phoneChanged =
+          data.phone !== undefined &&
+          normalizePhoneE164(data.phone) !==
+            normalizePhoneE164(current?.phone);
+        const requiresReLogin = emailChanged || phoneChanged;
+
+        const response = await updateProfileApi(data, token, locale);
         const nextUser = response.data?.user
           ? normalizeUser(response.data.user)
           : null;
+
+        if (requiresReLogin) {
+          clearSession(setToken, setUser);
+          return { ...response, requiresReLogin: true as const };
+        }
+
         if (nextUser) {
           localStorage.setItem("user", JSON.stringify(nextUser));
           setUser(nextUser);
           window.dispatchEvent(new Event("auth-changed"));
-        } else {
-          // Fallback: persist submitted fields locally if API omits user payload.
-          const savedUser = localStorage.getItem("user");
-          if (savedUser) {
-            const current = JSON.parse(savedUser) as User;
-            const patched = {
-              ...current,
-              name: data.name,
-              email: data.email ?? current.email,
-              phone: data.phone ?? current.phone,
-              login:
-                data.email ||
-                data.phone ||
-                current.login,
-            };
-            localStorage.setItem("user", JSON.stringify(patched));
-            setUser(patched);
-            window.dispatchEvent(new Event("auth-changed"));
-          }
+        } else if (current) {
+          const patched = {
+            ...current,
+            name: data.name ?? current.name,
+            email: data.email ?? current.email,
+            phone: data.phone ?? current.phone,
+            login:
+              data.email ||
+              data.phone ||
+              current.login,
+          };
+          localStorage.setItem("user", JSON.stringify(patched));
+          setUser(patched);
+          window.dispatchEvent(new Event("auth-changed"));
         }
-        return response;
+        return { ...response, requiresReLogin: false as const };
       } catch (err: any) {
         setError(err.message || "Profile update failed");
         throw err;
@@ -373,7 +430,7 @@ export function useAuth() {
         setLoading(false);
       }
     },
-    [token],
+    [token, user],
   );
 
   /** Patch persisted user (e.g. KYC status) and notify other hook instances via auth-changed. */
@@ -406,6 +463,7 @@ export function useAuth() {
     forgotPassword,
     resetPassword,
     changePassword,
+    fetchProfile,
     updateProfile,
     updateUser,
   };

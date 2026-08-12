@@ -30,19 +30,34 @@ export interface ChangePasswordRequest {
   password_confirmation: string;
 }
 
-export interface UpdateProfileRequest {
-  name: string;
-  email?: string | null;
-  phone?: string | null;
+export interface ProfileDocument {
+  id?: number | string;
+  type?: string;
+  label?: string;
+  name?: string;
+  url?: string;
+  created_at?: string;
 }
 
-export interface UpdateProfileResponse {
+export interface UpdateProfileRequest {
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  current_password?: string;
+  remove_image?: 1;
+  image?: File;
+}
+
+export interface ProfileResponse {
   status: boolean;
   message?: string;
   data?: {
     user?: AuthUser;
+    documents?: ProfileDocument[];
   };
 }
+
+export interface UpdateProfileResponse extends ProfileResponse {}
 
 export interface AuthUser {
   id: number;
@@ -52,6 +67,7 @@ export interface AuthUser {
   login?: string;
   role?: string;
   image_url?: string | null;
+  email_verified_at?: string | null;
   emirates_id?: string | null;
   emirates_id_verified?: boolean;
   kyc_verified?: boolean;
@@ -159,14 +175,58 @@ export async function changePassword(
   });
 }
 
+// Get Profile (Requires token)
+export async function getProfile(
+  token: string,
+  locale?: string,
+): Promise<ProfileResponse> {
+  return apiRequest<ProfileResponse>("/v1/profile", {
+    method: "GET",
+    token,
+    locale,
+  });
+}
+
+function buildProfileFormData(data: UpdateProfileRequest): FormData {
+  const formData = new FormData();
+  if (data.name !== undefined) formData.append("name", data.name);
+  if (data.email !== undefined) formData.append("email", data.email ?? "");
+  if (data.phone !== undefined) formData.append("phone", data.phone ?? "");
+  if (data.current_password) {
+    formData.append("current_password", data.current_password);
+  }
+  if (data.image) formData.append("image", data.image);
+  if (data.remove_image === 1) formData.append("remove_image", "1");
+  return formData;
+}
+
 // Update Profile (Requires token)
 export async function updateProfile(
   data: UpdateProfileRequest,
   token: string,
+  locale?: string,
 ): Promise<UpdateProfileResponse> {
-  return apiRequest<UpdateProfileResponse>("/v1/auth/profile", {
+  const usesMultipart = Boolean(data.image) || data.remove_image === 1;
+
+  if (usesMultipart) {
+    return apiRequest<UpdateProfileResponse>("/v1/profile", {
+      method: "POST",
+      body: buildProfileFormData(data),
+      token,
+      locale,
+    });
+  }
+
+  const payload: Record<string, string | null> = {};
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.email !== undefined) payload.email = data.email;
+  if (data.phone !== undefined) payload.phone = data.phone;
+  if (data.current_password) payload.current_password = data.current_password;
+
+  return apiRequest<UpdateProfileResponse>("/v1/profile", {
     method: "PUT",
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
     token,
+    locale,
   });
 }

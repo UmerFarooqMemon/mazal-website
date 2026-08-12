@@ -12,6 +12,21 @@ export function toE164FromPhoneDigits(value: string) {
   return digits ? `+${digits}` : "";
 }
 
+/** Normalize any phone string to E.164 for reliable equality checks. */
+export function normalizePhoneE164(phone: string | null | undefined) {
+  if (!phone?.trim()) return "";
+
+  try {
+    const parsed = parsePhoneNumberFromString(phone);
+    if (parsed) return parsed.format("E.164");
+  } catch {
+    // fall through to digit normalization
+  }
+
+  const digits = phone.replace(/\D/g, "");
+  return digits ? `+${digits}` : "";
+}
+
 /** Digits only (no + / spaces) — suitable as CountryPhoneInput value. */
 export function toPhoneInputDigits(value: string) {
   return value.replace(/\D/g, "");

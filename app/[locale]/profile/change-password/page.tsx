@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Lock } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
@@ -16,6 +17,7 @@ import {
 export default function ChangePasswordPage() {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const router = useRouter();
   const { changePassword, loading } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
@@ -70,10 +72,7 @@ export default function ChangePasswordPage() {
         password_confirmation: confirmPassword,
       });
       toast.success(t("profile.password_changed"));
-      setCurrentPassword("");
-      setPassword("");
-      setConfirmPassword("");
-      setFieldErrors({});
+      router.push(`/${locale}/login`);
     } catch (err: unknown) {
       toast.error(
         err instanceof Error

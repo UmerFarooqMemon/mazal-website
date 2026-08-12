@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import { Button } from "@/components/ui";
+import { Button, UserAvatar } from "@/components/ui";
 import SiteLogo from "@/components/layout/SiteLogo";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,7 +39,7 @@ export default function Header() {
   const router = useRouter();
   const { locale, t } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor, getGradient } = useTheme();
+  const { getColor } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -268,21 +268,14 @@ export default function Header() {
                     className="flex items-center gap-3 group"
                   >
                     <div className="relative shrink-0">
-                      <div
-                        className="h-9 w-9 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm transition-all"
-                        style={{
-                          background: getGradient("primaryButton"),
-                          boxShadow: `0 0 0 2px ${getColor("surface")}, 0 0 0 4px ${getColor("primary")}30`,
-                        }}
-                      >
-                        {user?.name
-                          ?.split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2) || "U"}
-                      </div>
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
+                      <UserAvatar
+                        name={user?.name}
+                        imageUrl={user?.image_url}
+                        className="h-9 w-9"
+                        textClassName="text-sm"
+                        showOnlineDot
+                        ring
+                      />
                     </div>
                     <div className="hidden xl:block">
                       <p
@@ -370,12 +363,12 @@ export default function Header() {
                   href={`/${locale}/profile`}
                   className="h-8 w-8 flex items-center justify-center rounded-lg transition-colors"
                 >
-                  <div
-                    className="h-7 w-7 rounded-full text-white flex items-center justify-center text-xs font-medium"
-                    style={{ background: getGradient("primaryButton") }}
-                  >
-                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                  </div>
+                  <UserAvatar
+                    name={user?.name}
+                    imageUrl={user?.image_url}
+                    className="h-7 w-7"
+                    textClassName="text-xs"
+                  />
                 </Link>
               ) : (
                 <Link href={loginHref}>
@@ -434,12 +427,12 @@ export default function Header() {
                   style={{ backgroundColor: getColor("primaryLight") }}
                 >
                   <div className="flex items-center gap-3 text-start">
-                    <div
-                      className="h-10 w-10 rounded-full text-white flex items-center justify-center text-sm font-medium"
-                      style={{ background: getGradient("primaryButton") }}
-                    >
-                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                    </div>
+                    <UserAvatar
+                      name={user?.name}
+                      imageUrl={user?.image_url}
+                      className="h-10 w-10"
+                      textClassName="text-sm"
+                    />
                     <div className="min-w-0">
                       <div
                         className="font-medium text-sm truncate"

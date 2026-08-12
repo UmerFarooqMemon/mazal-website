@@ -161,7 +161,7 @@ export async function apiRequest<T>(
   endpoint: string,
   options: {
     method?: string;
-    body?: string;
+    body?: string | FormData;
     token?: string;
     locale?: string;
     headers?: Record<string, string>;

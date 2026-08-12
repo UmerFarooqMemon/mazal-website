@@ -17,6 +17,17 @@ export function getApiBaseUrl(): string {
   return raw.replace(/([^:]\/)\/+/g, "$1").replace(/\/+$/, "");
 }
 
+/** Turn API-relative media paths into absolute URLs for img/Image src. */
+export function resolveMediaUrl(url?: string | null): string | null {
+  if (!url?.trim()) return null;
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  const apiBase = getApiBaseUrl();
+  const origin = apiBase.replace(/\/api\/?$/i, "");
+  return `${origin}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+}
+
 export function getApiAllowedHosts(): string[] {
   return [new URL(getApiBaseUrl()).hostname];
 }
