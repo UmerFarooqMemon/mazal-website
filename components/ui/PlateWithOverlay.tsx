@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isOldMotorcyclePlateStyle, isOldPlateStyle, type PlatePreviewConfig } from "@/lib/plate-preview";
+import {
+  isDubaiClassicRetro,
+  isOldMotorcyclePlateStyle,
+  isOldPlateStyle,
+  type PlatePreviewConfig,
+} from "@/lib/plate-preview";
 import {
   computePlateRenderState,
   type OverlayRenderState,
@@ -10,6 +15,41 @@ import {
 
 /** Placeholder when API strips the letter code under hide_code / code_hidden. */
 const HIDDEN_CODE_PLACEHOLDER = "?";
+
+function fontFormatFromUrl(url: string): string {
+  const lower = url.toLowerCase();
+  if (lower.endsWith(".woff2")) return "woff2";
+  if (lower.endsWith(".woff")) return "woff";
+  if (lower.endsWith(".otf")) return "opentype";
+  if (lower.endsWith(".ttf")) return "truetype";
+  return "";
+}
+
+function ensurePreviewFont(url: string): string | null {
+  const clean = url.trim().replace(/["'\\]/g, "");
+  if (!clean) return null;
+
+  const family = `MazalPlateFont-${clean.replace(/[^a-zA-Z0-9]+/g, "").slice(-48)}`;
+  const styleId = `font-face-${family}`;
+
+  if (typeof document !== "undefined" && !document.getElementById(styleId)) {
+    const format = fontFormatFromUrl(clean);
+    const source = format
+      ? `url("${clean}") format("${format}")`
+      : `url("${clean}")`;
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = [400, 700]
+      .map(
+        (weight) =>
+          `@font-face{font-family:"${family}";src:${source};font-weight:${weight};font-style:normal;font-display:swap;}`,
+      )
+      .join("");
+    document.head.appendChild(style);
+  }
+
+  return family;
+}
 
 interface PlateWithOverlayProps {
   plate_code: string;
@@ -124,6 +164,7 @@ export default function PlateWithOverlay({
     plateVariant,
     preview,
   });
+  const useClassicRetroDigits = isDubaiClassicRetro(preview);
   const useOldMotoLayout =
     useOldPlateFonts &&
     isOldMotorcyclePlateStyle({
@@ -140,6 +181,7 @@ export default function PlateWithOverlay({
   const platePreviewClass = [
     "relative mx-auto shrink-0 plate-preview",
     useOldPlateFonts ? "plate-preview--old" : "",
+    useClassicRetroDigits ? "plate-preview--classic-digits" : "",
     oldPlateLayoutClass,
     className,
   ]
@@ -219,6 +261,30 @@ export default function PlateWithOverlay({
 
     return () => cancelAnimationFrame(frame);
   }, [renderState?.needsAbuDhabiClassicResize, updateRenderState]);
+
+  useEffect(() => {
+    const fontUrl = preview?.font_url;
+    if (!fontUrl || !rootRef.current) return;
+
+    const family = ensurePreviewFont(fontUrl);
+    if (!family) return;
+
+    rootRef.current.style.setProperty("--mazal-plate-font", `"${family}"`);
+
+    if (typeof document.fonts?.load !== "function") {
+      updateRenderState();
+      return;
+    }
+
+    Promise.all([
+      document.fonts.load(`400 48px "${family}"`),
+      document.fonts.load(`700 48px "${family}"`),
+    ])
+      .catch(() => null)
+      .finally(() => {
+        updateRenderState();
+      });
+  }, [preview?.font_url, updateRenderState]);
 
   if (!preview) {
     return (

@@ -15,6 +15,27 @@ export type PlateOverlayConfig = {
   letter_spacing?: string;
 };
 
+export type DubaiOldSplitMetrics = {
+  reference_width?: number;
+  code_font_size?: number;
+  digits_font_size?: number;
+  code_left?: string;
+  code_top?: string;
+  digits_left?: string;
+  digits_top?: string;
+  code_transform?: string;
+  digits_transform?: string;
+  code_multi_scale_x?: number;
+};
+
+export type DubaiClassicCarMetrics = {
+  reference_width?: number;
+  digits_font_size?: number;
+  digits_left?: string;
+  digits_top?: string;
+  digits_transform?: string;
+};
+
 export type PlatePreviewConfig = {
   emirate?: string;
   emirate_label?: string;
@@ -31,16 +52,84 @@ export type PlatePreviewConfig = {
   };
   background_image_url?: string;
   background_image_path?: string;
+  font_url?: string;
   width?: number;
   height?: number;
   aspect_ratio?: string;
   overlay_layout?: string;
+  crop_card?: boolean;
   overlays?: {
     plate_code?: PlateOverlayConfig;
     plate_digits?: PlateOverlayConfig;
     plate_digits_ar?: PlateOverlayConfig;
   };
+  dubai_old_split?: DubaiOldSplitMetrics | null;
+  dubai_classic_car?: DubaiClassicCarMetrics | null;
 };
+
+/** Matches backend config/number-plate-previews.php dubai_old_split block. */
+export const DEFAULT_DUBAI_OLD_SPLIT: DubaiOldSplitMetrics = {
+  reference_width: 454,
+  code_font_size: 42,
+  digits_font_size: 77,
+  code_left: "19.5%",
+  code_top: "54%",
+  digits_left: "66%",
+  digits_top: "48.5%",
+  code_transform: "translate(-50%, -50%)",
+  digits_transform: "translate(-50%, -52%)",
+  code_multi_scale_x: 0.78,
+};
+
+/** Matches backend config/number-plate-previews.php dubai_classic_car block. */
+export const DEFAULT_DUBAI_CLASSIC_CAR: DubaiClassicCarMetrics = {
+  reference_width: 454,
+  digits_font_size: 77,
+  digits_left: "60%",
+  digits_top: "48%",
+  digits_transform: "translate(-50%, -50%)",
+};
+
+/** Dubai private old/classic — white embossed plate with logo bay + digit field. */
+export function isDubaiOldSplit(
+  preview?: PlatePreviewConfig | null,
+): boolean {
+  const design = preview?.design_key;
+  return (
+    preview?.emirate === "dubai" &&
+    preview?.overlay_layout === "split_top" &&
+    (design === "old" || design === "classic")
+  );
+}
+
+export function isDubaiClassicCar(
+  preview?: PlatePreviewConfig | null,
+): boolean {
+  return (
+    preview?.emirate === "dubai" &&
+    preview?.plate_type === "classic_car" &&
+    preview?.overlay_layout === "classic_car_row"
+  );
+}
+
+/** Dubai classic retro — Mazal digit font at 454px reference scale. */
+export function isDubaiClassicRetro(
+  preview?: PlatePreviewConfig | null,
+): boolean {
+  const design = preview?.design_key;
+  return (
+    isDubaiClassicCar(preview) &&
+    (design === "retro" || design === "default")
+  );
+}
+
+export function usesCardCrop(preview?: PlatePreviewConfig | null): boolean {
+  return Boolean(
+    preview?.crop_card ||
+      isDubaiOldSplit(preview) ||
+      isDubaiClassicCar(preview),
+  );
+}
 
 type VariantLike = {
   key?: string;

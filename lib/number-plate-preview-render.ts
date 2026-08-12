@@ -1,5 +1,11 @@
 import type { CSSProperties } from "react";
 import {
+  DEFAULT_DUBAI_CLASSIC_CAR,
+  DEFAULT_DUBAI_OLD_SPLIT,
+  isDubaiClassicRetro,
+  isDubaiOldSplit,
+  type DubaiClassicCarMetrics,
+  type DubaiOldSplitMetrics,
   isOldMotorcyclePlateStyle,
   type PlateOverlayConfig,
   type PlatePreviewConfig,
@@ -274,6 +280,116 @@ function fitOldPlateAlphabetToBay(
   return `${Math.max(8, Math.round(fitted))}px`;
 }
 
+function dubaiOldSplitFontSizes(
+  rootWidth: number,
+  metrics: DubaiOldSplitMetrics,
+): { code: string; digits: string } {
+  const ref = Number(metrics.reference_width) || 454;
+  const codePx = Number(metrics.code_font_size) || 42;
+  const digitsPx = Number(metrics.digits_font_size) || 77;
+  const width = rootWidth || ref;
+
+  return {
+    code: `${Math.round((width * codePx) / ref)}px`,
+    digits: `${Math.round((width * digitsPx) / ref)}px`,
+  };
+}
+
+function dubaiClassicCarFontSize(
+  rootWidth: number,
+  metrics: DubaiClassicCarMetrics,
+): string {
+  const ref = Number(metrics.reference_width) || 454;
+  const digitsPx = Number(metrics.digits_font_size) || 77;
+  const width = rootWidth || ref;
+
+  return `${Math.round((width * digitsPx) / ref)}px`;
+}
+
+type ResolvedOverlays = {
+  plate_code: PlateOverlayConfig | null;
+  plate_digits: PlateOverlayConfig | null;
+  plate_digits_ar: PlateOverlayConfig | null;
+};
+
+function applyDubaiOldSplitOverlays(
+  overlays: ResolvedOverlays,
+  code: string,
+  rootWidth: number,
+  metrics: DubaiOldSplitMetrics,
+): ResolvedOverlays {
+  const sizes = dubaiOldSplitFontSizes(rootWidth, metrics);
+  const codeLength = String(code || "").length;
+  const baseTransform = metrics.code_transform || "translate(-50%, -50%)";
+  const multiScale = metrics.code_multi_scale_x ?? 0.78;
+
+  const adjusted: ResolvedOverlays = {
+    plate_code: overlays.plate_code ? { ...overlays.plate_code } : null,
+    plate_digits: overlays.plate_digits ? { ...overlays.plate_digits } : null,
+    plate_digits_ar: overlays.plate_digits_ar
+      ? { ...overlays.plate_digits_ar }
+      : null,
+  };
+
+  if (adjusted.plate_code) {
+    adjusted.plate_code.layout_mode = "point_center";
+    adjusted.plate_code.font_size = sizes.code;
+    adjusted.plate_code.left = metrics.code_left || "19.5%";
+    adjusted.plate_code.top = metrics.code_top || "54%";
+    adjusted.plate_code.transform =
+      codeLength > 1
+        ? `${baseTransform} scaleX(${multiScale})`
+        : baseTransform;
+    adjusted.plate_code.font_family = '"Mazal Plate Alphabets", sans-serif';
+    adjusted.plate_code.font_weight = "700";
+    adjusted.plate_code.metal_plate_text = false;
+    delete adjusted.plate_code.height;
+    delete adjusted.plate_code.right;
+  }
+
+  if (adjusted.plate_digits) {
+    adjusted.plate_digits.font_size = sizes.digits;
+    adjusted.plate_digits.font_family = '"Mazal Plate Digits", sans-serif';
+    adjusted.plate_digits.font_weight = "400";
+    adjusted.plate_digits.metal_plate_text = false;
+    adjusted.plate_digits.left = metrics.digits_left || "66%";
+    adjusted.plate_digits.top = metrics.digits_top || "48.5%";
+    adjusted.plate_digits.transform =
+      metrics.digits_transform || "translate(-50%, -52%)";
+    delete adjusted.plate_digits.right;
+  }
+
+  return adjusted;
+}
+
+function applyDubaiClassicRetroOverlays(
+  overlays: ResolvedOverlays,
+  rootWidth: number,
+  metrics: DubaiClassicCarMetrics,
+): ResolvedOverlays {
+  const adjusted: ResolvedOverlays = {
+    plate_code: overlays.plate_code ? { ...overlays.plate_code } : null,
+    plate_digits: overlays.plate_digits ? { ...overlays.plate_digits } : null,
+    plate_digits_ar: overlays.plate_digits_ar
+      ? { ...overlays.plate_digits_ar }
+      : null,
+  };
+
+  if (adjusted.plate_digits) {
+    adjusted.plate_digits.metal_plate_text = false;
+    adjusted.plate_digits.font_size = dubaiClassicCarFontSize(rootWidth, metrics);
+    adjusted.plate_digits.font_family = '"Mazal Plate Digits", sans-serif';
+    adjusted.plate_digits.font_weight = "400";
+    adjusted.plate_digits.left = metrics.digits_left || "60%";
+    adjusted.plate_digits.top = metrics.digits_top || "48%";
+    adjusted.plate_digits.transform =
+      metrics.digits_transform || "translate(-50%, -50%)";
+    delete adjusted.plate_digits.right;
+  }
+
+  return adjusted;
+}
+
 function scaledDigitsConfig(
   baseConfig: PlateOverlayConfig | null | undefined,
   digits: string,
@@ -344,7 +460,7 @@ function adjustOverlaysForCode(
   layout: string | null,
   oldPlateStyle = false,
   oldMotorcycleStyle = false,
-  digits = "",
+  dubaiOldSplit = false,
 ) {
   if (!overlays) return overlays;
 
@@ -385,7 +501,7 @@ function adjustOverlaysForCode(
       delete adjusted.plate_code.height;
       delete adjusted.plate_code.right;
     }
-  } else if (oldPlateStyle && layout === "split_top") {
+  } else if (oldPlateStyle && layout === "split_top" && !dubaiOldSplit) {
     const codeLength = String(code || "").length;
     // Letter under Dubai logo only — do not force digit top/left (API position).
     const codeTop = "54%";
@@ -694,34 +810,59 @@ export function computePlateRenderState(
   };
 
   const layout = previewConfig.overlay_layout || null;
+  const dubaiOldSplit = isDubaiOldSplit(previewConfig);
+  const dubaiClassicRetro = isDubaiClassicRetro(previewConfig);
   const oldMotorcycleStyle =
     oldPlateStyle &&
+    !dubaiOldSplit &&
     isOldMotorcyclePlateStyle({
       preview: previewConfig,
       plateVariant,
       plateType,
     });
-  const overlays = adjustOverlaysForCode(
+
+  let overlays = adjustOverlaysForCode(
     resolveOverlays(previewConfig),
     code,
     layout,
     oldPlateStyle,
     oldMotorcycleStyle,
-    digits,
+    dubaiOldSplit,
   );
-  const digitValue = sanitizePlateDigits(digits);
 
   const codeValue = codeForOverlay(code, overlays.plate_code || undefined);
+  const digitValue = sanitizePlateDigits(digits);
 
-  const shouldScaleToPlateWidth = scaleFontToWidth || oldPlateStyle;
+  if (dubaiOldSplit) {
+    const metrics = {
+      ...DEFAULT_DUBAI_OLD_SPLIT,
+      ...(previewConfig.dubai_old_split || {}),
+    };
+    overlays = applyDubaiOldSplitOverlays(
+      overlays as ResolvedOverlays,
+      codeValue,
+      rootWidth,
+      metrics,
+    );
+  } else if (dubaiClassicRetro) {
+    const metrics = {
+      ...DEFAULT_DUBAI_CLASSIC_CAR,
+      ...(previewConfig.dubai_classic_car || {}),
+    };
+    overlays = applyDubaiClassicRetroOverlays(
+      overlays as ResolvedOverlays,
+      rootWidth,
+      metrics,
+    );
+  }
+
+  const usesBackendMetrics = dubaiOldSplit || dubaiClassicRetro;
+  const shouldScaleToPlateWidth =
+    (scaleFontToWidth || oldPlateStyle) && !usesBackendMetrics;
 
   const oldPlatePartMultiplier = (partScale: number) => {
-    if (!oldPlateStyle) return fontScaleMultiplier;
-    // Marketplace/cards: use the shared card multiplier only. Width-based scaling
-    // already shrinks fonts for small plates. Applying digit scale (e.g. 3.0) as a
-    // relative boost here made short numbers overflow tiny listing cards.
+    if (!oldPlateStyle || usesBackendMetrics) return fontScaleMultiplier;
     if (scaleFontToWidth) return fontScaleMultiplier;
-    // Full-size old plates: alphabet vs digits can differ (e.g. 1.5 vs 3.0).
     return partScale;
   };
 
@@ -758,8 +899,13 @@ export function computePlateRenderState(
     scaledDigitsConfig(overlays.plate_digits, digitValue, layout, code),
   );
   let codeConfig = scaleCodeConfig(overlays.plate_code);
-  // Alphabet: same width pipeline as digits, then shrink to under-logo bay.
-  if (oldPlateStyle && codeConfig?.font_size && codeValue) {
+  // Non–Dubai-old motorcycle/car: shrink alphabet into under-logo bay.
+  if (
+    oldPlateStyle &&
+    !usesBackendMetrics &&
+    codeConfig?.font_size &&
+    codeValue
+  ) {
     codeConfig = {
       ...codeConfig,
       font_size: fitOldPlateAlphabetToBay(
