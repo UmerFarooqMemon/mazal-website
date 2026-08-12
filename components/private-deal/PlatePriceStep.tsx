@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   ArrowLeft,
@@ -18,6 +18,13 @@ import Select from "@/components/ui/Select";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { DealData } from "./DealSummary";
 import { formatPriceInput } from "@/lib/card-input";
+import type { PrivateDealOtherItemOptions } from "@/services/private-deals";
+
+const DEFAULT_OTHER_ITEM_OPTIONS: PrivateDealOtherItemOptions = {
+  max_images: 5,
+  max_image_kb: 5120,
+  allowed_mimes: ["jpeg", "jpg", "png", "webp"],
+};
 
 interface PlateCodeItem {
   code: string;
@@ -74,6 +81,8 @@ interface FormErrors {
   digit?: string;
   price?: string;
   itemTitle?: string;
+  itemDescription?: string;
+  itemImages?: string;
 }
 
 interface PlatePriceStepProps {
@@ -81,6 +90,7 @@ interface PlatePriceStepProps {
   onChange: (patch: Partial<DealData>) => void;
   onBack: () => void;
   onContinue: () => void;
+  otherItemOptions?: PrivateDealOtherItemOptions | null;
 }
 
 export default function PlatePriceStep({
@@ -88,12 +98,14 @@ export default function PlatePriceStep({
   onChange,
   onBack,
   onContinue,
+  otherItemOptions,
 }: PlatePriceStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
+  const imageRules = otherItemOptions || DEFAULT_OTHER_ITEM_OPTIONS;
 
   const [variants, setVariants] = useState<Variant[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -103,6 +115,16 @@ export default function PlatePriceStep({
   const codeDropdownRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const sellingType = data.sellingType || "plate";
+  const activeApiImages = useMemo(
+    () =>
+      data.itemApiImages?.filter(
+        (image) => !data.removedItemImageIds?.includes(image.id),
+      ) || [],
+    [data.itemApiImages, data.removedItemImageIds],
+  );
+  const localImageUrls = data.itemImageUrls || [];
+  const hasSelectedImage =
+    (data.itemImageFiles?.length ?? 0) > 0 || activeApiImages.length > 0;
 
   useEffect(() => {
     fetch(`/api/number-plates/options?locale=${locale}`)
@@ -196,20 +218,87 @@ export default function PlatePriceStep({
   };
 
   const handleSellingTypeChange = (next: "plate" | "other") => {
-    onChange({ sellingType: next });
+    if (next === "other") {
+      onChange({
+        sellingType: "other",
+        code: "",
+        digit: "",
+      });
+    } else {
+      revokeLocalImageUrls(localImageUrls);
+      onChange({
+        sellingType: "plate",
+        itemTitle: "",
+        itemDescription: "",
+        itemSerial: "",
+        itemImageFiles: [],
+        itemImageUrls: [],
+        itemApiImages: [],
+        removedItemImageIds: [],
+      });
+    }
     setErrors({});
     setTouched({});
   };
 
+  const revokeLocalImageUrls = (urls: string[]) => {
+    urls.forEach((url) => {
+      if (url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+      }
+    });
+  };
+
+  const isAllowedImageFile = (file: File) => {
+    const extension = file.name.split(".").pop()?.toLowerCase() || "";
+    return imageRules.allowed_mimes.some(
+      (mime) =>
+        file.type.includes(mime) ||
+        extension === mime ||
+        (mime === "jpg" && extension === "jpeg"),
+    );
+  };
+
   const handleImageSelect = (file: File | null) => {
-    if (data.itemImageUrl?.startsWith("blob:")) {
-      URL.revokeObjectURL(data.itemImageUrl);
-    }
+    revokeLocalImageUrls(localImageUrls);
+
     if (!file) {
-      onChange({ itemImageUrl: "" });
+      onChange({ itemImageFiles: [], itemImageUrls: [] });
       return;
     }
-    onChange({ itemImageUrl: URL.createObjectURL(file) });
+
+    const maxBytes = imageRules.max_image_kb * 1024;
+
+    if (!isAllowedImageFile(file)) {
+      setErrors((prev) => ({
+        ...prev,
+        itemImages: t("private-deal.error_item_image_type"),
+      }));
+      return;
+    }
+
+    if (file.size > maxBytes) {
+      setErrors((prev) => ({
+        ...prev,
+        itemImages: t("private-deal.error_item_image_size").replace(
+          "{max}",
+          String(imageRules.max_image_kb),
+        ),
+      }));
+      return;
+    }
+
+    onChange({
+      itemImageFiles: [file],
+      itemImageUrls: [URL.createObjectURL(file)],
+      removedItemImageIds: [
+        ...new Set([
+          ...(data.removedItemImageIds || []),
+          ...activeApiImages.map((image) => image.id),
+        ]),
+      ],
+    });
+    clearError("itemImages");
   };
 
   const validatePlateForm = (): FormErrors => {
@@ -263,6 +352,14 @@ export default function PlatePriceStep({
     if (!data.itemTitle?.trim()) {
       newErrors.itemTitle = t("private-deal.error_item_title_required");
     }
+    if (!data.itemDescription?.trim()) {
+      newErrors.itemDescription = t(
+        "private-deal.error_item_description_required",
+      );
+    }
+    if (!hasSelectedImage) {
+      newErrors.itemImages = t("private-deal.error_item_images_required");
+    }
     if (!data.price || data.price <= 0) {
       newErrors.price = t("private-deal.error_price_required");
     }
@@ -271,7 +368,12 @@ export default function PlatePriceStep({
 
   const handleContinue = () => {
     if (sellingType === "other") {
-      setTouched({ itemTitle: true, price: true });
+      setTouched({
+        itemTitle: true,
+        itemDescription: true,
+        itemImages: true,
+        price: true,
+      });
       const newErrors = validateOtherForm();
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
@@ -406,7 +508,12 @@ export default function PlatePriceStep({
             <Input
               label={t("private-deal.item_description")}
               value={data.itemDescription || ""}
-              onChange={(e) => onChange({ itemDescription: e.target.value })}
+              onChange={(e) => {
+                onChange({ itemDescription: e.target.value });
+                clearError("itemDescription");
+              }}
+              onBlur={() => handleBlur("itemDescription")}
+              error={touched.itemDescription ? errors.itemDescription : undefined}
               placeholder={t("private-deal.item_description_placeholder")}
             />
             <div>
@@ -421,9 +528,12 @@ export default function PlatePriceStep({
                 onClick={() => imageInputRef.current?.click()}
                 className={`w-full rounded-xl border py-3 px-4 text-sm flex items-center gap-2 transition-colors text-start`}
                 style={{
-                  borderColor: getColor("border"),
+                  borderColor:
+                    touched.itemImages && errors.itemImages
+                      ? getColor("error")
+                      : getColor("border"),
                   backgroundColor: getColor("surface"),
-                  color: data.itemImageUrl
+                  color: hasSelectedImage
                     ? getColor("primaryText")
                     : getColor("mutedText"),
                 }}
@@ -433,19 +543,27 @@ export default function PlatePriceStep({
                   style={{ color: getColor("secondaryText") }}
                 />
                 <span className="truncate">
-                  {data.itemImageUrl
+                  {hasSelectedImage
                     ? t("private-deal.item_image_selected")
                     : t("private-deal.upload_image")}
                 </span>
               </button>
+              {touched.itemImages && errors.itemImages ? (
+                <div
+                  className={`flex items-center gap-1.5 mt-1.5 text-[11px]`}
+                  style={{ color: getColor("error") }}
+                >
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.itemImages}</span>
+                </div>
+              ) : null}
               <input
                 ref={imageInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                 className="hidden"
                 onChange={(e) => {
-                  const next = e.target.files?.[0] || null;
-                  handleImageSelect(next);
+                  handleImageSelect(e.target.files?.[0] || null);
                   e.target.value = "";
                 }}
               />

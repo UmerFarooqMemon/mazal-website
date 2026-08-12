@@ -5,12 +5,36 @@ export interface PrivateDealApiResponse<T> {
   errors?: Record<string, string[]>;
 }
 
+export interface PrivateDealOtherItemOptions {
+  max_images: number;
+  max_image_kb: number;
+  allowed_mimes: string[];
+}
+
 export interface PrivateDealOptions {
+  deal_types?: Record<string, string>;
+  other_item?: PrivateDealOtherItemOptions;
   payment_plans: Record<string, string>;
   payment_methods: Record<string, string>;
   party_types: Record<string, string>;
   license_sources: Record<string, string>;
   terms_version: string;
+}
+
+export interface PrivateDealItemImage {
+  id: number;
+  original_name?: string;
+  mime_type?: string;
+  size_bytes?: number;
+  sort_order?: number;
+  download_url: string;
+}
+
+export interface PrivateDealItem {
+  title?: string;
+  description?: string;
+  serial_number?: string | null;
+  images?: PrivateDealItemImage[];
 }
 
 export interface PrivateDealInvitation {
@@ -39,8 +63,10 @@ export interface PrivateDealPayment {
 
 export interface PrivateDeal {
   id: number;
+  deal_type?: "plate" | "other";
   status: string;
   agreed_price: string;
+  terms_completed?: boolean;
   fee_breakdown?: Array<{
     slug: string;
     label: string;
@@ -68,7 +94,56 @@ export interface PrivateDeal {
     code?: string | null;
     digits?: string;
     design?: string | null;
+  } | null;
+  item?: PrivateDealItem | null;
+}
+
+const DEFAULT_OTHER_ITEM_OPTIONS: PrivateDealOtherItemOptions = {
+  max_images: 5,
+  max_image_kb: 5120,
+  allowed_mimes: ["jpeg", "jpg", "png", "webp"],
+};
+
+export function resolveOtherItemOptions(
+  options?: PrivateDealOptions | null,
+): PrivateDealOtherItemOptions {
+  return {
+    ...DEFAULT_OTHER_ITEM_OPTIONS,
+    ...options?.other_item,
+    allowed_mimes:
+      options?.other_item?.allowed_mimes?.length
+        ? options.other_item.allowed_mimes
+        : DEFAULT_OTHER_ITEM_OPTIONS.allowed_mimes,
   };
+}
+
+export function resolvePrivateDealImagePath(downloadUrl: string): string {
+  const marker = "/private-deals/";
+  const markerIndex = downloadUrl.indexOf(marker);
+  if (markerIndex >= 0) {
+    return downloadUrl.slice(markerIndex + "/private-deals".length);
+  }
+
+  if (downloadUrl.startsWith("/api/private-deals")) {
+    return downloadUrl.replace("/api/private-deals", "") || "/";
+  }
+
+  if (downloadUrl.startsWith("/")) {
+    return downloadUrl;
+  }
+
+  try {
+    const url = new URL(downloadUrl);
+    const pathMarker = "/v1/private-deals/";
+    const pathIndex = url.pathname.indexOf(pathMarker);
+    if (pathIndex >= 0) {
+      return url.pathname.slice(pathIndex + "/v1/private-deals".length);
+    }
+  } catch {
+    // ignore invalid URLs
+  }
+
+  return downloadUrl;
 }
 
 function getToken() {
@@ -171,6 +246,14 @@ export function createPrivateDeal(
   });
 }
 
+export function createPrivateDealFormData(formData: FormData, locale: string) {
+  return privateDealsRequest<{ deal: PrivateDeal }>("", {
+    method: "POST",
+    locale,
+    body: formData,
+  });
+}
+
 export function getPrivateDeal(id: string | number, locale: string) {
   return privateDealsRequest<{ deal: PrivateDeal }>(`/${id}`, { locale });
 }
@@ -199,6 +282,69 @@ export function updatePrivateDealTerms(
     contentType: "application/json",
     body: JSON.stringify(payload),
   });
+}
+
+export function updatePrivateDealTermsFormData(
+  id: string | number,
+  formData: FormData,
+  locale: string,
+) {
+  return privateDealsRequest<{ deal: PrivateDeal }>(`/${id}/terms`, {
+    method: "PATCH",
+    locale,
+    body: formData,
+  });
+}
+
+export function uploadPrivateDealImages(
+  id: string | number,
+  formData: FormData,
+  locale: string,
+) {
+  return privateDealsRequest<{ deal: PrivateDeal }>(`/${id}/images`, {
+    method: "POST",
+    locale,
+    body: formData,
+  });
+}
+
+export function deletePrivateDealImage(
+  id: string | number,
+  imageId: string | number,
+  locale: string,
+) {
+  return privateDealsRequest<{ deal: PrivateDeal }>(
+    `/${id}/images/${imageId}`,
+    {
+      method: "DELETE",
+      locale,
+    },
+  );
+}
+
+export async function fetchPrivateDealImageBlob(
+  downloadUrl: string,
+  locale: string,
+): Promise<Blob> {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Please login to continue.");
+  }
+
+  const path = resolvePrivateDealImagePath(downloadUrl);
+  const response = await fetch(`/api/private-deals${path}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "*/*",
+      "Accept-Language": locale === "ar" ? "ar" : "en",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load item image.");
+  }
+
+  return response.blob();
 }
 
 export function issuePrivateDealInvitation(id: string | number, locale: string) {

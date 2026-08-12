@@ -37,16 +37,19 @@ import { resolveLicenseSourceOptions } from "@/config/license-sources";
 import {
   createPrivateDeal,
   createPrivateDealCheckout,
+  createPrivateDealFormData,
   extractPrivateDeal,
   getPrivateDeal,
   getPrivateDealOptions,
   issuePrivateDealInvitation,
   joinPrivateDeal,
   payPrivateDealWithWallet,
+  resolveOtherItemOptions,
   savePrivateDealParty,
   savePrivateDealPaymentPlan,
   submitPrivateDealPayment,
   updatePrivateDealTerms,
+  updatePrivateDealTermsFormData,
   type PrivateDeal,
   type PrivateDealOptions,
 } from "@/services/private-deals";
@@ -91,7 +94,10 @@ export default function PrivateDealPage() {
     sellingType: "plate",
     itemTitle: "",
     itemDescription: "",
-    itemImageUrl: "",
+    itemImageFiles: [],
+    itemImageUrls: [],
+    itemApiImages: [],
+    removedItemImageIds: [],
     itemSerial: "",
   });
   const [details, setDetails] = useState<ConfirmDetailsData>({
@@ -144,14 +150,30 @@ export default function PrivateDealPage() {
     dealIdRef.current = nextDealId;
     setApiDeal(nextDeal);
     setDealId(nextDealId);
+
+    const isOtherDeal = nextDeal.deal_type === "other";
     setDeal((prev) => ({
       ...prev,
       role: roleOverride || prev.role,
+      sellingType: isOtherDeal ? "other" : "plate",
       emirate: nextDeal.plate?.emirate || prev.emirate,
       plateType: nextDeal.plate?.type || prev.plateType,
       plateVariant: nextDeal.plate?.variant || prev.plateVariant,
       code: nextDeal.plate?.code || prev.code,
       digit: nextDeal.plate?.digits || prev.digit,
+      itemTitle: isOtherDeal
+        ? nextDeal.item?.title || prev.itemTitle || ""
+        : "",
+      itemDescription: isOtherDeal
+        ? nextDeal.item?.description || prev.itemDescription || ""
+        : "",
+      itemSerial: isOtherDeal
+        ? nextDeal.item?.serial_number || prev.itemSerial || ""
+        : "",
+      itemApiImages: isOtherDeal ? nextDeal.item?.images || [] : [],
+      itemImageFiles: [],
+      itemImageUrls: [],
+      removedItemImageIds: [],
       price: Number(nextDeal.agreed_price || prev.price || 0),
     }));
 
@@ -247,6 +269,10 @@ export default function PrivateDealPage() {
     () => resolveLicenseSourceOptions(options?.license_sources),
     [options?.license_sources],
   );
+  const otherItemOptions = useMemo(
+    () => resolveOtherItemOptions(options),
+    [options],
+  );
 
   const splitAllocated = useMemo(() => {
     if (paymentMode !== "split") return 0;
@@ -323,6 +349,33 @@ export default function PrivateDealPage() {
   const patchDetails = (patch: Partial<ConfirmDetailsData>) =>
     setDetails((prev) => ({ ...prev, ...patch }));
 
+  const handleRemoveItemImage = () => {
+    deal.itemImageUrls?.forEach((url) => {
+      if (url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+      }
+    });
+
+    const activeApiImages =
+      deal.itemApiImages?.filter(
+        (image) => !deal.removedItemImageIds?.includes(image.id),
+      ) || [];
+
+    patchDeal({
+      itemImageFiles: [],
+      itemImageUrls: [],
+      removedItemImageIds:
+        activeApiImages.length > 0
+          ? [
+              ...new Set([
+                ...(deal.removedItemImageIds || []),
+                ...activeApiImages.map((image) => image.id),
+              ]),
+            ]
+          : deal.removedItemImageIds,
+    });
+  };
+
   const goBackHome = () => router.push(`/${locale}`);
 
   const processingPayment = processingSplitId
@@ -343,6 +396,69 @@ export default function PrivateDealPage() {
   };
 
   const asMoney = (value: number) => value.toFixed(2);
+
+  const appendGiftFields = (target: FormData | Record<string, unknown>) => {
+    const isGift = Boolean(details.giftPlate);
+    const recipientEmail = isGift ? (details.giftEmail || "").trim() : "";
+    const giftMessage = isGift
+      ? details.giftMessage?.trim() || undefined
+      : undefined;
+
+    if (target instanceof FormData) {
+      if (isGift) {
+        target.append("is_gift", "1");
+      }
+      if (recipientEmail) {
+        target.append("recipient_email", recipientEmail);
+      }
+      if (giftMessage) {
+        target.append("gift_message", giftMessage);
+      }
+      return;
+    }
+
+    target.is_gift = isGift;
+    if (recipientEmail) {
+      target.recipient_email = recipientEmail;
+    }
+    if (giftMessage) {
+      target.gift_message = giftMessage;
+    }
+  };
+
+  const buildOtherDealFormData = (intent: "complete" | "draft" = "complete") => {
+    const formData = new FormData();
+    formData.append("deal_type", "other");
+    formData.append("intent", intent);
+    formData.append("item_title", (deal.itemTitle || "").trim());
+    formData.append("item_description", (deal.itemDescription || "").trim());
+    if ((deal.itemSerial || "").trim()) {
+      formData.append("item_serial_number", (deal.itemSerial || "").trim());
+    }
+    formData.append("agreed_price", asMoney(deal.price));
+    appendGiftFields(formData);
+
+    for (const file of deal.itemImageFiles || []) {
+      formData.append("images[]", file);
+    }
+
+    for (const imageId of deal.removedItemImageIds || []) {
+      formData.append("remove_image_ids[]", String(imageId));
+    }
+
+    return formData;
+  };
+
+  const syncOtherDealTerms = async (activeDealId: string) => {
+    const response = await updatePrivateDealTermsFormData(
+      activeDealId,
+      buildOtherDealFormData("complete"),
+      locale,
+    );
+    const nextDeal = extractPrivateDeal(response);
+    hydrateFromApiDeal(nextDeal, "seller");
+    return nextDeal;
+  };
 
   const withSubmit = async (task: () => Promise<void>) => {
     try {
@@ -480,14 +596,6 @@ export default function PrivateDealPage() {
 
   const handleSavePartyDetails = async (variant: "seller" | "buyer") => {
     await withSubmit(async () => {
-      if (variant === "seller" && deal.sellingType === "other") {
-        toast.error(
-          t("private-deal.other_api_unavailable") ||
-            "Other items are not available for escrow yet. Please use Number plate.",
-        );
-        return;
-      }
-
       const mobileIso = details.mobileCountryIso || "ae";
       const mobileDial = details.mobileDialCode || "+971";
       const secondaryIso = details.secondaryMobileCountryIso || "ae";
@@ -553,8 +661,14 @@ export default function PrivateDealPage() {
       let nextDeal: PrivateDeal;
 
       if (variant === "seller" && !activeDealId) {
-        const createResponse = await createPrivateDeal(
-          {
+        if (deal.sellingType === "other") {
+          const createResponse = await createPrivateDealFormData(
+            buildOtherDealFormData("complete"),
+            locale,
+          );
+          nextDeal = extractPrivateDeal(createResponse);
+        } else {
+          const createPayload: Record<string, unknown> = {
             intent: "complete",
             emirate: deal.emirate,
             plate_variant: deal.plateVariant,
@@ -563,17 +677,11 @@ export default function PrivateDealPage() {
             plate_digits: deal.digit,
             plate_design: undefined,
             agreed_price: asMoney(deal.price),
-            is_gift: Boolean(details.giftPlate),
-            recipient_email: details.giftPlate
-              ? (details.giftEmail || "").trim()
-              : undefined,
-            gift_message: details.giftPlate
-              ? details.giftMessage?.trim() || undefined
-              : undefined,
-          },
-          locale,
-        );
-        nextDeal = extractPrivateDeal(createResponse);
+          };
+          appendGiftFields(createPayload);
+          const createResponse = await createPrivateDeal(createPayload, locale);
+          nextDeal = extractPrivateDeal(createResponse);
+        }
         hydrateFromApiDeal(nextDeal, "seller");
         activeDealId = String(nextDeal.id);
       } else {
@@ -582,21 +690,28 @@ export default function PrivateDealPage() {
         }
 
         if (variant === "seller") {
-          const termsResponse = await updatePrivateDealTerms(
-            activeDealId,
-            {
-              is_gift: Boolean(details.giftPlate),
-              recipient_email: details.giftPlate
-                ? (details.giftEmail || "").trim()
-                : undefined,
-              gift_message: details.giftPlate
-                ? details.giftMessage?.trim() || undefined
-                : undefined,
-            },
-            locale,
-          );
-          nextDeal = extractPrivateDeal(termsResponse);
-          hydrateFromApiDeal(nextDeal, "seller");
+          if (deal.sellingType === "other") {
+            nextDeal = await syncOtherDealTerms(activeDealId);
+          } else {
+            const termsPayload: Record<string, unknown> = {
+              intent: "complete",
+              deal_type: "plate",
+              emirate: deal.emirate,
+              plate_variant: deal.plateVariant,
+              plate_type: deal.plateType,
+              plate_code: deal.code || undefined,
+              plate_digits: deal.digit,
+              agreed_price: asMoney(deal.price),
+            };
+            appendGiftFields(termsPayload);
+            const termsResponse = await updatePrivateDealTerms(
+              activeDealId,
+              termsPayload,
+              locale,
+            );
+            nextDeal = extractPrivateDeal(termsResponse);
+            hydrateFromApiDeal(nextDeal, "seller");
+          }
         }
       }
 
@@ -862,6 +977,7 @@ export default function PrivateDealPage() {
             onChange={patchDeal}
             onBack={() => setStep(0)}
             onContinue={handleSellerPlateContinue}
+            otherItemOptions={otherItemOptions}
           />
         );
       }
@@ -873,7 +989,6 @@ export default function PrivateDealPage() {
             onBack={() => setStep(1)}
             onContinue={() => void handleSavePartyDetails("seller")}
             variant="seller"
-            showGiftOptions
             submitting={submitting}
             licenseSources={licenseSourceOptions}
           />
@@ -1078,6 +1193,11 @@ export default function PrivateDealPage() {
                 allocatedAmount={splitAllocated}
                 plateCrop="deal-summary"
                 pricing={summaryPricing}
+                onRemoveItemImage={
+                  isSeller && deal.sellingType === "other"
+                    ? handleRemoveItemImage
+                    : undefined
+                }
               />
               {paymentMethod === "bank" && isBuyer && step >= 3 && step <= 4 && (
                 <BeneficiaryInformation />

@@ -792,7 +792,7 @@ export default function MarketplaceCheckout({
             className={`text-3xl sm:text-4xl font-serif mb-2 ${isRTL ? "text-right" : ""}`}
             style={{ color: getColor("primaryText") }}
           >
-            {t("offer.checkout_title") || "Complete purchase"}
+            {t("offer.checkout_title")}
           </h1>
           <p
             className="text-sm mb-6"

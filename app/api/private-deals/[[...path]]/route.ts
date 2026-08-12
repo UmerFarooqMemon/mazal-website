@@ -123,3 +123,11 @@ export async function PATCH(
   const { path } = await context.params;
   return proxyRequest(request, path, "PATCH");
 }
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ path?: string[] }> },
+) {
+  const { path } = await context.params;
+  return proxyRequest(request, path, "DELETE");
+}

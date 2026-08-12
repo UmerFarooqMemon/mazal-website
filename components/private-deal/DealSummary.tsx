@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { CheckCircle2, X } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay, {
@@ -9,6 +9,8 @@ import NumberPlateDisplay, {
 } from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
+import type { PrivateDealItemImage } from "@/services/private-deals";
+import { fetchPrivateDealImageBlob } from "@/services/private-deals";
 
 export interface DealData {
   role: "seller" | "buyer" | null;
@@ -26,8 +28,14 @@ export interface DealData {
   sellingType?: "plate" | "other";
   itemTitle?: string;
   itemDescription?: string;
-  /** Object URL or remote URL for Other-item preview in deal summary. */
-  itemImageUrl?: string;
+  /** Local files selected before upload. */
+  itemImageFiles?: File[];
+  /** Object URLs for local file previews. */
+  itemImageUrls?: string[];
+  /** Existing images returned by the API. */
+  itemApiImages?: PrivateDealItemImage[];
+  /** Remote image ids marked for removal on the next terms update. */
+  removedItemImageIds?: number[];
   itemSerial?: string;
 }
 
@@ -62,6 +70,7 @@ interface DealSummaryProps {
   showAllocation?: boolean;
   plateCrop?: PlateCropVariant;
   pricing?: DealSummaryPricing;
+  onRemoveItemImage?: () => void;
 }
 
 function toAmount(value: string | number | null | undefined): number | null {
@@ -76,6 +85,7 @@ export default function DealSummary({
   showAllocation = false,
   plateCrop = "form",
   pricing,
+  onRemoveItemImage,
 }: DealSummaryProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -131,6 +141,63 @@ export default function DealSummary({
     (selectedVariant?.has_code ?? (Boolean(data.code) || Boolean(data.hideCode)));
 
   const hideCode = Boolean(data.hideCode);
+  const activeApiImages = useMemo(
+    () =>
+      data.itemApiImages?.filter(
+        (image) => !data.removedItemImageIds?.includes(image.id),
+      ) || [],
+    [data.itemApiImages, data.removedItemImageIds],
+  );
+  const activeApiImageKey = useMemo(
+    () =>
+      activeApiImages
+        .map((image) => `${image.id}:${image.download_url}`)
+        .join("|"),
+    [activeApiImages],
+  );
+  const [apiPreviewUrl, setApiPreviewUrl] = useState<string | null>(null);
+
+  const localPreviewUrl = data.itemImageUrls?.[0] || null;
+  const itemPreviewUrl = localPreviewUrl || apiPreviewUrl;
+  const hasItemImage =
+    Boolean(itemPreviewUrl) ||
+    (data.itemImageFiles?.length ?? 0) > 0 ||
+    activeApiImages.length > 0;
+
+  useEffect(() => {
+    let ignore = false;
+    let objectUrl: string | null = null;
+
+    const loadPreview = async () => {
+      if (localPreviewUrl || activeApiImages.length === 0) {
+        setApiPreviewUrl(null);
+        return;
+      }
+
+      try {
+        const blob = await fetchPrivateDealImageBlob(
+          activeApiImages[0].download_url,
+          locale,
+        );
+        if (ignore) return;
+        objectUrl = URL.createObjectURL(blob);
+        setApiPreviewUrl(objectUrl);
+      } catch {
+        if (!ignore) {
+          setApiPreviewUrl(null);
+        }
+      }
+    };
+
+    void loadPreview();
+
+    return () => {
+      ignore = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [activeApiImageKey, localPreviewUrl, locale]);
 
   const emirateLabel =
     data.emirate?.toLowerCase() === "dubai"
@@ -163,18 +230,18 @@ export default function DealSummary({
           <div
             className={
               plateCrop === "deal-summary"
-                ? "deal-summary-plate w-full overflow-hidden rounded-xl"
-                : "w-full overflow-hidden rounded-xl"
+                ? "deal-summary-plate relative w-full overflow-hidden rounded-xl"
+                : "relative w-full overflow-hidden rounded-xl"
             }
             style={{
               backgroundColor: getColor("primaryLight"),
               aspectRatio: "16 / 10",
             }}
           >
-            {data.itemImageUrl ? (
+            {itemPreviewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={data.itemImageUrl}
+                src={itemPreviewUrl}
                 alt={data.itemTitle || t("private-deal.item_preview")}
                 className="w-full h-full object-cover"
               />
@@ -188,6 +255,16 @@ export default function DealSummary({
                 </span>
               </div>
             )}
+            {onRemoveItemImage && hasItemImage && itemPreviewUrl ? (
+              <button
+                type="button"
+                onClick={onRemoveItemImage}
+                className="absolute top-2 end-2 rounded-full bg-black/60 p-1.5 text-white transition-opacity hover:bg-black/75"
+                aria-label={t("private-deal.remove_image")}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
           </div>
         ) : (
           <NumberPlateDisplay
