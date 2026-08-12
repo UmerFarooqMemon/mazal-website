@@ -124,12 +124,22 @@ export function mapListingToAuctionListing(
     status === "paused";
 
   const askingPrice = resolveListingAskingPrice(listing);
-  const currentBid = resolvedAuction
-    ? toMarketplaceNumber(resolvedAuction.current_high_bid) ||
-      toMarketplaceNumber(resolvedAuction.starting_price) ||
-      toMarketplaceNumber(resolvedAuction.reserve_price) ||
-      askingPrice
-    : askingPrice;
+  const currentHighBid =
+    resolvedAuction?.current_high_bid != null &&
+    resolvedAuction.current_high_bid !== ""
+      ? toMarketplaceNumber(resolvedAuction.current_high_bid)
+      : null;
+  const currentBid =
+    currentHighBid != null
+      ? currentHighBid
+      : resolvedAuction
+        ? toMarketplaceNumber(resolvedAuction.starting_price) ||
+          toMarketplaceNumber(resolvedAuction.reserve_price) ||
+          askingPrice
+        : askingPrice;
+  const minBidIncrement = resolvedAuction
+    ? toMarketplaceNumber(resolvedAuction.min_bid_increment)
+    : 0;
 
   return {
     id: String(listing.id),
@@ -143,7 +153,9 @@ export function mapListingToAuctionListing(
     kind,
     status,
     askingPrice,
+    currentHighBid,
     currentBid,
+    minBidIncrement,
     views: listing.view_count,
     currentBids: resolvedAuction?.bid_count,
     startsAt: resolvedAuction?.starts_at,

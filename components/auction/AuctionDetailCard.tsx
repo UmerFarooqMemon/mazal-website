@@ -113,6 +113,32 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
           </div>
 
           <div className="flex items-start gap-2.5">
+            <span
+              className="mt-0.5 shrink-0 inline-flex"
+              style={{ color: getColor("primary") }}
+            >
+              <DirhamSymbolIcon className="w-5 h-5" />
+            </span>
+            <div>
+              <div
+                className="text-[12px] mb-0.5"
+                style={{ color: getColor("mutedText") }}
+              >
+                {t("auctions.min_bid_increment")}
+              </div>
+              <div
+                className="text-[20px] sm:text-[22px] font-bold"
+                style={{ color: getColor("success") }}
+              >
+                <DirhamAmount
+                  amount={auction.minBidIncrement}
+                  weight="bold"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2.5">
             <Clock
               className="w-5 h-5 mt-0.5 shrink-0"
               style={{ color: getColor("primary") }}

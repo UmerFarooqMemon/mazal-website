@@ -23,7 +23,10 @@ export interface AuctionListing {
   kind: AuctionKind;
   status: AuctionListingStatus;
   askingPrice: number;
+  /** Raw `auction.current_high_bid` when the API sent a value (not null). */
+  currentHighBid: number | null;
   currentBid: number;
+  minBidIncrement: number;
   views: number;
   startsAt?: string | null;
   endsAt?: string | null;

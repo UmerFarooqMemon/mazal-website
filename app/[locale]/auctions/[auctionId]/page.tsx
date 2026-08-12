@@ -106,6 +106,39 @@ export default function AuctionDetailPage({
       ? t("listings.listing_sold_message")
       : undefined;
 
+  const handleAuctionUpdated = (nextAuction: MarketplaceAuction) => {
+    setAuctionState(nextAuction);
+    setAuction((prev) => {
+      if (!prev) return prev;
+      const highBid =
+        nextAuction.current_high_bid != null &&
+        nextAuction.current_high_bid !== ""
+          ? Number(nextAuction.current_high_bid)
+          : null;
+      const currentBid =
+        highBid != null && Number.isFinite(highBid)
+          ? highBid
+          : Number(nextAuction.current_price) || prev.currentBid;
+      const minBidIncrement =
+        nextAuction.min_bid_increment != null &&
+        nextAuction.min_bid_increment !== ""
+          ? Number(nextAuction.min_bid_increment)
+          : prev.minBidIncrement;
+
+      return {
+        ...prev,
+        currentHighBid:
+          highBid != null && Number.isFinite(highBid) ? highBid : null,
+        currentBid: Number.isFinite(currentBid) ? currentBid : prev.currentBid,
+        minBidIncrement: Number.isFinite(minBidIncrement)
+          ? minBidIncrement
+          : prev.minBidIncrement,
+        currentBids: nextAuction.bid_count ?? prev.currentBids,
+        endsAt: nextAuction.ends_at ?? prev.endsAt,
+      };
+    });
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -137,6 +170,7 @@ export default function AuctionDetailPage({
               )}
               canBid={canBid}
               bidDisabledReason={bidDisabledReason}
+              onAuctionUpdated={handleAuctionUpdated}
             />
           )}
 

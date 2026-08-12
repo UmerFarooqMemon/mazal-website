@@ -18,6 +18,7 @@ interface LiveBidRoomProps {
   summary: AuctionSummaryData;
   canBid?: boolean;
   bidDisabledReason?: string;
+  onAuctionUpdated?: (auction: MarketplaceAuction) => void;
 }
 
 export default function LiveBidRoom({
@@ -26,6 +27,7 @@ export default function LiveBidRoom({
   summary,
   canBid = true,
   bidDisabledReason,
+  onAuctionUpdated,
 }: LiveBidRoomProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -56,6 +58,7 @@ export default function LiveBidRoom({
 
   const handleBidPlaced = (nextAuction: MarketplaceAuction) => {
     setAuction(nextAuction);
+    onAuctionUpdated?.(nextAuction);
     refreshBids();
   };
 

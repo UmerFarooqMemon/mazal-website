@@ -29,6 +29,7 @@
   "current_bids": "Current Bids",
   "be_first_to_bid": "Be the first to place a bid on this auction.",
   "current_price": "Current price",
+  "min_bid_increment": "Min bid increment",
   "time_left": "Time left",
   "add_deposit_cta": "Deposit & Bidding",
   "bid_too_low": "Your bid is too low. The minimum bid is {amount}.",

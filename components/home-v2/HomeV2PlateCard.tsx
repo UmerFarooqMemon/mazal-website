@@ -40,7 +40,10 @@ export function mapListingToHomeV2Plate(
   const card = mapListingToPlateCard(listing);
   const auctionPrice =
     listing.listing_type === "auction"
-      ? listing.auction?.current_price ?? listing.auction?.current_high_bid
+      ? listing.auction?.current_high_bid != null &&
+        listing.auction.current_high_bid !== ""
+        ? listing.auction.current_high_bid
+        : listing.auction?.current_price
       : undefined;
 
   return {

@@ -128,13 +128,22 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
             className="text-[10px] font-semibold uppercase tracking-wider mb-1"
             style={{ color: getColor("mutedText") }}
           >
-            {t("listings.asking_price")}
+            {auction.currentHighBid != null
+              ? t("auctions.current_bid")
+              : t("listings.asking_price")}
           </div>
           <div
             className="text-[18px] sm:text-[20px] font-bold"
             style={{ color: getColor("primaryText") }}
           >
-            <DirhamAmount amount={auction.askingPrice} weight="bold" />
+            <DirhamAmount
+              amount={
+                auction.currentHighBid != null
+                  ? auction.currentHighBid
+                  : auction.askingPrice
+              }
+              weight="bold"
+            />
           </div>
         </div>
 

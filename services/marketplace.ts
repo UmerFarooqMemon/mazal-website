@@ -712,21 +712,34 @@ export function toMarketplaceNumber(
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+/** Returns a finite number when `value` is present (not null/undefined/""). */
+export function toNullableMarketplaceNumber(
+  value: number | string | null | undefined,
+): number | null {
+  if (value == null || value === "") return null;
+  const parsed = toMarketplaceNumber(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function resolveListingAskingPrice(
   listing: Pick<MarketplaceListingCard, "asking_price"> & {
     auction?: MarketplaceAuction | null;
   },
 ): number {
+  const auction = listing.auction;
+  const highBid = toNullableMarketplaceNumber(auction?.current_high_bid);
+  // Auction listings: show current high bid in place of asking price when set.
+  if (highBid != null) return highBid;
+
   const askingPrice = toMarketplaceNumber(listing.asking_price);
   if (askingPrice > 0) return askingPrice;
 
-  const auction = listing.auction;
   if (!auction) return askingPrice;
 
   return (
     toMarketplaceNumber(auction.starting_price) ||
     toMarketplaceNumber(auction.reserve_price) ||
-    toMarketplaceNumber(auction.current_high_bid)
+    askingPrice
   );
 }
 
