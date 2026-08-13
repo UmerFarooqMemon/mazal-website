@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Store, Trash2 } from "lucide-react";
+import { Store, Trash2 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { Button, DirhamAmount } from "@/components/ui";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
@@ -61,7 +61,14 @@ export default function DashboardWatchlistPanel({
               key={listing.id}
               className="flex flex-col gap-6 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="w-full max-w-[345px] text-start">
+              <Link
+                href={
+                  String(listing.listing_type || "").toLowerCase() === "auction"
+                    ? `/${locale}/auctions/${listing.id}`
+                    : `/${locale}/listings/${listing.id}`
+                }
+                className="w-full max-w-[345px] text-start transition-opacity hover:opacity-80"
+              >
                 <NumberPlateDisplay
                   plate_code={listing.plate_code || undefined}
                   plate_digits={String(listing.plate_digits || "")}
@@ -78,16 +85,8 @@ export default function DashboardWatchlistPanel({
                     weight="bold"
                   />
                 </p>
-              </div>
+              </Link>
               <div className="flex items-center gap-5">
-                <Link
-                  href={`/${locale}/listings/${listing.id}`}
-                  className="inline-flex h-[35px] w-[35px] items-center justify-center rounded-full"
-                  style={{ backgroundColor: "rgba(1,92,20,0.05)" }}
-                  aria-label={t("listings.watchlist")}
-                >
-                  <Heart className="h-4 w-4 fill-[#0f6646] text-[#0f6646]" />
-                </Link>
                 <button
                   type="button"
                   onClick={() => onRemove(listing.id)}
