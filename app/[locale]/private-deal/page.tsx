@@ -26,8 +26,13 @@ import PaymentMethodStep, {
 import PaymentSuccessStep from "@/components/private-deal/PaymentSuccessStep";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 import GiftNoPaymentBanner from "@/components/private-deal/GiftNoPaymentBanner";
-import { getGiftPackage } from "@/components/private-deal/giftPackages";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
+import { useGiftProducts } from "@/hooks/useGiftProducts";
+import { detailsFromGiftProduct, resolveGiftBoxSummary } from "@/lib/gift-box";
+import {
+  buildRemoveGiftProductPayload,
+  buildSelectGiftProductPayload,
+} from "@/services/products";
 import {
   hasNationalPhoneDigits,
   isValidCountryPhoneNumber,
@@ -48,6 +53,7 @@ import {
   savePrivateDealParty,
   savePrivateDealPaymentPlan,
   submitPrivateDealPayment,
+  updatePrivateDealGiftProduct,
   updatePrivateDealTerms,
   updatePrivateDealTermsFormData,
   type PrivateDeal,
@@ -68,6 +74,7 @@ const PAYMENT_METHOD_MAP: Record<PaymentMethod, string> = {
 export default function PrivateDealPage() {
   const { t, locale, loading: localeLoading } = useLocale();
   const { getColor, loading: themeLoading } = useTheme();
+  const { products: giftProducts } = useGiftProducts();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isRTL = locale === "ar";
@@ -118,7 +125,7 @@ export default function PrivateDealPage() {
     giftPlate: false,
     giftEmail: "",
     giftMessage: "",
-    giftPackageId: "",
+    giftPackageId: "" as const,
     giftRecipientName: "",
     giftRecipientPhone: "",
     giftRecipientPhoneCountryIso: "ae",
@@ -185,6 +192,13 @@ export default function PrivateDealPage() {
         giftMessage: nextDeal.gift_message || prev.giftMessage || "",
       }));
     }
+
+    if (nextDeal.gift_product) {
+      setDetails((prev) => ({
+        ...prev,
+        ...detailsFromGiftProduct(nextDeal.gift_product),
+      }));
+    }
   }
 
   useEffect(() => {
@@ -233,25 +247,23 @@ export default function PrivateDealPage() {
 
   const isSeller = deal.role === "seller";
   const isBuyer = deal.role === "buyer";
+  const isPhysicalGiftBox = details.custodyIntent === "gift";
   const isGiftDeal =
-    Boolean(apiDeal?.is_gift) ||
-    Boolean(details.giftPlate) ||
-    apiDeal?.buyer_payment_required === false;
+    !isPhysicalGiftBox &&
+    (Boolean(apiDeal?.is_gift) ||
+      Boolean(details.giftPlate) ||
+      apiDeal?.buyer_payment_required === false);
   const buyerPaymentRequired =
-    !isGiftDeal && apiDeal?.buyer_payment_required !== false;
-  const selectedGiftPackage =
-    details.custodyIntent === "gift"
-      ? getGiftPackage(details.giftPackageId)
-      : undefined;
-  const giftPackageLabel = selectedGiftPackage
-    ? (
-        t("private-deal.gift_package_label") || "{name} Package"
-      ).replace(
-        "{name}",
-        t(`private-deal.${selectedGiftPackage.nameKey}`) ||
-          selectedGiftPackage.nameKey,
-      )
-    : null;
+    isPhysicalGiftBox ||
+    (!isGiftDeal && apiDeal?.buyer_payment_required !== false);
+  const giftBoxSummary = resolveGiftBoxSummary({
+    isGiftCustody: isPhysicalGiftBox,
+    selectedProductId: details.giftPackageId,
+    products: giftProducts,
+    apiGift: apiDeal?.gift_product,
+    apiTotalDue: apiDeal?.total_due,
+    labelTemplate: t("private-deal.gift_package_label") || "{name} Package",
+  });
   const summaryPricing = {
     feeBreakdown: apiDeal?.fee_breakdown,
     totalFees: apiDeal?.total_fees,
@@ -261,9 +273,12 @@ export default function PrivateDealPage() {
       : apiDeal?.seller_net,
     isGift: isGiftDeal,
     buyerPaymentRequired: !buyerPaymentRequired ? false : undefined,
-    giftPackageLabel,
-    giftPackageAmount: selectedGiftPackage?.price ?? null,
+    giftPackageLabel: giftBoxSummary.label,
+    giftPackageAmount: giftBoxSummary.amount,
+    giftIncludedInTotals: giftBoxSummary.includedInTotals,
   };
+  const payableTotal =
+    Number(apiDeal?.total_due) > 0 ? Number(apiDeal?.total_due) : deal.price;
 
   const licenseSourceOptions = useMemo(
     () => resolveLicenseSourceOptions(options?.license_sources),
@@ -480,13 +495,9 @@ export default function PrivateDealPage() {
     const isHoldCustody = details.custodyIntent === "hold";
     const isGiftCustody = details.custodyIntent === "gift";
 
-    // Hold custody: personal details only — same individual party payload shape.
-    // Gifting: buyer keeps personal details; recipient + package go in role_details.
+    // Hold custody / physical gift box: personal details only.
+    // Gift package + recipient go through PATCH /gift-product.
     if (isHoldCustody || isGiftCustody) {
-      const giftRecipientPhone =
-        toE164FromPhoneDigits(details.giftRecipientPhone || "") ||
-        details.giftRecipientPhone ||
-        "";
       return {
         intent: "complete",
         party_type: "individual",
@@ -497,20 +508,7 @@ export default function PrivateDealPage() {
         identification_type: "emirates_id",
         accept_terms: true,
         role_details: {
-          notes: isGiftCustody
-            ? details.giftRecipientNotes?.trim() || ""
-            : "",
-          ...(isGiftCustody
-            ? {
-                custody_intent: "gift",
-                gift_package_id: details.giftPackageId || undefined,
-                gift_recipient_name:
-                  details.giftRecipientName?.trim() || undefined,
-                gift_recipient_phone: giftRecipientPhone || undefined,
-                gift_recipient_address:
-                  details.giftRecipientAddress?.trim() || undefined,
-              }
-            : {}),
+          notes: "",
         },
       };
     }
@@ -645,6 +643,12 @@ export default function PrivateDealPage() {
               "Recipient phone number is required.",
           );
         }
+        if (!(details.giftRecipientAddress || "").trim()) {
+          throw new Error(
+            t("private-deal.gift_recipient_address_required") ||
+              "Recipient address is required.",
+          );
+        }
       }
 
       if (variant === "seller" && details.giftPlate) {
@@ -727,7 +731,41 @@ export default function PrivateDealPage() {
       nextDeal = extractPrivateDeal(partyResponse);
       hydrateFromApiDeal(nextDeal, variant);
 
-      if (variant === "buyer" && nextDeal.buyer_payment_required === false) {
+      if (variant === "buyer") {
+        if (details.custodyIntent === "gift") {
+          const giftRecipientPhone =
+            toE164FromPhoneDigits(details.giftRecipientPhone || "") ||
+            details.giftRecipientPhone ||
+            "";
+          const giftResponse = await updatePrivateDealGiftProduct(
+            activeDealId,
+            buildSelectGiftProductPayload({
+              productId: Number(details.giftPackageId),
+              name: details.giftRecipientName || "",
+              phone: giftRecipientPhone,
+              address: details.giftRecipientAddress || "",
+              notes: details.giftRecipientNotes,
+            }),
+            locale,
+          );
+          nextDeal = extractPrivateDeal(giftResponse);
+          hydrateFromApiDeal(nextDeal, variant);
+        } else if (nextDeal.gift_product) {
+          const giftResponse = await updatePrivateDealGiftProduct(
+            activeDealId,
+            buildRemoveGiftProductPayload(),
+            locale,
+          );
+          nextDeal = extractPrivateDeal(giftResponse);
+          hydrateFromApiDeal(nextDeal, variant);
+        }
+      }
+
+      if (
+        variant === "buyer" &&
+        details.custodyIntent !== "gift" &&
+        nextDeal.buyer_payment_required === false
+      ) {
         setStep(5);
         return;
       }
@@ -766,7 +804,7 @@ export default function PrivateDealPage() {
       const singlePayment: SplitPaymentEntry = {
         id: "single-payment",
         method: paymentMethod === "wallet" ? "wallet" : paymentMethod,
-        amount: deal.price,
+        amount: payableTotal,
         notes: "",
         status: "awaiting",
         createdAt: new Date().toISOString(),
@@ -785,7 +823,7 @@ export default function PrivateDealPage() {
             plan: "single",
             entries: [
               {
-                amount: asMoney(deal.price),
+                amount: asMoney(payableTotal),
                 method: "wallet",
               },
             ],
@@ -802,7 +840,7 @@ export default function PrivateDealPage() {
           {
             id: "single-payment",
             method: "bank",
-            amount: deal.price,
+            amount: payableTotal,
             notes: "",
             status: "awaiting",
             createdAt: new Date().toISOString(),
@@ -1037,6 +1075,7 @@ export default function PrivateDealPage() {
             continueLabel={t("private-deal.confirm")}
             submitting={submitting}
             licenseSources={licenseSourceOptions}
+            products={giftProducts}
           />
         );
       }
@@ -1053,11 +1092,7 @@ export default function PrivateDealPage() {
           <PaymentMethodStep
             method={paymentMethod}
             mode={paymentMode}
-            totalAmount={
-              Number(apiDeal?.total_due) > 0
-                ? Number(apiDeal?.total_due)
-                : deal.price
-            }
+            totalAmount={payableTotal}
             splitPayments={splitPayments}
             onMethodChange={setPaymentMethod}
             onModeChange={(mode) => {
@@ -1213,7 +1248,7 @@ export default function PrivateDealPage() {
       <WalletPaymentModal
         isOpen={walletModalOpen}
         onClose={() => setWalletModalOpen(false)}
-        amountDue={deal.price}
+        amountDue={payableTotal}
         reference={t("private-deal.payment_title")}
         onPaid={async () => {
           const activeDealId = resolveDealId();

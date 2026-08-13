@@ -1,59 +1,66 @@
-export type GiftPackageId = "18_karat" | "21_karat" | "24_karat" | "metallic";
+import type { GiftProduct } from "@/services/products";
+import type { GiftPackageId } from "@/lib/gift-box";
 
-export interface GiftPackage {
-  id: GiftPackageId;
-  price: number;
-  nameKey: string;
-  /** Right-side detail lines inside the bordered header box */
-  detailKeys: string[];
-}
+export type { GiftPackageId };
 
 export const GIFT_PACKAGE_IMAGE = "/private-deal/gift-package.png";
 
-export const GIFT_PACKAGES: GiftPackage[] = [
+/** Used when GET /products is unavailable so the gift UI still renders. */
+export const FALLBACK_GIFT_PRODUCTS: GiftProduct[] = [
   {
-    id: "18_karat",
-    price: 5000,
-    nameKey: "gift_pkg_18_karat",
-    detailKeys: [
-      "gift_pkg_theme_floral",
-      "gift_pkg_theme_palette_18",
-      "gift_pkg_theme_flowers_18",
-    ],
+    id: 1,
+    name: "18 KARAT",
+    slug: "18-karat",
+    image_url: GIFT_PACKAGE_IMAGE,
+    price: "5000.00",
+    currency: "AED",
+    floral_theme: "White, Ivory & Champagne",
+    flowers: "White Avalanche Roses, White Lisianthus",
+    description: null,
+    sort_order: 10,
   },
   {
-    id: "21_karat",
-    price: 10000,
-    nameKey: "gift_pkg_21_karat",
-    detailKeys: [
-      "gift_pkg_theme_floral",
-      "gift_pkg_theme_palette_21",
-      "gift_pkg_theme_flowers_21",
-    ],
+    id: 2,
+    name: "21 KARAT",
+    slug: "21-karat",
+    image_url: GIFT_PACKAGE_IMAGE,
+    price: "10000.00",
+    currency: "AED",
+    floral_theme: "Blush, Cream & Soft Gold",
+    flowers: "Blush Roses, Cream Peonies",
+    description: null,
+    sort_order: 20,
   },
   {
-    id: "24_karat",
-    price: 15000,
-    nameKey: "gift_pkg_24_karat",
-    detailKeys: [
-      "gift_pkg_theme_floral",
-      "gift_pkg_theme_palette_24",
-      "gift_pkg_theme_flowers_24",
-    ],
+    id: 3,
+    name: "24 KARAT",
+    slug: "24-karat",
+    image_url: GIFT_PACKAGE_IMAGE,
+    price: "15000.00",
+    currency: "AED",
+    floral_theme: "Gold, Ivory & Champagne",
+    flowers: "Golden Roses, Ivory Orchids",
+    description: null,
+    sort_order: 30,
   },
   {
-    id: "metallic",
-    price: 25000,
-    nameKey: "gift_pkg_metallic",
-    detailKeys: [
-      "gift_pkg_theme_floral",
-      "gift_pkg_theme_palette_metallic",
-      "gift_pkg_theme_flowers_metallic",
-    ],
+    id: 4,
+    name: "METALLIC",
+    slug: "metallic",
+    image_url: GIFT_PACKAGE_IMAGE,
+    price: "25000.00",
+    currency: "AED",
+    floral_theme: "Silver, Graphite & Pearl",
+    flowers: "White Roses, Silver Dust Eucalyptus",
+    description: null,
+    sort_order: 40,
   },
 ];
 
-export function getGiftPackage(id?: string | null): GiftPackage | undefined {
+export function getGiftPackage(
+  products: GiftProduct[],
+  id?: GiftPackageId | null,
+): GiftProduct | undefined {
   if (!id) return undefined;
-  return GIFT_PACKAGES.find((pkg) => pkg.id === id);
+  return products.find((pkg) => pkg.id === id);
 }

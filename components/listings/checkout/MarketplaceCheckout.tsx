@@ -25,6 +25,8 @@ import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProce
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import WalletDialog from "@/components/wallet/WalletDialog";
 import { Button } from "@/components/ui";
+import { useGiftProducts } from "@/hooks/useGiftProducts";
+import { detailsFromGiftProduct, resolveGiftBoxSummary } from "@/lib/gift-box";
 import {
   canTransactListing,
   createPurchaseCheckout,
@@ -37,9 +39,14 @@ import {
   resolvePlateParts,
   savePurchaseParty,
   submitPurchasePaymentEvidence,
+  updatePurchaseAddons,
   type MarketplaceListingDetail,
   type MarketplacePurchase,
 } from "@/services/marketplace";
+import {
+  buildRemoveGiftProductPayload,
+  buildSelectGiftProductPayload,
+} from "@/services/products";
 import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
 import { resolveLicenseSourceOptions } from "@/config/license-sources";
 import {
@@ -122,6 +129,7 @@ export default function MarketplaceCheckout({
   const searchParams = useSearchParams();
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const { products: giftProducts } = useGiftProducts();
   const isRTL = locale === "ar";
 
   const purchaseId =
@@ -150,6 +158,13 @@ export default function MarketplaceCheckout({
     giftPlate: false,
     giftEmail: "",
     giftMessage: "",
+    giftPackageId: "",
+    giftRecipientName: "",
+    giftRecipientPhone: "",
+    giftRecipientPhoneCountryIso: "ae",
+    giftRecipientPhoneDialCode: "+971",
+    giftRecipientAddress: "",
+    giftRecipientNotes: "",
   });
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank");
   const [paymentMode] = useState<PaymentMode>("single");
@@ -160,16 +175,24 @@ export default function MarketplaceCheckout({
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [offerRequiredModalOpen, setOfferRequiredModalOpen] = useState(false);
 
-  const refreshPurchase = async (id: string) => {
-    const response = await getPurchase(id, locale);
-    const next = response.data.purchase;
+  const applyPurchase = (next: MarketplacePurchase) => {
     setPurchase(next);
-    // Keep agreed price separate from payable total (fees).
     const agreed = Number(next.agreed_price);
     if (Number.isFinite(agreed) && agreed > 0) {
       setResolvedPrice(agreed);
     }
+    if (next.gift_product) {
+      setDetails((prev) => ({
+        ...prev,
+        ...detailsFromGiftProduct(next.gift_product),
+      }));
+    }
     return next;
+  };
+
+  const refreshPurchase = async (id: string) => {
+    const response = await getPurchase(id, locale);
+    return applyPurchase(response.data.purchase);
   };
 
   useEffect(() => {
@@ -284,9 +307,20 @@ export default function MarketplaceCheckout({
     hideCode,
   };
 
+  const giftBoxSummary = resolveGiftBoxSummary({
+    isGiftCustody: details.custodyIntent === "gift",
+    selectedProductId: details.giftPackageId,
+    products: giftProducts,
+    apiGift: purchase?.gift_product,
+    apiTotalDue: purchase?.total_due,
+    labelTemplate: t("private-deal.gift_package_label") || "{name} Package",
+  });
   const dealPricing = {
     totalDue: payableTotal,
     totalFees: payableFees,
+    giftPackageLabel: giftBoxSummary.label,
+    giftPackageAmount: giftBoxSummary.amount,
+    giftIncludedInTotals: giftBoxSummary.includedInTotals,
   };
 
   const steps: StepItem[] = useMemo(() => {
@@ -324,8 +358,9 @@ export default function MarketplaceCheckout({
     const secondaryMobile =
       toE164FromPhoneDigits(details.secondaryMobile) || details.secondaryMobile;
     const isHoldCustody = details.custodyIntent === "hold";
+    const isGiftCustody = details.custodyIntent === "gift";
 
-    if (isHoldCustody) {
+    if (isHoldCustody || isGiftCustody) {
       return {
         intent: "complete",
         party_type: "individual",
@@ -406,6 +441,7 @@ export default function MarketplaceCheckout({
     }
     if (
       details.custodyIntent !== "hold" &&
+      details.custodyIntent !== "gift" &&
       hasNationalPhoneDigits(details.secondaryMobile, secondaryDial) &&
       !isValidCountryPhoneNumber(details.secondaryMobile, secondaryIso)
     ) {
@@ -416,14 +452,90 @@ export default function MarketplaceCheckout({
       return;
     }
 
+    if (details.custodyIntent === "gift") {
+      if (!details.giftPackageId) {
+        toast.error(
+          t("private-deal.gift_package_required") ||
+            "Please select a gift package to continue.",
+        );
+        return;
+      }
+      if (!(details.giftRecipientName || "").trim()) {
+        toast.error(
+          t("private-deal.gift_recipient_name_required") ||
+            "Recipient name is required.",
+        );
+        return;
+      }
+      const giftIso = details.giftRecipientPhoneCountryIso || "ae";
+      const giftDial = details.giftRecipientPhoneDialCode || "+971";
+      if (
+        !hasNationalPhoneDigits(details.giftRecipientPhone || "", giftDial) ||
+        !isValidCountryPhoneNumber(details.giftRecipientPhone || "", giftIso)
+      ) {
+        toast.error(
+          t("private-deal.gift_recipient_phone_required") ||
+            "Recipient phone number is required.",
+        );
+        return;
+      }
+      if (!(details.giftRecipientAddress || "").trim()) {
+        toast.error(
+          t("private-deal.gift_recipient_address_required") ||
+            "Recipient address is required.",
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
-      const response = await savePurchaseParty(
+      const partyResponse = await savePurchaseParty(
         ready.purchaseId,
         getPartyPayload(),
         locale,
       );
-      setPurchase(response.data.purchase);
+      let nextPurchase = partyResponse.data.purchase;
+      const currentAddons = nextPurchase.addons || purchase?.addons;
+      const addonFlags = {
+        include_delivery: Boolean(currentAddons?.include_delivery),
+        include_fitting: Boolean(currentAddons?.include_fitting),
+      };
+
+      if (details.custodyIntent === "gift") {
+        const giftRecipientPhone =
+          toE164FromPhoneDigits(details.giftRecipientPhone || "") ||
+          details.giftRecipientPhone ||
+          "";
+        const giftPayload = buildSelectGiftProductPayload({
+          productId: Number(details.giftPackageId),
+          name: details.giftRecipientName || "",
+          phone: giftRecipientPhone,
+          address: details.giftRecipientAddress || "",
+          notes: details.giftRecipientNotes,
+        });
+        const addonsResponse = await updatePurchaseAddons(
+          ready.purchaseId,
+          {
+            ...addonFlags,
+            ...giftPayload,
+          },
+          locale,
+        );
+        nextPurchase = addonsResponse.data.purchase;
+      } else if (nextPurchase.gift_product) {
+        const addonsResponse = await updatePurchaseAddons(
+          ready.purchaseId,
+          {
+            ...addonFlags,
+            ...buildRemoveGiftProductPayload(),
+          },
+          locale,
+        );
+        nextPurchase = addonsResponse.data.purchase;
+      }
+
+      applyPurchase(nextPurchase);
       setStep(1);
     } catch (err) {
       toast.error(
@@ -675,6 +787,7 @@ export default function MarketplaceCheckout({
           continueLabel={t("private-deal.confirm")}
           submitting={submitting}
           licenseSources={licenseSourceOptions}
+          products={giftProducts}
         />
       );
     }

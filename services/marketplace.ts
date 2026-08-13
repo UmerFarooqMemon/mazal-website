@@ -1,5 +1,6 @@
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
+import type { GiftProductSelection } from "@/services/products";
 
 export interface MarketplaceApiResponse<T> {
   status?: boolean;
@@ -428,6 +429,7 @@ export interface MarketplacePurchase {
   can_gift?: boolean;
   gifted_to?: { id: number; name: string } | null;
   addons?: MarketplacePurchaseAddons;
+  gift_product?: GiftProductSelection | null;
   buyer?: { id: number; name: string };
   seller?: { id: number; name: string };
   listing?: {
@@ -497,6 +499,11 @@ export interface UpdatePurchaseAddonsPayload {
   include_fitting: boolean;
   delivery_address?: string;
   delivery_notes?: string;
+  product_id?: number | null;
+  gift_recipient_name?: string;
+  gift_recipient_phone?: string;
+  gift_recipient_address?: string;
+  gift_recipient_notes?: string;
 }
 
 export interface CreateGiftPayload {

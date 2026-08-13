@@ -5,14 +5,15 @@ import { useTheme } from "@/context/ThemeContext";
 import { CountryPhoneInput, DirhamAmount, Input } from "@/components/ui";
 import {
   GIFT_PACKAGE_IMAGE,
-  GIFT_PACKAGES,
-  type GiftPackageId,
 } from "@/components/private-deal/giftPackages";
+import { resolveMediaUrl } from "@/lib/api-config";
+import { giftProductAmount, type GiftPackageId } from "@/lib/gift-box";
+import type { GiftProduct } from "@/services/products";
 
 export type GiftFlowStep = "package" | "recipient";
 
 export interface GiftFlowData {
-  giftPackageId?: GiftPackageId | "";
+  giftPackageId?: GiftPackageId;
   giftRecipientName?: string;
   giftRecipientPhone?: string;
   giftRecipientPhoneCountryIso?: string;
@@ -24,6 +25,7 @@ export interface GiftFlowData {
 interface GiftFlowPanelProps {
   data: GiftFlowData;
   step: GiftFlowStep;
+  products: GiftProduct[];
   onChange: (patch: Partial<GiftFlowData>) => void;
   phoneError?: string;
   onPhoneErrorClear?: () => void;
@@ -32,6 +34,7 @@ interface GiftFlowPanelProps {
 export default function GiftFlowPanel({
   data,
   step,
+  products,
   onChange,
   phoneError,
   onPhoneErrorClear,
@@ -115,9 +118,18 @@ export default function GiftFlowPanel({
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {GIFT_PACKAGES.map((pkg) => {
+        {products.map((pkg) => {
           const selected = selectedId === pkg.id;
           const ink = selected ? "#FFFFFF" : accent;
+          const imageSrc =
+            resolveMediaUrl(pkg.image_url) || GIFT_PACKAGE_IMAGE;
+          const themeLines = [
+            t("private-deal.gift_pkg_theme_floral"),
+            pkg.floral_theme,
+            pkg.flowers
+              ? `${t("private-deal.gift_pkg_flowers_prefix") || "Flowers:"} ${pkg.flowers}`
+              : null,
+          ].filter(Boolean) as string[];
 
           return (
             <button
@@ -130,7 +142,6 @@ export default function GiftFlowPanel({
                 backgroundColor: selected ? accent : "transparent",
               }}
             >
-              {/* Header info box */}
               <div
                 className="rounded-[14px] border px-3 py-2.5 mb-2.5"
                 style={{ borderColor: ink }}
@@ -141,32 +152,31 @@ export default function GiftFlowPanel({
                       className="text-[15px] sm:text-base font-bold leading-tight [&_*]:!text-inherit"
                       style={{ color: ink }}
                     >
-                      <DirhamAmount amount={pkg.price} />
+                      <DirhamAmount amount={giftProductAmount(pkg.price)} />
                     </div>
                     <div
                       className="text-[12px] sm:text-[13px] font-bold uppercase tracking-wide mt-0.5"
                       style={{ color: ink }}
                     >
-                      {t(`private-deal.${pkg.nameKey}`)}
+                      {pkg.name}
                     </div>
                   </div>
                   <div
                     className="text-[8px] sm:text-[9px] leading-[1.35] text-end max-w-[52%]"
                     style={{ color: ink, opacity: selected ? 0.95 : 0.9 }}
                   >
-                    {pkg.detailKeys.map((key) => (
-                      <div key={key}>{t(`private-deal.${key}`)}</div>
+                    {themeLines.map((line) => (
+                      <div key={line}>{line}</div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Product image */}
               <div className="overflow-hidden rounded-[14px] aspect-[229/149] bg-[#E8DFD0]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={GIFT_PACKAGE_IMAGE}
-                  alt=""
+                  src={imageSrc}
+                  alt={pkg.name}
                   className="w-full h-full object-cover object-center"
                 />
               </div>

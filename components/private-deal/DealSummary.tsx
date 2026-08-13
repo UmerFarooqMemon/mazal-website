@@ -54,6 +54,8 @@ export interface DealSummaryPricing {
   /** Optional gift packaging line shown under fee rows. */
   giftPackageLabel?: string | null;
   giftPackageAmount?: number | null;
+  /** When API total_due already includes the gift package price. */
+  giftIncludedInTotals?: boolean;
 }
 
 interface Variant {
@@ -362,16 +364,7 @@ export default function DealSummary({
         >
           <Row
             label={t("private-deal.total_fees")}
-            value={
-              <DirhamAmount
-                amount={
-                  totalFees +
-                  (pricing?.giftPackageAmount && pricing.giftPackageAmount > 0
-                    ? pricing.giftPackageAmount
-                    : 0)
-                }
-              />
-            }
+            value={<DirhamAmount amount={totalFees} />}
             isRTL={isRTL}
             getColor={getColor}
           />
@@ -390,7 +383,9 @@ export default function DealSummary({
               amount={
                 data.role === "buyer"
                   ? totalDue +
-                    (pricing?.giftPackageAmount && pricing.giftPackageAmount > 0
+                    (!pricing?.giftIncludedInTotals &&
+                    pricing?.giftPackageAmount &&
+                    pricing.giftPackageAmount > 0
                       ? pricing.giftPackageAmount
                       : 0)
                   : sellerNet

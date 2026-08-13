@@ -18,7 +18,9 @@ import { PRIVATE_DEAL_LICENSE_SOURCES } from "@/config/license-sources";
 import GiftFlowPanel, {
   type GiftFlowStep,
 } from "@/components/private-deal/GiftFlowPanel";
-import type { GiftPackageId } from "@/components/private-deal/giftPackages";
+import { FALLBACK_GIFT_PRODUCTS } from "@/components/private-deal/giftPackages";
+import type { GiftPackageId } from "@/lib/gift-box";
+import type { GiftProduct } from "@/services/products";
 
 export type CustodyIntent = "hold" | "transfer" | "gift";
 
@@ -41,7 +43,7 @@ export interface ConfirmDetailsData {
   giftPlate?: boolean;
   giftEmail?: string;
   giftMessage?: string;
-  giftPackageId?: GiftPackageId | "";
+  giftPackageId?: GiftPackageId;
   giftRecipientName?: string;
   giftRecipientPhone?: string;
   giftRecipientPhoneCountryIso?: string;
@@ -65,6 +67,7 @@ interface ConfirmDetailsStepProps {
   showCustodyOptions?: boolean;
   submitting?: boolean;
   licenseSources?: { key: string; label: string }[];
+  products?: GiftProduct[];
 }
 
 export default function ConfirmDetailsStep({
@@ -79,6 +82,7 @@ export default function ConfirmDetailsStep({
   showCustodyOptions = false,
   submitting = false,
   licenseSources,
+  products,
 }: ConfirmDetailsStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -103,6 +107,8 @@ export default function ConfirmDetailsStep({
     "mbr";
   const custodyIntent: CustodyIntent = data.custodyIntent || "hold";
   const isGifting = showCustodyOptions && custodyIntent === "gift";
+  const giftProducts =
+    products && products.length > 0 ? products : FALLBACK_GIFT_PRODUCTS;
   const showTransferFields =
     variant === "buyer" &&
     (!showCustodyOptions || custodyIntent === "transfer");
@@ -307,6 +313,14 @@ export default function ConfirmDetailsStep({
         return;
       }
 
+      if (!(data.giftRecipientAddress || "").trim()) {
+        toast.error(
+          t("private-deal.gift_recipient_address_required") ||
+            "Recipient address is required.",
+        );
+        return;
+      }
+
       onContinue();
       return;
     }
@@ -505,6 +519,7 @@ export default function ConfirmDetailsStep({
         <GiftFlowPanel
           data={data}
           step={giftStep}
+          products={giftProducts}
           onChange={onChange}
           phoneError={phoneErrors.giftRecipientPhone}
           onPhoneErrorClear={() =>

@@ -1,4 +1,9 @@
 import { normalizeAcceptLanguage } from "@/lib/api-config";
+import type {
+  GiftProductSelection,
+  RemoveGiftProductPayload,
+  SelectGiftProductPayload,
+} from "@/services/products";
 
 export interface PrivateDealApiResponse<T> {
   status?: boolean;
@@ -84,6 +89,7 @@ export interface PrivateDeal {
   recipient_email?: string | null;
   gift_message?: string | null;
   gift_funded_at?: string | null;
+  gift_product?: GiftProductSelection | null;
   payment_plan?: string | null;
   remaining_amount?: string;
   parties?: Array<Record<string, unknown>>;
@@ -418,6 +424,19 @@ export function createPrivateDealCheckout(
     locale,
     contentType: "application/json",
     body: JSON.stringify(body),
+  });
+}
+
+export function updatePrivateDealGiftProduct(
+  id: string | number,
+  payload: SelectGiftProductPayload | RemoveGiftProductPayload,
+  locale: string,
+) {
+  return privateDealsRequest<{ deal: PrivateDeal }>(`/${id}/gift-product`, {
+    method: "PATCH",
+    locale,
+    contentType: "application/json",
+    body: JSON.stringify(payload),
   });
 }
 
