@@ -121,7 +121,7 @@ export async function getUiLabels(
     const response = await fetch(`/api/ui-labels?locale=${locale}`, {
       headers: {
         Accept: "application/json",
-        "Accept-Language": locale === "ar" ? "ar" : "en",
+        "Accept-Language": normalizeAcceptLanguage(locale),
       },
       cache: "default",
     });
@@ -137,15 +137,16 @@ export async function getUiLabels(
     }
 
     const labels = payload.data?.labels ?? {};
-    const responseLocale = normalizeAcceptLanguage(payload.data?.locale);
+    const rawResponseLocale = payload.data?.locale;
 
     // Never apply/cache the wrong language under this locale key.
     if (
       Object.keys(labels).length > 0 &&
-      responseLocale !== locale
+      rawResponseLocale &&
+      normalizeAcceptLanguage(rawResponseLocale) !== locale
     ) {
       console.warn(
-        `UI labels locale mismatch: requested ${locale}, got ${responseLocale}. Keeping static fallback.`,
+        `UI labels locale mismatch: requested ${locale}, got ${rawResponseLocale}. Keeping static fallback.`,
       );
       return getCachedUiLabelsSync(locale) ?? {};
     }

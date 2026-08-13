@@ -9,6 +9,7 @@ import { Button, BackButton } from "@/components/ui";
 import CertificateRequestCard from "@/components/dashboard/CertificateRequestCard";
 import DashboardCertificatesSkeleton from "@/components/skeletons/dashboard/valuation-certificates/DashboardCertificatesSkeleton";
 import DashboardCertificateRequestCardSkeleton from "@/components/skeletons/dashboard/valuation-certificates/DashboardCertificateRequestCardSkeleton";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 export default function DashboardCertificatesPage() {
   const { t, locale, loading: localeLoading } = useLocale();
@@ -32,7 +33,7 @@ export default function DashboardCertificatesPage() {
           ? fetch("/api/number-plates", {
               headers: {
                 Authorization: `Bearer ${token}`,
-                "Accept-Language": locale === "ar" ? "ar" : "en",
+                "Accept-Language": normalizeAcceptLanguage(locale),
               },
             }).then((r) => r.json())
           : Promise.resolve(null),

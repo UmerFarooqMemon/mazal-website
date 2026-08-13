@@ -1,4 +1,5 @@
 import { apiRequest } from "./api";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 export type HomepageStats = {
   currency: string;
@@ -45,7 +46,9 @@ export async function fetchHomepageStatsClient(
   const response = await fetch("/api/homepage/stats", {
     headers: {
       Accept: "application/json",
-      ...(locale ? { "Accept-Language": locale === "ar" ? "ar" : "en" } : {}),
+      ...(locale
+        ? { "Accept-Language": normalizeAcceptLanguage(locale) }
+        : {}),
     },
     cache: "no-store",
   });

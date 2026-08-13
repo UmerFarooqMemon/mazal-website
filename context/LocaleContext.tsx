@@ -13,6 +13,7 @@ import {
   getUiLabels,
   type UiLabelsMap,
 } from "@/services/ui-labels";
+import { getLocaleDir, normalizeLocale } from "@/lib/locale";
 
 interface LocaleContextType {
   locale: Locale;
@@ -49,14 +50,12 @@ export function LocaleProvider({
   children: ReactNode;
   initialLocale: Locale;
 }) {
-  const [locale, setLocale] = useState<Locale>(
-    initialLocale === "ar" ? "ar" : "en",
-  );
+  const [locale, setLocale] = useState<Locale>(normalizeLocale(initialLocale));
   const [loading, setLoading] = useState(true);
   const [labelsReady, setLabelsReady] = useState(false);
   const [remoteLabels, setRemoteLabels] = useState<UiLabelsMap>(() => {
     // Instant paint from cache when available (avoids waiting on network).
-    return getCachedUiLabelsSync(initialLocale === "ar" ? "ar" : "en") ?? {};
+    return getCachedUiLabelsSync(normalizeLocale(initialLocale)) ?? {};
   });
 
   const staticTranslations = loadAllTranslations(locale);
@@ -116,13 +115,12 @@ export function LocaleProvider({
   }, [locale]);
 
   useEffect(() => {
-    const dir = locale === "ar" ? "rtl" : "ltr";
-    const lang = locale === "ar" ? "ar" : "en";
+    const dir = getLocaleDir(locale);
 
     document.documentElement.setAttribute("dir", dir);
-    document.documentElement.setAttribute("lang", lang);
+    document.documentElement.setAttribute("lang", locale);
     document.body.setAttribute("dir", dir);
-    document.body.setAttribute("lang", lang);
+    document.body.setAttribute("lang", locale);
   }, [locale]);
 
   return (

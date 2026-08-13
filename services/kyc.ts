@@ -1,3 +1,5 @@
+import { normalizeAcceptLanguage } from "@/lib/api-config";
+
 export interface KycApiResponse<T> {
   status?: boolean;
   message?: string;
@@ -157,7 +159,7 @@ async function kycRequest<T>(
     Accept: "application/json",
   };
 
-  headers["Accept-Language"] = options.locale === "ar" ? "ar" : "en";
+  headers["Accept-Language"] = normalizeAcceptLanguage(options.locale);
 
   if (options.contentType) {
     headers["Content-Type"] = options.contentType;
@@ -260,7 +262,7 @@ export async function downloadKycDocument(
     Accept: "*/*",
   };
 
-  headers["Accept-Language"] = locale === "ar" ? "ar" : "en";
+  headers["Accept-Language"] = normalizeAcceptLanguage(locale);
 
   const response = await fetch(`/api/kyc/documents/${documentId}`, {
     method: "GET",

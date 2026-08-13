@@ -5,6 +5,7 @@ import {
   ConditionalFooter,
 } from "@/components/layout/ConditionalLayout";
 import { Toaster } from "react-hot-toast";
+import { getLocaleDir, normalizeLocale } from "@/lib/locale";
 
 export default async function LocaleLayout({
   children,
@@ -14,8 +15,8 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const validLocale = locale === "ar" ? "ar" : "en";
-  const dir = validLocale === "ar" ? "rtl" : "ltr";
+  const validLocale = normalizeLocale(locale);
+  const dir = getLocaleDir(validLocale);
 
   return (
     <div

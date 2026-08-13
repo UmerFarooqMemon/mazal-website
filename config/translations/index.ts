@@ -1,4 +1,5 @@
-export type Locale = "en" | "ar";
+import type { Locale } from "@/lib/locale";
+export type { Locale };
 
 import enCommon from "@/config/translations/en/common.json";
 import enAuth from "@/config/translations/en/auth.json";
@@ -38,27 +39,29 @@ import arWallet from "@/config/translations/ar/wallet.json";
 import arNotifications from "@/config/translations/ar/notifications.json";
 import arProfile from "@/config/translations/ar/profile.json";
 
-const translationsMap: Record<Locale, any> = {
-  en: {
-    common: enCommon,
-    auth: enAuth,
-    marketplace: enMarketplace,
-    home: enHome,
-    auctions: enAuctions,
-    dashboard: enDashboard,
-    listings: enListings,
-    "private-deal": enPrivateDeal,
-    offer: enOffer,
-    about: enAbout,
-    certificates: enCertificates,
-    valuation: enValuation,
-    portfolio: enPortfolio,
-    kyc: enKyc,
-    partners: enPartners,
-    wallet: enWallet,
-    notifications: enNotifications,
-    profile: enProfile,
-  },
+const enTranslations = {
+  common: enCommon,
+  auth: enAuth,
+  marketplace: enMarketplace,
+  home: enHome,
+  auctions: enAuctions,
+  dashboard: enDashboard,
+  listings: enListings,
+  "private-deal": enPrivateDeal,
+  offer: enOffer,
+  about: enAbout,
+  certificates: enCertificates,
+  valuation: enValuation,
+  portfolio: enPortfolio,
+  kyc: enKyc,
+  partners: enPartners,
+  wallet: enWallet,
+  notifications: enNotifications,
+  profile: enProfile,
+};
+
+const translationsMap: Record<Locale, Record<string, unknown>> = {
+  en: enTranslations,
   ar: {
     common: arCommon,
     auth: arAuth,
@@ -79,6 +82,9 @@ const translationsMap: Record<Locale, any> = {
     notifications: arNotifications,
     profile: arProfile,
   },
+  // English static fallback until the UI labels API returns zh/ru copy.
+  zh: enTranslations,
+  ru: enTranslations,
 };
 
 // A synchronous function for loading subtitles

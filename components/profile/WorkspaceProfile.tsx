@@ -24,6 +24,7 @@ import {
   type MarketplaceListingCard,
 } from "@/services/marketplace";
 import { getWallet } from "@/services/wallet";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 type DealTab = "marketplace" | "private_deal";
 
@@ -200,7 +201,7 @@ export default function WorkspaceProfile() {
       fetch("/api/number-plates", {
         headers: {
           Accept: "application/json",
-          "Accept-Language": locale === "ar" ? "ar" : "en",
+          "Accept-Language": normalizeAcceptLanguage(locale),
           ...(typeof window !== "undefined" &&
           localStorage.getItem("access_token")
             ? {

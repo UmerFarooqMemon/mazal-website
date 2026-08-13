@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { isLocale, isRtlLocale } from "@/lib/locale";
 
 interface LayoutSkeletonProps {
   locale?: string;
@@ -17,12 +18,12 @@ export default function LayoutSkeleton({
   useEffect(() => {
     const pathSegments = window.location.pathname.split("/");
     const urlLocale = pathSegments[1];
-    if (urlLocale === "ar" || urlLocale === "en") {
+    if (isLocale(urlLocale)) {
       setCurrentLocale(urlLocale);
     }
   }, []);
 
-  const isRTL = currentLocale === "ar";
+  const isRTL = isRtlLocale(currentLocale);
 
   // Header Skeleton
   const HeaderSkeleton = () => (

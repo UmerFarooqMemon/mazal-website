@@ -1,3 +1,5 @@
+import { normalizeAcceptLanguage } from "@/lib/api-config";
+
 export interface PrivateDealApiResponse<T> {
   status?: boolean;
   message?: string;
@@ -205,7 +207,7 @@ async function privateDealsRequest<T>(
     Accept: "application/json",
   };
 
-  headers["Accept-Language"] = options.locale === "ar" ? "ar" : "en";
+  headers["Accept-Language"] = normalizeAcceptLanguage(options.locale);
 
   if (options.contentType) {
     headers["Content-Type"] = options.contentType;
@@ -336,7 +338,7 @@ export async function fetchPrivateDealImageBlob(
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "*/*",
-      "Accept-Language": locale === "ar" ? "ar" : "en",
+      "Accept-Language": normalizeAcceptLanguage(locale),
     },
   });
 

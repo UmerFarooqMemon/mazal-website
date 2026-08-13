@@ -1,3 +1,5 @@
+import { normalizeAcceptLanguage } from "@/lib/api-config";
+
 export interface WalletApiResponse<T> {
   status?: boolean;
   message?: string;
@@ -207,7 +209,7 @@ async function walletRequest<T>(
     Accept: "application/json",
   };
 
-  headers["Accept-Language"] = options.locale === "ar" ? "ar" : "en";
+  headers["Accept-Language"] = normalizeAcceptLanguage(options.locale);
 
   if (options.contentType && !(options.body instanceof FormData)) {
     headers["Content-Type"] = options.contentType;

@@ -3,7 +3,7 @@ import "./globals.css";
 import { Inter, Fraunces } from "next/font/google";
 
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
   variable: "--font-inter",
   display: "swap",
 });

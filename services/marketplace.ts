@@ -1,4 +1,5 @@
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 export interface MarketplaceApiResponse<T> {
   status?: boolean;
@@ -643,7 +644,7 @@ async function marketplaceRequest<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  headers["Accept-Language"] = options.locale === "ar" ? "ar" : "en";
+  headers["Accept-Language"] = normalizeAcceptLanguage(options.locale);
 
   // Let the browser set multipart boundary when body is FormData.
   if (options.contentType && !(options.body instanceof FormData)) {
@@ -1085,7 +1086,7 @@ export async function downloadOwnershipDocument(
     {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Accept-Language": locale === "ar" ? "ar" : "en",
+        "Accept-Language": normalizeAcceptLanguage(locale),
       },
     },
   );
@@ -1763,7 +1764,7 @@ export async function downloadPurchaseInvoice(
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Accept-Language": locale === "ar" ? "ar" : "en",
+        "Accept-Language": normalizeAcceptLanguage(locale),
       },
     },
   );

@@ -7,6 +7,7 @@ import {
   ReactNode,
 } from "react";
 import { useLocale } from "@/context/LocaleContext";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 export interface ThemeColors {
   primary: {
@@ -237,7 +238,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       try {
         const response = await fetch("/api/site-settings", {
           headers: {
-            "Accept-Language": locale === "ar" ? "ar" : "en",
+            "Accept-Language": normalizeAcceptLanguage(locale),
           },
         });
         const data = await response.json();

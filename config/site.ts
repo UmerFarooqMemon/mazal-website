@@ -22,7 +22,7 @@ export const siteConfig = {
     country: "United Arab Emirates",
     poBox: "12345",
   },
-  locales: ["en", "ar"] as const,
+  locales: ["en", "ar", "zh", "ru"] as const,
   defaultLocale: "en" as const,
   rtlLocales: ["ar"] as const,
   supportedCurrencies: ["AED"] as const,
@@ -61,6 +61,8 @@ export function getLocalizedSiteName(locale: string) {
   const names: Record<string, string> = {
     en: "Mazal - UAE Plate Marketplace",
     ar: "مازال - سوق اللوحات الإماراتية",
+    zh: "Mazal - 阿联酋车牌市场",
+    ru: "Mazal — рынок номеров ОАЭ",
   };
   return names[locale] || names.en;
 }
@@ -69,6 +71,8 @@ export function getLocalizedDescription(locale: string) {
   const descriptions: Record<string, string> = {
     en: "The UAE's trust-first marketplace for distinctive vehicle plates.",
     ar: "السوق الأول الموثوق للوحات المركبات المميزة في الإمارات.",
+    zh: "阿联酋值得信赖的特色车牌交易市场。",
+    ru: "Надёжная площадка ОАЭ для покупки и продажи особых номеров.",
   };
   return descriptions[locale] || descriptions.en;
 }

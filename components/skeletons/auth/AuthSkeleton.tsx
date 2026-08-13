@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { isLocale, isRtlLocale } from "@/lib/locale";
 
 interface AuthSkeletonProps {
   locale?: string;
@@ -21,12 +22,12 @@ export default function AuthSkeleton({
   useEffect(() => {
     const pathSegments = window.location.pathname.split("/");
     const urlLocale = pathSegments[1];
-    if (urlLocale === "ar" || urlLocale === "en") {
+    if (isLocale(urlLocale)) {
       setCurrentLocale(urlLocale);
     }
   }, []);
 
-  const isRTL = currentLocale === "ar";
+  const isRTL = isRtlLocale(currentLocale);
 
   // Simple card skeleton for small auth pages
   const SimpleCardSkeleton = ({ children }: { children: React.ReactNode }) => (

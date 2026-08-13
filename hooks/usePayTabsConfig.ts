@@ -6,6 +6,7 @@ import {
   resolvePayTabsClientKey,
   type PayTabsSiteConfig,
 } from "@/lib/paytabs";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 interface PayTabsConfigState {
   config: PayTabsSiteConfig | null;
@@ -32,7 +33,7 @@ export function usePayTabsConfig(locale?: string): PayTabsConfigState {
         const response = await fetch("/api/site-settings", {
           headers: {
             Accept: "application/json",
-            "Accept-Language": locale === "ar" ? "ar" : "en",
+            "Accept-Language": normalizeAcceptLanguage(locale),
           },
           cache: "no-store",
         });

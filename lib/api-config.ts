@@ -1,3 +1,5 @@
+import { normalizeLocale, type Locale } from "@/lib/locale";
+
 /**
  * Resolves the backend API base URL from env (no hardcoded fallback).
  * Prefer NEXT_PUBLIC_API_BASE_URL (client + server). API_BASE_URL works on server only.
@@ -51,18 +53,12 @@ export function withPublicApiHeaders(
 
 /**
  * Normalize locale / Accept-Language values to the API contract:
- * `ar` → Arabic, `en` → English.
+ * `en` | `ar` | `zh` | `ru`.
  */
 export function normalizeAcceptLanguage(
   locale?: string | null,
-): "ar" | "en" {
-  if (!locale) return "en";
-  const primary = locale
-    .split(",")[0]
-    ?.trim()
-    .split("-")[0]
-    ?.toLowerCase();
-  return primary === "ar" ? "ar" : "en";
+): Locale {
+  return normalizeLocale(locale);
 }
 
 /** Attach Accept-Language so the backend returns localized content. */

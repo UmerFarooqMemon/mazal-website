@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import PortfolioPlateForm from "@/components/portfolio/PortfolioPlateForm";
 import CertificatesRequestSkeleton from "@/components/skeletons/dashboard/valuation-certificates/CertificatesRequestSkeleton";
 import { getLoginHref } from "@/lib/auth-redirect";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 interface PortfolioAddPlateFormProps {
   onSuccess?: () => void;
@@ -75,7 +76,7 @@ export default function PortfolioAddPlateForm({
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Accept-Language": locale === "ar" ? "ar" : "en",
+          "Accept-Language": normalizeAcceptLanguage(locale),
         },
         body: formDataToSend,
       });

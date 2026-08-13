@@ -11,6 +11,7 @@ import VerifiedCertificateCard, {
   type CertificateDisplayData,
 } from "@/components/certificates/VerifiedCertificateCard";
 import VerifyCertificateSkeleton from "@/components/skeletons/certificates/VerifyCertificateSkeleton";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 import {
   buildPlatePreviewLookup,
   resolvePlatePreview,
@@ -234,7 +235,7 @@ export default function VerifyCertificatePage() {
         `/api/certificates/verify/${encodeURIComponent(certificateCode)}`,
         {
           headers: {
-            "Accept-Language": locale === "ar" ? "ar" : "en",
+            "Accept-Language": normalizeAcceptLanguage(locale),
           },
         },
       );

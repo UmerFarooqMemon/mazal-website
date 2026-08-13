@@ -11,6 +11,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import { getLocaleDir, normalizeLocale } from "@/lib/locale";
 
 function DashboardSidebar() {
   const { t, locale } = useLocale();
@@ -96,11 +97,11 @@ export default function DashboardLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = use(params);
-  const validLocale = locale === "ar" || locale === "en" ? locale : "en";
-  const dir = validLocale === "ar" ? "rtl" : "ltr";
+  const validLocale = normalizeLocale(locale);
+  const dir = getLocaleDir(validLocale);
 
   return (
-    <LocaleProvider initialLocale={validLocale as "ar" | "en"}>
+    <LocaleProvider initialLocale={validLocale}>
       <div
         className="flex min-h-screen bg-[#fbfaf7]"
         dir={dir}

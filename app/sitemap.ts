@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { LOCALES } from "@/lib/locale";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mazal.ae";
@@ -12,7 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/register",
   ];
 
-  const locales = ["en", "ar"];
+  const locales = LOCALES;
 
   const sitemapEntries: MetadataRoute.Sitemap = [];
 

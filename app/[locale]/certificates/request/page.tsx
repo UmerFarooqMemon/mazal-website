@@ -11,6 +11,7 @@ import { BadgeCheck, ShieldCheck, Sparkles, Stamp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import CertificatesRequestSkeleton from "@/components/skeletons/dashboard/valuation-certificates/CertificatesRequestSkeleton";
 import { getLoginHref } from "@/lib/auth-redirect";
+import { normalizeAcceptLanguage } from "@/lib/api-config";
 
 export default function CertificateRequestPage() {
   const router = useRouter();
@@ -67,7 +68,7 @@ export default function CertificateRequestPage() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Accept-Language": locale === "ar" ? "ar" : "en",
+          "Accept-Language": normalizeAcceptLanguage(locale),
         },
         body: formDataToSend,
       });
