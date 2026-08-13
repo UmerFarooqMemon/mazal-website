@@ -111,16 +111,37 @@ function mapListingToDashboardRow(
 
 function mapPurchaseStatus(status: string): MarketplaceStatus {
   const s = status.toLowerCase();
-  if (s === "completed" || s === "complete") return "completed";
+  if (/(complete|sold|closed|done)/.test(s)) return "completed";
   if (/(transit|transfer|delivery)/.test(s)) return "in_transit";
-  if (/(payment|pending|funded|escrow|awaiting)/.test(s)) {
+  if (/(payment|pending|funded|escrow|awaiting|paid)/.test(s)) {
     return "awaiting_payment";
   }
   return "awaiting_offer";
 }
 
+function isCancelledPurchase(purchase: MarketplacePurchase) {
+  const s = String(purchase.status || "").toLowerCase();
+  return s === "cancelled" || s === "canceled";
+}
+
 function isAuctionPurchase(purchase: MarketplacePurchase) {
-  return String(purchase.listing?.listing_type || "").toLowerCase() === "auction";
+  const type = String(
+    purchase.listing?.listing_type || "",
+  ).toLowerCase();
+  return type === "auction";
+}
+
+function extractPurchases(payload: unknown): MarketplacePurchase[] {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== "object") return [];
+  const data = payload as Record<string, unknown>;
+  if (Array.isArray(data.purchases)) {
+    return data.purchases as MarketplacePurchase[];
+  }
+  if (Array.isArray(data.data)) {
+    return data.data as MarketplacePurchase[];
+  }
+  return [];
 }
 
 function mapPurchaseToDashboardRow(
@@ -251,10 +272,8 @@ export default function UserDashboard() {
       }
 
       if (purchasesRes.status === "fulfilled") {
-        const purchases = (purchasesRes.value.data?.purchases || []).filter(
-          (purchase) =>
-            purchase.can_rate_seller ||
-            mapPurchaseStatus(purchase.status) === "completed",
+        const purchases = extractPurchases(purchasesRes.value.data).filter(
+          (purchase) => purchase?.id && !isCancelledPurchase(purchase),
         );
         for (const purchase of purchases) {
           const row = mapPurchaseToDashboardRow(purchase, locale, offerLabel);
