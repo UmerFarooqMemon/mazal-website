@@ -124,7 +124,15 @@ export default function Header() {
     router.push(`/${locale}`);
   };
 
-  const isActive = (path: string) => pathname.includes(path);
+  const isActive = (path: string) => {
+    if (path === "/dashboard") {
+      return (
+        pathname === `/${locale}/dashboard` ||
+        pathname.startsWith(`/${locale}/dashboard/`)
+      );
+    }
+    return pathname.includes(path);
+  };
 
   const navLinks = [
     featureFlags.marketplace && {
@@ -152,9 +160,9 @@ export default function Header() {
       icon: FileBadge,
     },
     {
-      href: `/${locale}/user-dashboard`,
+      href: `/${locale}/dashboard`,
       label: t("common.dashboard"),
-      match: "/user-dashboard",
+      match: "/dashboard",
       icon: LayoutDashboard,
     },
   ].filter(Boolean) as {
@@ -457,8 +465,8 @@ export default function Header() {
                     {(
                       [
                         {
-                          href: `/${locale}/user-dashboard`,
-                          match: "/user-dashboard",
+                          href: `/${locale}/dashboard`,
+                          match: "/dashboard",
                           label: t("common.dashboard"),
                           icon: LayoutDashboard,
                         },

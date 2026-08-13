@@ -956,9 +956,12 @@ export function getSimilarListings(id: string | number, locale: string) {
 }
 
 // 5. My Listings
-export function getMyListings(locale: string) {
+export function getMyListings(
+  locale: string,
+  params?: { listing_type?: string },
+) {
   return marketplaceRequest<{ listings: MarketplaceListingDetail[] }>(
-    "/my-listings",
+    `/my-listings${buildQuery({ listing_type: params?.listing_type })}`,
     { locale, auth: "required" },
   );
 }

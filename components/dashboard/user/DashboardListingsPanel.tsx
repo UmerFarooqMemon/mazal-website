@@ -86,6 +86,7 @@ export default function DashboardListingsPanel({
   tab,
   onTabChange,
   marketplaceRows,
+  auctionRows,
   privateRows,
   onRateSeller,
   onBoost,
@@ -93,12 +94,15 @@ export default function DashboardListingsPanel({
   tab: ListingDealTab;
   onTabChange: (tab: ListingDealTab) => void;
   marketplaceRows: DashboardListingRow[];
+  auctionRows: DashboardListingRow[];
   privateRows: PrivateDealRow[];
   onRateSeller: (row: DashboardListingRow) => void;
   onBoost: (row: DashboardListingRow) => void;
 }) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
+  const isAuctionTab = tab === "auction";
+  const listingRows = isAuctionTab ? auctionRows : marketplaceRows;
 
   const marketplaceStatusLabel = (status: MarketplaceStatus) => {
     switch (status) {
@@ -136,6 +140,7 @@ export default function DashboardListingsPanel({
           {(
             [
               { key: "marketplace" as const, label: t("dashboard.tab_marketplace") },
+              { key: "auction" as const, label: t("dashboard.tab_auction") },
               { key: "private_deal" as const, label: t("dashboard.tab_private_deal") },
             ] as const
           ).map((item) => {
@@ -158,7 +163,15 @@ export default function DashboardListingsPanel({
           })}
         </div>
 
-        <Link href={`/${locale}/listings/create`}>
+        <Link
+          href={
+            tab === "auction"
+              ? `/${locale}/auctions/add`
+              : tab === "private_deal"
+                ? `/${locale}/private-deal`
+                : `/${locale}/listings/create`
+          }
+        >
           <Button
             variant="primary"
             size="md"
@@ -171,9 +184,9 @@ export default function DashboardListingsPanel({
         </Link>
       </div>
 
-      {tab === "marketplace" ? (
+      {tab !== "private_deal" ? (
         <div className="divide-y" style={{ borderColor: DASH_BORDER }}>
-          {marketplaceRows.map((row) => {
+          {listingRows.map((row) => {
             const plan = tierPlan(row.listingPlan, row.boostTier);
             return (
               <div
@@ -245,13 +258,17 @@ export default function DashboardListingsPanel({
                     <Link
                       href={
                         row.href === "#"
-                          ? `/${locale}/buyer/offers`
+                          ? isAuctionTab
+                            ? `/${locale}/auctions`
+                            : `/${locale}/buyer/offers`
                           : row.href
                       }
                       className="inline-flex items-center gap-1 rounded-[5px] bg-[#f6f6f6] px-1.5 py-1 text-[8px] font-medium whitespace-nowrap"
                       style={{ color: DASH_TEXT }}
                     >
-                      {t("dashboard.see_all_offers")}
+                      {isAuctionTab
+                        ? t("dashboard.see_all_bids")
+                        : t("dashboard.see_all_offers")}
                       <ChevronRight
                         className={`h-2.5 w-2.5 ${isRTL ? "rotate-180" : ""}`}
                       />
@@ -288,7 +305,7 @@ export default function DashboardListingsPanel({
             );
           })}
 
-          {marketplaceRows.length === 0 && (
+          {listingRows.length === 0 && (
             <div className="px-6 py-16 text-center text-sm" style={{ color: DASH_MUTED }}>
               {t("dashboard.no_listings")}
             </div>
@@ -342,6 +359,12 @@ export default function DashboardListingsPanel({
               </div>
             </div>
           ))}
+
+          {privateRows.length === 0 && (
+            <div className="px-6 py-16 text-center text-sm" style={{ color: DASH_MUTED }}>
+              {t("dashboard.no_listings")}
+            </div>
+          )}
         </div>
       )}
     </section>

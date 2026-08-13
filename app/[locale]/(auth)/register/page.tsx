@@ -53,7 +53,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(`/${locale}/user-dashboard`);
+      router.replace(`/${locale}/dashboard`);
     }
   }, [isAuthenticated, locale, router]);
 
@@ -139,7 +139,7 @@ export default function RegisterPage() {
       });
       toast.dismiss(loadingToast);
       toast.success(t("common.register_success"));
-      setTimeout(() => router.push(`/${locale}/user-dashboard`), 800);
+      setTimeout(() => router.push(`/${locale}/dashboard`), 800);
     } catch (err: any) {
       toast.dismiss(loadingToast);
       toast.error(t("common.register_failed"));

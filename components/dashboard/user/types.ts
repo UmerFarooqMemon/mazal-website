@@ -5,6 +5,6 @@ export type DashboardView =
   | "collection"
   | "wallet";
 
-export type ListingDealTab = "marketplace" | "private_deal";
+export type ListingDealTab = "marketplace" | "auction" | "private_deal";
 
 export type CollectionMode = "list" | "add" | "subscribe";

@@ -17,7 +17,9 @@ import {
   getMyListings,
   getWatchlist,
   removeFromWatchlist,
+  toMarketplaceNumber,
   type MarketplaceListingCard,
+  type MarketplaceListingDetail,
 } from "@/services/marketplace";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
 import DashboardListingsPanel, {
@@ -48,96 +50,9 @@ import {
   DASH_TEXT,
 } from "./theme";
 
-const FALLBACK_MARKETPLACE: DashboardListingRow[] = [
-  {
-    id: "m1",
-    plate_code: "A",
-    plate_digits: "7",
-    emirate: "dubai",
-    askingPrice: 450000,
-    offerLabel: "Highest Offer",
-    offerAmount: 450000,
-    status: "awaiting_offer",
-    href: "#",
-    boostTier: "SILVER",
-  },
-  {
-    id: "m2",
-    plate_code: "KK",
-    plate_digits: "87897",
-    emirate: "dubai",
-    askingPrice: 450000,
-    offerLabel: "Accepted Offer",
-    offerAmount: 445000,
-    status: "awaiting_payment",
-    href: "#",
-    boostTier: "GOLD",
-  },
-  {
-    id: "m3",
-    plate_code: "B",
-    plate_digits: "12",
-    emirate: "dubai",
-    askingPrice: 450000,
-    offerLabel: "Highest Offer",
-    offerAmount: 450000,
-    status: "in_transit",
-    href: "#",
-    boostTier: "DIAMOND",
-  },
-  {
-    id: "m4",
-    plate_code: "C",
-    plate_digits: "99",
-    emirate: "dubai",
-    askingPrice: 450000,
-    offerLabel: "Highest Offer",
-    offerAmount: 450000,
-    status: "completed",
-    href: "#",
-    boostTier: "SILVER",
-  },
-];
-
-const FALLBACK_PRIVATE: PrivateDealRow[] = [
-  {
-    id: "p1",
-    plate_code: "D",
-    plate_digits: "5",
-    emirate: "dubai",
-    askingPrice: 450000,
-    status: "pending_transfer",
-    showTransferCta: true,
-    href: "#",
-  },
-  {
-    id: "p2",
-    plate_code: "E",
-    plate_digits: "88",
-    emirate: "dubai",
-    askingPrice: 450000,
-    status: "pending_purchase",
-    href: "#",
-  },
-  {
-    id: "p3",
-    plate_code: "F",
-    plate_digits: "21",
-    emirate: "dubai",
-    askingPrice: 450000,
-    status: "awaiting_payment",
-    href: "#",
-  },
-  {
-    id: "p4",
-    plate_code: "G",
-    plate_digits: "9",
-    emirate: "dubai",
-    askingPrice: 450000,
-    status: "completed",
-    href: "#",
-  },
-];
+function isAuctionListing(listing: { listing_type?: string | null }) {
+  return String(listing.listing_type || "").toLowerCase() === "auction";
+}
 
 function mapListingStatus(status: string): MarketplaceStatus {
   const s = status.toLowerCase();
@@ -145,6 +60,45 @@ function mapListingStatus(status: string): MarketplaceStatus {
   if (/(transit|delivery|ship)/.test(s)) return "in_transit";
   if (/(payment|escrow|paid)/.test(s)) return "awaiting_payment";
   return "awaiting_offer";
+}
+
+function mapListingToDashboardRow(
+  listing: MarketplaceListingDetail,
+  locale: string,
+  highestOfferLabel: string,
+  asAuction: boolean,
+): DashboardListingRow {
+  const highBid =
+    listing.auction?.current_high_bid ?? listing.auction?.winning_bid?.amount;
+  const offerAmount = asAuction
+    ? toMarketplaceNumber(highBid) ||
+      toMarketplaceNumber(listing.asking_price) ||
+      0
+    : toMarketplaceNumber(listing.asking_price) || 0;
+
+  return {
+    id: listing.id,
+    plate_code: listing.plate_code || undefined,
+    plate_digits: String(listing.plate_digits || ""),
+    emirate: listing.emirate,
+    plateType: listing.plate_type || undefined,
+    plateDesign: listing.plate_design || undefined,
+    preview: listing.preview,
+    askingPrice: toMarketplaceNumber(listing.asking_price) || 0,
+    offerLabel: highestOfferLabel,
+    offerAmount,
+    status: mapListingStatus(listing.status),
+    href: asAuction
+      ? `/${locale}/auctions/${listing.id}`
+      : `/${locale}/listings/${listing.id}`,
+    listingPlan: listing.listing_plan ?? null,
+    boostTier:
+      listing.boost_tier ||
+      listing.featured_tier ||
+      listing.tier ||
+      listing.listing_plan?.name ||
+      null,
+  };
 }
 
 function matchesQuery(
@@ -165,8 +119,11 @@ export default function UserDashboard() {
   const [collectionMode, setCollectionMode] = useState<CollectionMode>("list");
   const [search, setSearch] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
-  const [marketplaceRows, setMarketplaceRows] =
-    useState<DashboardListingRow[]>(FALLBACK_MARKETPLACE);
+  const [marketplaceRows, setMarketplaceRows] = useState<
+    DashboardListingRow[]
+  >([]);
+  const [auctionRows, setAuctionRows] = useState<DashboardListingRow[]>([]);
+  const [privateRows] = useState<PrivateDealRow[]>([]);
   const [watchlist, setWatchlist] = useState<MarketplaceListingCard[]>([]);
   const [certificates, setCertificates] = useState<CertificateRow[]>([]);
   const [collection, setCollection] = useState<CollectionRow[]>([]);
@@ -178,11 +135,11 @@ export default function UserDashboard() {
     null,
   );
   const [stats, setStats] = useState({
-    listings: 4,
-    certificates: 5,
-    watchlist: 10,
-    collection: 15,
-    wallet: 1,
+    listings: 0,
+    certificates: 0,
+    watchlist: 0,
+    collection: 0,
+    wallet: 0,
   });
 
   useEffect(() => {
@@ -190,6 +147,7 @@ export default function UserDashboard() {
 
     Promise.allSettled([
       getMyListings(locale),
+      getMyListings(locale, { listing_type: "auction" }),
       getWatchlist(locale),
       fetch("/api/number-plates", {
         headers: {
@@ -200,38 +158,49 @@ export default function UserDashboard() {
             : {}),
         },
       }).then((r) => r.json()),
-    ]).then(([listingsRes, watchRes, platesRes]) => {
+    ]).then(([listingsRes, auctionRes, watchRes, platesRes]) => {
       if (!active) return;
       const nextStats = { ...stats };
+      const offerLabel = t("dashboard.highest_offer");
+      let marketplaceCount = 0;
+      let auctionCount = 0;
 
       if (listingsRes.status === "fulfilled") {
         const listings = listingsRes.value.data?.listings || [];
-        if (listings.length) {
-          nextStats.listings = listings.length;
-          setMarketplaceRows(
-            listings.map((listing) => ({
-              id: listing.id,
-              plate_code: listing.plate_code || undefined,
-              plate_digits: String(listing.plate_digits || ""),
-              emirate: listing.emirate,
-              plateType: listing.plate_type || undefined,
-              plateDesign: listing.plate_design || undefined,
-              preview: listing.preview,
-              askingPrice: Number(listing.asking_price) || 0,
-              offerLabel: t("dashboard.highest_offer"),
-              offerAmount: Number(listing.asking_price) || 0,
-              status: mapListingStatus(listing.status),
-              href: `/${locale}/listings/${listing.id}`,
-              listingPlan: listing.listing_plan ?? null,
-              boostTier:
-                listing.boost_tier ||
-                listing.featured_tier ||
-                listing.tier ||
-                listing.listing_plan?.name ||
-                null,
-            })),
+        const marketplace = listings.filter(
+          (listing) => !isAuctionListing(listing),
+        );
+        const auctionsFromAll = listings.filter(isAuctionListing);
+        marketplaceCount = marketplace.length;
+        setMarketplaceRows(
+          marketplace.map((listing) =>
+            mapListingToDashboardRow(listing, locale, offerLabel, false),
+          ),
+        );
+        auctionCount = auctionsFromAll.length;
+        setAuctionRows(
+          auctionsFromAll.map((listing) =>
+            mapListingToDashboardRow(listing, locale, offerLabel, true),
+          ),
+        );
+      }
+
+      if (auctionRes.status === "fulfilled") {
+        const auctions = (auctionRes.value.data?.listings || []).filter(
+          isAuctionListing,
+        );
+        if (auctions.length || listingsRes.status !== "fulfilled") {
+          auctionCount = auctions.length;
+          setAuctionRows(
+            auctions.map((listing) =>
+              mapListingToDashboardRow(listing, locale, offerLabel, true),
+            ),
           );
         }
+      }
+
+      if (listingsRes.status === "fulfilled" || auctionRes.status === "fulfilled") {
+        nextStats.listings = marketplaceCount + auctionCount;
       }
 
       if (watchRes.status === "fulfilled") {
@@ -243,56 +212,55 @@ export default function UserDashboard() {
         const items = [...categorized, ...uncategorized]
           .map((item) => item.listing)
           .filter(Boolean);
-        if (items.length) {
-          nextStats.watchlist = items.length;
-          setWatchlist(items);
-        }
+        nextStats.watchlist = items.length;
+        setWatchlist(items);
       }
 
       if (platesRes.status === "fulfilled") {
         const result = platesRes.value;
-        const list: Array<Record<string, unknown>> =
-          result?.data?.number_plates ||
-          (Array.isArray(result?.data) ? result.data : []) ||
-          [];
-        if (Array.isArray(list) && list.length) {
-          nextStats.certificates = list.length;
-          nextStats.collection = list.length;
-          setCertificates(
-            list.map((req) => {
-              const status = String(req.status || "").toLowerCase();
-              const issued = ["completed", "approved", "issued"].includes(
-                status,
-              );
-              return {
-                id: (req.id as string | number) || String(Math.random()),
-                emirate: String(
-                  req.emirate_label || req.emirate || "dubai",
-                ),
-                plate_code: String(req.plate_code || ""),
-                plate_digits: String(req.plate_digits || ""),
-                status: issued ? "Issued" : "Pending",
-                askingPrice: Number(req.price || req.asking_price || 450000),
-                preview: req.preview,
-              };
-            }),
-          );
-          setCollection(
-            list.map((req) => ({
+        const list: Array<Record<string, unknown>> = Array.isArray(
+          result?.data?.number_plates,
+        )
+          ? result.data.number_plates
+          : Array.isArray(result?.data)
+            ? result.data
+            : [];
+        nextStats.certificates = list.length;
+        nextStats.collection = list.length;
+        setCertificates(
+          list.map((req) => {
+            const status = String(req.status || "").toLowerCase();
+            const issued = ["completed", "approved", "issued"].includes(
+              status,
+            );
+            return {
               id: (req.id as string | number) || String(Math.random()),
+              emirate: String(
+                req.emirate_label || req.emirate || "dubai",
+              ),
               plate_code: String(req.plate_code || ""),
               plate_digits: String(req.plate_digits || ""),
-              emirate: String(req.emirate_label || req.emirate || "dubai"),
-              plateType: req.plate_type as string | undefined,
-              plateDesign: req.plate_design as string | undefined,
+              status: issued ? "Issued" : "Pending",
+              askingPrice: Number(req.price || req.asking_price || 450000),
               preview: req.preview,
-              addedAt: String(req.created_at || ""),
-              valuatedAt: String(
-                req.valuated_at || req.updated_at || req.created_at || "",
-              ),
-            })),
-          );
-        }
+            };
+          }),
+        );
+        setCollection(
+          list.map((req) => ({
+            id: (req.id as string | number) || String(Math.random()),
+            plate_code: String(req.plate_code || ""),
+            plate_digits: String(req.plate_digits || ""),
+            emirate: String(req.emirate_label || req.emirate || "dubai"),
+            plateType: req.plate_type as string | undefined,
+            plateDesign: req.plate_design as string | undefined,
+            preview: req.preview,
+            addedAt: String(req.created_at || ""),
+            valuatedAt: String(
+              req.valuated_at || req.updated_at || req.created_at || "",
+            ),
+          })),
+        );
       }
 
       setStats(nextStats);
@@ -312,6 +280,20 @@ export default function UserDashboard() {
         matchesQuery(query, row.plate_code, row.plate_digits),
       ),
     [marketplaceRows, query],
+  );
+  const filteredAuctions = useMemo(
+    () =>
+      auctionRows.filter((row) =>
+        matchesQuery(query, row.plate_code, row.plate_digits),
+      ),
+    [auctionRows, query],
+  );
+  const filteredPrivateRows = useMemo(
+    () =>
+      privateRows.filter((row) =>
+        matchesQuery(query, row.plate_code, row.plate_digits),
+      ),
+    [privateRows, query],
   );
   const filteredWatchlist = useMemo(
     () =>
@@ -335,29 +317,36 @@ export default function UserDashboard() {
     [collection, query],
   );
 
+  const listingCount =
+    listingTab === "auction"
+      ? filteredAuctions.length
+      : listingTab === "private_deal"
+        ? filteredPrivateRows.length
+        : filteredListings.length;
+
   const cards = [
     {
       key: "listings" as const,
       label: t("dashboard.stat_listing"),
-      value: stats.listings,
+      value: listingCount,
       icon: LayoutList,
     },
     {
       key: "certificates" as const,
       label: t("dashboard.stat_valuation_certificate"),
-      value: stats.certificates,
+      value: certificates.length,
       icon: FileBadge,
     },
     {
       key: "watchlist" as const,
       label: t("dashboard.stat_watchlist"),
-      value: stats.watchlist,
+      value: watchlist.length,
       icon: Eye,
     },
     {
       key: "collection" as const,
       label: t("dashboard.stat_collection"),
-      value: stats.collection,
+      value: collection.length,
       icon: Bookmark,
     },
     {
@@ -482,7 +471,8 @@ export default function UserDashboard() {
             tab={listingTab}
             onTabChange={setListingTab}
             marketplaceRows={filteredListings}
-            privateRows={FALLBACK_PRIVATE}
+            auctionRows={filteredAuctions}
+            privateRows={filteredPrivateRows}
             onRateSeller={() => setRateOpen(true)}
             onBoost={(row) => setBoostListing(row)}
           />

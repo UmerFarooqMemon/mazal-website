@@ -28,7 +28,7 @@ export default function AccountPageShell({
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const dashboardHref = `/${locale}/user-dashboard`;
+  const dashboardHref = `/${locale}/dashboard`;
 
   useEffect(() => {
     setMounted(true);
@@ -38,7 +38,7 @@ export default function AccountPageShell({
     if (!mounted || loading) return;
     if (!isAuthenticated) {
       router.replace(
-        getLoginHref(locale, backHref || `/${locale}/user-dashboard`),
+        getLoginHref(locale, backHref || `/${locale}/dashboard`),
       );
     }
   }, [mounted, isAuthenticated, loading, locale, router, backHref]);

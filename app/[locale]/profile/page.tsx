@@ -97,7 +97,7 @@ export default function ProfilePage() {
     <AccountPageShell
       title={t("common.profile")}
       subtitle={t("profile.profile_subtitle")}
-      backHref={`/${locale}/user-dashboard`}
+      backHref={`/${locale}/dashboard`}
       icon={<UserRound className="w-5 h-5" strokeWidth={1.8} />}
     >
       {loadingProfile && (

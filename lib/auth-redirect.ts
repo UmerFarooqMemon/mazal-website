@@ -29,7 +29,7 @@ export function getPostLoginRedirect(
   locale: string,
   redirectParam?: string | null,
 ): string {
-  return sanitizeReturnPath(redirectParam, locale) ?? `/${locale}/user-dashboard`;
+  return sanitizeReturnPath(redirectParam, locale) ?? `/${locale}/dashboard`;
 }
 
 /** Only allow same-origin relative paths; never auth pages or open redirects. */
