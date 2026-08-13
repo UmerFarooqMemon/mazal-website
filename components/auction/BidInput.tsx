@@ -37,10 +37,15 @@ export default function BidInput({
 }: BidInputProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const minBid =
-    toNumber(auction.min_next_bid) ||
-    toNumber(auction.current_high_bid) + toNumber(auction.min_bid_increment) ||
-    1;
+  const minNextBid = toNumber(auction.min_next_bid);
+  const minIncrement = toNumber(auction.min_bid_increment);
+  const hasHighBid =
+    auction.current_high_bid != null && auction.current_high_bid !== "";
+  const minBid = hasHighBid
+    ? minNextBid ||
+      toNumber(auction.current_high_bid) + minIncrement ||
+      1
+    : minNextBid + minIncrement || 1;
   const [amountInput, setAmountInput] = useState(() =>
     formatPriceInput(String(minBid))
   );
@@ -118,7 +123,7 @@ export default function BidInput({
         >
           {submitting
             ? t("common.loading") || "Loading..."
-            : t("auctions.add_deposit_cta")}
+            : t("auctions.place_bid") || "Bid"}
         </Button>
       </div>
       {disabledReason && !canBid && (

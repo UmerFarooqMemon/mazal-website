@@ -32,6 +32,7 @@
   "min_bid_increment": "Min bid increment",
   "time_left": "Time left",
   "add_deposit_cta": "Deposit & Bidding",
+  "place_bid": "Bid",
   "bid_too_low": "Your bid is too low. The minimum bid is {amount}.",
   "plate_details_title": "Plate details & Specification",
   "plate_details_1": "Premium Dubai plate with verified ownership documentation.",

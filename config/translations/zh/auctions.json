@@ -32,6 +32,7 @@
   "min_bid_increment": "最低加价幅度",
   "time_left": "剩余时间",
   "add_deposit_cta": "保证金与出价",
+  "place_bid": "出价",
   "bid_too_low": "您的出价过低。最低出价为 {amount}。",
   "plate_details_title": "车牌详情与规格",
   "plate_details_1": "高端迪拜车牌，附已验证所有权文件。",
