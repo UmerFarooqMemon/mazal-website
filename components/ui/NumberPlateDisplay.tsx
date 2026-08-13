@@ -73,7 +73,11 @@ export default function NumberPlateDisplay({
   oldPlateDigitsScale,
 }: NumberPlateDisplayProps) {
   const { locale } = useLocale();
-  const { lookup, variantsByKey } = usePlatePreviewLookup(locale);
+  const { lookup, variantsByKey, loading } = usePlatePreviewLookup(locale);
+  const allowDefaultTemplate =
+    crop === "form" ||
+    crop === "live-preview" ||
+    crop === "auction-preview";
 
   const resolvedPreview =
     preview ||
@@ -82,7 +86,9 @@ export default function NumberPlateDisplay({
       plateType,
       plateDesign,
     }) ||
-    getDefaultPlatePreview(lookup);
+    (allowDefaultTemplate && !loading
+      ? getDefaultPlatePreview(lookup)
+      : null);
 
   const variantMeta = plateVariant ? variantsByKey[plateVariant] : undefined;
   // When code is hidden, API often strips plate_code — still show a blurred letter unless

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   isDubaiClassicRetro,
   isOldMotorcyclePlateStyle,
@@ -15,6 +15,55 @@ import {
 
 /** Placeholder when API strips the letter code under hide_code / code_hidden. */
 const HIDDEN_CODE_PLACEHOLDER = "?";
+
+/** Shown until the listing's real plate preview image is ready. */
+const PLATE_PLACEHOLDER_SRC = "/plate-dubai-private-old.png";
+
+const loadedPlateImages = new Set<string>();
+
+function previewBackgroundUrl(preview?: PlatePreviewConfig): string {
+  return (
+    preview?.background_image?.url ||
+    preview?.background_image_url ||
+    ""
+  ).trim();
+}
+
+function usePlateBackgroundReady(preview?: PlatePreviewConfig) {
+  const bgUrl = previewBackgroundUrl(preview);
+  const [ready, setReady] = useState(() =>
+    Boolean(bgUrl && loadedPlateImages.has(bgUrl)),
+  );
+
+  useEffect(() => {
+    if (!bgUrl) {
+      setReady(false);
+      return;
+    }
+    if (loadedPlateImages.has(bgUrl)) {
+      setReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    setReady(false);
+    const img = new Image();
+    const markReady = () => {
+      loadedPlateImages.add(bgUrl);
+      if (!cancelled) setReady(true);
+    };
+    img.onload = markReady;
+    img.onerror = markReady;
+    img.src = bgUrl;
+    if (img.complete && img.naturalWidth > 0) markReady();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bgUrl]);
+
+  return ready;
+}
 
 function fontFormatFromUrl(url: string): string {
   const lower = url.toLowerCase();
@@ -207,6 +256,8 @@ export default function PlateWithOverlay({
       : null,
   );
 
+  const backgroundReady = usePlateBackgroundReady(preview);
+
   const updateRenderState = useCallback(() => {
     const rootWidth = rootRef.current?.clientWidth || 420;
     const next = computePlateRenderState(
@@ -236,11 +287,13 @@ export default function PlateWithOverlay({
     plateType,
   ]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!backgroundReady) return;
     updateRenderState();
-  }, [updateRenderState]);
+  }, [backgroundReady, updateRenderState]);
 
   useEffect(() => {
+    if (!backgroundReady) return;
     const root = rootRef.current;
     if (!root) return;
 
@@ -250,9 +303,10 @@ export default function PlateWithOverlay({
 
     observer.observe(root);
     return () => observer.disconnect();
-  }, [updateRenderState]);
+  }, [backgroundReady, updateRenderState]);
 
   useEffect(() => {
+    if (!backgroundReady) return;
     if (!renderState?.needsAbuDhabiClassicResize) return;
 
     const frame = requestAnimationFrame(() => {
@@ -260,9 +314,10 @@ export default function PlateWithOverlay({
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [renderState?.needsAbuDhabiClassicResize, updateRenderState]);
+  }, [backgroundReady, renderState?.needsAbuDhabiClassicResize, updateRenderState]);
 
   useEffect(() => {
+    if (!backgroundReady) return;
     const fontUrl = preview?.font_url;
     if (!fontUrl || !rootRef.current) return;
 
@@ -284,9 +339,9 @@ export default function PlateWithOverlay({
       .finally(() => {
         updateRenderState();
       });
-  }, [preview?.font_url, updateRenderState]);
+  }, [backgroundReady, preview?.font_url, updateRenderState]);
 
-  if (!preview) {
+  if (!preview || !backgroundReady) {
     return (
       <div
         dir="ltr"
@@ -295,7 +350,7 @@ export default function PlateWithOverlay({
           width: width ? `${width}px` : "100%",
           maxWidth: "100%",
           aspectRatio: "840 / 592",
-          backgroundImage: 'url("/plate-empty.png")',
+          backgroundImage: `url("${PLATE_PLACEHOLDER_SRC}")`,
           backgroundSize: "100% 100%",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center center",
