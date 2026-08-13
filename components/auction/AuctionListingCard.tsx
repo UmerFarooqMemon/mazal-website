@@ -9,28 +9,19 @@ import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
 import { ListingInlineStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import { formatCountdown } from "./mappers";
-import type { AuctionListing, AuctionListingStatus } from "./types";
+import type { AuctionListing } from "./types";
+import {
+  AuctionKindBadge,
+  AuctionLiveStatusBadge,
+} from "./AuctionStatusBadges";
 
 interface AuctionListingCardProps {
   auction: AuctionListing;
 }
 
-const STATUS_STYLES: Record<
-  AuctionListingStatus,
-  { bg: string; color: string; dot?: string }
-> = {
-  scheduled: { bg: "#FFF1E6", color: "#C45C1A" },
-  live: { bg: "#FEE2E2", color: "#DC2626", dot: "#EF4444" },
-  closed: { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" },
-  upcoming: { bg: "#EDE9FE", color: "#7C3AED", dot: "#8B5CF6" },
-  starting_soon: { bg: "#DCFCE7", color: "#15803D", dot: "#22C55E" },
-  paused: { bg: "#FEF3C7", color: "#B45309", dot: "#F59E0B" },
-};
-
 export default function AuctionListingCard({ auction }: AuctionListingCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
-  const statusStyle = STATUS_STYLES[auction.status];
   const isTimedStart =
     auction.status === "scheduled" ||
     auction.status === "upcoming" ||
@@ -92,35 +83,8 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span
-          className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
-          style={{
-            backgroundColor: auction.kind === "scheduled" ? "#FFF1E6" : "#DCFCE7",
-            color: auction.kind === "scheduled" ? "#C45C1A" : "#15803D",
-          }}
-        >
-          {auction.kind === "scheduled"
-            ? t("auctions.badge_scheduled")
-            : t("auctions.badge_open")}
-        </span>
-
-        {auction.status !== "scheduled" && (
-          <span
-            className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"
-            style={{
-              backgroundColor: statusStyle.bg,
-              color: statusStyle.color,
-            }}
-          >
-            {statusStyle.dot && (
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: statusStyle.dot }}
-              />
-            )}
-            {t(`auctions.status_${auction.status}`)}
-          </span>
-        )}
+        <AuctionKindBadge kind={auction.kind} />
+        <AuctionLiveStatusBadge status={auction.status} />
       </div>
 
       <div className="flex items-end justify-between gap-3">

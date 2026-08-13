@@ -5,12 +5,12 @@ import Link from "next/link";
 import { Clock, Gavel } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { ListingStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { Button, DirhamAmount } from "@/components/ui";
 import DirhamSymbolIcon from "@/components/ui/DirhamSymbolIcon";
 import { formatCountdown } from "./mappers";
 import type { AuctionListing } from "./types";
+import AuctionStatusBadges from "./AuctionStatusBadges";
 
 interface AuctionDetailCardProps {
   auction: AuctionListing;
@@ -43,21 +43,8 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
           "linear-gradient(160deg, #F7F1E4 0%, #F3EADA 45%, #EFE4D2 100%)",
       }}
     >
-      <div className="flex items-center justify-between gap-3 mb-6">
-        <span
-          className={`text-[11px] font-bold px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 ${
-            auction.status === "live"
-              ? "bg-[#FEE2E2] text-[#DC2626]"
-              : "bg-[#F3F4F6] text-[#6B7280]"
-          }`}
-        >
-          {auction.status === "live" && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse" />
-          )}
-          {auction.status === "live"
-            ? t("auctions.live_badge")
-            : t(`auctions.status_${auction.status}`)}
-        </span>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <AuctionStatusBadges auction={auction} />
         <span
           className="text-[13px] font-medium"
           style={{ color: getColor("primaryText") }}
@@ -67,11 +54,6 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
       </div>
 
       <div className="relative bg-white rounded-[20px] p-4 sm:p-8 mb-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
-        <ListingStatusBadge
-          status={auction.marketplaceStatus}
-          showSold
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
-        />
         <NumberPlateDisplay
           plate_code={auction.code}
           plate_digits={auction.digits}
