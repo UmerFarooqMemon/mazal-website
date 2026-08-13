@@ -39,6 +39,44 @@ import arWallet from "@/config/translations/ar/wallet.json";
 import arNotifications from "@/config/translations/ar/notifications.json";
 import arProfile from "@/config/translations/ar/profile.json";
 
+import zhCommon from "@/config/translations/zh/common.json";
+import zhAuth from "@/config/translations/zh/auth.json";
+import zhMarketplace from "@/config/translations/zh/marketplace.json";
+import zhHome from "@/config/translations/zh/home.json";
+import zhAuctions from "@/config/translations/zh/auctions.json";
+import zhDashboard from "@/config/translations/zh/dashboard.json";
+import zhListings from "@/config/translations/zh/listings.json";
+import zhPrivateDeal from "@/config/translations/zh/private-deal.json";
+import zhOffer from "@/config/translations/zh/offer.json";
+import zhAbout from "@/config/translations/zh/about.json";
+import zhCertificates from "@/config/translations/zh/certificates.json";
+import zhValuation from "@/config/translations/zh/valuation.json";
+import zhPortfolio from "@/config/translations/zh/portfolio.json";
+import zhKyc from "@/config/translations/zh/kyc.json";
+import zhPartners from "@/config/translations/zh/partners.json";
+import zhWallet from "@/config/translations/zh/wallet.json";
+import zhNotifications from "@/config/translations/zh/notifications.json";
+import zhProfile from "@/config/translations/zh/profile.json";
+
+import ruCommon from "@/config/translations/ru/common.json";
+import ruAuth from "@/config/translations/ru/auth.json";
+import ruMarketplace from "@/config/translations/ru/marketplace.json";
+import ruHome from "@/config/translations/ru/home.json";
+import ruAuctions from "@/config/translations/ru/auctions.json";
+import ruDashboard from "@/config/translations/ru/dashboard.json";
+import ruListings from "@/config/translations/ru/listings.json";
+import ruPrivateDeal from "@/config/translations/ru/private-deal.json";
+import ruOffer from "@/config/translations/ru/offer.json";
+import ruAbout from "@/config/translations/ru/about.json";
+import ruCertificates from "@/config/translations/ru/certificates.json";
+import ruValuation from "@/config/translations/ru/valuation.json";
+import ruPortfolio from "@/config/translations/ru/portfolio.json";
+import ruKyc from "@/config/translations/ru/kyc.json";
+import ruPartners from "@/config/translations/ru/partners.json";
+import ruWallet from "@/config/translations/ru/wallet.json";
+import ruNotifications from "@/config/translations/ru/notifications.json";
+import ruProfile from "@/config/translations/ru/profile.json";
+
 const enTranslations = {
   common: enCommon,
   auth: enAuth,
@@ -82,10 +120,51 @@ const translationsMap: Record<Locale, Record<string, unknown>> = {
     notifications: arNotifications,
     profile: arProfile,
   },
-  // English static fallback until the UI labels API returns zh/ru copy.
-  zh: enTranslations,
-  ru: enTranslations,
+  zh: {
+    common: zhCommon,
+    auth: zhAuth,
+    marketplace: zhMarketplace,
+    home: zhHome,
+    auctions: zhAuctions,
+    dashboard: zhDashboard,
+    listings: zhListings,
+    "private-deal": zhPrivateDeal,
+    offer: zhOffer,
+    about: zhAbout,
+    certificates: zhCertificates,
+    valuation: zhValuation,
+    portfolio: zhPortfolio,
+    kyc: zhKyc,
+    partners: zhPartners,
+    wallet: zhWallet,
+    notifications: zhNotifications,
+    profile: zhProfile,
+  },
+  ru: {
+    common: ruCommon,
+    auth: ruAuth,
+    marketplace: ruMarketplace,
+    home: ruHome,
+    auctions: ruAuctions,
+    dashboard: ruDashboard,
+    listings: ruListings,
+    "private-deal": ruPrivateDeal,
+    offer: ruOffer,
+    about: ruAbout,
+    certificates: ruCertificates,
+    valuation: ruValuation,
+    portfolio: ruPortfolio,
+    kyc: ruKyc,
+    partners: ruPartners,
+    wallet: ruWallet,
+    notifications: ruNotifications,
+    profile: ruProfile,
+  },
 };
+
+export function loadEnglishTranslations() {
+  return enTranslations;
+}
 
 // A synchronous function for loading subtitles
 export function loadAllTranslations(locale: Locale) {

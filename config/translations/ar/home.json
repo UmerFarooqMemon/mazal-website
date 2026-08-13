@@ -63,6 +63,10 @@
   "hero_closes": "ينتهي",
   "hero_dubai_t": "دبي T · 8",
   "hero_single_digit": "رقم واحد",
+  "digits": "أرقام",
+  "digit": "رقم",
+  "v2_hero_trades": "صفقات",
+  "v2_hero_plates": "لوحات",
 
   "v2_hero_card_label": "الأكثر نشاطاً · أعلى اللوحات قيمة",
   "v2_hero_live_prefix": "مزاد مباشر",

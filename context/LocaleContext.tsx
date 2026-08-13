@@ -7,7 +7,11 @@ import {
   useCallback,
   ReactNode,
 } from "react";
-import { Locale, loadAllTranslations } from "../config/translations";
+import {
+  Locale,
+  loadAllTranslations,
+  loadEnglishTranslations,
+} from "../config/translations";
 import {
   getCachedUiLabelsSync,
   getUiLabels,
@@ -59,21 +63,40 @@ export function LocaleProvider({
   });
 
   const staticTranslations = loadAllTranslations(locale);
+  const englishTranslations = loadEnglishTranslations();
 
   const t = useCallback(
     (path: string): string => {
-      const fromApi = remoteLabels[path];
-      if (typeof fromApi === "string" && fromApi.length > 0) {
-        return fromApi;
-      }
-
       const fromStatic = resolveFromNested(
         staticTranslations as Record<string, unknown>,
         path,
       );
+      const fromEn =
+        locale === "en"
+          ? fromStatic
+          : resolveFromNested(
+              englishTranslations as Record<string, unknown>,
+              path,
+            );
+      const fromApi = remoteLabels[path];
+
+      if (typeof fromApi === "string" && fromApi.length > 0) {
+        // If the API still returns English for a non-English locale, use local copy.
+        if (
+          locale !== "en" &&
+          fromEn &&
+          fromApi === fromEn &&
+          fromStatic &&
+          fromStatic !== fromEn
+        ) {
+          return fromStatic;
+        }
+        return fromApi;
+      }
+
       return fromStatic ?? path;
     },
-    [remoteLabels, staticTranslations],
+    [locale, remoteLabels, staticTranslations, englishTranslations],
   );
 
   // Static translations are sync — don't block UI on the remote labels fetch.

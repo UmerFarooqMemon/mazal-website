@@ -72,9 +72,7 @@ export default function HomeV2Hero() {
   const digitPattern =
     featuredListing?.digit_count === 1
       ? t("home.hero_single_digit")
-      : `${featuredListing?.digit_count ?? 0} ${
-          locale === "ar" ? "أرقام" : "digits"
-        }`;
+      : `${featuredListing?.digit_count ?? 0} ${t("home.digits")}`;
 
   return (
     <section className="overflow-hidden bg-[#f2faef]">
@@ -119,7 +117,7 @@ export default function HomeV2Hero() {
                 {stats?.plates_transacted.display ?? "—"}
               </div>
               <div className="mt-1 text-xs text-[#545e6f]">
-                {stats?.plates_transacted.label || t("home.hero_stats_plates")}
+                {t("home.hero_stats_plates")}
               </div>
             </div>
             <div>
@@ -127,7 +125,7 @@ export default function HomeV2Hero() {
                 {stats?.verified_bidders.display ?? "—"}
               </div>
               <div className="mt-1 text-xs text-[#545e6f]">
-                {stats?.verified_bidders.label || t("home.hero_stats_bidders")}
+                {t("home.hero_stats_bidders")}
               </div>
             </div>
           </div>
@@ -244,15 +242,15 @@ export default function HomeV2Hero() {
                   <span className="relative inline-flex size-2 rounded-full bg-[#d40c1a]" />
                 </span>
                 <span className="text-xs font-semibold tracking-[0.6px] text-[#2b1500] uppercase">
-                  {`${t("home.v2_hero_live_prefix")} · ${stats.live_auction.trades_display}`}
+                  {`${t("home.v2_hero_live_prefix")} · ${stats.live_auction.trades_count} ${t("home.v2_hero_trades")}`}
                 </span>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-serif text-lg font-semibold tracking-tight text-[#081123]">
-                  {`${stats.live_auction.label_auctioning || t("home.v2_hero_label_auctioning")} : ${stats.live_auction.plates_display}`}
+                  {`${t("home.v2_hero_label_auctioning")} : ${stats.live_auction.plates_count} ${t("home.v2_hero_plates")}`}
                 </span>
                 <span className="font-serif text-lg font-semibold tracking-tight text-[#152e2b]">
-                  {`${stats.live_auction.label_value || t("home.v2_hero_label_value")}: ${stats.live_auction.total_value_display}`}
+                  {`${t("home.v2_hero_label_value")}: ${stats.live_auction.total_value_display}`}
                 </span>
               </div>
             </Link>
