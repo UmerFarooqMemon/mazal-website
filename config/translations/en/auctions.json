@@ -145,5 +145,12 @@
   "my_registrations_subtitle": "Track your auction deposits and bidding eligibility.",
   "no_registrations": "You have not registered for any auctions yet.",
   "browse_auctions": "Browse auctions",
-  "view_auction": "View auction"
+  "view_auction": "View auction",
+  "award_and_close": "Award & close",
+  "award_confirm_title": "Award this bid?",
+  "award_confirm_body": "This will close bidding and award the plate to {bidder}.",
+  "award_success": "Auction awarded and bidding closed.",
+  "award_failed": "Could not award this bid.",
+  "award_cancel": "Cancel",
+  "winning_bid": "Winning bid"
 }

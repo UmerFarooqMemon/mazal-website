@@ -13,9 +13,29 @@ export interface MarketplaceSeller {
   id: number;
   name: string;
   rating: number;
+  average_rating?: number;
   rating_count: number;
   completed_deals: number;
   emirates_id_verified: boolean;
+}
+
+export type HighestOffer = {
+  id: number;
+  amount: number | string;
+  status: string;
+} | null;
+
+export interface MarketplaceSellerRating {
+  id: number;
+  marketplace_purchase_id: number;
+  listing_id: number;
+  seller_id: number;
+  buyer_id: number;
+  rating: number;
+  comment: string | null;
+  buyer?: { id: number; name: string | null } | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 /**
@@ -266,11 +286,17 @@ export interface MarketplaceListingCard {
   trending_score?: number;
   offer_count: number;
   previously_sold: boolean;
+  /** Seller-level aggregate — use for ★ on every listing surface. */
+  average_rating?: number;
+  rating_count?: number;
+  /** Present for listing owners; null for everyone else. */
+  highest_offer?: HighestOffer;
   /** Boost / featured tier shown on marketplace cards (Figma: Diamond / Gold / Silver). */
   boost_tier?: string | null;
   featured_tier?: string | null;
   tier?: string | null;
   seller: MarketplaceSeller;
+  is_owner?: boolean;
   is_watchlisted?: boolean;
   preview?: MarketplaceListingPreview | null;
   published_at: string;
@@ -312,7 +338,6 @@ export interface MarketplaceListingDetail extends MarketplaceListingCard {
   reveal?: MarketplaceReveal | null;
   reveal_screen_url?: string | null;
   can_make_offer?: boolean;
-  is_owner?: boolean;
   sold_at?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -329,7 +354,7 @@ export interface MarketplaceListingDetail extends MarketplaceListingCard {
 export interface MarketplaceOffer {
   id: number;
   listing_id: number;
-  amount: number;
+  amount: number | string;
   message?: string | null;
   status: string;
   status_label: string;
@@ -338,17 +363,25 @@ export interface MarketplaceOffer {
   parent_offer_id?: number | null;
   is_seller_counter?: boolean;
   is_final?: boolean;
-  buyer?: { id: number; name: string };
+  buyer?: { id: number; name: string | null };
   listing?: {
     id: number;
     title: string;
     status: string;
     display_plate: string;
     asking_price: number | string;
+    listing_type?: string;
   };
   responded_at?: string | null;
   created_at: string;
   updated_at?: string;
+}
+
+export interface MarketplaceRecentOffersData {
+  listing_id: number;
+  limit: number;
+  highest_offer: HighestOffer;
+  offers: MarketplaceOffer[];
 }
 
 export interface MarketplaceCounterOfferQuota {
@@ -430,14 +463,30 @@ export interface MarketplacePurchase {
   gifted_to?: { id: number; name: string } | null;
   addons?: MarketplacePurchaseAddons;
   gift_product?: GiftProductSelection | null;
+  can_rate_seller?: boolean;
+  seller_rating?: MarketplaceSellerRating | null;
   buyer?: { id: number; name: string };
-  seller?: { id: number; name: string };
+  seller?: {
+    id: number;
+    name: string;
+    rating?: number;
+    average_rating?: number;
+    rating_count?: number;
+  };
   listing?: {
     id: number;
     title: string;
     status: string;
     display_plate: string;
     asking_price: number | string;
+    listing_type?: string;
+    plate_code?: string | null;
+    plate_digits?: string | null;
+    emirate?: string;
+    emirate_label?: string;
+    plate_type?: string | null;
+    plate_design?: string | null;
+    preview?: MarketplaceListingPreview | null;
   };
   payments?: MarketplacePurchasePayment[];
   invoice?: MarketplacePurchaseInvoice | null;
@@ -482,8 +531,15 @@ export interface MarketplaceAuctionBid {
   listing_id: number;
   amount: number | string;
   is_winning?: boolean;
-  bidder?: { id: number | null; name: string };
+  can_award?: boolean;
+  bidder?: { id: number | null; name: string | null };
   created_at: string;
+}
+
+export interface MarketplaceAuctionAwardResult {
+  listing_id: number;
+  auction: MarketplaceAuction;
+  winning_bid?: MarketplaceAuctionBid;
 }
 
 export interface MarketplacePurchaseAddonCatalogItem {
@@ -880,7 +936,7 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
     type: listing.listing_type_label?.toUpperCase() || listing.listing_type,
     listingPlan: listing.listing_plan ?? null,
     views: listing.view_count,
-    rating: listing.seller?.rating ?? 0,
+    rating: resolveListingRating(listing),
     previouslySold: listing.previously_sold,
     isFavorite: listing.is_watchlisted,
     hideCode,
@@ -890,6 +946,19 @@ export function mapListingToPlateCard(listing: MarketplaceListingCard) {
 }
 
 export type MarketplacePlateCard = ReturnType<typeof mapListingToPlateCard>;
+
+/** Seller-level aggregate on listing payloads — prefer top-level `average_rating`. */
+export function resolveListingRating(
+  listing?: Pick<MarketplaceListingCard, "average_rating" | "seller"> | null,
+): number {
+  const top = listing?.average_rating;
+  if (typeof top === "number" && Number.isFinite(top) && top > 0) return top;
+  const sellerAvg = listing?.seller?.average_rating;
+  if (typeof sellerAvg === "number" && Number.isFinite(sellerAvg) && sellerAvg > 0) {
+    return sellerAvg;
+  }
+  return listing?.seller?.rating ?? 0;
+}
 
 /**
  * Maps browse API listings to grid cards. Does not filter by status — active,
@@ -1347,8 +1416,21 @@ export function submitOffer(
 export function getListingOffers(listingId: string | number, locale: string) {
   return marketplaceRequest<{
     offers: MarketplaceOffer[];
+    highest_offer?: HighestOffer;
     counter_offer_limit?: number;
+    recent_offers_limit?: number;
   }>(`/listings/${listingId}/offers`, { locale, auth: "required" });
+}
+
+/** Latest offers for dashboard “See all offers” preview (seller only). */
+export function getRecentListingOffers(
+  listingId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<MarketplaceRecentOffersData>(
+    `/listings/${listingId}/offers/recent`,
+    { locale, auth: "required" },
+  );
 }
 
 // 21. My Offers (Buyer)
@@ -1530,6 +1612,38 @@ export function getMyPurchases(
     `/purchases${buildQuery({ role })}`,
     { locale, auth: "required" },
   );
+}
+
+/** Buyer rates seller after a completed purchase. */
+export function rateSeller(
+  purchaseId: string | number,
+  payload: { rating: number; comment?: string },
+  locale: string,
+) {
+  return marketplaceRequest<{
+    rating: MarketplaceSellerRating;
+    seller: {
+      id: number;
+      average_rating: number;
+      rating_count: number;
+    };
+  }>(`/purchases/${purchaseId}/rate-seller`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getPurchaseRating(
+  purchaseId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    can_rate_seller: boolean;
+    rating: MarketplaceSellerRating | null;
+  }>(`/purchases/${purchaseId}/rating`, { locale, auth: "required" });
 }
 
 // 28. Confirm Purchase Payment (Fake Local)
@@ -2035,6 +2149,22 @@ export function placeAuctionBid(
     contentType: "application/json",
     body: JSON.stringify({ amount }),
   });
+}
+
+/** Seller awards any bid and closes bidding. */
+export function awardAuctionBid(
+  listingId: string | number,
+  bidId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<MarketplaceAuctionAwardResult>(
+    `/listings/${listingId}/auction/bids/${bidId}/award`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
 }
 
 // 47. My Auction Registrations

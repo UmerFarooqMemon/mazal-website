@@ -1,31 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Star, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { Button } from "@/components/ui";
+import {
+  MarketplaceRequestError,
+  rateSeller,
+} from "@/services/marketplace";
 import { DASH_BORDER, DASH_BTN, DASH_MUTED, DASH_TEXT } from "./theme";
 
 export default function RateSellerModal({
   open,
+  purchaseId,
   onClose,
+  onRated,
 }: {
   open: boolean;
+  purchaseId: number | null;
   onClose: () => void;
+  onRated?: () => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setRating(0);
+      setHover(0);
+      setComment("");
+      setSubmitting(false);
+    }
+  }, [open, purchaseId]);
 
   if (!open) return null;
 
-  const submit = () => {
-    toast.success(t("dashboard.rating_thanks") || "Thanks for your rating.");
-    setRating(0);
-    setComment("");
-    onClose();
+  const submit = async () => {
+    if (!purchaseId || !rating || submitting) return;
+    setSubmitting(true);
+    try {
+      const trimmed = comment.trim();
+      await rateSeller(
+        purchaseId,
+        {
+          rating,
+          ...(trimmed ? { comment: trimmed.slice(0, 2000) } : {}),
+        },
+        locale,
+      );
+      toast.success(t("dashboard.rating_thanks") || "Thanks for your rating.");
+      onRated?.();
+      onClose();
+    } catch (error) {
+      const message =
+        error instanceof MarketplaceRequestError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : t("dashboard.rating_failed");
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -81,6 +121,7 @@ export default function RateSellerModal({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={4}
+          maxLength={2000}
           placeholder={t("dashboard.rate_seller_placeholder")}
           className="mt-6 w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
           style={{ borderColor: DASH_BORDER, color: DASH_TEXT }}
@@ -90,16 +131,19 @@ export default function RateSellerModal({
           <Button
             type="button"
             variant="primary"
-            disabled={!rating}
+            disabled={!rating || submitting || !purchaseId}
             onClick={submit}
             className="h-11 flex-1 rounded-full text-base font-medium"
             style={{ background: DASH_BTN }}
           >
-            {t("dashboard.submit_rating")}
+            {submitting
+              ? t("common.loading") || "Loading..."
+              : t("dashboard.submit_rating")}
           </Button>
           <Button
             type="button"
             variant="outline"
+            disabled={submitting}
             onClick={onClose}
             className="h-11 flex-1 rounded-full border-[#d9dee6] text-base font-medium text-[#081123]"
           >

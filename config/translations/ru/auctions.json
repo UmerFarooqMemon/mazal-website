@@ -145,5 +145,12 @@
   "my_registrations_subtitle": "Отслеживайте депозиты и право делать ставки.",
   "no_registrations": "Вы ещё не регистрировались ни на один аукцион.",
   "browse_auctions": "Смотреть аукционы",
-  "view_auction": "Смотреть аукцион"
+  "view_auction": "Смотреть аукцион",
+  "award_and_close": "Присудить и закрыть",
+  "award_confirm_title": "Присудить эту ставку?",
+  "award_confirm_body": "Торги будут закрыты, номер достанется {bidder}.",
+  "award_success": "Аукцион присуждён, торги закрыты.",
+  "award_failed": "Не удалось присудить ставку.",
+  "award_cancel": "Отмена",
+  "winning_bid": "Победившая ставка"
 }

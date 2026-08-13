@@ -97,6 +97,12 @@
   "card_holder": "Card holder’s name",
   "proceed": "Proceed",
   "subscribe_thanks": "Plan selected.",
+  "no_offers": "No offers yet.",
+  "offers_load_failed": "Could not load offers.",
+  "offer_buyer_fallback": "Buyer",
+  "manage_offers": "Manage offers",
+  "open_auction": "Open auction",
+  "rating_failed": "Could not submit rating.",
   "no_watchlist": "No plates in your watchlist yet.",
   "no_collection": "No plates in your collection yet.",
   "no_certificates": "No valuation certificates yet."

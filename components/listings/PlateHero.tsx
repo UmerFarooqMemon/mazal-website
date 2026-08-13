@@ -13,6 +13,7 @@ import { usesCardCrop } from "@/lib/plate-preview";
 import {
   isHiddenPlateCode,
   resolveListingPreview,
+  resolveListingRating,
   resolvePlateParts,
   type MarketplaceListingDetail,
 } from "@/services/marketplace";
@@ -41,7 +42,7 @@ export default function PlateHero({ listing }: PlateHeroProps) {
       title: listing?.seller
         ? t("listings.seller_rating_title_dynamic").replace(
             "{rating}",
-            listing.seller.rating.toFixed(1),
+            resolveListingRating(listing).toFixed(1),
           )
         : t("listings.seller_rating_title"),
       desc: listing?.seller

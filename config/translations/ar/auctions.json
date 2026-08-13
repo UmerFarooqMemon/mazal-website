@@ -145,5 +145,12 @@
   "my_registrations_subtitle": "تتبع تأمين المزاد وأهليتك للمزايدة.",
   "no_registrations": "لم تسجل في أي مزاد بعد.",
   "browse_auctions": "تصفح المزادات",
-  "view_auction": "عرض المزاد"
+  "view_auction": "عرض المزاد",
+  "award_and_close": "ترسية وإغلاق",
+  "award_confirm_title": "ترسية هذه المزايدة؟",
+  "award_confirm_body": "سيتم إغلاق المزايدة وترسية اللوحة على {bidder}.",
+  "award_success": "تمت الترسية وأُغلق باب المزايدة.",
+  "award_failed": "تعذّرت ترسية هذه المزايدة.",
+  "award_cancel": "إلغاء",
+  "winning_bid": "المزايدة الفائزة"
 }

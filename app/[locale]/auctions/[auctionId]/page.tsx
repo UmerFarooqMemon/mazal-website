@@ -35,6 +35,7 @@ export default function AuctionDetailPage({
   );
   const [listingStatus, setListingStatus] =
     useState<MarketplaceListingStatus | string>("active");
+  const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +57,7 @@ export default function AuctionDetailPage({
 
         setAuctionState(apiAuction);
         setListingStatus(listing.status);
+        setIsOwner(Boolean(listing.is_owner));
         setAuction(mapDetailToAuctionListing(listing));
       })
       .catch((err) => {
@@ -65,6 +67,7 @@ export default function AuctionDetailPage({
         );
         setAuction(null);
         setAuctionState(null);
+        setIsOwner(false);
         setListingStatus("active");
       })
       .finally(() => {
@@ -99,6 +102,7 @@ export default function AuctionDetailPage({
   }
 
   const isBiddingOpen = auctionState?.is_bidding_open === true;
+  const showBidRoom = Boolean(auctionState) && (isBiddingOpen || isOwner);
   const canBid = canTransactListing(listingStatus);
   const bidDisabledReason = isListingReserved(listingStatus)
     ? t("listings.listing_reserved_message")
@@ -135,8 +139,17 @@ export default function AuctionDetailPage({
           : prev.minBidIncrement,
         currentBids: nextAuction.bid_count ?? prev.currentBids,
         endsAt: nextAuction.ends_at ?? prev.endsAt,
+        status:
+          nextAuction.is_bidding_open === false || nextAuction.outcome
+            ? "closed"
+            : prev.status,
       };
     });
+    if (nextAuction.is_bidding_open === false || nextAuction.outcome) {
+      setListingStatus((prev) =>
+        prev === "sold" || prev === "reserved" ? prev : "reserved",
+      );
+    }
   };
 
   return (
@@ -160,7 +173,7 @@ export default function AuctionDetailPage({
         <div className="max-w-5xl mx-auto space-y-8">
           <AuctionDetailCard auction={auction} />
 
-          {isBiddingOpen && auctionState && (
+          {showBidRoom && auctionState && (
             <LiveBidRoom
               listingId={auctionId}
               auction={auctionState}
@@ -170,6 +183,7 @@ export default function AuctionDetailPage({
               )}
               canBid={canBid}
               bidDisabledReason={bidDisabledReason}
+              isOwner={isOwner}
               onAuctionUpdated={handleAuctionUpdated}
             />
           )}

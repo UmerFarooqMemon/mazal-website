@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Play, Plus, Zap } from "lucide-react";
+import { ChevronRight, Play, Plus, Star, Zap } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { Button, DirhamAmount } from "@/components/ui";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
@@ -11,6 +12,7 @@ import type {
   MarketplaceListingPreview,
 } from "@/services/marketplace";
 import type { ListingDealTab } from "./types";
+import DashboardBoostOverlay from "./DashboardBoostOverlay";
 import {
   DASH_BORDER,
   DASH_BTN,
@@ -36,6 +38,7 @@ export type PrivateDealStatus =
 
 export type DashboardListingRow = {
   id: string | number;
+  listingId: number;
   plate_code?: string;
   plate_digits: string;
   emirate?: string;
@@ -49,6 +52,10 @@ export type DashboardListingRow = {
   href: string;
   listingPlan?: MarketplaceListingPlanSummary | null;
   boostTier?: string | null;
+  purchaseId?: number;
+  canRateSeller?: boolean;
+  isOwner?: boolean;
+  averageRating?: number;
 };
 
 export type PrivateDealRow = {
@@ -82,6 +89,17 @@ function tierPlan(
   };
 }
 
+function isDiamondPlan(
+  plan?: MarketplaceListingPlanSummary | null,
+  tier?: string | null,
+): boolean {
+  const haystack = [plan?.slug, plan?.name, tier]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes("diamond");
+}
+
 export default function DashboardListingsPanel({
   tab,
   onTabChange,
@@ -89,7 +107,8 @@ export default function DashboardListingsPanel({
   auctionRows,
   privateRows,
   onRateSeller,
-  onBoost,
+  onSeeOffers,
+  onSeeBids,
 }: {
   tab: ListingDealTab;
   onTabChange: (tab: ListingDealTab) => void;
@@ -97,12 +116,20 @@ export default function DashboardListingsPanel({
   auctionRows: DashboardListingRow[];
   privateRows: PrivateDealRow[];
   onRateSeller: (row: DashboardListingRow) => void;
-  onBoost: (row: DashboardListingRow) => void;
+  onSeeOffers: (row: DashboardListingRow) => void;
+  onSeeBids: (row: DashboardListingRow) => void;
 }) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
   const isAuctionTab = tab === "auction";
   const listingRows = isAuctionTab ? auctionRows : marketplaceRows;
+  const [boostListingId, setBoostListingId] = useState<string | number | null>(
+    null,
+  );
+
+  useEffect(() => {
+    setBoostListingId(null);
+  }, [tab]);
 
   const marketplaceStatusLabel = (status: MarketplaceStatus) => {
     switch (status) {
@@ -188,9 +215,14 @@ export default function DashboardListingsPanel({
         <div className="divide-y" style={{ borderColor: DASH_BORDER }}>
           {listingRows.map((row) => {
             const plan = tierPlan(row.listingPlan, row.boostTier);
+            const showBoost =
+              !isAuctionTab &&
+              row.isOwner !== false &&
+              !isDiamondPlan(row.listingPlan, row.boostTier);
+            const boostOpen = boostListingId === row.id;
             return (
+              <div key={row.id}>
               <div
-                key={row.id}
                 className="flex flex-col gap-6 px-6 py-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:px-6 lg:py-6"
               >
                 <div className="w-full max-w-[345px] shrink-0 text-start">
@@ -210,32 +242,41 @@ export default function DashboardListingsPanel({
                   >
                     <DirhamAmount amount={row.askingPrice} weight="bold" />
                   </p>
+                  {row.averageRating != null && row.averageRating > 0 && (
+                    <p
+                      className="mt-1.5 flex items-center gap-1 text-xs"
+                      style={{ color: DASH_MUTED }}
+                    >
+                      <Star className="h-3 w-3" fill="#e0ae57" color="#e0ae57" />
+                      {row.averageRating.toFixed(1)}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex flex-1 flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-end sm:gap-8">
-                  {plan ? (
+                  {(plan || showBoost) && (
                     <div className="flex items-center gap-2.5">
-                      <ListingPlanBadge plan={plan} className="!px-3 !py-1 !text-[16px] !leading-[26px]" />
-                      <button
-                        type="button"
-                        onClick={() => onBoost(row)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-full"
-                        style={{ backgroundColor: DASH_GREEN }}
-                        aria-label={t("dashboard.boost") || "Boost"}
-                      >
-                        <Zap className="h-3.5 w-3.5 text-white" fill="currentColor" />
-                      </button>
+                      {plan && (
+                        <ListingPlanBadge
+                          plan={plan}
+                          className="!px-3 !py-1 !text-[16px] !leading-[26px]"
+                        />
+                      )}
+                      {showBoost && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBoostListingId(boostOpen ? null : row.id)
+                          }
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full"
+                          style={{ backgroundColor: DASH_GREEN }}
+                          aria-label={t("dashboard.boost") || "Boost"}
+                          aria-expanded={boostOpen}
+                        >
+                          <Zap className="h-3.5 w-3.5 text-white" fill="currentColor" />
+                        </button>
+                      )}
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => onBoost(row)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full"
-                      style={{ backgroundColor: DASH_GREEN }}
-                      aria-label={t("dashboard.boost") || "Boost"}
-                    >
-                      <Zap className="h-3.5 w-3.5 text-white" fill="currentColor" />
-                    </button>
                   )}
 
                   <div
@@ -247,7 +288,7 @@ export default function DashboardListingsPanel({
                         className="text-[8px] font-medium uppercase leading-[10px] tracking-wide"
                         style={{ color: DASH_TEXT }}
                       >
-                        {row.status === "awaiting_payment"
+                        {row.isOwner === false || row.status === "awaiting_payment"
                           ? t("dashboard.accepted_offer")
                           : t("dashboard.highest_offer")}
                       </p>
@@ -255,36 +296,37 @@ export default function DashboardListingsPanel({
                         {row.offerAmount.toLocaleString("en-AE")}
                       </p>
                     </div>
-                    <Link
-                      href={
-                        row.href === "#"
-                          ? isAuctionTab
-                            ? `/${locale}/auctions`
-                            : `/${locale}/buyer/offers`
-                          : row.href
-                      }
-                      className="inline-flex items-center gap-1 rounded-[5px] bg-[#f6f6f6] px-1.5 py-1 text-[8px] font-medium whitespace-nowrap"
-                      style={{ color: DASH_TEXT }}
-                    >
-                      {isAuctionTab
-                        ? t("dashboard.see_all_bids")
-                        : t("dashboard.see_all_offers")}
-                      <ChevronRight
-                        className={`h-2.5 w-2.5 ${isRTL ? "rotate-180" : ""}`}
-                      />
-                    </Link>
-                  </div>
-
-                  {row.status === "completed" ? (
-                    <div className="flex flex-wrap items-center gap-2.5">
+                    {row.isOwner !== false && (
                       <button
                         type="button"
-                        onClick={() => onRateSeller(row)}
-                        className="inline-flex h-9 min-w-[120px] items-center justify-center rounded-xl px-4 text-xs font-medium"
-                        style={{ backgroundColor: DASH_PILL, color: DASH_TEXT }}
+                        onClick={() =>
+                          isAuctionTab ? onSeeBids(row) : onSeeOffers(row)
+                        }
+                        className="inline-flex items-center gap-1 rounded-[5px] bg-[#f6f6f6] px-1.5 py-1 text-[8px] font-medium whitespace-nowrap"
+                        style={{ color: DASH_TEXT }}
                       >
-                        {t("dashboard.rate_seller")}
+                        {isAuctionTab
+                          ? t("dashboard.see_all_bids")
+                          : t("dashboard.see_all_offers")}
+                        <ChevronRight
+                          className={`h-2.5 w-2.5 ${isRTL ? "rotate-180" : ""}`}
+                        />
                       </button>
+                    )}
+                  </div>
+
+                  {row.canRateSeller || row.status === "completed" ? (
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      {row.canRateSeller && (
+                        <button
+                          type="button"
+                          onClick={() => onRateSeller(row)}
+                          className="inline-flex h-9 min-w-[120px] items-center justify-center rounded-xl px-4 text-xs font-medium"
+                          style={{ backgroundColor: DASH_PILL, color: DASH_TEXT }}
+                        >
+                          {t("dashboard.rate_seller")}
+                        </button>
+                      )}
                       <div
                         className="inline-flex h-9 min-w-[147px] items-center justify-center rounded-xl px-4 text-xs font-medium"
                         style={{ backgroundColor: DASH_PILL, color: DASH_TEXT }}
@@ -301,6 +343,13 @@ export default function DashboardListingsPanel({
                     </div>
                   )}
                 </div>
+              </div>
+              {boostOpen && (
+                <DashboardBoostOverlay
+                  listing={row}
+                  onClose={() => setBoostListingId(null)}
+                />
+              )}
               </div>
             );
           })}

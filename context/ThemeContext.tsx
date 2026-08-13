@@ -137,6 +137,8 @@ interface ThemeContextType {
   social: SocialLinks;
   footerContent: FooterContent;
   counterOfferLimit: number;
+  recentOffersLimit: number;
+  auctionBidExtensionMinutes: number;
   loading: boolean;
   getColor: (key: keyof ThemeColors) => string;
   getGradient: (key: keyof ThemeColors) => string;
@@ -191,6 +193,33 @@ const defaultFooterContent: FooterContent = {
 };
 
 const DEFAULT_COUNTER_OFFER_LIMIT = 5;
+const DEFAULT_RECENT_OFFERS_LIMIT = 5;
+const DEFAULT_AUCTION_BID_EXTENSION_MINUTES = 5;
+
+function resolveNumericSetting(
+  data: Record<string, unknown> | undefined,
+  key: string,
+  fallback: number,
+): number {
+  if (!data) return fallback;
+  const direct = data[key];
+  if (typeof direct === "number" && Number.isFinite(direct) && direct > 0) {
+    return direct;
+  }
+  if (typeof direct === "string") {
+    const parsed = Number(direct);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  const settings = data.platform_settings;
+  if (Array.isArray(settings)) {
+    const setting = settings.find(
+      (item: { slug?: string }) => item.slug === key,
+    ) as { value?: string | number } | undefined;
+    const parsed = Number(setting?.value);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return fallback;
+}
 
 const ThemeContext = createContext<ThemeContextType>({
   colors: defaultColors,
@@ -199,6 +228,8 @@ const ThemeContext = createContext<ThemeContextType>({
   social: defaultSocial,
   footerContent: defaultFooterContent,
   counterOfferLimit: DEFAULT_COUNTER_OFFER_LIMIT,
+  recentOffersLimit: DEFAULT_RECENT_OFFERS_LIMIT,
+  auctionBidExtensionMinutes: DEFAULT_AUCTION_BID_EXTENSION_MINUTES,
   loading: true,
   getColor: () => "transparent",
   getGradient: () => "transparent",
@@ -215,6 +246,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     useState<FooterContent>(defaultFooterContent);
   const [counterOfferLimit, setCounterOfferLimit] = useState(
     DEFAULT_COUNTER_OFFER_LIMIT,
+  );
+  const [recentOffersLimit, setRecentOffersLimit] = useState(
+    DEFAULT_RECENT_OFFERS_LIMIT,
+  );
+  const [auctionBidExtensionMinutes, setAuctionBidExtensionMinutes] = useState(
+    DEFAULT_AUCTION_BID_EXTENSION_MINUTES,
   );
   const [loading, setLoading] = useState(true);
 
@@ -274,21 +311,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           });
         }
 
-        const resolveCounterOfferLimit = () => {
-          const direct = data?.data?.counter_offer_limit;
-          if (typeof direct === "number" && Number.isFinite(direct) && direct > 0) {
-            return direct;
-          }
-          const setting = data?.data?.platform_settings?.find(
-            (item: { slug?: string }) => item.slug === "counter_offer_limit",
-          );
-          const parsed = Number(setting?.value);
-          if (Number.isFinite(parsed) && parsed > 0) {
-            return parsed;
-          }
-          return DEFAULT_COUNTER_OFFER_LIMIT;
-        };
-        setCounterOfferLimit(resolveCounterOfferLimit());
+        const payload = data?.data as Record<string, unknown> | undefined;
+        setCounterOfferLimit(
+          resolveNumericSetting(payload, "counter_offer_limit", DEFAULT_COUNTER_OFFER_LIMIT),
+        );
+        setRecentOffersLimit(
+          resolveNumericSetting(
+            payload,
+            "recent_offers_limit",
+            DEFAULT_RECENT_OFFERS_LIMIT,
+          ),
+        );
+        setAuctionBidExtensionMinutes(
+          resolveNumericSetting(
+            payload,
+            "auction_bid_extension_minutes",
+            DEFAULT_AUCTION_BID_EXTENSION_MINUTES,
+          ),
+        );
 
         // Footer copy from site-settings (ignore empty / placeholder values)
         if (data?.data?.footer) {
@@ -412,6 +452,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         social,
         footerContent,
         counterOfferLimit,
+        recentOffersLimit,
+        auctionBidExtensionMinutes,
         loading,
         getColor,
         getGradient,

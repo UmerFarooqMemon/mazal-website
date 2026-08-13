@@ -97,6 +97,12 @@
   "card_holder": "Имя владельца карты",
   "proceed": "Продолжить",
   "subscribe_thanks": "План выбран.",
+  "no_offers": "Офферов пока нет.",
+  "offers_load_failed": "Не удалось загрузить офферы.",
+  "offer_buyer_fallback": "Покупатель",
+  "manage_offers": "Управлять офферами",
+  "open_auction": "Открыть аукцион",
+  "rating_failed": "Не удалось отправить оценку.",
   "no_watchlist": "В избранном пока нет номеров.",
   "no_collection": "В коллекции пока нет номеров.",
   "no_certificates": "Сертификатов оценки пока нет."

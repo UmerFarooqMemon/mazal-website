@@ -36,6 +36,7 @@ export interface AuctionListing {
   timeLeft?: string;
   /** Marketplace lifecycle — reserved/sold badges use this, not auction.outcome. */
   marketplaceStatus?: string;
+  previouslySold?: boolean;
   hideCode?: boolean;
 }
 

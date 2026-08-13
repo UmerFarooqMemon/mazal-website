@@ -7,7 +7,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
-import { ListingStatusBadge } from "@/components/marketplace/ListingStatusBadge";
+import { ListingInlineStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import { formatCountdown } from "./mappers";
 import type { AuctionListing, AuctionListingStatus } from "./types";
 
@@ -60,12 +60,6 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
       className="relative block bg-white rounded-[18px] border p-4 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_36px_rgba(0,0,0,0.07)] transition-shadow"
       style={{ borderColor: getColor("border") }}
     >
-      <ListingStatusBadge
-        status={auction.marketplaceStatus}
-        showSold
-        className="absolute top-3 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
-      />
-
       <div
         className="flex items-center justify-end gap-1.5 mb-3 text-[12px]"
         style={{ color: getColor("mutedText") }}
@@ -87,6 +81,13 @@ export default function AuctionListingCard({ auction }: AuctionListingCardProps)
           hideCode={Boolean(auction.hideCode)}
           scaleFontToWidth
           fontScaleMultiplier={2.3}
+        />
+      </div>
+
+      <div className="mb-4 min-h-6">
+        <ListingInlineStatusBadge
+          status={auction.marketplaceStatus}
+          previouslySold={auction.previouslySold}
         />
       </div>
 

@@ -145,5 +145,12 @@
   "my_registrations_subtitle": "跟踪拍卖保证金与出价资格。",
   "no_registrations": "您尚未报名任何拍卖。",
   "browse_auctions": "浏览拍卖",
-  "view_auction": "查看拍卖"
+  "view_auction": "查看拍卖",
+  "award_and_close": "成交并关闭",
+  "award_confirm_title": "将拍品授予此出价？",
+  "award_confirm_body": "将关闭竞拍，并把车牌授予 {bidder}。",
+  "award_success": "已成交，竞拍已关闭。",
+  "award_failed": "无法授予此出价。",
+  "award_cancel": "取消",
+  "winning_bid": "中标出价"
 }

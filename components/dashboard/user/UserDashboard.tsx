@@ -15,11 +15,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui";
 import {
   getMyListings,
+  getMyPurchases,
   getWatchlist,
   removeFromWatchlist,
+  resolveListingRating,
+  resolvePlateParts,
   toMarketplaceNumber,
   type MarketplaceListingCard,
   type MarketplaceListingDetail,
+  type MarketplacePurchase,
 } from "@/services/marketplace";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
 import DashboardListingsPanel, {
@@ -35,7 +39,8 @@ import DashboardCollectionPanel, {
   type CollectionRow,
 } from "./DashboardCollectionPanel";
 import DashboardWalletPanel from "./DashboardWalletPanel";
-import DashboardBoostOverlay from "./DashboardBoostOverlay";
+import DashboardOffersPanel from "./DashboardOffersPanel";
+import DashboardBidsPanel from "./DashboardBidsPanel";
 import RateSellerModal from "./RateSellerModal";
 import type { CollectionMode, DashboardView, ListingDealTab } from "./types";
 import {
@@ -74,10 +79,11 @@ function mapListingToDashboardRow(
     ? toMarketplaceNumber(highBid) ||
       toMarketplaceNumber(listing.asking_price) ||
       0
-    : toMarketplaceNumber(listing.asking_price) || 0;
+    : toMarketplaceNumber(listing.highest_offer?.amount);
 
   return {
     id: listing.id,
+    listingId: listing.id,
     plate_code: listing.plate_code || undefined,
     plate_digits: String(listing.plate_digits || ""),
     emirate: listing.emirate,
@@ -98,6 +104,57 @@ function mapListingToDashboardRow(
       listing.tier ||
       listing.listing_plan?.name ||
       null,
+    isOwner: listing.is_owner !== false,
+    averageRating: resolveListingRating(listing),
+  };
+}
+
+function mapPurchaseStatus(status: string): MarketplaceStatus {
+  const s = status.toLowerCase();
+  if (s === "completed" || s === "complete") return "completed";
+  if (/(transit|transfer|delivery)/.test(s)) return "in_transit";
+  if (/(payment|pending|funded|escrow|awaiting)/.test(s)) {
+    return "awaiting_payment";
+  }
+  return "awaiting_offer";
+}
+
+function isAuctionPurchase(purchase: MarketplacePurchase) {
+  return String(purchase.listing?.listing_type || "").toLowerCase() === "auction";
+}
+
+function mapPurchaseToDashboardRow(
+  purchase: MarketplacePurchase,
+  locale: string,
+  offerLabel: string,
+): DashboardListingRow {
+  const listing = purchase.listing;
+  const { code, digits } = resolvePlateParts(listing);
+  const asAuction = isAuctionPurchase(purchase);
+
+  return {
+    id: `purchase-${purchase.id}`,
+    listingId: purchase.listing_id,
+    plate_code: listing?.plate_code || code || undefined,
+    plate_digits: String(listing?.plate_digits || digits || ""),
+    emirate: listing?.emirate,
+    plateType: listing?.plate_type || undefined,
+    plateDesign: listing?.plate_design || undefined,
+    preview: listing?.preview,
+    askingPrice: toMarketplaceNumber(
+      listing?.asking_price ?? purchase.agreed_price,
+    ),
+    offerLabel,
+    offerAmount: toMarketplaceNumber(purchase.agreed_price),
+    status: mapPurchaseStatus(purchase.status),
+    href: asAuction
+      ? `/${locale}/auctions/${purchase.listing_id}`
+      : `/${locale}/listings/${purchase.listing_id}/checkout`,
+    purchaseId: purchase.id,
+    canRateSeller: Boolean(purchase.can_rate_seller),
+    isOwner: false,
+    averageRating:
+      purchase.seller?.average_rating ?? purchase.seller?.rating ?? undefined,
   };
 }
 
@@ -130,8 +187,10 @@ export default function UserDashboard() {
   const [certFilter, setCertFilter] = useState<"All" | "Pending" | "Issued">(
     "All",
   );
-  const [rateOpen, setRateOpen] = useState(false);
-  const [boostListing, setBoostListing] = useState<DashboardListingRow | null>(
+  const [ratePurchaseId, setRatePurchaseId] = useState<number | null>(null);
+  const [offersListing, setOffersListing] =
+    useState<DashboardListingRow | null>(null);
+  const [bidsListing, setBidsListing] = useState<DashboardListingRow | null>(
     null,
   );
   const [stats, setStats] = useState({
@@ -148,6 +207,7 @@ export default function UserDashboard() {
     Promise.allSettled([
       getMyListings(locale),
       getMyListings(locale, { listing_type: "auction" }),
+      getMyPurchases(locale, "buyer"),
       getWatchlist(locale),
       fetch("/api/number-plates", {
         headers: {
@@ -158,12 +218,12 @@ export default function UserDashboard() {
             : {}),
         },
       }).then((r) => r.json()),
-    ]).then(([listingsRes, auctionRes, watchRes, platesRes]) => {
+    ]).then(([listingsRes, auctionRes, purchasesRes, watchRes, platesRes]) => {
       if (!active) return;
       const nextStats = { ...stats };
       const offerLabel = t("dashboard.highest_offer");
-      let marketplaceCount = 0;
-      let auctionCount = 0;
+      let marketplaceRows: DashboardListingRow[] = [];
+      let auctionRows: DashboardListingRow[] = [];
 
       if (listingsRes.status === "fulfilled") {
         const listings = listingsRes.value.data?.listings || [];
@@ -171,17 +231,11 @@ export default function UserDashboard() {
           (listing) => !isAuctionListing(listing),
         );
         const auctionsFromAll = listings.filter(isAuctionListing);
-        marketplaceCount = marketplace.length;
-        setMarketplaceRows(
-          marketplace.map((listing) =>
-            mapListingToDashboardRow(listing, locale, offerLabel, false),
-          ),
+        marketplaceRows = marketplace.map((listing) =>
+          mapListingToDashboardRow(listing, locale, offerLabel, false),
         );
-        auctionCount = auctionsFromAll.length;
-        setAuctionRows(
-          auctionsFromAll.map((listing) =>
-            mapListingToDashboardRow(listing, locale, offerLabel, true),
-          ),
+        auctionRows = auctionsFromAll.map((listing) =>
+          mapListingToDashboardRow(listing, locale, offerLabel, true),
         );
       }
 
@@ -190,18 +244,28 @@ export default function UserDashboard() {
           isAuctionListing,
         );
         if (auctions.length || listingsRes.status !== "fulfilled") {
-          auctionCount = auctions.length;
-          setAuctionRows(
-            auctions.map((listing) =>
-              mapListingToDashboardRow(listing, locale, offerLabel, true),
-            ),
+          auctionRows = auctions.map((listing) =>
+            mapListingToDashboardRow(listing, locale, offerLabel, true),
           );
         }
       }
 
-      if (listingsRes.status === "fulfilled" || auctionRes.status === "fulfilled") {
-        nextStats.listings = marketplaceCount + auctionCount;
+      if (purchasesRes.status === "fulfilled") {
+        const purchases = (purchasesRes.value.data?.purchases || []).filter(
+          (purchase) =>
+            purchase.can_rate_seller ||
+            mapPurchaseStatus(purchase.status) === "completed",
+        );
+        for (const purchase of purchases) {
+          const row = mapPurchaseToDashboardRow(purchase, locale, offerLabel);
+          if (isAuctionPurchase(purchase)) auctionRows.push(row);
+          else marketplaceRows.push(row);
+        }
       }
+
+      setMarketplaceRows(marketplaceRows);
+      setAuctionRows(auctionRows);
+      nextStats.listings = marketplaceRows.length + auctionRows.length;
 
       if (watchRes.status === "fulfilled") {
         const data = watchRes.value.data;
@@ -473,8 +537,11 @@ export default function UserDashboard() {
             marketplaceRows={filteredListings}
             auctionRows={filteredAuctions}
             privateRows={filteredPrivateRows}
-            onRateSeller={() => setRateOpen(true)}
-            onBoost={(row) => setBoostListing(row)}
+            onRateSeller={(row) => {
+              if (row.purchaseId) setRatePurchaseId(row.purchaseId);
+            }}
+            onSeeOffers={(row) => setOffersListing(row)}
+            onSeeBids={(row) => setBidsListing(row)}
           />
         )}
         {view === "certificates" && (
@@ -500,10 +567,43 @@ export default function UserDashboard() {
         {view === "wallet" && <DashboardWalletPanel />}
       </div>
 
-      <RateSellerModal open={rateOpen} onClose={() => setRateOpen(false)} />
-      <DashboardBoostOverlay
-        listing={boostListing}
-        onClose={() => setBoostListing(null)}
+      <RateSellerModal
+        open={ratePurchaseId != null}
+        purchaseId={ratePurchaseId}
+        onClose={() => setRatePurchaseId(null)}
+        onRated={() => {
+          setMarketplaceRows((prev) =>
+            prev.map((row) =>
+              row.purchaseId === ratePurchaseId
+                ? { ...row, canRateSeller: false }
+                : row,
+            ),
+          );
+          setAuctionRows((prev) =>
+            prev.map((row) =>
+              row.purchaseId === ratePurchaseId
+                ? { ...row, canRateSeller: false }
+                : row,
+            ),
+          );
+        }}
+      />
+      <DashboardOffersPanel
+        listing={offersListing}
+        onClose={() => setOffersListing(null)}
+      />
+      <DashboardBidsPanel
+        listing={bidsListing}
+        onClose={() => setBidsListing(null)}
+        onAwarded={() => {
+          setAuctionRows((prev) =>
+            prev.map((row) =>
+              row.listingId === bidsListing?.listingId
+                ? { ...row, status: "awaiting_payment" }
+                : row,
+            ),
+          );
+        }}
       />
     </div>
   );

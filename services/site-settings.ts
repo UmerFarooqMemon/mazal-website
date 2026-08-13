@@ -64,6 +64,8 @@ export interface SiteSettingsResponse {
     }>;
     reveal_fee_amount?: string;
     counter_offer_limit?: number;
+    recent_offers_limit?: number;
+    auction_bid_extension_minutes?: number;
     enabled_emirates?: Array<{ key: string; label: string }>;
     emirates?: Array<{
       key: string;

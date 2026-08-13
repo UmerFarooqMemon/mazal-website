@@ -97,6 +97,12 @@
   "card_holder": "持卡人姓名",
   "proceed": "继续",
   "subscribe_thanks": "已选择方案。",
+  "no_offers": "暂无报价。",
+  "offers_load_failed": "无法加载报价。",
+  "offer_buyer_fallback": "买家",
+  "manage_offers": "管理报价",
+  "open_auction": "打开拍卖",
+  "rating_failed": "无法提交评分。",
   "no_watchlist": "关注列表暂无车牌。",
   "no_collection": "收藏中暂无车牌。",
   "no_certificates": "暂无估值证书。"

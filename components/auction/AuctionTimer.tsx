@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { formatCountdown } from "./mappers";
@@ -8,25 +8,42 @@ import { formatCountdown } from "./mappers";
 interface AuctionTimerProps {
   /** Null for open auctions that run without an end date. */
   endsAt: string | null;
+  onExpired?: () => void;
 }
 
-export default function AuctionTimer({ endsAt }: AuctionTimerProps) {
+export default function AuctionTimer({ endsAt, onExpired }: AuctionTimerProps) {
   const { t } = useLocale();
   const { getColor } = useTheme();
   const [timeLeft, setTimeLeft] = useState(() =>
     endsAt ? formatCountdown(endsAt) : "—",
   );
+  const expiredRef = useRef(false);
+  const onExpiredRef = useRef(onExpired);
+  onExpiredRef.current = onExpired;
 
   useEffect(() => {
+    expiredRef.current = false;
     if (!endsAt) {
       setTimeLeft("—");
       return;
     }
 
-    setTimeLeft(formatCountdown(endsAt));
-    const interval = setInterval(() => {
+    const target = new Date(endsAt).getTime();
+    if (Number.isNaN(target)) {
+      setTimeLeft("—");
+      return;
+    }
+
+    const tick = () => {
       setTimeLeft(formatCountdown(endsAt));
-    }, 1000);
+      if (!expiredRef.current && Date.now() >= target) {
+        expiredRef.current = true;
+        onExpiredRef.current?.();
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, [endsAt]);
 

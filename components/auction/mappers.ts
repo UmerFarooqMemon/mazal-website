@@ -173,6 +173,7 @@ export function mapListingToAuctionListing(
       : undefined,
     hideCode: plate.hideCode,
     marketplaceStatus: listing.status,
+    previouslySold: listing.previously_sold,
   };
 }
 

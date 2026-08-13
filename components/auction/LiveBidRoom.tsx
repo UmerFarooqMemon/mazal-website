@@ -5,12 +5,13 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import AuctionTimer from "./AuctionTimer";
 import BidInput from "./BidInput";
+import AuctionBidsList from "./AuctionBidsList";
 import type { AuctionSummaryData } from "./types";
 import type {
   MarketplaceAuction,
   MarketplaceAuctionBid,
 } from "@/services/marketplace";
-import { getAuctionBids } from "@/services/marketplace";
+import { getAuctionBids, getAuctionState } from "@/services/marketplace";
 
 interface LiveBidRoomProps {
   listingId: string | number;
@@ -18,6 +19,7 @@ interface LiveBidRoomProps {
   summary: AuctionSummaryData;
   canBid?: boolean;
   bidDisabledReason?: string;
+  isOwner?: boolean;
   onAuctionUpdated?: (auction: MarketplaceAuction) => void;
 }
 
@@ -27,6 +29,7 @@ export default function LiveBidRoom({
   summary,
   canBid = true,
   bidDisabledReason,
+  isOwner = false,
   onAuctionUpdated,
 }: LiveBidRoomProps) {
   const { t, locale } = useLocale();
@@ -34,6 +37,14 @@ export default function LiveBidRoom({
   const [auction, setAuction] = useState(initialAuction);
   const [bids, setBids] = useState<MarketplaceAuctionBid[]>([]);
   const [loadingBids, setLoadingBids] = useState(true);
+
+  const applyAuction = useCallback(
+    (nextAuction: MarketplaceAuction) => {
+      setAuction(nextAuction);
+      onAuctionUpdated?.(nextAuction);
+    },
+    [onAuctionUpdated],
+  );
 
   const refreshBids = useCallback(async () => {
     try {
@@ -46,6 +57,18 @@ export default function LiveBidRoom({
     }
   }, [listingId, locale]);
 
+  const refreshAuctionState = useCallback(async () => {
+    try {
+      const response = await getAuctionState(listingId, locale);
+      if (response.data.auction) {
+        applyAuction(response.data.auction);
+      }
+    } catch {
+      // Keep the last known auction snapshot.
+    }
+    await refreshBids();
+  }, [applyAuction, listingId, locale, refreshBids]);
+
   useEffect(() => {
     setAuction(initialAuction);
   }, [initialAuction]);
@@ -57,8 +80,7 @@ export default function LiveBidRoom({
   }, [refreshBids]);
 
   const handleBidPlaced = (nextAuction: MarketplaceAuction) => {
-    setAuction(nextAuction);
-    onAuctionUpdated?.(nextAuction);
+    applyAuction(nextAuction);
     refreshBids();
   };
 
@@ -72,18 +94,22 @@ export default function LiveBidRoom({
           className="text-[18px] font-semibold"
           style={{ color: getColor("primaryText") }}
         >
-          {t("auctions.live_badge")}
+          {auction.is_bidding_open
+            ? t("auctions.live_badge")
+            : t("auctions.status_closed")}
         </h2>
-        <AuctionTimer endsAt={auction.ends_at} />
+        <AuctionTimer endsAt={auction.ends_at} onExpired={refreshAuctionState} />
       </div>
 
-      <BidInput
-        listingId={listingId}
-        auction={auction}
-        onBidPlaced={handleBidPlaced}
-        canBid={canBid}
-        disabledReason={bidDisabledReason}
-      />
+      {auction.is_bidding_open && (
+        <BidInput
+          listingId={listingId}
+          auction={auction}
+          onBidPlaced={handleBidPlaced}
+          canBid={canBid}
+          disabledReason={bidDisabledReason}
+        />
+      )}
 
       <div>
         <h3
@@ -92,38 +118,16 @@ export default function LiveBidRoom({
         >
           {t("auctions.current_bids")}
         </h3>
-
-        {loadingBids ? (
-          <p className="text-sm" style={{ color: getColor("mutedText") }}>
-            {t("common.loading") || "Loading..."}
-          </p>
-        ) : bids.length === 0 ? (
-          <p className="text-sm" style={{ color: getColor("mutedText") }}>
-            {t("auctions.be_first_to_bid")}
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {bids.slice(0, 5).map((bid) => (
-              <li
-                key={bid.id}
-                className="flex items-center justify-between text-sm rounded-xl border px-3 py-2"
-                style={{ borderColor: getColor("border") }}
-              >
-                <span style={{ color: getColor("secondaryText") }}>
-                  {bid.bidder?.name || "—"}
-                </span>
-                <span
-                  className="font-semibold"
-                  style={{ color: getColor("primaryText") }}
-                >
-                  {typeof bid.amount === "number"
-                    ? bid.amount.toLocaleString()
-                    : bid.amount}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <AuctionBidsList
+          listingId={listingId}
+          bids={bids}
+          loading={loadingBids}
+          isOwner={isOwner}
+          onAwarded={(nextAuction) => {
+            applyAuction(nextAuction);
+            refreshBids();
+          }}
+        />
       </div>
 
       <p className="text-xs" style={{ color: getColor("mutedText") }}>

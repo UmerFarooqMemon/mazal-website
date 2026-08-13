@@ -97,6 +97,12 @@
   "card_holder": "اسم حامل البطاقة",
   "proceed": "متابعة",
   "subscribe_thanks": "تم اختيار الخطة.",
+  "no_offers": "لا توجد عروض بعد.",
+  "offers_load_failed": "تعذّر تحميل العروض.",
+  "offer_buyer_fallback": "المشتري",
+  "manage_offers": "إدارة العروض",
+  "open_auction": "فتح المزاد",
+  "rating_failed": "تعذّر إرسال التقييم.",
   "no_watchlist": "لا توجد لوحات في قائمة المتابعة بعد.",
   "no_collection": "لا توجد لوحات في مجموعتك بعد.",
   "no_certificates": "لا توجد شهادات تقييم بعد."
