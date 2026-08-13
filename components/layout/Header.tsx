@@ -146,9 +146,9 @@ export default function Header() {
       icon: Gavel,
     },
     featureFlags.valuationCertificate && {
-      href: `/${locale}/dashboard-certificates`,
+      href: `/${locale}/certificates/request`,
       label: t("common.nav_valuation"),
-      match: "/dashboard-certificates",
+      match: "/certificates/request",
       icon: FileBadge,
     },
     {
