@@ -19,12 +19,14 @@ export default function AuctionBidsList({
   bids,
   loading,
   isOwner,
+  biddingOpen,
   onAwarded,
 }: {
   listingId: string | number;
   bids: MarketplaceAuctionBid[];
   loading?: boolean;
   isOwner?: boolean;
+  biddingOpen?: boolean;
   onAwarded?: (auction: MarketplaceAuction) => void;
 }) {
   const { t, locale } = useLocale();
@@ -79,7 +81,9 @@ export default function AuctionBidsList({
     <>
       <ul className="space-y-2">
         {bids.map((bid) => {
-          const showAward = Boolean(isOwner && bid.can_award);
+          const showAward =
+            Boolean(bid.can_award) ||
+            Boolean(isOwner && biddingOpen && !bid.is_winning);
           return (
             <li
               key={bid.id}

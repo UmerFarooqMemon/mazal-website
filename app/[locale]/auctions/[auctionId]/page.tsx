@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
 import AuctionPageHero from "@/components/auction/AuctionPageHero";
 import AuctionDetailCard from "@/components/auction/AuctionDetailCard";
 import LiveBidRoom from "@/components/auction/LiveBidRoom";
@@ -29,6 +30,7 @@ export default function AuctionDetailPage({
   const { auctionId } = use(params);
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const { user } = useAuth();
   const [auction, setAuction] = useState<AuctionListing | null>(null);
   const [auctionState, setAuctionState] = useState<MarketplaceAuction | null>(
     null,
@@ -57,7 +59,12 @@ export default function AuctionDetailPage({
 
         setAuctionState(apiAuction);
         setListingStatus(listing.status);
-        setIsOwner(Boolean(listing.is_owner));
+        setIsOwner(
+          Boolean(listing.is_owner) ||
+            (user?.id != null &&
+              listing.seller?.id != null &&
+              Number(user.id) === Number(listing.seller.id)),
+        );
         setAuction(mapDetailToAuctionListing(listing));
       })
       .catch((err) => {
@@ -77,7 +84,7 @@ export default function AuctionDetailPage({
     return () => {
       active = false;
     };
-  }, [auctionId, locale]);
+  }, [auctionId, locale, user?.id]);
 
   if (loading) {
     return (

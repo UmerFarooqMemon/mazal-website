@@ -81,6 +81,7 @@ export default function DashboardBidsPanel({
             bids={bids}
             loading={loading}
             isOwner={listing.isOwner !== false}
+            biddingOpen={listing.status !== "completed"}
             onAwarded={(auction) => {
               refreshBids();
               onAwarded?.(auction);

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 interface ModalProps {
   isOpen: boolean;
@@ -19,8 +21,8 @@ export default function Modal({
   size = "md",
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const { getColor } = useTheme();
 
-  // Handling the ESC key press to close
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -31,7 +33,6 @@ export default function Modal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  // The window closes when clicked outside of it (except when clicking on the window itself).
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
@@ -40,16 +41,21 @@ export default function Modal({
     };
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  // If the window is closed, nothing will come back
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isOpen]);
 
-  // Setting the window size based on the prop
+  if (!isOpen || typeof document === "undefined") return null;
+
   const sizeClasses = {
     sm: "max-w-sm",
     md: "max-w-md",
@@ -57,45 +63,47 @@ export default function Modal({
     xl: "max-w-4xl",
   };
 
-  // Use React Portal to ensure the window appears above all Z-indexes
   return createPortal(
-    <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/30 backdrop-blur-[6px] transition-opacity duration-300">
       <div
         ref={modalRef}
-        className={`w-full ${sizeClasses[size]} bg-white dark:bg-[#041443] rounded-2xl shadow-2xl transform transition-all duration-300 scale-100 opacity-100 overflow-hidden border border-gray-200 dark:border-white/10`}
+        role="dialog"
+        aria-modal="true"
+        className={`w-full ${sizeClasses[size]} rounded-[24px] shadow-[0_40px_90px_-30px_rgba(6,32,25,0.45)] overflow-hidden`}
+        style={{
+          backgroundColor: getColor("surface") || "#ffffff",
+          border: `1px solid ${getColor("border") || "#E8E4DC"}`,
+        }}
       >
-        {/* Window header (optional if title exists) */}
         {title && (
-          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-white/10">
-            <h3 className="text-lg font-serif font-bold text-[#041443] dark:text-white">
+          <div
+            className="flex items-center justify-between px-6 pt-6 pb-4"
+            style={{ borderBottom: `1px solid ${getColor("border") || "#E8E4DC"}` }}
+          >
+            <h3
+              className="text-lg font-serif font-bold"
+              style={{ color: getColor("primaryText") }}
+            >
               {title}
             </h3>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition"
+              className="size-10 rounded-[12px] flex items-center justify-center transition-colors"
+              style={{
+                backgroundColor: getColor("primaryLight"),
+                color: getColor("primaryText"),
+              }}
+              aria-label="Close"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-gray-500 dark:text-gray-400"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <X className="h-5 w-5" />
             </button>
           </div>
         )}
 
-        {/* Window Content */}
         <div className="px-6 py-6">{children}</div>
       </div>
     </div>,
-    document.body, // Link it directly to the body
+    document.body,
   );
 }

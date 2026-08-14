@@ -1,9 +1,12 @@
 "use client";
 
-import { Modal, Button, DirhamAmount } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { toMarketplaceNumber } from "@/services/marketplace";
 import type { MarketplaceAuctionBid } from "@/services/marketplace";
+import WalletDialog from "@/components/wallet/WalletDialog";
+import { Gavel } from "lucide-react";
 
 export default function AuctionAwardDialog({
   bid,
@@ -17,23 +20,37 @@ export default function AuctionAwardDialog({
   onClose: () => void;
 }) {
   const { t } = useLocale();
+  const { getColor } = useTheme();
 
   return (
-    <Modal
+    <WalletDialog
       isOpen={Boolean(bid)}
       onClose={submitting ? () => undefined : onClose}
       title={t("auctions.award_confirm_title")}
-      size="sm"
+      icon={<Gavel className="w-5 h-5" />}
+      maxWidth="max-w-[420px]"
     >
-      <p className="text-sm leading-6 text-[#545e6f]">
+      <p
+        className="text-sm leading-6"
+        style={{ color: getColor("secondaryText") }}
+      >
         {t("auctions.award_confirm_body").replace(
           "{bidder}",
           bid?.bidder?.name || "—",
         )}
       </p>
       {bid && (
-        <p className="mt-3 text-lg font-semibold text-[#081123]">
-          <DirhamAmount amount={toMarketplaceNumber(bid.amount)} weight="bold" />
+        <p
+          className="mt-4 inline-flex rounded-full px-4 py-2 text-lg font-semibold"
+          style={{
+            backgroundColor: getColor("primaryLight"),
+            color: getColor("primaryText"),
+          }}
+        >
+          <DirhamAmount
+            amount={toMarketplaceNumber(bid.amount)}
+            weight="bold"
+          />
         </p>
       )}
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -58,6 +75,6 @@ export default function AuctionAwardDialog({
           {t("auctions.award_cancel")}
         </Button>
       </div>
-    </Modal>
+    </WalletDialog>
   );
 }

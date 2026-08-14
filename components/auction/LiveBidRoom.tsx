@@ -101,7 +101,7 @@ export default function LiveBidRoom({
         <AuctionTimer endsAt={auction.ends_at} onExpired={refreshAuctionState} />
       </div>
 
-      {auction.is_bidding_open && (
+      {auction.is_bidding_open && !isOwner && (
         <BidInput
           listingId={listingId}
           auction={auction}
@@ -123,6 +123,9 @@ export default function LiveBidRoom({
           bids={bids}
           loading={loadingBids}
           isOwner={isOwner}
+          biddingOpen={
+            auction.is_bidding_open === true && auction.outcome == null
+          }
           onAwarded={(nextAuction) => {
             applyAuction(nextAuction);
             refreshBids();
