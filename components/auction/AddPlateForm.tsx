@@ -8,19 +8,31 @@ import {
   Search,
   Upload,
 } from "lucide-react";
-import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
-import { createListing } from "@/services/marketplace";
 import { formatPriceInput } from "@/lib/card-input";
 
 interface AddPlateFormProps {
   onBack: () => void;
-  onContinue: () => void;
+  onContinue: (draft: AuctionPlateDraft) => void;
+  submitting?: boolean;
+}
+
+export interface AuctionPlateDraft {
+  title: string;
+  emirate: string;
+  plate_variant?: string;
+  plate_type?: string;
+  plate_design?: string;
+  plate_code?: string;
+  plate_digits: string;
+  asking_price: number;
+  description?: string;
+  ownership_document: File;
 }
 
 interface PlateCodeItem {
@@ -45,7 +57,11 @@ interface Variant {
   preview?: PlatePreviewConfig;
 }
 
-export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) {
+export default function AddPlateForm({
+  onBack,
+  onContinue,
+  submitting = false,
+}: AddPlateFormProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const isRTL = locale === "ar";
@@ -64,7 +80,6 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
   const [variants, setVariants] = useState<Variant[]>([]);
   const [codeDropdownOpen, setCodeDropdownOpen] = useState(false);
   const [codeSearch, setCodeSearch] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const codeDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -154,50 +169,27 @@ export default function AddPlateForm({ onBack, onContinue }: AddPlateFormProps) 
     Boolean(ownershipFile) &&
     form.price > 0;
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!canContinue || !ownershipFile) return;
 
-    setSubmitting(true);
     setError(null);
-    try {
-      const title =
-        `${form.emirate} ${form.code ? `${form.code} ` : ""}${form.digits}`.trim();
-      const plateType = selectedVariant?.plate_type;
-      const plateDesign = selectedVariant?.plate_design;
+    const title =
+      `${form.emirate} ${form.code ? `${form.code} ` : ""}${form.digits}`.trim();
+    const plateType = selectedVariant?.plate_type;
+    const plateDesign = selectedVariant?.plate_design;
 
-      await createListing(
-        {
-          listing_type: "auction",
-          title,
-          emirate: form.emirate,
-          plate_variant: form.plateVariant || undefined,
-          plate_type: plateType || undefined,
-          plate_design: plateDesign || undefined,
-          plate_code: showCodeField ? form.code || undefined : undefined,
-          plate_digits: form.digits,
-          asking_price: form.price,
-          description: form.notes || undefined,
-          status: "pending_approval",
-          ownership_document: ownershipFile,
-        },
-        locale,
-      );
-
-      toast.success(
-        t("auctions.create_success") ||
-          "Auction listing submitted for approval.",
-      );
-      onContinue();
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : t("common.error_submission") || "Something went wrong";
-      setError(message);
-      toast.error(message);
-    } finally {
-      setSubmitting(false);
-    }
+    onContinue({
+      title,
+      emirate: form.emirate,
+      plate_variant: form.plateVariant || undefined,
+      plate_type: plateType || undefined,
+      plate_design: plateDesign || undefined,
+      plate_code: showCodeField ? form.code || undefined : undefined,
+      plate_digits: form.digits,
+      asking_price: form.price,
+      description: form.notes || undefined,
+      ownership_document: ownershipFile,
+    });
   };
 
   return (

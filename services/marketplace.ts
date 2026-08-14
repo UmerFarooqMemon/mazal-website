@@ -305,6 +305,7 @@ export interface MarketplaceListingCard {
   is_scheduled?: boolean;
   auction?: MarketplaceAuction | null;
   listing_plan?: MarketplaceListingPlanSummary | null;
+  auction_plan?: MarketplaceListingPlanSummary | null;
 }
 
 export interface MarketplaceListingPlan {
@@ -321,6 +322,8 @@ export interface MarketplaceListingPlan {
   requires_payment?: boolean;
   sort_order?: number;
 }
+
+export type MarketplaceAuctionPlan = MarketplaceListingPlan;
 
 export interface MarketplaceListingPlanSummary {
   id: number | null;
@@ -397,6 +400,7 @@ export interface MarketplaceListingPlanTransaction {
   id: number;
   listing_id: number;
   listing_plan_id?: number | null;
+  auction_plan_id?: number | null;
   provider: string;
   status: string;
   tran_ref?: string | null;
@@ -647,6 +651,7 @@ export interface CreateListingPayload {
   auction_reserve_price?: number | null;
   previously_sold?: boolean;
   listing_plan_id?: number | string | null;
+  auction_plan_id?: number | string | null;
   ownership_document?: File | Blob | null;
 }
 
@@ -1092,6 +1097,13 @@ export function createListing(payload: CreateListingPayload, locale: string) {
     ) {
       formData.append("listing_plan_id", String(payload.listing_plan_id));
     }
+    if (
+      payload.auction_plan_id !== undefined &&
+      payload.auction_plan_id !== null &&
+      payload.auction_plan_id !== ""
+    ) {
+      formData.append("auction_plan_id", String(payload.auction_plan_id));
+    }
     if (payload.previously_sold != null) {
       formData.append("previously_sold", payload.previously_sold ? "1" : "0");
     }
@@ -1128,6 +1140,15 @@ export function getListingPlans(locale: string) {
   }>("/listing-plans", { locale });
 }
 
+/** Public catalogue of auction plans (separate from listing plans). */
+export function getAuctionPlans(locale: string) {
+  return marketplaceRequest<{
+    auction_plans: MarketplaceAuctionPlan[];
+    payment_required_for_paid_plans?: boolean;
+    checkout_hint?: string;
+  }>("/auction-plans", { locale });
+}
+
 /** PayTabs checkout for a listing waiting on plan payment. */
 export function createListingPlanCheckout(
   listingId: string | number,
@@ -1144,6 +1165,30 @@ export function createListingPlanCheckout(
     transaction?: MarketplaceListingPlanTransaction;
     listing?: MarketplaceListingDetail;
   }>(`/listings/${listingId}/listing-plan/paytabs/checkout`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(body),
+  });
+}
+
+/** PayTabs checkout for an auction listing waiting on auction-plan payment. */
+export function createAuctionPlanCheckout(
+  listingId: string | number,
+  locale: string,
+  options: { payment_token?: string } = {},
+) {
+  const body =
+    options.payment_token != null
+      ? { payment_token: options.payment_token }
+      : {};
+
+  return marketplaceRequest<{
+    redirect_url: string | null;
+    transaction?: MarketplaceListingPlanTransaction;
+    listing?: MarketplaceListingDetail;
+  }>(`/listings/${listingId}/auction-plan/paytabs/checkout`, {
     method: "POST",
     locale,
     auth: "required",

@@ -1,0 +1,161 @@
+"use client";
+
+import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
+import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
+import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
+import { Button, DirhamAmount } from "@/components/ui";
+import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
+
+interface AuctionPlanPaymentStepProps {
+  planName: string;
+  planPrice: number;
+  durationDays: number | null;
+  listingId: string | number;
+  onBack: () => void;
+  onPay: (paymentToken: string) => Promise<void>;
+  onHostedFallback: () => Promise<void>;
+  loading?: boolean;
+}
+
+export default function AuctionPlanPaymentStep({
+  planName,
+  planPrice,
+  durationDays,
+  listingId,
+  onBack,
+  onPay,
+  onHostedFallback,
+  loading = false,
+}: AuctionPlanPaymentStepProps) {
+  const { t, locale } = useLocale();
+  const { getColor } = useTheme();
+  const paytabs = usePayTabsConfig(locale);
+  const isRTL = locale === "ar";
+  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+
+  const durationLabel = durationDays
+    ? t("listings.days_n").replace("{days}", String(durationDays)) ||
+      `${durationDays} DAYS`
+    : t("listings.days_30");
+
+  return (
+    <div className="max-w-[944px] mx-auto">
+      <div
+        className="rounded-2xl border shadow-[0_12px_40px_-20px_rgba(4,20,67,0.15)] p-6 md:p-9"
+        style={{
+          backgroundColor: getColor("surface"),
+          borderColor: getColor("border"),
+        }}
+      >
+        <h2
+          className="text-2xl font-serif font-bold mb-2"
+          style={{ color: getColor("primaryText") }}
+        >
+          {t("auctions.plan_payment_title") || "Pay auction plan fee"}
+        </h2>
+        <p
+          className="text-sm mb-8 leading-relaxed"
+          style={{ color: getColor("secondaryText") }}
+        >
+          {t("auctions.plan_payment_desc") ||
+            "Your auction listing was created. Complete the auction plan payment below to submit it for admin approval."}
+        </p>
+
+        <div
+          className="rounded-2xl border p-5 mb-6 space-y-3"
+          style={{
+            backgroundColor: getColor("primaryLight"),
+            borderColor: getColor("border"),
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <ShieldCheck
+              className="w-4 h-4"
+              style={{ color: getColor("primary") }}
+            />
+            <span
+              className="text-[11px] font-bold uppercase tracking-[0.12em]"
+              style={{ color: getColor("primary") }}
+            >
+              {t("listings.plan_summary") || "Plan summary"}
+            </span>
+          </div>
+          {[
+            [t("listings.tier"), planName],
+            [t("listings.duration"), durationLabel],
+            [t("listings.total"), planPrice] as const,
+          ].map(([label, value]) => (
+            <div
+              key={String(label)}
+              className="flex items-center justify-between text-sm"
+            >
+              <span style={{ color: getColor("secondaryText") }}>{label}</span>
+              <span
+                className="font-semibold text-end max-w-[60%] truncate"
+                style={{ color: getColor("primaryText") }}
+              >
+                {typeof value === "number" ? (
+                  <DirhamAmount amount={value} weight="semibold" />
+                ) : (
+                  value
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {paytabs.loading ? (
+          <p className="text-sm" style={{ color: getColor("mutedText") }}>
+            {t("listings.loading_payment_form") || "Loading secure payment form…"}
+          </p>
+        ) : paytabs.managedFormEnabled && paytabs.clientKey ? (
+          <PayTabsManagedForm
+            clientKey={paytabs.clientKey}
+            submitLabel={t("listings.pay_with_paytabs") || "Pay with PayTabs"}
+            loading={loading}
+            onToken={onPay}
+          />
+        ) : (
+          <div className="space-y-4">
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: getColor("secondaryText") }}
+            >
+              {t("listings.paytabs_hint") ||
+                "You will be redirected to PayTabs. After payment, your listing moves to admin approval automatically."}
+            </p>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => void onHostedFallback()}
+              loading={loading}
+              className="!rounded-lg px-5"
+            >
+              {t("listings.pay_with_paytabs") || "Pay with PayTabs"}
+            </Button>
+          </div>
+        )}
+
+        <div
+          className="flex items-center justify-between border-t mt-8 pt-5"
+          style={{ borderColor: getColor("border") }}
+        >
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBack}
+            leftIcon={<BackIcon className="w-4 h-4" />}
+            disabled={loading}
+          >
+            {t("auctions.back")}
+          </Button>
+          <span className="text-xs" style={{ color: getColor("mutedText") }}>
+            {t("listings.listing_ref")?.replace("{id}", String(listingId)) ||
+              `Listing #${listingId}`}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
