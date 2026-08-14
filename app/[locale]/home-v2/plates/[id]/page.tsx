@@ -17,7 +17,7 @@ export default async function HomeV2PlateDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#f2faef]">
+    <div className="min-h-screen bg-[var(--color-background)]">
       <HomeV2PlateDetailView plate={plate} />
     </div>
   );

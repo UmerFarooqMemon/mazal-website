@@ -70,8 +70,8 @@ export default function HomeV2Partners() {
   const logos = [...partners, ...partners, ...partners];
 
   return (
-    <section className="overflow-hidden bg-white py-16 lg:py-20">
-      <h2 className="mb-12 text-center font-serif text-3xl tracking-tight text-[#081123] sm:text-4xl">
+    <section className="overflow-hidden bg-[var(--color-surface)] py-16 lg:py-20">
+      <h2 className="mb-12 text-center font-serif text-3xl tracking-tight text-[var(--color-text-dark)] sm:text-4xl">
         {t("home.v2_partners")}
       </h2>
       <div className="relative">

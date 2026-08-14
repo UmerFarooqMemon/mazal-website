@@ -36,15 +36,15 @@ export default function RightSidebar() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-2xl border border-[#d9dee6] bg-white p-6">
+      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
         <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-serif text-xl text-[#081123]">
+          <div className="flex items-center gap-2 font-serif text-xl text-[var(--color-text-dark)]">
             <Users className="h-[18px] w-[18px]" strokeWidth={2} />
             {t("dashboard.crm")}
           </div>
           <button
             type="button"
-            className="text-xs text-[#0a2f94] hover:underline"
+            className="text-xs text-[var(--color-primary)] hover:underline"
           >
             {t("dashboard.export")}
           </button>
@@ -53,19 +53,19 @@ export default function RightSidebar() {
           {clients.map((client, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between border-b border-[#d9dee6] pb-3 last:border-0 last:pb-0"
+              className="flex items-center justify-between border-b border-[var(--color-border)] pb-3 last:border-0 last:pb-0"
             >
               <div className="text-start">
-                <div className="text-sm font-medium text-[#081123]">
+                <div className="text-sm font-medium text-[var(--color-text-dark)]">
                   {client.name}
                 </div>
-                <div className="text-xs text-[#545e6f]">{client.deals}</div>
+                <div className="text-xs text-[var(--color-muted-text)]">{client.deals}</div>
               </div>
               <div className="text-end">
-                <div className="font-serif text-sm font-normal text-[#081123]">
+                <div className="font-serif text-sm font-normal text-[var(--color-text-dark)]">
                   <DirhamAmount amount={client.amount} weight="bold" />
                 </div>
-                <div className="mt-0.5 text-[10px] uppercase text-[#0a2f94]">
+                <div className="mt-0.5 text-[10px] uppercase text-[var(--color-primary)]">
                   {t(client.tagKey)}
                 </div>
               </div>
@@ -74,12 +74,12 @@ export default function RightSidebar() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#d9dee6] bg-white p-6">
-        <div className="mb-4 flex items-center gap-2 font-serif text-xl text-[#081123]">
+      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <div className="mb-4 flex items-center gap-2 font-serif text-xl text-[var(--color-text-dark)]">
           <Activity className="h-[18px] w-[18px]" strokeWidth={2} />
           {t("dashboard.activity")}
         </div>
-        <ul className="space-y-3 text-sm text-[#081123]">
+        <ul className="space-y-3 text-sm text-[var(--color-text-dark)]">
           <li>
             · Hamdan A. watchlisted{" "}
             <span className="font-medium">Dubai M · 7</span>

@@ -34,19 +34,19 @@ export default function StatCards() {
       {stats.map((stat, idx) => (
         <div
           key={idx}
-          className="rounded-2xl border border-[#d9dee6] bg-white p-5"
+          className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
         >
-          <div className="text-xs uppercase text-[#545e6f]">
+          <div className="text-xs uppercase text-[var(--color-muted-text)]">
             {t(stat.labelKey)}
           </div>
-          <div className="mt-1 font-serif text-2xl font-semibold text-[#081123]">
+          <div className="mt-1 font-serif text-2xl font-semibold text-[var(--color-text-dark)]">
             {"amount" in stat && stat.amount != null ? (
               <DirhamAmount amount={stat.amount} weight="bold" />
             ) : (
               stat.value
             )}
           </div>
-          <div className="mt-1 text-xs text-[#0a2f94]">
+          <div className="mt-1 text-xs text-[var(--color-primary)]">
             {"subAmount" in stat && stat.subAmount != null ? (
               <>
                 +<DirhamAmount amount={stat.subAmount} />

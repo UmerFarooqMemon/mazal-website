@@ -9,7 +9,6 @@ import BankSelect from "@/components/ui/BankSelect";
 import { formatPriceInput } from "@/lib/card-input";
 import { resolveBankLabel } from "@/lib/uae-banks";
 import WalletDialog from "./WalletDialog";
-import { WALLET_MUTED_SURFACE } from "./theme";
 
 export interface CashOutFormPayload {
   amount: number;
@@ -110,7 +109,7 @@ export default function CashOutModal({
     >
       <div
         className="rounded-2xl px-4 py-3.5 mb-5"
-        style={{ backgroundColor: WALLET_MUTED_SURFACE }}
+        style={{ backgroundColor: getColor("primaryLight") }}
       >
         <p
           className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-1"

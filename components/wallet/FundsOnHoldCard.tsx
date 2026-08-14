@@ -4,7 +4,6 @@ import { TrendingUp } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { DirhamAmount } from "@/components/ui";
-import { WALLET_ACTION_GRADIENT } from "./theme";
 import type { WalletHold } from "./types";
 
 interface FundsOnHoldCardProps {
@@ -22,7 +21,7 @@ export default function FundsOnHoldCard({
   onRequestRelease,
 }: FundsOnHoldCardProps) {
   const { t } = useLocale();
-  const { getColor } = useTheme();
+  const { getColor, getGradient } = useTheme();
 
   const biddingLimit = heldAmount / HOLD_RATIO;
 
@@ -35,7 +34,7 @@ export default function FundsOnHoldCard({
       }}
     >
       <div className="flex items-start gap-3 mb-4">
-        <span className="size-9 rounded-xl bg-[#EAF8F0] text-[#1E7A54] flex items-center justify-center shrink-0">
+        <span className="size-9 rounded-xl bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center shrink-0">
           <TrendingUp className="w-4 h-4" />
         </span>
         <div className="flex-1 min-w-0">
@@ -54,7 +53,7 @@ export default function FundsOnHoldCard({
           onClick={onRequestRelease}
           disabled={heldAmount <= 0}
           className="rounded-full px-3.5 py-1.5 text-[11px] font-medium text-white shrink-0 transition-opacity disabled:opacity-40"
-          style={{ background: WALLET_ACTION_GRADIENT }}
+          style={{ background: getGradient("primaryButton") }}
         >
           {t("wallet.request_release_deposit")}
         </button>
@@ -71,12 +70,12 @@ export default function FundsOnHoldCard({
         {t("wallet.hold_total_suffix")}
       </p>
 
-      <div className="h-2 rounded-full overflow-hidden bg-[#EDF1EF]">
+      <div className="h-2 rounded-full overflow-hidden bg-[var(--color-primary-light)]">
         <div
           className="h-full rounded-full"
           style={{
             width: heldAmount > 0 ? "100%" : "0%",
-            background: WALLET_ACTION_GRADIENT,
+            background: getGradient("primaryButton"),
           }}
         />
       </div>

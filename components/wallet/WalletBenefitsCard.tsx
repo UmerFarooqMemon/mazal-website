@@ -4,7 +4,6 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { DirhamAmount } from "@/components/ui";
-import { WALLET_ACTION_GRADIENT } from "./theme";
 
 interface WalletBenefitsCardProps {
   income: number;
@@ -20,7 +19,7 @@ export default function WalletBenefitsCard({
   spendingShare,
 }: WalletBenefitsCardProps) {
   const { t } = useLocale();
-  const { getColor } = useTheme();
+  const { getColor, getGradient } = useTheme();
 
   return (
     <div
@@ -43,7 +42,7 @@ export default function WalletBenefitsCard({
           style={{ borderColor: getColor("border") }}
         >
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="size-7 rounded-lg bg-[#EAF8F0] text-[#1E7A54] flex items-center justify-center">
+            <span className="size-7 rounded-lg bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center">
               <TrendingUp className="w-3.5 h-3.5" />
             </span>
             <span
@@ -85,12 +84,12 @@ export default function WalletBenefitsCard({
         </div>
       </div>
 
-      <div className="h-2 rounded-full overflow-hidden bg-[#EDF1EF]">
+      <div className="h-2 rounded-full overflow-hidden bg-[var(--color-primary-light)]">
         <div
           className="h-full rounded-full"
           style={{
             width: `${incomeShare}%`,
-            background: WALLET_ACTION_GRADIENT,
+            background: getGradient("primaryButton"),
           }}
         />
       </div>

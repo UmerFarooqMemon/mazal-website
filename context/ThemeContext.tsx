@@ -413,6 +413,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         root.style.setProperty("--color-secondary", cssVar("accent"));
         root.style.setProperty("--color-accent", cssVar("accent"));
         root.style.setProperty("--color-text-dark", cssVar("primaryText"));
+        root.style.setProperty("--color-primary-text", cssVar("primaryText"));
         root.style.setProperty("--color-text-light", "#FFFFFF");
         root.style.setProperty("--color-background", cssVar("background"));
         root.style.setProperty("--color-btn-primary", cssVar("primaryButton"));

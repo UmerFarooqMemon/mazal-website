@@ -6,13 +6,8 @@ import { useLocale } from "@/context/LocaleContext";
 import { Button, DirhamAmount } from "@/components/ui";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import {
-  DASH_BORDER,
-  DASH_BTN,
-  DASH_MUTED,
-  DASH_PILL,
-  DASH_TAB,
-  DASH_TEXT,
   dashPanel,
+  useDashTheme,
 } from "./theme";
 
 export type CertificateRow = {
@@ -37,6 +32,16 @@ export default function DashboardCertificatesPanel({
   loading?: boolean;
 }) {
   const { t, locale } = useLocale();
+  const {
+    DASH_BORDER,
+    DASH_BTN,
+    DASH_MUTED,
+    DASH_PILL,
+    DASH_TAB,
+    DASH_TEXT,
+    DASH_SURFACE,
+    DASH_GREEN,
+  } = useDashTheme();
 
   const pendingCount = rows.filter((row) => row.status === "Pending").length;
   const issuedCount = rows.filter((row) => row.status === "Issued").length;
@@ -46,7 +51,10 @@ export default function DashboardCertificatesPanel({
       : rows.filter((row) => row.status === filter);
 
   return (
-    <section className={dashPanel}>
+    <section
+      className={dashPanel}
+      style={{ borderColor: DASH_BORDER, backgroundColor: DASH_SURFACE }}
+    >
       <div
         className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-6"
         style={{ borderColor: DASH_BORDER }}
@@ -75,7 +83,7 @@ export default function DashboardCertificatesPanel({
                 onClick={() => onFilterChange(tab.key)}
                 className="inline-flex h-9 items-center rounded-full border px-4 text-sm font-medium"
                 style={{
-                  background: active ? DASH_TAB : "#ffffff",
+                  background: active ? DASH_TAB : DASH_SURFACE,
                   color: active ? "#ffffff" : DASH_TEXT,
                   borderColor: active ? "transparent" : DASH_BORDER,
                 }}
@@ -135,8 +143,8 @@ export default function DashboardCertificatesPanel({
                 className="inline-flex h-9 min-w-[120px] items-center justify-center self-start rounded-xl px-4 text-xs font-medium sm:self-center"
                 style={{
                   backgroundColor:
-                    row.status === "Issued" ? "#E8FFE2" : DASH_PILL,
-                  color: row.status === "Issued" ? "#015C14" : DASH_TEXT,
+                    row.status === "Issued" ? `${DASH_GREEN}22` : DASH_PILL,
+                  color: row.status === "Issued" ? DASH_GREEN : DASH_TEXT,
                 }}
               >
                 {row.status === "Issued"

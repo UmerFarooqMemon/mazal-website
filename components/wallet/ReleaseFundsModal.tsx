@@ -7,7 +7,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, DirhamSymbolIcon, Input } from "@/components/ui";
 import type { WalletHold } from "./types";
 import WalletDialog from "./WalletDialog";
-import { WALLET_MUTED_SURFACE } from "./theme";
 
 interface ReleaseFundsModalProps {
   isOpen: boolean;
@@ -87,7 +86,7 @@ export default function ReleaseFundsModal({
     >
       <div
         className="rounded-2xl px-4 py-3.5 mb-5"
-        style={{ backgroundColor: WALLET_MUTED_SURFACE }}
+        style={{ backgroundColor: getColor("primaryLight") }}
       >
         <p
           className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-1"

@@ -12,7 +12,6 @@ import WalletBenefitsCard from "@/components/wallet/WalletBenefitsCard";
 import FundsOnHoldCard from "@/components/wallet/FundsOnHoldCard";
 import CashOutModal from "@/components/wallet/CashOutModal";
 import ReleaseFundsModal from "@/components/wallet/ReleaseFundsModal";
-import { WALLET_PAGE_BG } from "@/components/wallet/theme";
 import { createWalletCashOut } from "@/services/wallet";
 import { releaseAuctionDepositToWallet } from "@/services/marketplace";
 
@@ -26,7 +25,7 @@ export default function WalletPage() {
   const [releaseOpen, setReleaseOpen] = useState(false);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: WALLET_PAGE_BG }}>
+    <div className="min-h-screen" style={{ backgroundColor: getColor("background") }}>
       <section className="px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
         <div className="max-w-6xl mx-auto">
           <div className="mb-7">

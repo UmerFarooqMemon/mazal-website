@@ -106,24 +106,24 @@ export default function HomeV2PlateDetailView({
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-10">
       <nav
-        className="mb-8 flex flex-wrap items-center gap-2 text-[11px] font-medium tracking-[0.8px] text-[#7a8494] uppercase"
+        className="mb-8 flex flex-wrap items-center gap-2 text-[11px] font-medium tracking-[0.8px] text-[var(--color-muted-text)] uppercase"
         aria-label="Breadcrumb"
       >
         <Link
           href={`/${locale}/marketplace`}
-          className="transition-colors hover:text-[#152e2b]"
+          className="transition-colors hover:text-[var(--color-primary)]"
         >
           {t("listings.breadcrumb_marketplace")}
         </Link>
         <span>/</span>
         <span>{emirateLabel}</span>
         <span>/</span>
-        <span className="text-[#545e6f]">{listingType}</span>
+        <span className="text-[var(--color-muted-text)]">{listingType}</span>
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.85fr)] lg:items-start lg:gap-10">
         <div className="flex flex-col gap-5">
-          <div className="overflow-hidden rounded-2xl border border-[#d9dee6] bg-white px-6 py-10 shadow-[0_1px_2px_rgba(1,15,81,0.06)] sm:px-10 sm:py-14">
+          <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-10 shadow-[0_1px_2px_rgba(1,15,81,0.06)] sm:px-10 sm:py-14">
             <NumberPlateDisplay
               plate_code={plate.code}
               plate_digits={plate.digits}
@@ -138,30 +138,30 @@ export default function HomeV2PlateDetailView({
             {highlightCards.map((card) => (
               <div
                 key={card.title}
-                className="rounded-xl border border-[#e4e8ee] bg-white px-4 py-4"
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4"
               >
                 <div className="mb-1.5 flex items-center gap-2">
                   <HomeV2Icon src={card.icon} size={16} />
-                  <h3 className="text-sm font-semibold text-[#081123]">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-dark)]">
                     {card.title}
                   </h3>
                 </div>
-                <p className="text-xs leading-5 text-[#545e6f]">{card.body}</p>
+                <p className="text-xs leading-5 text-[var(--color-muted-text)]">{card.body}</p>
               </div>
             ))}
           </div>
         </div>
 
         <aside className="lg:sticky lg:top-24">
-          <div className="rounded-2xl border border-[#e4e8ee] bg-white p-6 shadow-[0_8px_28px_-12px_rgba(1,15,81,0.18)]">
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[0_8px_28px_-12px_rgba(1,15,81,0.18)]">
             <div className="mb-6">
-              <p className="mb-1 text-[10px] font-semibold tracking-[1px] text-[#7a8494] uppercase">
+              <p className="mb-1 text-[10px] font-semibold tracking-[1px] text-[var(--color-muted-text)] uppercase">
                 {t("listings.asking_price")}
               </p>
-              <div className="font-serif text-4xl font-semibold tracking-tight text-[#081123] sm:text-[42px]">
+              <div className="font-serif text-4xl font-semibold tracking-tight text-[var(--color-text-dark)] sm:text-[42px]">
                 <DirhamAmount amount={plate.price} weight="bold" />
               </div>
-              <p className="mt-2 text-xs text-[#7a8494]">
+              <p className="mt-2 text-xs text-[var(--color-muted-text)]">
                 {t("listings.fees_breakdown")}
               </p>
             </div>
@@ -169,13 +169,13 @@ export default function HomeV2PlateDetailView({
             <div className="mb-6 flex flex-col gap-3">
               <Link
                 href={`/${locale}/marketplace`}
-                className="inline-flex h-12 items-center justify-center rounded-lg bg-[#152e2b] px-4 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                className="inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-sm font-medium text-white transition-opacity hover:opacity-90"
               >
                 {t("listings.buy_escrow")}
               </Link>
               <Link
                 href={`/${locale}/marketplace`}
-                className="inline-flex h-12 items-center justify-center rounded-lg border border-[#152e2b] bg-white px-4 text-sm font-medium text-[#081123] transition-colors hover:bg-[#f2faef]"
+                className="inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-primary)] bg-[var(--color-surface)] px-4 text-sm font-medium text-[var(--color-text-dark)] transition-colors hover:bg-[var(--color-background)]"
               >
                 {t("listings.make_offer")}
               </Link>
@@ -183,7 +183,7 @@ export default function HomeV2PlateDetailView({
                 <button
                   type="button"
                   onClick={handleWatchlist}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[#d9dee6] bg-white text-sm font-medium text-[#081123] transition-colors hover:bg-[#f7f8fa]"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm font-medium text-[var(--color-text-dark)] transition-colors hover:bg-[var(--color-primary-light)]"
                 >
                   <HomeV2Icon src="/home-v2/icon-heart.svg" size={16} />
                   {t("listings.watchlist")}
@@ -191,7 +191,7 @@ export default function HomeV2PlateDetailView({
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[#d9dee6] bg-white text-sm font-medium text-[#081123] transition-colors hover:bg-[#f7f8fa]"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm font-medium text-[var(--color-text-dark)] transition-colors hover:bg-[var(--color-primary-light)]"
                 >
                   <HomeV2Icon src="/home-v2/icon-share.svg" size={16} />
                   {t("listings.share")}
@@ -199,14 +199,14 @@ export default function HomeV2PlateDetailView({
               </div>
             </div>
 
-            <dl className="divide-y divide-[#eef1f5] border-t border-[#eef1f5]">
+            <dl className="divide-y divide-[var(--color-border)] border-t border-[var(--color-border)]">
               {specRows.map((row) => (
                 <div
                   key={row.label}
                   className="flex items-center justify-between gap-4 py-3.5"
                 >
-                  <dt className="text-sm text-[#7a8494]">{row.label}</dt>
-                  <dd className="text-sm font-medium text-[#081123]">
+                  <dt className="text-sm text-[var(--color-muted-text)]">{row.label}</dt>
+                  <dd className="text-sm font-medium text-[var(--color-text-dark)]">
                     {row.value}
                   </dd>
                 </div>
@@ -217,19 +217,19 @@ export default function HomeV2PlateDetailView({
       </div>
 
       <section className="mt-10 max-w-3xl lg:mt-12">
-        <h2 className="mb-3 font-serif text-2xl tracking-tight text-[#081123]">
+        <h2 className="mb-3 font-serif text-2xl tracking-tight text-[var(--color-text-dark)]">
           {t("listings.description_heading")}
         </h2>
-        <p className="text-sm leading-6 text-[#545e6f]">{description}</p>
+        <p className="text-sm leading-6 text-[var(--color-muted-text)]">{description}</p>
       </section>
 
       {similar.length > 0 ? (
         <section className="mt-12 lg:mt-14">
           <div className="mb-6">
-            <h2 className="font-serif text-2xl tracking-tight text-[#081123]">
+            <h2 className="font-serif text-2xl tracking-tight text-[var(--color-text-dark)]">
               {t("listings.similar_title")}
             </h2>
-            <p className="mt-1 text-sm text-[#545e6f]">
+            <p className="mt-1 text-sm text-[var(--color-muted-text)]">
               {t("listings.similar_subtitle")}
             </p>
           </div>

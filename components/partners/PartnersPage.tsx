@@ -22,7 +22,7 @@ function PartnerCard({ partner }: { partner: Partner }) {
     return (
       <div className="flex flex-col items-center gap-3">
         {image}
-        <p className="text-center text-sm font-medium text-[#081123]">
+        <p className="text-center text-sm font-medium text-[var(--color-text-dark)]">
           {partner.name}
         </p>
       </div>
@@ -38,7 +38,7 @@ function PartnerCard({ partner }: { partner: Partner }) {
       aria-label={partner.name}
     >
       {image}
-      <p className="text-center text-sm font-medium text-[#081123]">
+      <p className="text-center text-sm font-medium text-[var(--color-text-dark)]">
         {partner.name}
       </p>
     </a>
@@ -75,23 +75,23 @@ export default function PartnersPage() {
   }, []);
 
   return (
-    <div className="min-h-[70vh] bg-[#f2faef]">
+    <div className="min-h-[70vh] bg-[var(--color-background)]">
       <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
         <div className="max-w-2xl">
-          <h1 className="font-serif text-4xl tracking-tight text-[#081123] sm:text-5xl">
+          <h1 className="font-serif text-4xl tracking-tight text-[var(--color-text-dark)] sm:text-5xl">
             {t("partners.title")}
           </h1>
-          <p className="mt-4 text-base leading-7 text-[#545e6f]">
+          <p className="mt-4 text-base leading-7 text-[var(--color-muted-text)]">
             {t("partners.subtitle")}
           </p>
         </div>
 
         {loading ? (
-          <p className="mt-16 text-[#545e6f]">{t("partners.loading")}</p>
+          <p className="mt-16 text-[var(--color-muted-text)]">{t("partners.loading")}</p>
         ) : error ? (
-          <p className="mt-16 text-[#545e6f]">{t("partners.error")}</p>
+          <p className="mt-16 text-[var(--color-muted-text)]">{t("partners.error")}</p>
         ) : partners.length === 0 ? (
-          <p className="mt-16 text-[#545e6f]">{t("partners.empty")}</p>
+          <p className="mt-16 text-[var(--color-muted-text)]">{t("partners.empty")}</p>
         ) : (
           <div className="mt-16 grid grid-cols-1 items-center gap-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-16">
             {partners.map((partner) => (

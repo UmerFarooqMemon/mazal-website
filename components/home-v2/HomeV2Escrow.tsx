@@ -32,12 +32,12 @@ export default function HomeV2Escrow() {
   ];
 
   return (
-    <section className="bg-[#152e2b] text-[#fbfaf6]">
+    <section className="bg-[var(--color-primary)] text-[var(--color-text-light)]">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-8 lg:py-24">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <HomeV2Icon src="/home-v2/icon-gold-star.svg" size={14} />
-            <span className="text-xs font-medium tracking-[0.6px] text-[#e0ae57] uppercase">
+            <span className="text-xs font-medium tracking-[0.6px] text-[var(--color-accent)] uppercase">
               {t("home.escrow_badge")}
             </span>
           </div>
@@ -57,7 +57,7 @@ export default function HomeV2Escrow() {
           <div className="pt-2">
             <Link
               href={`/${locale}/about`}
-              className="inline-flex items-center gap-2 rounded-full bg-[#e0ae57] px-6 py-3 text-sm font-medium text-[#2b1500] transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-medium text-[var(--color-text-dark)] transition-opacity hover:opacity-90"
             >
               {t("home.escrow_button")}
               <HomeV2Icon
@@ -75,11 +75,11 @@ export default function HomeV2Escrow() {
               key={step.number}
               className="flex gap-5 rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-[4px]"
             >
-              <span className="font-serif text-2xl tracking-tight text-[#e0ae57]">
+              <span className="font-serif text-2xl tracking-tight text-[var(--color-accent)]">
                 {step.number}
               </span>
               <div className="flex flex-col gap-1">
-                <h3 className="text-base font-medium text-[#fbfaf6]">
+                <h3 className="text-base font-medium text-[var(--color-text-light)]">
                   {step.title}
                 </h3>
                 <p className="text-sm leading-5 text-[rgba(251,250,246,0.7)]">

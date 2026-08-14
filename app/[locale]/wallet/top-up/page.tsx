@@ -19,7 +19,6 @@ import { Button, DirhamSymbolIcon, Input } from "@/components/ui";
 import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
 import type { StepItem } from "@/components/private-deal/Stepper";
 import WalletFlowHeader from "@/components/wallet/WalletFlowHeader";
-import { WALLET_PAGE_BG } from "@/components/wallet/theme";
 import { useWallet } from "@/hooks/useWallet";
 import { formatPriceInput } from "@/lib/card-input";
 import {
@@ -504,7 +503,7 @@ export default function WalletTopUpPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: WALLET_PAGE_BG }}>
+    <div className="min-h-screen" style={{ backgroundColor: getColor("background") }}>
       <section className="px-4 sm:px-6 lg:px-8 pt-10 pb-8">
         <WalletFlowHeader
           badge={t("wallet.topup_badge")}

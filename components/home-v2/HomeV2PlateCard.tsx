@@ -82,12 +82,12 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
     <Link
       href={`/${locale}${plate.href ?? `/home-v2/plates/${plate.id}`}`}
       data-listing-status={plate.status}
-      className="relative flex flex-col gap-4 rounded-xl border border-[#d9dee6] bg-white p-5 shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)] transition-shadow hover:shadow-[0_8px_28px_-10px_rgba(21,46,43,0.2)]"
+      className="relative flex flex-col gap-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[0_1px_2px_rgba(1,15,81,0.08),0_8px_24px_-12px_rgba(1,15,81,0.15)] transition-shadow hover:shadow-[0_8px_28px_-10px_rgba(21,46,43,0.2)]"
     >
       <div className="flex items-center justify-between">
         <ListingPlanBadge plan={plate.listingPlan} />
-        <div className="flex items-center gap-2.5">
-          <span className="flex items-center gap-1 text-xs text-[#545e6f]">
+        <div className="ms-auto flex items-center gap-2.5">
+          <span className="flex items-center gap-1 text-xs text-[var(--color-muted-text)]">
             <HomeV2Icon src="/home-v2/icon-eye.svg" size={14} />
             {plate.views.toLocaleString("en-US")}
           </span>
@@ -122,10 +122,10 @@ export default function HomeV2PlateCard({ plate }: { plate: HomeV2Plate }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <div className="font-serif text-2xl font-semibold tracking-tight text-[#081123]">
+        <div className="font-serif text-2xl font-semibold tracking-tight text-[var(--color-text-dark)]">
           <DirhamAmount amount={plate.price} weight="bold" />
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#545e6f]">
+        <div className="flex items-center gap-2 text-xs text-[var(--color-muted-text)]">
           <span>{t("marketplace.seller_rating")}</span>
           <span>·</span>
           <span className="flex items-center gap-0.5">

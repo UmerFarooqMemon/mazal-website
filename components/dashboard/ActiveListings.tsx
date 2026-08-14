@@ -73,26 +73,26 @@ export default function ActiveListings() {
   const { t } = useLocale();
 
   return (
-    <div className="rounded-2xl border border-[#d9dee6] bg-white">
-      <div className="flex flex-col gap-4 border-b border-[#d9dee6] px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div className="flex flex-col gap-4 border-b border-[var(--color-border)] px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-start">
-          <h2 className="font-serif text-2xl font-normal text-[#081123]">
+          <h2 className="font-serif text-2xl font-normal text-[var(--color-text-dark)]">
             {t("dashboard.active_listings")}
           </h2>
-          <p className="mt-1 text-sm text-[#545e6f]">
+          <p className="mt-1 text-sm text-[var(--color-muted-text)]">
             {t("dashboard.edit_reflected")}
           </p>
         </div>
         <button
           type="button"
-          className="inline-flex h-[30px] items-center gap-1.5 rounded-full border border-[#d9dee6] px-3 text-xs text-[#081123] transition hover:bg-[#fbfaf7]"
+          className="inline-flex h-[30px] items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 text-xs text-[var(--color-text-dark)] transition hover:bg-[var(--color-background)]"
         >
           <Share2 className="h-3.5 w-3.5" strokeWidth={2} />
           {t("dashboard.share_all")}
         </button>
       </div>
 
-      <div className="divide-y divide-[#d9dee6]">
+      <div className="divide-y divide-[var(--color-border)]">
         {listings.map((item) => (
           <div
             key={item.id}
@@ -111,17 +111,17 @@ export default function ActiveListings() {
             </div>
 
             <div className="min-w-[140px] flex-1 text-start">
-              <div className="text-sm font-medium text-[#081123]">
+              <div className="text-sm font-medium text-[var(--color-text-dark)]">
                 {item.title}
               </div>
-              <div className="mt-0.5 text-xs text-[#545e6f]">{item.status}</div>
+              <div className="mt-0.5 text-xs text-[var(--color-muted-text)]">{item.status}</div>
             </div>
 
             <div className="min-w-[100px] text-end">
-              <div className="text-xs text-[#545e6f]">
+              <div className="text-xs text-[var(--color-muted-text)]">
                 {t("dashboard.listed")}
               </div>
-              <div className="font-serif text-lg text-[#081123]">
+              <div className="font-serif text-lg text-[var(--color-text-dark)]">
                 <DirhamAmount
                   amount={Number(item.price.replace(/,/g, ""))}
                   weight="bold"
@@ -130,17 +130,17 @@ export default function ActiveListings() {
             </div>
 
             <div className="min-w-[72px] text-end">
-              <div className="text-xs text-[#545e6f]">
+              <div className="text-xs text-[var(--color-muted-text)]">
                 {t("dashboard.margin")}
               </div>
-              <div className="font-serif text-lg text-[#0a2f94]">
+              <div className="font-serif text-lg text-[var(--color-primary)]">
                 {item.margin} ↗
               </div>
             </div>
 
             <button
               type="button"
-              className="inline-flex h-[30px] shrink-0 items-center rounded-full border border-[#d9dee6] px-3 text-xs text-[#081123] transition hover:bg-[#fbfaf7]"
+              className="inline-flex h-[30px] shrink-0 items-center rounded-full border border-[var(--color-border)] px-3 text-xs text-[var(--color-text-dark)] transition hover:bg-[var(--color-background)]"
             >
               {t("dashboard.manage")}
             </button>

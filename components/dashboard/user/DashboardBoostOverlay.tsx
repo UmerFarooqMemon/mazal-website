@@ -12,14 +12,7 @@ import {
   type MarketplaceListingPlan,
 } from "@/services/marketplace";
 import type { DashboardListingRow } from "./DashboardListingsPanel";
-import {
-  DASH_BORDER,
-  DASH_BTN,
-  DASH_GREEN,
-  DASH_MUTED,
-  DASH_SURFACE,
-  DASH_TEXT,
-} from "./theme";
+import { useDashTheme } from "./theme";
 
 export default function DashboardBoostOverlay({
   listing,
@@ -29,6 +22,15 @@ export default function DashboardBoostOverlay({
   onClose: () => void;
 }) {
   const { t, locale } = useLocale();
+  const {
+    DASH_BORDER,
+    DASH_BTN,
+    DASH_GREEN,
+    DASH_MUTED,
+    DASH_SURFACE,
+    DASH_TEXT,
+    DASH_BG,
+  } = useDashTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const [plans, setPlans] = useState<MarketplaceListingPlan[]>([]);
@@ -66,12 +68,12 @@ export default function DashboardBoostOverlay({
   return (
     <div
       className="border-t px-6 pb-8 pt-6"
-      style={{ borderColor: DASH_BORDER, backgroundColor: "#fbfaf7" }}
+      style={{ borderColor: DASH_BORDER, backgroundColor: DASH_BG }}
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#0f6646]">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-primary)]">
         {t("dashboard.featured_listing") || "FEATURED LISTING"}
       </p>
-      <h2 className="mt-2 max-w-xl whitespace-pre-line font-serif text-[28px] font-normal leading-9 text-[#081123]">
+      <h2 className="mt-2 max-w-xl whitespace-pre-line font-serif text-[28px] font-normal leading-9" style={{ color: DASH_TEXT }}>
         {t("dashboard.boost_title")}
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: DASH_MUTED }}>
@@ -80,10 +82,10 @@ export default function DashboardBoostOverlay({
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div
-          className="rounded-2xl border bg-white p-6 md:p-8"
+          className="rounded-2xl border bg-[var(--color-surface)] p-6 md:p-8"
           style={{ borderColor: DASH_BORDER }}
         >
-          <h3 className="font-serif text-[22px] text-[#081123]">
+          <h3 className="font-serif text-[22px]" style={{ color: DASH_TEXT }}>
             {t("listings.choose_tier")}
           </h3>
           <p className="mt-1 mb-8 text-sm" style={{ color: DASH_MUTED }}>
@@ -113,15 +115,15 @@ export default function DashboardBoostOverlay({
                         : undefined,
                     }}
                   >
-                    <div className="font-serif text-[22px] text-[#152e2b]">
+                    <div className="font-serif text-[22px] text-[var(--color-primary)]">
                       {plan.name}
                     </div>
-                    <div className="mt-1 text-[10px] font-medium uppercase tracking-wide text-[#545e6f]">
+                    <div className="mt-1 text-[10px] font-medium uppercase tracking-wide text-[var(--color-muted-text)]">
                       {plan.duration_days
                         ? `${plan.duration_days} DAYS`
                         : "30 DAYS"}
                     </div>
-                    <div className="mt-3 font-serif text-[22px] text-[#152e2b]">
+                    <div className="mt-3 font-serif text-[22px] text-[var(--color-primary)]">
                       {(Number(plan.price) || 0) > 0 ? (
                         <DirhamAmount
                           amount={Number(plan.price) || 0}
@@ -131,10 +133,10 @@ export default function DashboardBoostOverlay({
                         t("listings.plan_free") || "Free"
                       )}
                     </div>
-                    <ul className="mt-4 space-y-2 text-[12px] text-[#545e6f]">
+                    <ul className="mt-4 space-y-2 text-[12px] text-[var(--color-muted-text)]">
                       {(plan.features || []).slice(0, 5).map((feature) => (
                         <li key={feature} className="flex gap-2">
-                          <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0f6646]" />
+                          <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-primary)]" />
                           {feature}
                         </li>
                       ))}
@@ -180,10 +182,10 @@ export default function DashboardBoostOverlay({
         </div>
 
         <div
-          className="rounded-2xl border bg-white p-5"
+          className="rounded-2xl border bg-[var(--color-surface)] p-5"
           style={{ borderColor: DASH_BORDER }}
         >
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-[#545e6f]">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-muted-text)]">
             {t("listings.preview")}
           </p>
           <NumberPlateDisplay

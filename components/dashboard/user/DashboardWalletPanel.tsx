@@ -14,7 +14,13 @@ import ReleaseFundsModal from "@/components/wallet/ReleaseFundsModal";
 import { createWalletCashOut } from "@/services/wallet";
 import { releaseAuctionDepositToWallet } from "@/services/marketplace";
 
-export default function DashboardWalletPanel() {
+export default function DashboardWalletPanel({
+  balanceHidden,
+  onBalanceHiddenChange,
+}: {
+  balanceHidden?: boolean;
+  onBalanceHiddenChange?: (hidden: boolean) => void;
+}) {
   const { t, locale } = useLocale();
   const router = useRouter();
   const wallet = useWallet();
@@ -30,6 +36,8 @@ export default function DashboardWalletPanel() {
         <div className="space-y-6">
           <WalletBalanceCard
             balance={wallet.availableBalance}
+            hidden={balanceHidden}
+            onHiddenChange={onBalanceHiddenChange}
             onTopUp={() => router.push(`/${locale}/wallet/top-up`)}
             onCashOut={() => setCashOutOpen(true)}
           />

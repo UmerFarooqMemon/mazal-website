@@ -7,11 +7,8 @@ import { Button, DirhamAmount } from "@/components/ui";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import type { MarketplaceListingCard } from "@/services/marketplace";
 import {
-  DASH_BORDER,
-  DASH_BTN,
-  DASH_MUTED,
-  DASH_TEXT,
   dashPanel,
+  useDashTheme,
 } from "./theme";
 
 export default function DashboardWatchlistPanel({
@@ -22,9 +19,14 @@ export default function DashboardWatchlistPanel({
   onRemove: (listingId: number) => void;
 }) {
   const { t, locale } = useLocale();
+  const { DASH_BORDER, DASH_BTN, DASH_GREEN, DASH_MUTED, DASH_TEXT, DASH_SURFACE } =
+    useDashTheme();
 
   return (
-    <section className={dashPanel}>
+    <section
+      className={dashPanel}
+      style={{ borderColor: DASH_BORDER, backgroundColor: DASH_SURFACE }}
+    >
       <div
         className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-6"
         style={{ borderColor: DASH_BORDER }}
@@ -91,10 +93,10 @@ export default function DashboardWatchlistPanel({
                   type="button"
                   onClick={() => onRemove(listing.id)}
                   className="inline-flex h-[35px] w-[35px] items-center justify-center rounded-full"
-                  style={{ backgroundColor: "rgba(1,92,20,0.05)" }}
+                  style={{ backgroundColor: DASH_SURFACE }}
                   aria-label={t("common.delete") || "Remove"}
                 >
-                  <Trash2 className="h-4 w-4 text-[#0f6646]" />
+                  <Trash2 className="h-4 w-4" style={{ color: DASH_GREEN }} />
                 </button>
               </div>
             </div>

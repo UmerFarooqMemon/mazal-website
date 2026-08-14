@@ -11,14 +11,7 @@ import Select from "@/components/ui/Select";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
 import type { CollectionMode } from "./types";
-import {
-  DASH_BORDER,
-  DASH_BTN,
-  DASH_GREEN,
-  DASH_MUTED,
-  DASH_TEXT,
-  dashPanel,
-} from "./theme";
+import { dashPanel, useDashTheme } from "./theme";
 
 export type CollectionRow = {
   id: string | number;
@@ -58,6 +51,14 @@ export default function DashboardCollectionPanel({
   rows: CollectionRow[];
 }) {
   const { t, locale } = useLocale();
+  const {
+    DASH_BORDER,
+    DASH_BTN,
+    DASH_MUTED,
+    DASH_TEXT,
+    DASH_SURFACE,
+    DASH_GREEN,
+  } = useDashTheme();
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const { token, isAuthenticated } = useAuth();
@@ -84,7 +85,10 @@ export default function DashboardCollectionPanel({
   }
 
   return (
-    <section className={dashPanel}>
+    <section
+      className={dashPanel}
+      style={{ borderColor: DASH_BORDER, backgroundColor: DASH_SURFACE }}
+    >
       <div
         className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-6"
         style={{ borderColor: DASH_BORDER }}
@@ -182,7 +186,7 @@ export default function DashboardCollectionPanel({
                   style={{ backgroundColor: "rgba(1,92,20,0.05)" }}
                   aria-label={t("common.more") || "More"}
                 >
-                  <MoreVertical className="h-4 w-4 text-[#0f6646]" />
+                  <MoreVertical className="h-4 w-4 text-[var(--color-primary)]" />
                 </button>
               </div>
             </div>
@@ -201,7 +205,15 @@ function SubscribeView({
   BackIcon: typeof ArrowLeft;
 }) {
   const { t } = useLocale();
-  const [selected, setSelected] = useState(true);
+  const {
+    DASH_BORDER,
+    DASH_BTN,
+    DASH_GREEN,
+    DASH_GREEN_DARK,
+    DASH_MUTED,
+    DASH_TEXT,
+    DASH_SURFACE,
+  } = useDashTheme();
   const [card, setCard] = useState({
     number: "",
     expiry: "",
@@ -210,7 +222,10 @@ function SubscribeView({
   });
 
   return (
-    <section className={dashPanel}>
+    <section
+      className={dashPanel}
+      style={{ borderColor: DASH_BORDER, backgroundColor: DASH_SURFACE }}
+    >
       <div
         className="border-b px-6 py-6 text-start"
         style={{ borderColor: DASH_BORDER }}
@@ -234,18 +249,18 @@ function SubscribeView({
             className="mb-4 flex h-[53px] w-[53px] items-center justify-center rounded-full"
             style={{ backgroundColor: "rgba(15,102,70,0.08)" }}
           >
-            <span className="text-xl text-[#152e2b]">★</span>
+            <span className="text-xl text-[var(--color-primary)]">★</span>
           </div>
-          <p className="font-serif text-[28px] text-[#152e2b]">
+          <p className="font-serif text-[28px] text-[var(--color-primary)]">
             {t("dashboard.standard_plan")}
           </p>
-          <p className="mt-1 font-serif text-[28px] leading-9 text-[#152e2b]">
+          <p className="mt-1 font-serif text-[28px] leading-9 text-[var(--color-primary)]">
             AED 89{" "}
             <span className="text-lg font-normal">
               {t("dashboard.per_valuation")}
             </span>
           </p>
-          <ul className="mt-5 space-y-3 border-t pt-4 text-sm text-[#152e2b]" style={{ borderColor: DASH_BORDER }}>
+          <ul className="mt-5 space-y-3 border-t pt-4 text-sm" style={{ borderColor: DASH_BORDER, color: DASH_GREEN_DARK }}>
             <li>{t("dashboard.periodic_feature_1")}</li>
             <li>{t("dashboard.periodic_feature_2")}</li>
             <li>{t("dashboard.periodic_feature_3")}</li>
@@ -330,6 +345,8 @@ function AddPlateView({
   isAuthenticated: boolean;
 }) {
   const { t, locale } = useLocale();
+  const { DASH_BORDER, DASH_BTN, DASH_MUTED, DASH_TEXT, DASH_SURFACE, DASH_BG } =
+    useDashTheme();
   const [options, setOptions] = useState<{
     emirates?: { key: string; label: string }[];
   } | null>(null);
@@ -401,7 +418,10 @@ function AddPlateView({
   };
 
   return (
-    <section className={`${dashPanel} p-6 md:p-8`}>
+    <section
+      className={`${dashPanel} p-6 md:p-8`}
+      style={{ borderColor: DASH_BORDER, backgroundColor: DASH_SURFACE }}
+    >
       <p className="text-xs" style={{ color: DASH_MUTED }}>
         {t("dashboard.collection_crumb")}
       </p>
@@ -434,7 +454,7 @@ function AddPlateView({
               {t("dashboard.mulkiya_label")}
             </p>
             <label
-              className="flex h-[38px] cursor-pointer items-center gap-2 rounded-lg border bg-white px-3 text-sm"
+              className="flex h-[38px] cursor-pointer items-center gap-2 rounded-lg border bg-[var(--color-surface)] px-3 text-sm"
               style={{ borderColor: DASH_BORDER, color: DASH_MUTED }}
             >
               <Upload className="h-4 w-4" />
@@ -454,8 +474,8 @@ function AddPlateView({
             {t("listings.preview")}
           </p>
           <div
-            className="overflow-hidden rounded-xl border bg-[#fbfaf7] p-4"
-            style={{ borderColor: DASH_BORDER }}
+            className="overflow-hidden rounded-xl border p-4"
+            style={{ borderColor: DASH_BORDER, backgroundColor: DASH_BG }}
           >
             <NumberPlateDisplay
               plate_code={code}

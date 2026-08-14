@@ -123,8 +123,11 @@ export default function AuctionsPage() {
 
           <form
             onSubmit={handleSearch}
-            className="flex items-center gap-2 bg-white rounded-2xl border p-2 mb-8 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
-            style={{ borderColor: getColor("border") }}
+            className="flex items-center gap-2 rounded-full border p-2 mb-8 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
+            style={{
+              borderColor: getColor("border"),
+              backgroundColor: getColor("surface"),
+            }}
           >
             <div className="flex-1 flex items-center gap-2 px-3">
               <Search

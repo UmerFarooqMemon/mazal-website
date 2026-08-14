@@ -10,7 +10,7 @@ import HomeV2CTA from "@/components/home-v2/HomeV2CTA";
 
 export default function HomePage() {
   return (
-    <div className="bg-[#f2faef]">
+    <div className="bg-[var(--color-background)]">
       <HomeV2Hero />
       <HomeV2Features />
       <HomeV2Watching />

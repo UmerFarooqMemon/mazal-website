@@ -138,7 +138,7 @@ export default function BuyerWatchlistPage() {
               <button
                 type="button"
                 onClick={() => handleRemoveItem(item.listing.id)}
-                className="absolute top-3 end-3 z-10 size-9 rounded-full border flex items-center justify-center bg-white/95 hover:bg-white transition-colors"
+                className="absolute top-3 end-3 z-10 size-9 rounded-full border flex items-center justify-center bg-[color-mix(in_srgb,var(--color-surface)_95%,transparent)] hover:bg-white transition-colors"
                 style={{ borderColor: getColor("border") }}
                 aria-label="Remove from watchlist"
               >

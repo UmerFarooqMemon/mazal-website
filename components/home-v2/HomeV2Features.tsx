@@ -31,22 +31,22 @@ export default function HomeV2Features() {
   ];
 
   return (
-    <section className="border-y border-[#d9dee6] bg-white">
+    <section className="border-y border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="mx-auto grid max-w-7xl gap-8 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 lg:px-8 lg:py-14">
         {features.map((feature) => (
           <div key={feature.title} className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
               <HomeV2Icon src={feature.icon} size={24} />
               {feature.upcoming ? (
-                <span className="rounded-full bg-[rgba(225,225,225,0.35)] px-2.5 py-1 text-[9px] tracking-[1px] text-[#545e6f] uppercase">
+                <span className="rounded-full bg-[rgba(225,225,225,0.35)] px-2.5 py-1 text-[9px] tracking-[1px] text-[var(--color-muted-text)] uppercase">
                   {t("common.upcoming_feature")}
                 </span>
               ) : null}
             </div>
-            <h3 className="pt-2 font-serif text-2xl tracking-tight text-[#081123]">
+            <h3 className="pt-2 font-serif text-2xl tracking-tight text-[var(--color-text-dark)]">
               {feature.title}
             </h3>
-            <p className="text-sm leading-5 text-[#545e6f]">
+            <p className="text-sm leading-5 text-[var(--color-muted-text)]">
               {feature.description}
             </p>
           </div>

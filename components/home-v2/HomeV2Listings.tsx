@@ -69,27 +69,27 @@ function PlateGridSection({
   const isRTL = locale === "ar";
 
   return (
-    <section className="bg-[#f2faef]">
+    <section className="bg-[var(--color-background)]">
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-20">
         <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
             <div className="mb-3 flex items-center gap-2">
               <HomeV2Icon src={badgeIcon} size={14} />
-              <span className="text-xs font-medium tracking-[0.6px] text-[#152e2b] uppercase">
+              <span className="text-xs font-medium tracking-[0.6px] text-[var(--color-primary)] uppercase">
                 {badge}
               </span>
             </div>
-            <h2 className="font-serif text-3xl tracking-tight text-[#081123] sm:text-4xl">
+            <h2 className="font-serif text-3xl tracking-tight text-[var(--color-text-dark)] sm:text-4xl">
               {title}
             </h2>
             {subtitle ? (
-              <p className="mt-3 text-lg leading-6 text-[#545e6f]">{subtitle}</p>
+              <p className="mt-3 text-lg leading-6 text-[var(--color-muted-text)]">{subtitle}</p>
             ) : null}
           </div>
           {seeAll ? (
             <Link
               href={`/${locale}/marketplace`}
-              className="inline-flex items-center gap-1 text-sm font-medium text-[#152e2b] hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)] hover:underline"
             >
               {t("home.trending_see_all")}
               <span aria-hidden>{isRTL ? "←" : "→"}</span>
@@ -98,15 +98,15 @@ function PlateGridSection({
         </div>
 
         {loading ? (
-          <div className="py-10 text-center text-sm text-[#545e6f]">
+          <div className="py-10 text-center text-sm text-[var(--color-muted-text)]">
             {t("common.loading")}
           </div>
         ) : hasError ? (
-          <div className="py-10 text-center text-sm text-[#545e6f]">
+          <div className="py-10 text-center text-sm text-[var(--color-muted-text)]">
             {t("common.error_submission")}
           </div>
         ) : plates.length === 0 ? (
-          <div className="py-10 text-center text-sm text-[#545e6f]">
+          <div className="py-10 text-center text-sm text-[var(--color-muted-text)]">
             {t("common.no_results")}
           </div>
         ) : (

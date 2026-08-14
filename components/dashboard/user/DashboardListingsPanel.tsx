@@ -14,14 +14,8 @@ import type {
 import type { ListingDealTab } from "./types";
 import DashboardBoostOverlay from "./DashboardBoostOverlay";
 import {
-  DASH_BORDER,
-  DASH_BTN,
-  DASH_GREEN,
-  DASH_MUTED,
-  DASH_PILL,
-  DASH_TAB,
-  DASH_TEXT,
   dashPanel,
+  useDashTheme,
 } from "./theme";
 
 export type MarketplaceStatus =
@@ -120,6 +114,17 @@ export default function DashboardListingsPanel({
   onSeeBids: (row: DashboardListingRow) => void;
 }) {
   const { t, locale } = useLocale();
+  const {
+    DASH_BORDER,
+    DASH_BTN,
+    DASH_GREEN,
+    DASH_MUTED,
+    DASH_PILL,
+    DASH_TAB,
+    DASH_TEXT,
+    DASH_SURFACE,
+    DASH_ACCENT,
+  } = useDashTheme();
   const isRTL = locale === "ar";
   const isAuctionTab = tab === "auction";
   const listingRows = isAuctionTab ? auctionRows : marketplaceRows;
@@ -158,7 +163,10 @@ export default function DashboardListingsPanel({
   };
 
   return (
-    <section className={dashPanel}>
+    <section
+      className={dashPanel}
+      style={{ borderColor: DASH_BORDER, backgroundColor: DASH_SURFACE }}
+    >
       <div
         className="flex flex-wrap items-center justify-between gap-4 border-b px-[22px] py-6"
         style={{ borderColor: DASH_BORDER }}
@@ -177,12 +185,12 @@ export default function DashboardListingsPanel({
                 key={item.key}
                 type="button"
                 onClick={() => onTabChange(item.key)}
-                className="inline-flex h-[46px] min-w-[133px] items-center justify-center rounded-[14px] px-[23px] text-base font-medium transition-colors"
-                style={
-                  active
-                    ? { background: DASH_TAB, color: "#ffffff" }
-                    : { backgroundColor: "transparent", color: DASH_TEXT }
-                }
+                className="inline-flex h-9 items-center rounded-full border px-4 text-sm font-medium"
+                style={{
+                  background: active ? DASH_TAB : DASH_SURFACE,
+                  color: active ? "#ffffff" : DASH_TEXT,
+                  borderColor: active ? "transparent" : DASH_BORDER,
+                }}
               >
                 {item.label}
               </button>
@@ -247,7 +255,7 @@ export default function DashboardListingsPanel({
                       className="mt-1.5 flex items-center gap-1 text-xs"
                       style={{ color: DASH_MUTED }}
                     >
-                      <Star className="h-3 w-3" fill="#e0ae57" color="#e0ae57" />
+                      <Star className="h-3 w-3" fill={DASH_ACCENT} color={DASH_ACCENT} />
                       {row.averageRating.toFixed(1)}
                     </p>
                   )}
@@ -302,7 +310,7 @@ export default function DashboardListingsPanel({
                         onClick={() =>
                           isAuctionTab ? onSeeBids(row) : onSeeOffers(row)
                         }
-                        className="inline-flex items-center gap-1 rounded-[5px] bg-[#f6f6f6] px-1.5 py-1 text-[8px] font-medium whitespace-nowrap"
+                        className="inline-flex items-center gap-1 rounded-[5px] bg-[var(--color-primary-light)] px-1.5 py-1 text-[8px] font-medium whitespace-nowrap"
                         style={{ color: DASH_TEXT }}
                       >
                         {isAuctionTab

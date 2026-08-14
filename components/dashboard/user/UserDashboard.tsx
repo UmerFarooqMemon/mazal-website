@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Bookmark,
   Eye,
+  EyeOff,
   FileBadge,
   LayoutList,
   Search,
@@ -12,7 +13,7 @@ import {
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui";
+import { Button, DirhamAmount } from "@/components/ui";
 import {
   getMyListings,
   getMyPurchases,
@@ -43,17 +44,8 @@ import DashboardOffersPanel from "./DashboardOffersPanel";
 import DashboardBidsPanel from "./DashboardBidsPanel";
 import RateSellerModal from "./RateSellerModal";
 import type { CollectionMode, DashboardView, ListingDealTab } from "./types";
-import {
-  DASH_BG,
-  DASH_BORDER,
-  DASH_BTN,
-  DASH_GREEN,
-  DASH_GREEN_DARK,
-  DASH_ICON_BORDER,
-  DASH_MUTED,
-  DASH_SURFACE,
-  DASH_TEXT,
-} from "./theme";
+import { useDashTheme } from "./theme";
+import { useWallet } from "@/hooks/useWallet";
 
 function isAuctionListing(listing: { listing_type?: string | null }) {
   return String(listing.listing_type || "").toLowerCase() === "auction";
@@ -192,6 +184,17 @@ function matchesQuery(
 export default function UserDashboard() {
   const { t, locale } = useLocale();
   const { token } = useAuth();
+  const {
+    DASH_BG,
+    DASH_BORDER,
+    DASH_BTN,
+    DASH_GREEN,
+    DASH_GREEN_DARK,
+    DASH_ICON_BORDER,
+    DASH_MUTED,
+    DASH_SURFACE,
+    DASH_TEXT,
+  } = useDashTheme();
   const [view, setView] = useState<DashboardView>("listings");
   const [listingTab, setListingTab] = useState<ListingDealTab>("marketplace");
   const [collectionMode, setCollectionMode] = useState<CollectionMode>("list");
@@ -219,8 +222,9 @@ export default function UserDashboard() {
     certificates: 0,
     watchlist: 0,
     collection: 0,
-    wallet: 0,
   });
+  const wallet = useWallet();
+  const [walletHidden, setWalletHidden] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -435,7 +439,7 @@ export default function UserDashboard() {
     {
       key: "wallet" as const,
       label: t("dashboard.stat_wallet"),
-      value: stats.wallet,
+      value: wallet.availableBalance,
       icon: Wallet,
     },
   ];
@@ -469,30 +473,34 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: DASH_BG }}>
       <section
-        className="border-b bg-white"
-        style={{ borderColor: DASH_BORDER }}
+        className="border-b"
+        style={{ borderColor: DASH_BORDER, backgroundColor: DASH_BG }}
       >
         <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-6 pb-10 pt-10">
-          <h1 className="font-serif text-[36px] font-normal leading-10 tracking-[-0.02em] text-[#081123]">
+          <h1
+            className="font-serif text-[36px] font-normal leading-10 tracking-[-0.02em]"
+            style={{ color: DASH_TEXT }}
+          >
             {t("common.dashboard") || "Dashboard"}
           </h1>
           <p className="max-w-xl text-base leading-6" style={{ color: DASH_MUTED }}>
             {t("dashboard.page_subtitle")}
           </p>
           <form
-            className="mt-4 flex h-[62px] items-center gap-3 rounded-2xl border bg-[#fbfaf7] px-3"
-            style={{ borderColor: DASH_BORDER }}
+            className="mt-4 flex h-[62px] items-center gap-3 rounded-full border px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+            style={{ borderColor: DASH_BORDER, backgroundColor: DASH_SURFACE }}
             onSubmit={(e) => {
               e.preventDefault();
               runSearch();
             }}
           >
-            <Search className="h-4 w-4 shrink-0 text-[#545e6f]" />
+            <Search className="h-4 w-4 shrink-0" style={{ color: DASH_MUTED }} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("dashboard.search_placeholder")}
-              className="h-full min-w-0 flex-1 bg-transparent text-sm text-[#081123] outline-none placeholder:text-[#545e6f]"
+              className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
+              style={{ color: DASH_TEXT }}
             />
             <Button
               type="submit"
@@ -518,7 +526,7 @@ export default function UserDashboard() {
                 key={card.key}
                 type="button"
                 onClick={() => selectView(card.key)}
-                className="flex min-h-[144px] flex-col rounded-2xl border bg-white p-5 text-start transition-shadow hover:shadow-sm"
+                className="flex min-h-[144px] flex-col rounded-2xl border p-5 text-start transition-shadow hover:shadow-sm"
                 style={{
                   borderColor: active ? DASH_GREEN : DASH_BORDER,
                   backgroundColor: DASH_SURFACE,
@@ -535,7 +543,51 @@ export default function UserDashboard() {
                     className="text-[30px] font-semibold leading-[38px] tabular-nums"
                     style={{ color: DASH_GREEN_DARK }}
                   >
-                    {card.value}
+                    {card.key === "wallet" ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        {walletHidden ? (
+                          <span className="text-[22px] tracking-widest">••••</span>
+                        ) : (
+                          <span className="text-[18px] sm:text-[20px] leading-8">
+                            <DirhamAmount
+                              amount={Number(card.value)}
+                              decimals={2}
+                              weight="semibold"
+                            />
+                          </span>
+                        )}
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+                          style={{ backgroundColor: DASH_GREEN, color: "#ffffff" }}
+                          aria-label={
+                            walletHidden
+                              ? t("wallet.show_balance")
+                              : t("wallet.hide_balance")
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setWalletHidden((v) => !v);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setWalletHidden((v) => !v);
+                            }
+                          }}
+                        >
+                          {walletHidden ? (
+                            <EyeOff className="h-3.5 w-3.5" />
+                          ) : (
+                            <Eye className="h-3.5 w-3.5" />
+                          )}
+                        </span>
+                      </span>
+                    ) : (
+                      card.value
+                    )}
                   </p>
                 </div>
                 <p
@@ -583,7 +635,12 @@ export default function UserDashboard() {
             rows={filteredCollection}
           />
         )}
-        {view === "wallet" && <DashboardWalletPanel />}
+        {view === "wallet" && (
+          <DashboardWalletPanel
+            balanceHidden={walletHidden}
+            onBalanceHiddenChange={setWalletHidden}
+          />
+        )}
       </div>
 
       <RateSellerModal

@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-import { WALLET_MINT } from "./theme";
 
 interface WalletDialogProps {
   isOpen: boolean;
@@ -56,12 +55,13 @@ export default function WalletDialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`w-full ${maxWidth} my-auto rounded-[24px] bg-white shadow-[0_40px_90px_-30px_rgba(6,32,25,0.45)] p-6 sm:p-7`}
+        className={`w-full ${maxWidth} my-auto rounded-[24px] shadow-[0_40px_90px_-30px_rgba(6,32,25,0.45)] p-6 sm:p-7`}
+        style={{ backgroundColor: getColor("surface") }}
       >
         <div className="flex items-center gap-3 mb-6">
           <div
             className="size-11 rounded-[14px] flex items-center justify-center shrink-0"
-            style={{ backgroundColor: WALLET_MINT, color: getColor("primary") }}
+            style={{ backgroundColor: getColor("primaryLight"), color: getColor("primary") }}
           >
             {icon}
           </div>
@@ -76,7 +76,7 @@ export default function WalletDialog({
             onClick={onClose}
             aria-label="Close"
             className="size-10 rounded-[12px] flex items-center justify-center shrink-0 transition-colors hover:bg-gray-100"
-            style={{ backgroundColor: "#F7F7F8", color: getColor("primaryText") }}
+            style={{ backgroundColor: getColor("primaryLight"), color: getColor("primaryText") }}
           >
             <X className="w-5 h-5" />
           </button>

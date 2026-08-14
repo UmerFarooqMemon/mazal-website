@@ -181,26 +181,26 @@ export default function Header() {
         label: t("common.kyc_verified"),
         shortLabel: t("common.kyc_short"),
         icon: CheckCircle2,
-        backgroundColor: "#E8F7EF",
-        borderColor: "#A7E1BF",
-        color: "#138A52",
+        backgroundColor: `${getColor("success")}22`,
+        borderColor: getColor("success"),
+        color: getColor("success"),
       }
     : isKycRejected
       ? {
           label: t("common.kyc_rejected"),
           shortLabel: t("common.kyc_short"),
           icon: XCircle,
-          backgroundColor: "#FEF2F2",
-          borderColor: "#FECACA",
-          color: "#DC2626",
+          backgroundColor: `${getColor("error")}14`,
+          borderColor: getColor("error"),
+          color: getColor("error"),
         }
       : {
           label: t("common.kyc_pending"),
           shortLabel: t("common.kyc_short"),
           icon: Clock,
-          backgroundColor: "#FFF4E3",
-          borderColor: "#F4C98A",
-          color: "#B7791F",
+          backgroundColor: `${getColor("warning")}22`,
+          borderColor: getColor("warning"),
+          color: getColor("warning"),
         };
 
   const KycIcon = kycBadgeConfig.icon;

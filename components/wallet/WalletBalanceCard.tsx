@@ -4,12 +4,14 @@ import { useState } from "react";
 import { ArrowDownToLine, ArrowUpFromLine, Eye, EyeOff } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { DirhamAmount } from "@/components/ui";
-import { WALLET_BALANCE_GRADIENT } from "./theme";
+import { useTheme } from "@/context/ThemeContext";
 
 interface WalletBalanceCardProps {
   balance: number;
   onTopUp: () => void;
   onCashOut: () => void;
+  hidden?: boolean;
+  onHiddenChange?: (hidden: boolean) => void;
 }
 
 function ActionButton({
@@ -27,7 +29,7 @@ function ActionButton({
       onClick={onClick}
       className="flex-1 rounded-2xl bg-white/10 hover:bg-white/[0.16] transition-colors py-4 px-3 flex flex-col items-center gap-2"
     >
-      <span className="size-8 rounded-full bg-white flex items-center justify-center text-[#1F433A]">
+      <span className="size-8 rounded-full bg-white flex items-center justify-center text-[var(--color-primary)]">
         {icon}
       </span>
       <span className="text-[13px] font-medium text-white/90">{label}</span>
@@ -39,14 +41,23 @@ export default function WalletBalanceCard({
   balance,
   onTopUp,
   onCashOut,
+  hidden: hiddenProp,
+  onHiddenChange,
 }: WalletBalanceCardProps) {
   const { t } = useLocale();
-  const [hidden, setHidden] = useState(false);
+  const { getGradient } = useTheme();
+  const [internalHidden, setInternalHidden] = useState(true);
+  const hidden = hiddenProp ?? internalHidden;
+  const toggleHidden = () => {
+    const next = !hidden;
+    onHiddenChange?.(next);
+    if (hiddenProp === undefined) setInternalHidden(next);
+  };
 
   return (
     <div
       className="rounded-[24px] p-6 sm:p-7 shadow-[0_28px_60px_-32px_rgba(9,45,34,0.65)]"
-      style={{ background: WALLET_BALANCE_GRADIENT }}
+      style={{ background: getGradient("primaryButton") }}
     >
       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/60">
         {t("wallet.available_balance")}
@@ -58,7 +69,7 @@ export default function WalletBalanceCard({
         </span>
         <button
           type="button"
-          onClick={() => setHidden((value) => !value)}
+          onClick={toggleHidden}
           className="text-white/60 hover:text-white transition-colors"
           aria-label={hidden ? t("wallet.show_balance") : t("wallet.hide_balance")}
         >

@@ -1,31 +1,23 @@
 "use client";
 
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 import { ListingInlineStatusBadge } from "@/components/marketplace/ListingStatusBadge";
 import type { AuctionKind, AuctionListing, AuctionListingStatus } from "./types";
 
-export const AUCTION_STATUS_STYLES: Record<
-  AuctionListingStatus,
-  { bg: string; color: string; dot?: string }
-> = {
-  scheduled: { bg: "#FFF1E6", color: "#C45C1A" },
-  live: { bg: "#FEE2E2", color: "#DC2626", dot: "#EF4444" },
-  closed: { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" },
-  upcoming: { bg: "#EDE9FE", color: "#7C3AED", dot: "#8B5CF6" },
-  starting_soon: { bg: "#DCFCE7", color: "#15803D", dot: "#22C55E" },
-  paused: { bg: "#FEF3C7", color: "#B45309", dot: "#F59E0B" },
-};
-
 export function AuctionKindBadge({ kind }: { kind: AuctionKind }) {
   const { t } = useLocale();
+  const { getColor } = useTheme();
   const scheduled = kind === "scheduled";
 
   return (
     <span
       className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
       style={{
-        backgroundColor: scheduled ? "#FFF1E6" : "#DCFCE7",
-        color: scheduled ? "#C45C1A" : "#15803D",
+        backgroundColor: scheduled
+          ? `${getColor("warning")}22`
+          : `${getColor("success")}22`,
+        color: scheduled ? getColor("warning") : getColor("success"),
       }}
     >
       {scheduled ? t("auctions.badge_scheduled") : t("auctions.badge_open")}
@@ -39,9 +31,45 @@ export function AuctionLiveStatusBadge({
   status: AuctionListingStatus;
 }) {
   const { t } = useLocale();
+  const { getColor } = useTheme();
   if (status === "scheduled") return null;
 
-  const statusStyle = AUCTION_STATUS_STYLES[status];
+  const styles: Record<
+    AuctionListingStatus,
+    { bg: string; color: string; dot?: string }
+  > = {
+    scheduled: {
+      bg: `${getColor("warning")}22`,
+      color: getColor("warning"),
+    },
+    live: {
+      bg: `${getColor("error")}22`,
+      color: getColor("error"),
+      dot: getColor("error"),
+    },
+    closed: {
+      bg: `${getColor("mutedText")}18`,
+      color: getColor("mutedText"),
+      dot: getColor("mutedText"),
+    },
+    upcoming: {
+      bg: `${getColor("primary")}18`,
+      color: getColor("primary"),
+      dot: getColor("primary"),
+    },
+    starting_soon: {
+      bg: `${getColor("success")}22`,
+      color: getColor("success"),
+      dot: getColor("success"),
+    },
+    paused: {
+      bg: `${getColor("warning")}22`,
+      color: getColor("warning"),
+      dot: getColor("warning"),
+    },
+  };
+
+  const statusStyle = styles[status];
 
   return (
     <span

@@ -12,7 +12,7 @@ import {
   type MarketplaceAuctionBid,
 } from "@/services/marketplace";
 import type { DashboardListingRow } from "./DashboardListingsPanel";
-import { DASH_BTN, DASH_MUTED, DASH_TEXT } from "./theme";
+import { useDashTheme } from "./theme";
 
 export default function DashboardBidsPanel({
   listing,
@@ -24,6 +24,7 @@ export default function DashboardBidsPanel({
   onAwarded?: (auction: MarketplaceAuction) => void;
 }) {
   const { t, locale } = useLocale();
+  const { DASH_BTN, DASH_MUTED, DASH_TEXT } = useDashTheme();
   const [bids, setBids] = useState<MarketplaceAuctionBid[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -49,14 +50,14 @@ export default function DashboardBidsPanel({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div
-        className="relative w-full max-w-[560px] rounded-2xl bg-white p-8 shadow-xl"
+        className="relative w-full max-w-[560px] rounded-2xl bg-[var(--color-surface)] p-8 shadow-xl"
         role="dialog"
         aria-modal="true"
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 end-4 text-[#545e6f] hover:text-[#081123]"
+          className="absolute top-4 end-4 text-[var(--color-muted-text)] hover:text-[var(--color-text-dark)]"
           aria-label={t("common.close") || "Close"}
         >
           <X className="h-5 w-5" />

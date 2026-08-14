@@ -8,7 +8,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount } from "@/components/ui";
 import { useWallet } from "@/hooks/useWallet";
 import WalletDialog from "./WalletDialog";
-import { WALLET_MUTED_SURFACE } from "./theme";
 
 interface WalletPaymentModalProps {
   isOpen: boolean;
@@ -63,7 +62,7 @@ export default function WalletPaymentModal({
     >
       <div
         className="rounded-2xl px-4 py-3.5 mb-3"
-        style={{ backgroundColor: WALLET_MUTED_SURFACE }}
+        style={{ backgroundColor: getColor("primaryLight") }}
       >
         <p
           className="text-[10px] font-semibold uppercase tracking-[0.12em] mb-1"

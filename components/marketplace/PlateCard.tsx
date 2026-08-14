@@ -91,7 +91,7 @@ export default function PlateCard({
       >
         <ListingPlanBadge plan={listingPlan} />
         <div
-          className={`flex items-center gap-1.5 text-xs`}
+          className={`ms-auto flex items-center gap-1.5 text-xs`}
           style={{ color: getColor("mutedText") }}
         >
           <Eye className="w-3.5 h-3.5" strokeWidth={2} />
