@@ -214,6 +214,7 @@ function SubscribeView({
     DASH_TEXT,
     DASH_SURFACE,
   } = useDashTheme();
+  const [selected, setSelected] = useState(false);
   const [card, setCard] = useState({
     number: "",
     expiry: "",
