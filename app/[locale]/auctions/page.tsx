@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Filter, Plus, Search } from "lucide-react";
+import { ClipboardList, Filter, Plus, Search } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
@@ -101,12 +101,17 @@ export default function AuctionsPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href={`/${locale}/auctions/registrations`}
-                className="text-sm font-semibold hover:opacity-80"
-                style={{ color: getColor("primary") }}
-              >
-                {t("auctions.my_registrations_title") || "My registrations"}
+              <Link href={`/${locale}/auctions/registrations`}>
+                <Button
+                  variant="outline"
+                  size="md"
+                  leftIcon={<ClipboardList className="w-4 h-4" />}
+                  className="rounded-full"
+                >
+                  {t("auctions.my_registrations_cta") ||
+                    t("auctions.my_registrations_title") ||
+                    "My registrations"}
+                </Button>
               </Link>
               <Link href={`/${locale}/auctions/add`}>
                 <Button

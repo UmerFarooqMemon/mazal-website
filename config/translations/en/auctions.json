@@ -147,6 +147,7 @@
   "awaiting_bank_desc": "Your bank transfer details were submitted. Once the deposit is received and verified, your Auction Bidding Limit will be activated.",
   "awaiting_cash_desc": "Your cash collection request has been scheduled. Once collected and verified, the amount will be applied to your Auction Bidding Limit.",
   "my_registrations_title": "My Auction Registrations",
+  "my_registrations_cta": "My registrations",
   "my_registrations_subtitle": "Track your auction deposits and bidding eligibility.",
   "no_registrations": "You have not registered for any auctions yet.",
   "browse_auctions": "Browse auctions",

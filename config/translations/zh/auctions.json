@@ -147,6 +147,7 @@
   "awaiting_bank_desc": "您的银行转账信息已提交。保证金到账并验证后，拍卖出价限额将激活。",
   "awaiting_cash_desc": "您的现金收取预约已安排。收取并验证后，金额将计入拍卖出价限额。",
   "my_registrations_title": "我的拍卖报名",
+  "my_registrations_cta": "我的报名",
   "my_registrations_subtitle": "跟踪拍卖保证金与出价资格。",
   "no_registrations": "您尚未报名任何拍卖。",
   "browse_auctions": "浏览拍卖",
