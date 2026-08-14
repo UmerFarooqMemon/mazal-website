@@ -57,10 +57,10 @@ export function LocaleProvider({
   const [locale, setLocale] = useState<Locale>(normalizeLocale(initialLocale));
   const [loading, setLoading] = useState(true);
   const [labelsReady, setLabelsReady] = useState(false);
-  const [remoteLabels, setRemoteLabels] = useState<UiLabelsMap>(() => {
-    // Instant paint from cache when available (avoids waiting on network).
-    return getCachedUiLabelsSync(normalizeLocale(initialLocale)) ?? {};
-  });
+  // Start empty so SSR and the first client render match. Applying
+  // localStorage-cached API labels here caused hydration mismatches
+  // (e.g. home.v2_watching_badge: static vs admin-edited copy).
+  const [remoteLabels, setRemoteLabels] = useState<UiLabelsMap>({});
 
   const staticTranslations = loadAllTranslations(locale);
   const englishTranslations = loadEnglishTranslations();
