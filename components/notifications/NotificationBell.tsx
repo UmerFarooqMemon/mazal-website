@@ -20,8 +20,8 @@ function NotificationList({
 }: {
   recent: ReturnType<typeof useNotifications>["recent"];
   locale: string;
-  onToggleRead: (id: string) => void;
-  onItemOpen: (id: string, read: boolean) => void;
+  onToggleRead: (id: number) => void;
+  onItemOpen: (id: number, read: boolean) => void;
   emptyLabel: string;
   mutedColor: string;
   borderColor: string;
@@ -47,7 +47,7 @@ function NotificationList({
             locale={locale}
             compact
             onToggleRead={onToggleRead}
-            onOpen={() => onItemOpen(item.id, item.read)}
+            onOpen={() => onItemOpen(item.id, item.is_read)}
           />
         </div>
       ))}
@@ -58,7 +58,10 @@ function NotificationList({
 export default function NotificationBell() {
   const { locale, t } = useLocale();
   const { getColor } = useTheme();
-  const { recent, unreadCount, toggleRead, markRead } = useNotifications();
+  const { recent, unreadCount, toggleRead, markRead } = useNotifications({
+    filter: "all",
+    perPage: 8,
+  });
   const [open, setOpen] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -114,7 +117,7 @@ export default function NotificationBell() {
       ? t("notifications.unread_count").replace("{count}", String(unreadCount))
       : t("notifications.all_caught_up");
 
-  const handleItemOpen = (id: string, read: boolean) => {
+  const handleItemOpen = (id: number, read: boolean) => {
     if (!read) markRead(id, true);
     setOpen(false);
   };

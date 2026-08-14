@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
@@ -10,8 +10,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { getLoginHref } from "@/lib/auth-redirect";
 import { BackButton, Button } from "@/components/ui";
 import NotificationItem from "@/components/notifications/NotificationItem";
-
-type Filter = "all" | "unread" | "read";
+import type { NotificationFilter } from "@/services/notifications";
 
 export default function NotificationsPage() {
   const { locale, t } = useLocale();
@@ -19,9 +18,9 @@ export default function NotificationsPage() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [filter, setFilter] = useState<Filter>("all");
-  const { notifications, unreadCount, toggleRead, markAllRead } =
-    useNotifications();
+  const [filter, setFilter] = useState<NotificationFilter>("all");
+  const { notifications, unreadCount, toggleRead, markAllRead, loading: listLoading } =
+    useNotifications({ filter, perPage: 50 });
 
   useEffect(() => {
     setMounted(true);
@@ -34,12 +33,6 @@ export default function NotificationsPage() {
     }
   }, [mounted, isAuthenticated, loading, locale, router]);
 
-  const filtered = useMemo(() => {
-    if (filter === "unread") return notifications.filter((n) => !n.read);
-    if (filter === "read") return notifications.filter((n) => n.read);
-    return notifications;
-  }, [notifications, filter]);
-
   if (!mounted || loading || !isAuthenticated) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -48,7 +41,7 @@ export default function NotificationsPage() {
     );
   }
 
-  const filters: { key: Filter; label: string }[] = [
+  const filters: { key: NotificationFilter; label: string }[] = [
     { key: "all", label: t("notifications.filter_all") },
     { key: "unread", label: t("notifications.filter_unread") },
     { key: "read", label: t("notifications.filter_read") },
@@ -145,7 +138,14 @@ export default function NotificationsPage() {
               borderColor: getColor("border"),
             }}
           >
-            {filtered.length === 0 ? (
+            {listLoading && notifications.length === 0 ? (
+              <p
+                className="px-5 py-14 text-sm text-center"
+                style={{ color: getColor("mutedText") }}
+              >
+                {t("common.loading")}
+              </p>
+            ) : notifications.length === 0 ? (
               <p
                 className="px-5 py-14 text-sm text-center"
                 style={{ color: getColor("mutedText") }}
@@ -154,12 +154,12 @@ export default function NotificationsPage() {
               </p>
             ) : (
               <div>
-                {filtered.map((item, index) => (
+                {notifications.map((item, index) => (
                   <div
                     key={item.id}
                     style={{
                       borderBottom:
-                        index < filtered.length - 1
+                        index < notifications.length - 1
                           ? `1px solid ${getColor("border")}`
                           : undefined,
                     }}
