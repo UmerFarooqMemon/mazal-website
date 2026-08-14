@@ -9,8 +9,6 @@ import {
   FileCheck,
   Banknote,
   Info,
-  Calendar,
-  Clock,
   Upload,
   Copy,
   Check,
@@ -20,7 +18,10 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
+import CollectionSlotPicker from "@/components/payments/CollectionSlotPicker";
 import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
+import { useCollectionSlots } from "@/hooks/useCollectionSlots";
+import { findCollectionSlot } from "@/services/collection-slots";
 import type { MarketplaceAuctionBankInstructions } from "@/services/marketplace";
 import type {
   DepositPaymentMethod,
@@ -78,17 +79,21 @@ export default function DepositPaymentStep({
   });
   const [checkForm, setCheckForm] = useState({
     checkNumber: "",
-    date: "",
-    time: "",
     pickupAddress: "",
     notes: "",
   });
   const [cashForm, setCashForm] = useState({
-    date: "",
-    time: "",
     pickupAddress: "",
     notes: "",
   });
+  const needsSlots = method === "managers_check" || method === "cash";
+  const {
+    slots,
+    error: slotsError,
+    refresh: refreshSlots,
+  } = useCollectionSlots({ enabled: needsSlots });
+  const [collectionDate, setCollectionDate] = useState("");
+  const [collectionTime, setCollectionTime] = useState("");
 
   useEffect(() => {
     setFormError(null);
@@ -171,7 +176,7 @@ export default function DepositPaymentStep({
     Boolean(paytabs.clientKey) &&
     Boolean(onCardPay);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     setFormError(null);
 
     if (method === "card") {
@@ -210,10 +215,12 @@ export default function DepositPaymentStep({
         );
         return;
       }
-      if (!checkForm.date || !checkForm.time) {
+      const latest = await refreshSlots();
+      const slot = findCollectionSlot(latest, collectionDate, collectionTime);
+      if (!slot) {
         setFormError(
           t("auctions.collection_slot_required") ||
-            "Collection date and time are required.",
+            "Please choose an available collection date and time.",
         );
         return;
       }
@@ -227,18 +234,19 @@ export default function DepositPaymentStep({
       onContinue({
         method: "managers_check",
         check_number: checkForm.checkNumber.trim(),
-        collection_date: checkForm.date,
-        collection_time: checkForm.time,
+        collection_slot_id: slot.id,
         pickup_address: checkForm.pickupAddress.trim(),
         notes: checkForm.notes.trim() || undefined,
       });
       return;
     }
 
-    if (!cashForm.date || !cashForm.time) {
+    const latest = await refreshSlots();
+    const slot = findCollectionSlot(latest, collectionDate, collectionTime);
+    if (!slot) {
       setFormError(
         t("auctions.collection_slot_required") ||
-          "Collection date and time are required.",
+          "Please choose an available collection date and time.",
       );
       return;
     }
@@ -250,8 +258,7 @@ export default function DepositPaymentStep({
     }
     onContinue({
       method: "cash",
-      collection_date: cashForm.date,
-      collection_time: cashForm.time,
+      collection_slot_id: slot.id,
       pickup_address: cashForm.pickupAddress.trim(),
       notes: cashForm.notes.trim() || undefined,
     });
@@ -572,30 +579,22 @@ export default function DepositPaymentStep({
             />
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label={t("auctions.field_collection_date")}
-              type="date"
-              icon={<Calendar className="w-4 h-4" />}
-              value={method === "managers_check" ? checkForm.date : cashForm.date}
-              onChange={(e) =>
-                method === "managers_check"
-                  ? setCheckForm({ ...checkForm, date: e.target.value })
-                  : setCashForm({ ...cashForm, date: e.target.value })
-              }
-            />
-            <Input
-              label={t("auctions.field_collection_time")}
-              type="time"
-              icon={<Clock className="w-4 h-4" />}
-              value={method === "managers_check" ? checkForm.time : cashForm.time}
-              onChange={(e) =>
-                method === "managers_check"
-                  ? setCheckForm({ ...checkForm, time: e.target.value })
-                  : setCashForm({ ...cashForm, time: e.target.value })
-              }
-            />
-          </div>
+          <CollectionSlotPicker
+            slots={slots}
+            date={collectionDate}
+            time={collectionTime}
+            onDateChange={setCollectionDate}
+            onTimeChange={setCollectionTime}
+            dateLabel={t("auctions.field_collection_date")}
+            timeLabel={t("auctions.field_collection_time")}
+            timePlaceholder={
+              t("auctions.collection_time_placeholder") || "--:--"
+            }
+            pickDateFirstLabel={
+              t("auctions.collection_time_pick_date") || "Select a date first"
+            }
+            loadError={slotsError}
+          />
 
           <Input
             label={t("auctions.field_pickup_address")}

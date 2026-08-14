@@ -12,6 +12,7 @@ interface SelectProps {
   value?: string;
   onChange?: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 export default function Select({
@@ -22,6 +23,7 @@ export default function Select({
   value,
   onChange,
   placeholder,
+  disabled = false,
 }: SelectProps) {
   const { getColor } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
@@ -58,8 +60,12 @@ export default function Select({
         {/* Trigger Button */}
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between cursor-pointer transition-all duration-200 ${error ? "border-red-300" : ""} text-start`}
+          disabled={disabled}
+          onClick={() => {
+            if (disabled) return;
+            setIsOpen(!isOpen);
+          }}
+          className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all duration-200 ${error ? "border-red-300" : ""} text-start ${disabled ? "cursor-not-allowed opacity-50 bg-gray-100" : "cursor-pointer"}`}
           style={{
             borderColor: isOpen
               ? getColor("primary")
@@ -83,7 +89,7 @@ export default function Select({
         </button>
 
         {/* Dropdown Menu */}
-        {isOpen && (
+        {isOpen && !disabled && (
           <div
             className={`absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg overflow-hidden start-0`}
             style={{

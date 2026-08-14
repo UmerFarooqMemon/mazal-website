@@ -903,8 +903,7 @@ export default function PrivateDealPage() {
     notes?: string;
     evidence?: File | null;
     checkNumber?: string;
-    collectionDate?: string;
-    collectionTime?: string;
+    collectionSlotId?: number;
     pickupAddress?: string;
   }) => {
     await withSubmit(async () => {
@@ -958,9 +957,14 @@ export default function PrivateDealPage() {
               "Pickup address is required.",
           );
         }
+        if (!payload.collectionSlotId) {
+          throw new Error(
+            t("private-deal.collection_slot_required") ||
+              "Please select an available collection slot.",
+          );
+        }
         formData.append("check_number", payload.checkNumber || "");
-        formData.append("collection_date", payload.collectionDate || "");
-        formData.append("collection_time", payload.collectionTime || "");
+        formData.append("collection_slot_id", String(payload.collectionSlotId || ""));
         formData.append("pickup_address", payload.pickupAddress || "");
         formData.append("notes", payload.notes || "");
       }
@@ -972,8 +976,13 @@ export default function PrivateDealPage() {
               "Pickup address is required.",
           );
         }
-        formData.append("collection_date", payload.collectionDate || "");
-        formData.append("collection_time", payload.collectionTime || "");
+        if (!payload.collectionSlotId) {
+          throw new Error(
+            t("private-deal.collection_slot_required") ||
+              "Please select an available collection slot.",
+          );
+        }
+        formData.append("collection_slot_id", String(payload.collectionSlotId || ""));
         formData.append("pickup_address", payload.pickupAddress || "");
         formData.append("notes", payload.notes || "");
       }

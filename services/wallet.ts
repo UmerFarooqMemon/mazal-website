@@ -123,6 +123,7 @@ export interface WalletDepositPayment {
   sender_bank_name?: string | null;
   sender_account_last4?: string | null;
   check_number?: string | null;
+  collection_slot_id?: number | string | null;
   collection_date?: string | null;
   collection_time?: string | null;
   collection_notes?: string | null;

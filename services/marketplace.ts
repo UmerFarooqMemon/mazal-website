@@ -1722,8 +1722,7 @@ export function submitPurchasePaymentEvidence(
     payment_reference?: string;
     evidence?: File | Blob | null;
     check_number?: string;
-    collection_date?: string;
-    collection_time?: string;
+    collection_slot_id?: number | string;
     pickup_address?: string;
     collection_notes?: string;
   },
@@ -1739,11 +1738,8 @@ export function submitPurchasePaymentEvidence(
   if (payload.check_number) {
     formData.append("check_number", payload.check_number);
   }
-  if (payload.collection_date) {
-    formData.append("collection_date", payload.collection_date);
-  }
-  if (payload.collection_time) {
-    formData.append("collection_time", payload.collection_time);
+  if (payload.collection_slot_id != null && payload.collection_slot_id !== "") {
+    formData.append("collection_slot_id", String(payload.collection_slot_id));
   }
   if (payload.pickup_address) {
     formData.append("pickup_address", payload.pickup_address);
@@ -2091,8 +2087,7 @@ export function submitAuctionManagersCheck(
   locale: string,
   payload: {
     check_number: string;
-    collection_date: string;
-    collection_time: string;
+    collection_slot_id: number | string;
     pickup_address: string;
     notes?: string;
   },
@@ -2115,8 +2110,7 @@ export function submitAuctionCashCollection(
   registrationId: string | number,
   locale: string,
   payload: {
-    collection_date: string;
-    collection_time: string;
+    collection_slot_id: number | string;
     pickup_address: string;
     notes?: string;
   },

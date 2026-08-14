@@ -426,8 +426,7 @@ export default function AuctionRegisterPage({
           locale,
           {
             check_number: payload.check_number,
-            collection_date: payload.collection_date,
-            collection_time: payload.collection_time,
+            collection_slot_id: payload.collection_slot_id,
             pickup_address: payload.pickup_address,
             notes: payload.notes,
           },
@@ -439,8 +438,7 @@ export default function AuctionRegisterPage({
           nextRegistration.id,
           locale,
           {
-            collection_date: payload.collection_date,
-            collection_time: payload.collection_time,
+            collection_slot_id: payload.collection_slot_id,
             pickup_address: payload.pickup_address,
             notes: payload.notes,
           },
@@ -492,8 +490,7 @@ export default function AuctionRegisterPage({
     notes?: string;
     evidence?: File | null;
     checkNumber?: string;
-    collectionDate?: string;
-    collectionTime?: string;
+    collectionSlotId?: number;
     pickupAddress?: string;
   }) => {
     if (method === "wallet") return;
@@ -524,8 +521,7 @@ export default function AuctionRegisterPage({
       await handlePaymentContinue({
         method: "managers_check",
         check_number: payload.checkNumber || "",
-        collection_date: payload.collectionDate || "",
-        collection_time: payload.collectionTime || "",
+        collection_slot_id: payload.collectionSlotId || 0,
         pickup_address: payload.pickupAddress || "",
         notes: payload.notes,
       });
@@ -534,8 +530,7 @@ export default function AuctionRegisterPage({
 
     await handlePaymentContinue({
       method: "cash",
-      collection_date: payload.collectionDate || "",
-      collection_time: payload.collectionTime || "",
+      collection_slot_id: payload.collectionSlotId || 0,
       pickup_address: payload.pickupAddress || "",
       notes: payload.notes,
     });

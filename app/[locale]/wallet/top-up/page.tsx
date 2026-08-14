@@ -19,6 +19,9 @@ import { Button, DirhamSymbolIcon, Input } from "@/components/ui";
 import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
 import type { StepItem } from "@/components/private-deal/Stepper";
 import WalletFlowHeader from "@/components/wallet/WalletFlowHeader";
+import CollectionSlotPicker from "@/components/payments/CollectionSlotPicker";
+import { useCollectionSlots } from "@/hooks/useCollectionSlots";
+import { findCollectionSlot } from "@/services/collection-slots";
 import { useWallet } from "@/hooks/useWallet";
 import { formatPriceInput } from "@/lib/card-input";
 import {
@@ -87,6 +90,14 @@ export default function WalletTopUpPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [donePending, setDonePending] = useState(false);
+  const needsSlots =
+    activePayment?.method === "managers_check" ||
+    activePayment?.method === "cash_collection";
+  const {
+    slots,
+    error: slotsError,
+    refresh: refreshSlots,
+  } = useCollectionSlots({ enabled: needsSlots });
 
   const minDeposit = wallet.limits?.min_deposit ?? 100;
   const maxDeposit = wallet.limits?.max_deposit ?? 5_000_000;
@@ -286,10 +297,18 @@ export default function WalletTopUpPage() {
         setError(t("wallet.pickup_address_required"));
         return;
       }
+      const latest = await refreshSlots();
+      const slot = findCollectionSlot(latest, collectionDate, collectionTime);
+      if (!slot) {
+        setError(
+          t("wallet.collection_slot_required") ||
+            "Please choose an available collection date and time.",
+        );
+        return;
+      }
       formData.append("check_number", checkNumber.trim());
       formData.append("pickup_address", pickupAddress.trim());
-      if (collectionDate) formData.append("collection_date", collectionDate);
-      if (collectionTime) formData.append("collection_time", collectionTime);
+      formData.append("collection_slot_id", String(slot.id));
       if (collectionNotes.trim()) {
         formData.append("collection_notes", collectionNotes.trim());
       }
@@ -301,9 +320,17 @@ export default function WalletTopUpPage() {
         setError(t("wallet.pickup_address_required"));
         return;
       }
+      const latest = await refreshSlots();
+      const slot = findCollectionSlot(latest, collectionDate, collectionTime);
+      if (!slot) {
+        setError(
+          t("wallet.collection_slot_required") ||
+            "Please choose an available collection date and time.",
+        );
+        return;
+      }
       formData.append("pickup_address", pickupAddress.trim());
-      if (collectionDate) formData.append("collection_date", collectionDate);
-      if (collectionTime) formData.append("collection_time", collectionTime);
+      formData.append("collection_slot_id", String(slot.id));
       if (collectionNotes.trim()) {
         formData.append("collection_notes", collectionNotes.trim());
       }
@@ -764,24 +791,24 @@ export default function WalletTopUpPage() {
                                   setPickupAddress(event.target.value)
                                 }
                               />
-                              <div className="grid grid-cols-2 gap-3">
-                                <Input
-                                  label={t("wallet.collection_date")}
-                                  type="date"
-                                  value={collectionDate}
-                                  onChange={(event) =>
-                                    setCollectionDate(event.target.value)
-                                  }
-                                />
-                                <Input
-                                  label={t("wallet.collection_time")}
-                                  type="time"
-                                  value={collectionTime}
-                                  onChange={(event) =>
-                                    setCollectionTime(event.target.value)
-                                  }
-                                />
-                              </div>
+                              <CollectionSlotPicker
+                                slots={slots}
+                                date={collectionDate}
+                                time={collectionTime}
+                                onDateChange={setCollectionDate}
+                                onTimeChange={setCollectionTime}
+                                dateLabel={t("wallet.collection_date")}
+                                timeLabel={t("wallet.collection_time")}
+                                timePlaceholder={
+                                  t("wallet.collection_time_placeholder") ||
+                                  "--:--"
+                                }
+                                pickDateFirstLabel={
+                                  t("wallet.collection_time_pick_date") ||
+                                  "Select a date first"
+                                }
+                                loadError={slotsError}
+                              />
                               <Input
                                 label={t("wallet.field_notes")}
                                 value={collectionNotes}

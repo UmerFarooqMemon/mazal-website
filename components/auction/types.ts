@@ -60,15 +60,13 @@ export type DepositPaymentSubmitPayload =
   | {
       method: "managers_check";
       check_number: string;
-      collection_date: string;
-      collection_time: string;
+      collection_slot_id: number;
       pickup_address: string;
       notes?: string;
     }
   | {
       method: "cash";
-      collection_date: string;
-      collection_time: string;
+      collection_slot_id: number;
       pickup_address: string;
       notes?: string;
     };

@@ -669,8 +669,7 @@ export default function MarketplaceCheckout({
     notes?: string;
     evidence?: File | null;
     checkNumber?: string;
-    collectionDate?: string;
-    collectionTime?: string;
+    collectionSlotId?: number;
     pickupAddress?: string;
   }) => {
     if (!processingPayment) return;
@@ -736,8 +735,7 @@ export default function MarketplaceCheckout({
           {
             method: "managers_check",
             check_number: payload.checkNumber,
-            collection_date: payload.collectionDate,
-            collection_time: payload.collectionTime,
+            collection_slot_id: payload.collectionSlotId,
             pickup_address: payload.pickupAddress,
             collection_notes: payload.notes,
           },
@@ -750,8 +748,7 @@ export default function MarketplaceCheckout({
           locale,
           {
             method: "cash_collection",
-            collection_date: payload.collectionDate,
-            collection_time: payload.collectionTime,
+            collection_slot_id: payload.collectionSlotId,
             pickup_address: payload.pickupAddress,
             collection_notes: payload.notes,
           },

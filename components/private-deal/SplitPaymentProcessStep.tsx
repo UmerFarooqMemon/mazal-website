@@ -10,15 +10,16 @@ import {
   Banknote,
   Upload,
   Info,
-  Calendar,
-  Clock,
   MapPin,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme, type ThemeColors } from "@/context/ThemeContext";
 import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
+import CollectionSlotPicker from "@/components/payments/CollectionSlotPicker";
 import { Button, DirhamAmount, Input } from "@/components/ui";
+import { useCollectionSlots } from "@/hooks/useCollectionSlots";
+import { findCollectionSlot } from "@/services/collection-slots";
 import BankSelect from "@/components/ui/BankSelect";
 import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
 import { resolveBankLabel } from "@/lib/uae-banks";
@@ -36,8 +37,7 @@ interface SplitPaymentProcessStepProps {
     notes?: string;
     evidence?: File | null;
     checkNumber?: string;
-    collectionDate?: string;
-    collectionTime?: string;
+    collectionSlotId?: number;
     pickupAddress?: string;
   }) => void;
   submitting?: boolean;
@@ -54,14 +54,6 @@ const METHOD_META: Record<
   managers_check: { titleKey: "managers_check", icon: FileCheck },
   cash: { titleKey: "cash_collection", icon: Banknote },
 };
-
-function todayIsoDate() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 function ReadOnlyAmountField({
   label,
@@ -201,16 +193,22 @@ export default function SplitPaymentProcessStep({
     accountNumber: payment.accountNumber || "",
     notes: payment.notes || "",
   });
+  const needsSlots =
+    payment.method === "managers_check" || payment.method === "cash";
+  const {
+    slots,
+    error: slotsError,
+    refresh: refreshSlots,
+  } = useCollectionSlots({ enabled: needsSlots });
+  const [collectionDate, setCollectionDate] = useState("");
+  const [collectionTime, setCollectionTime] = useState("");
+
   const [check, setCheck] = useState({
     number: "",
-    date: "",
-    time: "",
     pickupAddress: "",
     notes: payment.notes || "",
   });
   const [cash, setCash] = useState({
-    date: "",
-    time: "",
     pickupAddress: "",
     notes: payment.notes || "",
   });
@@ -226,7 +224,6 @@ export default function SplitPaymentProcessStep({
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
-    const minDate = todayIsoDate();
 
     if (payment.method === "bank") {
       if (!bankTransfer.paymentReference.trim()) {
@@ -257,19 +254,10 @@ export default function SplitPaymentProcessStep({
           t("private-deal.error_check_number_required") ||
           "Check number is required.";
       }
-      if (!check.date) {
-        errors.collectionDate =
-          t("private-deal.error_collection_date_required") ||
-          "Collection date is required.";
-      } else if (check.date < minDate) {
-        errors.collectionDate =
-          t("private-deal.error_collection_date_future") ||
-          "Collection date must be today or later.";
-      }
-      if (!check.time) {
-        errors.collectionTime =
-          t("private-deal.error_collection_time_required") ||
-          "Collection time is required.";
+      if (!findCollectionSlot(slots, collectionDate, collectionTime)) {
+        errors.collectionSlot =
+          t("private-deal.collection_slot_required") ||
+          "Please choose an available collection date and time.";
       }
       if (!check.pickupAddress.trim()) {
         errors.pickupAddress =
@@ -279,19 +267,10 @@ export default function SplitPaymentProcessStep({
     }
 
     if (payment.method === "cash") {
-      if (!cash.date) {
-        errors.collectionDate =
-          t("private-deal.error_collection_date_required") ||
-          "Collection date is required.";
-      } else if (cash.date < minDate) {
-        errors.collectionDate =
-          t("private-deal.error_collection_date_future") ||
-          "Collection date must be today or later.";
-      }
-      if (!cash.time) {
-        errors.collectionTime =
-          t("private-deal.error_collection_time_required") ||
-          "Collection time is required.";
+      if (!findCollectionSlot(slots, collectionDate, collectionTime)) {
+        errors.collectionSlot =
+          t("private-deal.collection_slot_required") ||
+          "Please choose an available collection date and time.";
       }
       if (!cash.pickupAddress.trim()) {
         errors.pickupAddress =
@@ -309,7 +288,22 @@ export default function SplitPaymentProcessStep({
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    let resolvedSlotId: number | undefined;
+    if (needsSlots) {
+      const latest = await refreshSlots();
+      const slot = findCollectionSlot(latest, collectionDate, collectionTime);
+      if (!slot) {
+        const message =
+          t("private-deal.collection_slot_unavailable") ||
+          t("private-deal.collection_slot_required") ||
+          "That collection slot is no longer available. Please choose another.";
+        toast.error(message);
+        return;
+      }
+      resolvedSlotId = slot.id;
+    }
+
     if (!validate()) return;
 
     if (payment.method === "bank") {
@@ -338,8 +332,7 @@ export default function SplitPaymentProcessStep({
     if (payment.method === "managers_check") {
       onComplete({
         checkNumber: check.number.trim(),
-        collectionDate: check.date,
-        collectionTime: check.time,
+        collectionSlotId: resolvedSlotId,
         pickupAddress: check.pickupAddress.trim(),
         notes: check.notes,
       });
@@ -347,8 +340,7 @@ export default function SplitPaymentProcessStep({
     }
 
     onComplete({
-      collectionDate: cash.date,
-      collectionTime: cash.time,
+      collectionSlotId: resolvedSlotId,
       pickupAddress: cash.pickupAddress.trim(),
       notes: cash.notes,
     });
@@ -651,25 +643,24 @@ export default function SplitPaymentProcessStep({
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input
-                  label={t("private-deal.collection_date")}
-                  type="date"
-                  value={check.date}
-                  min={todayIsoDate()}
-                  onChange={(e) => setCheck({ ...check, date: e.target.value })}
-                  icon={<Calendar className="w-4 h-4" />}
-                  error={fieldErrors.collectionDate}
-                />
-                <Input
-                  label={t("private-deal.collection_time")}
-                  type="time"
-                  value={check.time}
-                  onChange={(e) => setCheck({ ...check, time: e.target.value })}
-                  icon={<Clock className="w-4 h-4" />}
-                  error={fieldErrors.collectionTime}
-                />
-              </div>
+              <CollectionSlotPicker
+                slots={slots}
+                date={collectionDate}
+                time={collectionTime}
+                onDateChange={setCollectionDate}
+                onTimeChange={setCollectionTime}
+                dateLabel={t("private-deal.collection_date")}
+                timeLabel={t("private-deal.collection_time")}
+                timePlaceholder={
+                  t("private-deal.collection_time_placeholder") || "--:--"
+                }
+                pickDateFirstLabel={
+                  t("private-deal.collection_time_pick_date") ||
+                  "Select a date first"
+                }
+                loadError={slotsError}
+                error={fieldErrors.collectionSlot}
+              />
               <div>
                 <label
                   className="block text-[11px] font-medium mb-1.5 text-start"
@@ -748,25 +739,24 @@ export default function SplitPaymentProcessStep({
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input
-                  label={t("private-deal.collection_date")}
-                  type="date"
-                  value={cash.date}
-                  min={todayIsoDate()}
-                  onChange={(e) => setCash({ ...cash, date: e.target.value })}
-                  icon={<Calendar className="w-4 h-4" />}
-                  error={fieldErrors.collectionDate}
-                />
-                <Input
-                  label={t("private-deal.collection_time")}
-                  type="time"
-                  value={cash.time}
-                  onChange={(e) => setCash({ ...cash, time: e.target.value })}
-                  icon={<Clock className="w-4 h-4" />}
-                  error={fieldErrors.collectionTime}
-                />
-              </div>
+              <CollectionSlotPicker
+                slots={slots}
+                date={collectionDate}
+                time={collectionTime}
+                onDateChange={setCollectionDate}
+                onTimeChange={setCollectionTime}
+                dateLabel={t("private-deal.collection_date")}
+                timeLabel={t("private-deal.collection_time")}
+                timePlaceholder={
+                  t("private-deal.collection_time_placeholder") || "--:--"
+                }
+                pickDateFirstLabel={
+                  t("private-deal.collection_time_pick_date") ||
+                  "Select a date first"
+                }
+                loadError={slotsError}
+                error={fieldErrors.collectionSlot}
+              />
               <div>
                 <label
                   className="block text-[11px] font-medium mb-1.5 text-start"
