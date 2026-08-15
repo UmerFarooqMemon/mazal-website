@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { DirhamAmount } from "@/components/ui";
+import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import {
   getMyAuctionRegistrations,
   type MarketplaceAuctionRegistration,
@@ -14,6 +15,49 @@ function toNumber(value: number | string | null | undefined): number {
   if (value == null || value === "") return 0;
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function plateFromDisplay(displayPlate?: string | null) {
+  const display = String(displayPlate || "").trim();
+  const displayMatch = display.match(/^([A-Za-z?]{1,3})\s+(.+)$/);
+  return {
+    code: displayMatch?.[1]?.toUpperCase() || "",
+    digits: (displayMatch?.[2] || "").replace(/\s+/g, ""),
+  };
+}
+
+function mapRegistrationRow(reg: MarketplaceAuctionRegistration) {
+  const listing = reg.listing;
+  const fromDisplay = plateFromDisplay(listing?.display_plate);
+  const plate_code = String(
+    listing?.plate_code || fromDisplay.code || "",
+  ).trim();
+  const plate_digits = String(
+    listing?.plate_digits || fromDisplay.digits || "",
+  ).trim();
+  const listingId = listing?.id ?? reg.listing_id;
+  const display_plate =
+    listing?.display_plate ||
+    (plate_code && plate_digits ? `${plate_code} ${plate_digits}` : "") ||
+    listing?.title ||
+    `Listing #${listingId}`;
+
+  return {
+    registrationId: reg.id,
+    listingId,
+    title: listing?.title || display_plate,
+    depositStatus: reg.deposit_status,
+    depositAmount: reg.deposit_amount,
+    preview: listing?.preview ?? null,
+    plate_code: plate_code || undefined,
+    plate_digits,
+    display_plate,
+    emirate: listing?.emirate,
+    plate_type: listing?.plate_type,
+    plate_design: listing?.plate_design,
+    statusLabel: reg.status_label || reg.status,
+    depositStatusLabel: reg.deposit_status_label || reg.deposit_status,
+  };
 }
 
 export default function MyAuctionRegistrationsPage() {
@@ -113,47 +157,57 @@ export default function MyAuctionRegistrationsPage() {
           ) : (
             <div className="space-y-4">
               {registrations.map((registration) => {
-                const listing = registration.listing;
-                const listingId = registration.listing_id;
-                const title =
-                  listing && "title" in listing && listing.title
-                    ? listing.title
-                    : listing && "display_plate" in listing && listing.display_plate
-                      ? listing.display_plate
-                      : `Listing #${listingId}`;
+                const row = mapRegistrationRow(registration);
 
                 return (
                   <div
-                    key={registration.id}
+                    key={row.registrationId}
                     className="rounded-2xl border bg-white p-5 sm:p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
                     style={{ borderColor: getColor("border") }}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div>
-                        <Link
-                          href={`/${locale}/auctions/${listingId}`}
-                          className="text-lg font-semibold hover:opacity-80"
-                          style={{ color: getColor("primaryText") }}
-                        >
-                          {title}
-                        </Link>
+                      <div className="min-w-0 flex-1">
+                        {row.preview ? (
+                          <Link
+                            href={`/${locale}/auctions/${row.listingId}`}
+                            className="block max-w-[345px]"
+                          >
+                            <NumberPlateDisplay
+                              plate_code={row.plate_code}
+                              plate_digits={row.plate_digits}
+                              emirate={row.emirate}
+                              preview={row.preview}
+                              plateType={row.plate_type || undefined}
+                              plateDesign={row.plate_design || undefined}
+                              crop="card"
+                              hideCode={false}
+                              scaleFontToWidth
+                              fontScaleMultiplier={2.3}
+                            />
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/${locale}/auctions/${row.listingId}`}
+                            className="text-lg font-semibold hover:opacity-80"
+                            style={{ color: getColor("primaryText") }}
+                          >
+                            {row.display_plate || row.title}
+                          </Link>
+                        )}
                         <div
                           className="flex flex-wrap gap-3 mt-2 text-sm"
                           style={{ color: getColor("secondaryText") }}
                         >
-                          <span>
-                            {registration.status_label || registration.status}
-                          </span>
+                          <span>{row.statusLabel}</span>
                           <span>•</span>
                           <span>
                             {t("auctions.summary_deposit_status")}:{" "}
-                            {registration.deposit_status_label ||
-                              registration.deposit_status}
+                            {row.depositStatusLabel}
                           </span>
                         </div>
                       </div>
 
-                      <div className="text-end">
+                      <div className="text-end shrink-0">
                         <div
                           className="text-[10px] font-semibold uppercase tracking-wider mb-1"
                           style={{ color: getColor("mutedText") }}
@@ -165,7 +219,7 @@ export default function MyAuctionRegistrationsPage() {
                           style={{ color: getColor("primaryText") }}
                         >
                           <DirhamAmount
-                            amount={toNumber(registration.deposit_amount)}
+                            amount={toNumber(row.depositAmount)}
                             weight="bold"
                           />
                         </div>
@@ -174,15 +228,15 @@ export default function MyAuctionRegistrationsPage() {
 
                     <div className="mt-4 flex flex-wrap gap-3">
                       <Link
-                        href={`/${locale}/auctions/${listingId}`}
+                        href={`/${locale}/auctions/${row.listingId}`}
                         className="text-sm font-semibold"
                         style={{ color: getColor("primary") }}
                       >
                         {t("auctions.view_auction") || "View auction"}
                       </Link>
-                      {registration.deposit_status?.toLowerCase() !== "held" && (
+                      {row.depositStatus?.toLowerCase() !== "held" && (
                         <Link
-                          href={`/${locale}/auctions/${listingId}/register`}
+                          href={`/${locale}/auctions/${row.listingId}/register`}
                           className="text-sm font-semibold"
                           style={{ color: getColor("primary") }}
                         >

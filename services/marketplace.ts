@@ -100,6 +100,26 @@ export interface MarketplaceAuctionDepositMethod {
   instructions?: MarketplaceAuctionBankInstructions | Record<string, unknown>;
 }
 
+export interface MarketplaceAuctionRegistrationListing {
+  id: number;
+  title?: string;
+  status?: string;
+  listing_type?: string;
+  emirate?: string;
+  emirate_label?: string;
+  plate_type?: string | null;
+  plate_type_label?: string | null;
+  plate_design?: string | null;
+  plate_code?: string | null;
+  plate_digits?: string | null;
+  display_plate?: string;
+  hide_code?: boolean;
+  code_hidden?: boolean;
+  preview?: MarketplaceListingPreview | null;
+  asking_price?: number | string;
+  auction_outcome?: string | null;
+}
+
 export interface MarketplaceAuctionRegistration {
   id: number;
   listing_id: number;
@@ -127,15 +147,7 @@ export interface MarketplaceAuctionRegistration {
   provider_transaction?: MarketplaceAuctionProviderTransaction | null;
   paytabs_configured?: boolean;
   user?: { id: number; name: string };
-  listing?:
-    | MarketplaceListingCard
-    | {
-        id: number;
-        title?: string;
-        display_plate?: string;
-        auction_outcome?: string | null;
-      }
-    | null;
+  listing?: MarketplaceAuctionRegistrationListing | MarketplaceListingCard | null;
   created_at?: string;
   updated_at?: string;
 }
