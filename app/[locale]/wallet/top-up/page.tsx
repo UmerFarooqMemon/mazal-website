@@ -723,11 +723,9 @@ export default function WalletTopUpPage() {
                                   {custody.cheque_payee}
                                 </p>
                               )}
-                              {(custody.collection_location ||
-                                custody.collection_address) && (
+                              {custody.collection_address && (
                                 <p style={{ color: getColor("secondaryText") }}>
-                                  {custody.collection_location ||
-                                    custody.collection_address}
+                                  {custody.collection_address}
                                 </p>
                               )}
                               {custody.note && (

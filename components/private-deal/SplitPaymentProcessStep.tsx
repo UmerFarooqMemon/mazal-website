@@ -10,7 +10,6 @@ import {
   Banknote,
   Upload,
   Info,
-  MapPin,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
@@ -213,9 +212,6 @@ export default function SplitPaymentProcessStep({
     notes: payment.notes || "",
   });
 
-  const custodyLocation = String(
-    custodyInstructions?.collection_location || "",
-  ).trim();
   const custodyAddress = String(
     custodyInstructions?.collection_address || "",
   ).trim();
@@ -602,13 +598,6 @@ export default function SplitPaymentProcessStep({
                 placeholder="eg. 000123"
                 error={fieldErrors.checkNumber}
               />
-              <Input
-                label={t("private-deal.collection_location")}
-                value={custodyLocation}
-                readOnly
-                placeholder="eg. 000123"
-                icon={<MapPin className="w-4 h-4" />}
-              />
               <div>
                 <label
                   className="block text-[11px] font-medium mb-1.5 text-start"
@@ -697,13 +686,6 @@ export default function SplitPaymentProcessStep({
                 title={t("private-deal.instructions")}
                 body={t("private-deal.cash_collection_instructions")}
                 getColor={getColor}
-              />
-              <Input
-                label={t("private-deal.collection_location")}
-                value={custodyLocation}
-                readOnly
-                placeholder="eg. 000123"
-                icon={<MapPin className="w-4 h-4" />}
               />
               <div>
                 <label

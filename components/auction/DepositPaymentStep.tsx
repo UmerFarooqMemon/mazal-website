@@ -146,7 +146,6 @@ export default function DepositPaymentStep({
     if (!source) return null;
     return {
       payee: source.cheque_payee,
-      location: source.collection_location,
       address: source.collection_address,
       notice: source.notice,
       reference: source.reference,
@@ -524,25 +523,6 @@ export default function DepositPaymentStep({
                     style={{ color: getColor("primaryText") }}
                   >
                     {collectionInfo.payee}
-                  </div>
-                </div>
-              )}
-              {collectionInfo.location && (
-                <div
-                  className="rounded-xl border px-4 py-3.5"
-                  style={{ borderColor: getColor("border") }}
-                >
-                  <div
-                    className="text-xs mb-0.5"
-                    style={{ color: getColor("mutedText") }}
-                  >
-                    {t("auctions.field_collection_location")}
-                  </div>
-                  <div
-                    className="text-sm font-medium"
-                    style={{ color: getColor("primaryText") }}
-                  >
-                    {collectionInfo.location}
                   </div>
                 </div>
               )}
