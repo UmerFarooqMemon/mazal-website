@@ -211,49 +211,57 @@ export default function HomeV2Hero() {
                   didSwipe.current = false;
                 }}
               >
-                <div className="relative">
-                  <NumberPlateDisplay
-                    plate_code={featuredPlate.code}
-                    plate_digits={featuredPlate.digits}
-                    emirate={featuredPlate.emirate}
-                    preview={featuredPlate.preview}
-                    plateType={featuredPlate.plateType}
-                    plateDesign={featuredPlate.plateDesign}
-                    crop="card"
-                    hideCode={featuredPlate.hideCode}
-                    scaleFontToWidth
-                    fontScaleMultiplier={2.3}
-                  />
+                <div
+                  className={
+                    listings.length > 1
+                      ? "flex items-center gap-2 lg:block"
+                      : undefined
+                  }
+                >
                   {listings.length > 1 ? (
-                    <>
-                      <button
-                        type="button"
-                        className="absolute top-1/2 left-1 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_4px_12px_rgba(21,46,43,0.16)] lg:hidden"
-                        onClick={() =>
-                          goToSlide(activeIndex + (isRTL ? 1 : -1))
-                        }
-                        aria-label="Previous"
-                      >
-                        <HomeV2Icon
-                          src="/home-v2/icon-arrow-dark.svg"
-                          size={14}
-                          className="-scale-x-100"
-                        />
-                      </button>
-                      <button
-                        type="button"
-                        className="absolute top-1/2 right-1 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_4px_12px_rgba(21,46,43,0.16)] lg:hidden"
-                        onClick={() =>
-                          goToSlide(activeIndex + (isRTL ? -1 : 1))
-                        }
-                        aria-label="Next"
-                      >
-                        <HomeV2Icon
-                          src="/home-v2/icon-arrow-dark.svg"
-                          size={14}
-                        />
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_4px_12px_rgba(21,46,43,0.16)] lg:hidden"
+                      onClick={() =>
+                        goToSlide(activeIndex + (isRTL ? 1 : -1))
+                      }
+                      aria-label="Previous"
+                    >
+                      <HomeV2Icon
+                        src="/home-v2/icon-arrow-dark.svg"
+                        size={14}
+                        className="-scale-x-100"
+                      />
+                    </button>
+                  ) : null}
+                  <div className="min-w-0 flex-1">
+                    <NumberPlateDisplay
+                      plate_code={featuredPlate.code}
+                      plate_digits={featuredPlate.digits}
+                      emirate={featuredPlate.emirate}
+                      preview={featuredPlate.preview}
+                      plateType={featuredPlate.plateType}
+                      plateDesign={featuredPlate.plateDesign}
+                      crop="card"
+                      hideCode={featuredPlate.hideCode}
+                      scaleFontToWidth
+                      fontScaleMultiplier={2.3}
+                    />
+                  </div>
+                  {listings.length > 1 ? (
+                    <button
+                      type="button"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_4px_12px_rgba(21,46,43,0.16)] lg:hidden"
+                      onClick={() =>
+                        goToSlide(activeIndex + (isRTL ? -1 : 1))
+                      }
+                      aria-label="Next"
+                    >
+                      <HomeV2Icon
+                        src="/home-v2/icon-arrow-dark.svg"
+                        size={14}
+                      />
+                    </button>
                   ) : null}
                 </div>
 
