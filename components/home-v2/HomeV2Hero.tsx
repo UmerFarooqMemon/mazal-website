@@ -24,6 +24,11 @@ export default function HomeV2Hero() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [pauseAutoplay, setPauseAutoplay] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 1023px)").matches
+      : true,
+  );
   const swipeStartX = useRef<number | null>(null);
   const didSwipe = useRef(false);
   const resumeTimer = useRef<number | null>(null);
@@ -58,13 +63,21 @@ export default function HomeV2Hero() {
   }, [locale]);
 
   useEffect(() => {
-    if (listings.length < 2 || pauseAutoplay) return;
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile || listings.length < 2 || pauseAutoplay) return;
     const timer = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % listings.length);
     }, 6000);
 
     return () => window.clearInterval(timer);
-  }, [listings.length, pauseAutoplay]);
+  }, [isMobile, listings.length, pauseAutoplay]);
 
   useEffect(() => {
     return () => {
@@ -102,7 +115,7 @@ export default function HomeV2Hero() {
     if (Math.abs(deltaX) < threshold) return;
 
     didSwipe.current = true;
-    pauseThenResumeAutoplay();
+    if (!isMobile) pauseThenResumeAutoplay();
     const swipedNext = isRTL ? deltaX > 0 : deltaX < 0;
     goToSlide(activeIndex + (swipedNext ? 1 : -1));
   };
