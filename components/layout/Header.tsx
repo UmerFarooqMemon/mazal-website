@@ -14,6 +14,7 @@ import { featureFlags } from "@/config/featureFlags";
 import { getCurrentKyc } from "@/services/kyc";
 import { getLoginHref } from "@/lib/auth-redirect";
 import {
+  Home,
   User,
   Menu,
   X,
@@ -125,6 +126,9 @@ export default function Header() {
   };
 
   const isActive = (path: string) => {
+    if (path === "home") {
+      return pathname === `/${locale}` || pathname === `/${locale}/`;
+    }
     if (path === "/dashboard") {
       return (
         pathname === `/${locale}/dashboard` ||
@@ -135,6 +139,12 @@ export default function Header() {
   };
 
   const navLinks = [
+    {
+      href: `/${locale}`,
+      label: t("common.home"),
+      match: "home",
+      icon: Home,
+    },
     featureFlags.marketplace && {
       href: `/${locale}/marketplace`,
       label: t("common.marketplace"),
@@ -225,7 +235,11 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`transition-colors whitespace-nowrap ${ isActive(link.match) ? "font-medium" : "hover:opacity-80" }`}
+                  className={`transition-colors whitespace-nowrap ${
+                    isActive(link.match)
+                      ? "font-bold underline underline-offset-8 decoration-2"
+                      : "hover:opacity-80"
+                  }`}
                   style={linkStyle(isActive(link.match))}
                 >
                   {link.label}
@@ -501,7 +515,7 @@ export default function Header() {
                           key={item.href}
                           href={item.href}
                           onClick={closeMenu}
-                          className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${active ? "font-medium" : ""} text-start`}
+                          className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${active ? "font-bold underline underline-offset-4" : ""} text-start`}
                           style={{
                             backgroundColor: active
                               ? `${getColor("primary")}10`
@@ -535,7 +549,7 @@ export default function Header() {
                       key={link.href}
                       href={link.href}
                       onClick={closeMenu}
-                      className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ active ? "font-medium" : "" } text-start`}
+                      className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ active ? "font-bold underline underline-offset-4" : "" } text-start`}
                       style={{
                         backgroundColor: active
                           ? `${getColor("primary")}10`
@@ -565,7 +579,7 @@ export default function Header() {
                   <Link
                     href={`/${locale}/kyc`}
                     onClick={closeMenu}
-                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ isActive("/kyc") ? "font-medium" : "" } text-start`}
+                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ isActive("/kyc") ? "font-bold underline underline-offset-4" : "" } text-start`}
                     style={{
                       backgroundColor: isAuthenticated
                         ? kycBadgeConfig.backgroundColor
@@ -614,7 +628,7 @@ export default function Header() {
                   <Link
                     href={`/${locale}/notifications`}
                     onClick={closeMenu}
-                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ isActive("/notifications") ? "font-medium" : "" } text-start`}
+                    className={`flex items-center justify-between px-3 py-3 rounded-xl text-sm transition-all duration-200 ${ isActive("/notifications") ? "font-bold underline underline-offset-4" : "" } text-start`}
                     style={{
                       backgroundColor: isActive("/notifications")
                         ? `${getColor("primary")}10`
