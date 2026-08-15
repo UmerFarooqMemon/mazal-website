@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { DirhamAmount } from "@/components/ui";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
@@ -23,6 +23,10 @@ export default function HomeV2Hero() {
   const [stats, setStats] = useState<HomepageStats | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [pauseAutoplay, setPauseAutoplay] = useState(false);
+  const swipeStartX = useRef<number | null>(null);
+  const didSwipe = useRef(false);
+  const resumeTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -54,13 +58,54 @@ export default function HomeV2Hero() {
   }, [locale]);
 
   useEffect(() => {
-    if (listings.length < 2) return;
+    if (listings.length < 2 || pauseAutoplay) return;
     const timer = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % listings.length);
     }, 6000);
 
     return () => window.clearInterval(timer);
-  }, [listings.length]);
+  }, [listings.length, pauseAutoplay]);
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimer.current != null) window.clearTimeout(resumeTimer.current);
+    };
+  }, []);
+
+  const goToSlide = (index: number) => {
+    if (listings.length < 2) return;
+    const next = (index + listings.length) % listings.length;
+    setActiveIndex(next);
+  };
+
+  const pauseThenResumeAutoplay = () => {
+    setPauseAutoplay(true);
+    if (resumeTimer.current != null) window.clearTimeout(resumeTimer.current);
+    resumeTimer.current = window.setTimeout(() => {
+      setPauseAutoplay(false);
+      resumeTimer.current = null;
+    }, 8000);
+  };
+
+  const onSwipeStart = (clientX: number) => {
+    swipeStartX.current = clientX;
+    didSwipe.current = false;
+  };
+
+  const onSwipeEnd = (clientX: number) => {
+    const startX = swipeStartX.current;
+    swipeStartX.current = null;
+    if (startX == null || listings.length < 2) return;
+
+    const deltaX = clientX - startX;
+    const threshold = 40;
+    if (Math.abs(deltaX) < threshold) return;
+
+    didSwipe.current = true;
+    pauseThenResumeAutoplay();
+    const swipedNext = isRTL ? deltaX > 0 : deltaX < 0;
+    goToSlide(activeIndex + (swipedNext ? 1 : -1));
+  };
 
   const featuredListing = listings[activeIndex];
   const featuredPlate = featuredListing
@@ -146,7 +191,26 @@ export default function HomeV2Hero() {
                 {t("common.no_results")}
               </div>
             ) : (
-              <>
+              <div
+                className="touch-pan-y"
+                onPointerDown={(event) => {
+                  if (event.pointerType === "mouse") return;
+                  onSwipeStart(event.clientX);
+                }}
+                onPointerUp={(event) => {
+                  if (event.pointerType === "mouse") return;
+                  onSwipeEnd(event.clientX);
+                }}
+                onPointerCancel={() => {
+                  swipeStartX.current = null;
+                }}
+                onClickCapture={(event) => {
+                  if (!didSwipe.current) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  didSwipe.current = false;
+                }}
+              >
                 <NumberPlateDisplay
                   plate_code={featuredPlate.code}
                   plate_digits={featuredPlate.digits}
@@ -160,18 +224,18 @@ export default function HomeV2Hero() {
                   fontScaleMultiplier={2.3}
                 />
 
-                <div className="mt-5 flex items-end justify-between gap-4">
-                  <div>
+                <div className="mt-5 flex flex-wrap items-end justify-between gap-x-3 gap-y-3">
+                  <div className="min-w-0 flex-1">
                     <div className="text-xs text-[var(--color-muted-text)]">
                       {t("home.hero_asking")}
                     </div>
-                    <div className="font-serif text-3xl font-semibold tracking-tight text-[var(--color-text-dark)]">
+                    <div className="font-serif text-[length:clamp(1.35rem,5vw,1.875rem)] font-semibold tracking-tight text-[var(--color-text-dark)]">
                       <DirhamAmount amount={featuredPlate.price} weight="bold" />
                     </div>
                   </div>
                   <Link
                     href={featuredHref}
-                    className="inline-flex items-center gap-1 rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-[var(--color-text-light)] transition-opacity hover:opacity-90"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-[var(--color-text-light)] transition-opacity hover:opacity-90"
                   >
                     {t("home.hero_view")}
                     <HomeV2Icon
@@ -227,7 +291,7 @@ export default function HomeV2Hero() {
                     />
                   ))}
                 </div>
-              </>
+              </div>
             )}
           </div>
 
