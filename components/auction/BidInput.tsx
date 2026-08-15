@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
@@ -56,6 +57,15 @@ export default function BidInput({
     setAmountInput(formatPriceInput(String(minBid)));
   }, [minBid]);
 
+  const bumpAmount = (direction: 1 | -1) => {
+    if (!canBid) return;
+    const current = parseBidAmount(amountInput) || minBid;
+    const next = current + direction;
+    const clamped = Math.max(minBid, Math.round(next));
+    setAmountInput(formatPriceInput(String(clamped)));
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canBid) return;
@@ -95,25 +105,54 @@ export default function BidInput({
         {t("auctions.current_bid_label")}
       </label>
       <div className="flex flex-col sm:flex-row gap-3">
-        <input
-          type="text"
-          inputMode="numeric"
-          value={amountInput}
-          onFocus={() => setAmountInput("")}
-          onBlur={() => {
-            if (!amountInput.trim()) {
-              setAmountInput(formatPriceInput(String(minBid)));
-            }
-          }}
-          onChange={(e) => setAmountInput(formatPriceInput(e.target.value))}
-          disabled={!canBid}
-          className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none disabled:opacity-60"
-          style={{
-            borderColor: getColor("border"),
-            color: getColor("primaryText"),
-            backgroundColor: getColor("surface"),
-          }}
-        />
+        <div className="relative flex-1">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={amountInput}
+            onFocus={() => setAmountInput("")}
+            onBlur={() => {
+              if (!amountInput.trim()) {
+                setAmountInput(formatPriceInput(String(minBid)));
+              }
+            }}
+            onChange={(e) => setAmountInput(formatPriceInput(e.target.value))}
+            disabled={!canBid}
+            className="w-full rounded-xl border py-2.5 pe-10 ps-4 text-sm outline-none disabled:opacity-60"
+            style={{
+              borderColor: getColor("border"),
+              color: getColor("primaryText"),
+              backgroundColor: getColor("surface"),
+            }}
+          />
+          <div className="absolute inset-y-1 end-1 flex flex-col overflow-hidden rounded-lg border"
+            style={{ borderColor: getColor("border") }}
+          >
+            <button
+              type="button"
+              disabled={!canBid}
+              onClick={() => bumpAmount(1)}
+              className="flex h-1/2 w-7 items-center justify-center disabled:opacity-40"
+              style={{ color: getColor("primaryText") }}
+              aria-label="Increase bid"
+            >
+              <ChevronUp className="h-3.5 w-3.5" strokeWidth={2.4} />
+            </button>
+            <button
+              type="button"
+              disabled={!canBid || parseBidAmount(amountInput) <= minBid}
+              onClick={() => bumpAmount(-1)}
+              className="flex h-1/2 w-7 items-center justify-center border-t disabled:opacity-40"
+              style={{
+                color: getColor("primaryText"),
+                borderColor: getColor("border"),
+              }}
+              aria-label="Decrease bid"
+            >
+              <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.4} />
+            </button>
+          </div>
+        </div>
         <Button
           type="submit"
           variant="primary"
@@ -121,9 +160,18 @@ export default function BidInput({
           disabled={submitting || !auction.is_bidding_open || !canBid}
           className="rounded-xl shrink-0"
         >
-          {submitting
-            ? t("common.loading") || "Loading..."
-            : t("auctions.place_bid") || "Bid"}
+          {submitting ? (
+            t("common.loading") || "Loading..."
+          ) : (
+            <span className="inline-flex items-center gap-1.5">
+              <img
+                src="/icons/bid-gavel.png"
+                alt=""
+                className="h-4 w-4 object-contain mix-blend-screen"
+              />
+              {t("auctions.place_bid") || "Bid"}
+            </span>
+          )}
         </Button>
       </div>
       {disabledReason && !canBid && (

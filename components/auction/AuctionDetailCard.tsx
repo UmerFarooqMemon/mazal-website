@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Clock, Gavel } from "lucide-react";
+import { Clock } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
@@ -148,8 +148,7 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
             size="sm"
             className="h-9 px-4 text-xs rounded-full"
           >
-            <Gavel className="w-4 h-4" strokeWidth={2} />
-            <span className="ms-1.5">{t("auctions.add_deposit_cta")}</span>
+            <span>{t("auctions.add_deposit_cta")}</span>
           </Button>
         </Link>
       </div>
