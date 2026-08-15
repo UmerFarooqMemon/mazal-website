@@ -21,7 +21,7 @@ interface CacheEntry {
 }
 
 /** v2: locale is part of the request URL (fixes en/ar HTTP cache mix-up). */
-const CACHE_PREFIX = "mazal_ui_labels_v2_";
+const CACHE_PREFIX = "mazal_ui_labels_v3_";
 /** Client cache TTL — labels are admin-edited infrequently. */
 export const UI_LABELS_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -123,7 +123,7 @@ export async function getUiLabels(
         Accept: "application/json",
         "Accept-Language": normalizeAcceptLanguage(locale),
       },
-      cache: "default",
+      cache: "no-store",
     });
 
     const payload = (await response.json()) as UiLabelsApiResponse;
