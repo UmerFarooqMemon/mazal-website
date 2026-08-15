@@ -16,11 +16,12 @@ import {
 import type { MarketplaceListingDetail } from "@/services/marketplace";
 import {
   addToWatchlist,
-  buyListingAtAskingPrice,
   canTransactListing,
   firstMarketplaceError,
+  getMyPurchases,
   isListingReserved,
   isListingSold,
+  isOpenMarketplacePurchase,
   MarketplaceRequestError,
   removeFromWatchlist,
 } from "@/services/marketplace";
@@ -119,19 +120,34 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
       );
       return;
     }
-    if (!isDirectListing || !canTransact) return;
+    if (!isDirectListing || listing.is_owner) return;
+    if (!canTransact && !reserved) return;
 
     setBuying(true);
     try {
-      const response = await buyListingAtAskingPrice(
-        listing.id,
-        locale,
-        askingPrice,
-      );
-      const purchaseId = response.data.purchase?.id;
+      let purchaseId: string | undefined;
+
+      if (reserved) {
+        const response = await getMyPurchases(locale, "buyer");
+        const match = (response.data.purchases || []).find(
+          (row) =>
+            isOpenMarketplacePurchase(row) &&
+            (String(row.listing_id) === String(listing.id) ||
+              String(row.listing?.id) === String(listing.id)),
+        );
+        if (!match?.id) {
+          toast.error(
+            t("listings.listing_reserved_toast") ||
+              t("listings.listing_reserved_message"),
+          );
+          return;
+        }
+        purchaseId = String(match.id);
+      }
+
       rememberCheckoutIntent("marketplace", listing.id, {
         role: "buyer",
-        purchaseId: purchaseId ? String(purchaseId) : undefined,
+        purchaseId,
         price: askingPrice,
       });
       router.push(listingCheckoutPath(locale, listing.id));
@@ -200,7 +216,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
 
       <div className="flex flex-col gap-3 mb-4">
         {!listing.is_owner &&
-          (canTransact ? (
+          (canTransact || reserved ? (
             isDirectListing ? (
               <Button
                 variant="primary"

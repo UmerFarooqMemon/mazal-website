@@ -4,6 +4,8 @@ export type CheckoutIntent = {
   role?: "buyer" | "seller";
   purchaseId?: string;
   price?: number;
+  step?: number;
+  details?: Record<string, unknown>;
 };
 
 const STORAGE_PREFIX = "mazal_checkout_v1";
@@ -33,10 +35,20 @@ export function rememberCheckoutIntent(
 ) {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(
-      storageKey(flow, listingId),
-      JSON.stringify(intent),
-    );
+    const previous = readCheckoutIntent(flow, listingId);
+    const next: CheckoutIntent = { ...previous };
+    (Object.keys(intent) as (keyof CheckoutIntent)[]).forEach((key) => {
+      const value = intent[key];
+      if (value !== undefined) {
+        (next as Record<string, unknown>)[key] = value;
+      }
+    });
+    if (intent.details) {
+      next.details = intent.details;
+    } else if (previous?.details) {
+      next.details = previous.details;
+    }
+    sessionStorage.setItem(storageKey(flow, listingId), JSON.stringify(next));
   } catch {
     // Ignore quota / private-mode failures; checkout can still resolve via API.
   }

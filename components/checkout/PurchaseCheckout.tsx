@@ -36,12 +36,14 @@ import { detailsFromGiftProduct, resolveGiftBoxSummary } from "@/lib/gift-box";
 import {
   canTransactListing,
   createPurchaseCheckout,
+  buyListingAtAskingPrice,
   getListingDetail,
   getMyPurchases,
   getPurchase,
   isHiddenPlateCode,
   isListingReserved,
   isListingSold,
+  isOpenMarketplacePurchase,
   payPurchaseWithWallet,
   resolvePlateParts,
   submitPurchasePaymentEvidence,
@@ -163,6 +165,7 @@ export default function PurchaseCheckout({
   const { products: giftProducts } = useGiftProducts();
   const isRTL = locale === "ar";
 
+  const [purchaseLookupDone, setPurchaseLookupDone] = useState(false);
   const [purchaseId, setPurchaseId] = useState<string | undefined>();
   const [initialRole, setInitialRole] = useState<"buyer" | "seller">("buyer");
   const [agreedPrice, setAgreedPrice] = useState(0);
@@ -231,20 +234,39 @@ export default function PurchaseCheckout({
       role: gatewayReturn.role || stored?.role || "buyer",
       purchaseId: gatewayReturn.purchaseId || stored?.purchaseId,
       price: queryPrice ?? stored?.price,
+      step: stored?.step,
+      details: stored?.details,
     };
     rememberCheckoutIntent(flow, listingId, merged);
     setInitialRole(merged.role === "seller" ? "seller" : "buyer");
+    if (merged.details && typeof merged.details === "object") {
+      setDetails((prev) => ({
+        ...prev,
+        ...(merged.details as Partial<ConfirmDetailsData>),
+      }));
+    }
+    if (
+      !gatewayReturn.isReturn &&
+      typeof merged.step === "number" &&
+      merged.step >= 0 &&
+      merged.step <= 2
+    ) {
+      setStep(merged.step);
+    }
     if (merged.price && merged.price > 0) {
       setAgreedPrice(merged.price);
       setResolvedPrice(merged.price);
     }
     if (merged.purchaseId) {
       setPurchaseId(String(merged.purchaseId));
+      setPurchaseLookupDone(true);
     } else {
       getMyPurchases(locale, "buyer")
         .then((response) => {
-          const match = purchasesFromPayload(response.data).find((row) =>
-            purchaseMatchesListing(row, listingId),
+          const match = purchasesFromPayload(response.data).find(
+            (row) =>
+              purchaseMatchesListing(row, listingId) &&
+              isOpenMarketplacePurchase(row),
           );
           if (!match?.id) return;
           const id = String(match.id);
@@ -258,7 +280,8 @@ export default function PurchaseCheckout({
               (Number.isFinite(agreed) && agreed > 0 ? agreed : undefined),
           });
         })
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => setPurchaseLookupDone(true));
     }
     stripUrlSearch();
   }, [flow, gatewayReturn, listingId, locale]);
@@ -439,6 +462,15 @@ export default function PurchaseCheckout({
   const patchDetails = (patch: Partial<ConfirmDetailsData>) =>
     setDetails((previous) => ({ ...previous, ...patch }));
 
+  useEffect(() => {
+    rememberCheckoutIntent(flow, listingId, {
+      purchaseId,
+      price: resolvedPrice || agreedPrice,
+      step,
+      details: details as unknown as Record<string, unknown>,
+    });
+  }, [agreedPrice, details, flow, listingId, purchaseId, resolvedPrice, step]);
+
   const licenseSourceOptions = useMemo(
     () => resolveLicenseSourceOptions(null),
     [],
@@ -452,9 +484,6 @@ export default function PurchaseCheckout({
   });
 
   const handleSavePartyDetails = async () => {
-    const ready = requirePurchaseOrPrompt();
-    if (!ready) return;
-
     const mobileIso = details.mobileCountryIso || "ae";
     const mobileDial = details.mobileDialCode || "+971";
     const secondaryIso = details.secondaryMobileCountryIso || "ae";
@@ -522,8 +551,41 @@ export default function PurchaseCheckout({
 
     setSubmitting(true);
     try {
-      const addonFlags = addonFlagsFromPurchase(purchase);
+      let activeId = purchaseId;
       let nextPurchase = purchase;
+
+      if (!activeId && flow === "marketplace") {
+        const created = await buyListingAtAskingPrice(
+          listingId,
+          locale,
+          resolvedPrice,
+        );
+        const createdPurchase = created.data.purchase;
+        if (!createdPurchase?.id) {
+          throw new Error("Failed to start purchase.");
+        }
+        activeId = String(createdPurchase.id);
+        setPurchaseId(activeId);
+        nextPurchase = applyPurchase(createdPurchase);
+        rememberCheckoutIntent(flow, listingId, {
+          role: "buyer",
+          purchaseId: activeId,
+          price: resolvedPrice,
+          step: 1,
+          details: details as unknown as Record<string, unknown>,
+        });
+      }
+
+      if (!activeId) {
+        if (flow === "auction") {
+          toast.error("Auction payment is not ready yet.");
+          return;
+        }
+        setOfferRequiredModalOpen(true);
+        return;
+      }
+
+      const addonFlags = addonFlagsFromPurchase(nextPurchase);
 
       if (details.custodyIntent === "gift") {
         const giftRecipientPhone =
@@ -538,7 +600,7 @@ export default function PurchaseCheckout({
           notes: details.giftRecipientNotes,
         });
         const addonsResponse = await updatePurchaseAddons(
-          ready.purchaseId,
+          activeId,
           {
             ...addonFlags,
             ...giftPayload,
@@ -546,9 +608,9 @@ export default function PurchaseCheckout({
           locale,
         );
         nextPurchase = addonsResponse.data.purchase;
-      } else if (purchase?.gift_product) {
+      } else if (nextPurchase?.gift_product) {
         const addonsResponse = await updatePurchaseAddons(
-          ready.purchaseId,
+          activeId,
           {
             ...addonFlags,
             ...buildRemoveGiftProductPayload(),
@@ -812,7 +874,7 @@ export default function PurchaseCheckout({
                 : `/${locale}/listings/${listingId}`,
             )
           }
-          beforeContinue={() => Boolean(requirePurchaseOrPrompt())}
+          beforeContinue={undefined}
           onContinue={() => void handleSavePartyDetails()}
           variant="buyer"
           showCustodyOptions
@@ -878,6 +940,7 @@ export default function PurchaseCheckout({
   const listingBlocked =
     flow !== "auction" &&
     listing != null &&
+    purchaseLookupDone &&
     initialRole === "buyer" &&
     !purchaseId &&
     !canTransactListing(listing.status);

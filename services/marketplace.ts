@@ -353,6 +353,8 @@ export interface MarketplaceListingDetail extends MarketplaceListingCard {
   reveal?: MarketplaceReveal | null;
   reveal_screen_url?: string | null;
   can_make_offer?: boolean;
+  /** Open purchase for the logged-in buyer, if they already started checkout. */
+  viewer_open_purchase_id?: number | string | null;
   sold_at?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -521,6 +523,16 @@ export interface MarketplacePurchase {
   cancel_reason?: string | null;
   created_at: string;
   updated_at?: string;
+}
+
+export function isOpenMarketplacePurchase(
+  purchase?: Pick<MarketplacePurchase, "status"> | null,
+): boolean {
+  const status = String(purchase?.status || "").toLowerCase();
+  return (
+    Boolean(status) &&
+    !["cancelled", "canceled", "completed"].includes(status)
+  );
 }
 
 export interface MarketplaceGift {

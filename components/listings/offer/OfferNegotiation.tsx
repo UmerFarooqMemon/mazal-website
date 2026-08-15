@@ -16,7 +16,6 @@ import { Button } from "@/components/ui";
 import OfferDealSummary from "./OfferDealSummary";
 import {
   acceptOffer,
-  buyListingAtAskingPrice,
   canTransactListing,
   counterOffer,
   endNegotiation,
@@ -456,47 +455,14 @@ export default function OfferNegotiation() {
   };
 
   const handleAcceptAsking = async () => {
-    if (!isDirectListing || !canTransact) return;
+    if (!isDirectListing || (!canTransact && !reserved)) return;
     setActionLoading(true);
     try {
-      const response = await buyListingAtAskingPrice(
-        params.id,
-        locale,
-        askingPrice,
-      );
-      const purchase = response.data.purchase;
-      const purchaseId = purchase?.id;
       rememberCheckoutIntent("marketplace", params.id, {
         role: "buyer",
-        purchaseId: purchaseId ? String(purchaseId) : undefined,
         price: askingPrice,
       });
       router.push(listingCheckoutPath(locale, params.id));
-    } catch (error) {
-      if (error instanceof MarketplaceRequestError && error.status === 401) {
-        router.push(
-          getLoginHref(
-            locale,
-            `/${locale}/listings/${params.id}/offer`,
-          ),
-        );
-        return;
-      }
-      if (error instanceof MarketplaceRequestError && error.status === 422) {
-        const amountError = firstMarketplaceError(error, ["amount"]);
-        const listingError = firstMarketplaceError(error, ["listing"]);
-        toast.error(
-          amountError ||
-            listingError ||
-            firstMarketplaceError(error) ||
-            t("listings.listing_reserved_toast"),
-        );
-        await load();
-        return;
-      }
-      toast.error(
-        firstMarketplaceError(error) || "Failed to start purchase.",
-      );
     } finally {
       setActionLoading(false);
     }
