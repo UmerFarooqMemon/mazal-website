@@ -1,9 +1,9 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
-import { DirhamAmount } from "@/components/ui";
 import type { PlatePreviewConfig } from "@/lib/plate-preview";
 
 export type { PlatePreviewConfig } from "@/lib/plate-preview";
@@ -28,54 +28,65 @@ export type CertificateDisplayData = {
   emirate?: string;
   emirateLabel?: string;
   plateType?: string;
+  plateTypeLabel?: string;
   plateVariant?: string;
   plateDesign?: string;
   holderName?: string;
-  /** Variant preview from /api/number-plates/options — drives PlateWithOverlay */
+  trafficFileNumber?: string;
   platePreview?: PlatePreviewConfig | null;
 };
 
-function formatIssuedLabel(data: CertificateDisplayData, locale: string) {
-  if (!data.issuedAt) return data.issuedLabel;
+function dash(value?: string | null) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : "—";
+}
 
-  const issued = new Date(data.issuedAt);
-  if (Number.isNaN(issued.getTime())) return data.issuedLabel;
+function formatIssueDate(issuedAt: string | undefined, locale: string) {
+  if (!issuedAt) return "—";
+  const issued = new Date(issuedAt);
+  if (Number.isNaN(issued.getTime())) return "—";
+  return issued.toLocaleDateString(locale === "ar" ? "ar-AE" : "en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
-  const date = issued.toLocaleDateString(
-    locale === "ar" ? "ar-AE" : "en-GB",
-    { day: "2-digit", month: "long", year: "numeric" },
-  );
+function formatAmount(amount: number, locale: string) {
+  if (!Number.isFinite(amount) || amount <= 0) return "—";
+  return amount.toLocaleString(locale === "ar" ? "ar-AE" : "en-US");
+}
 
-  if (!data.expiresAt) {
-    return locale === "ar" ? `صدرت ${date}` : `Issued ${date}`;
-  }
-
-  const expires = new Date(data.expiresAt);
-  if (Number.isNaN(expires.getTime())) return data.issuedLabel;
-
-  const days = Math.max(
-    0,
-    Math.round(
-      (expires.getTime() - issued.getTime()) / (1000 * 60 * 60 * 24),
-    ),
-  );
-
-  return locale === "ar"
-    ? `صدرت ${date} · صالحة لمدة ${days.toLocaleString("ar-AE")} يومًا`
-    : `Issued ${date} · Valid ${days} days`;
+function formatAssessedRange(
+  data: CertificateDisplayData,
+  locale: string,
+) {
+  const low = formatAmount(data.marketLow, locale);
+  const high = formatAmount(data.marketHigh, locale);
+  if (low !== "—" && high !== "—") return `${low} – ${high}`;
+  if (low !== "—") return low;
+  if (high !== "—") return high;
+  return formatAmount(data.assessedValue, locale);
 }
 
 export const SAMPLE_CERTIFICATE: CertificateDisplayData = {
-  certificateNumber: "MZL-VAL-55K0-2026",
+  certificateNumber: "MZL-26-K7H2-9QMX4P",
   plateCode: "M",
   plateDigits: "777",
   assessedValue: 620000,
   marketLow: 545600,
   marketHigh: 706800,
   issuedLabel: "Issued 01 July 2026 · Valid 90 days",
+  issuedAt: "2026-07-01T00:00:00.000Z",
   signatory1Name: "Abdullah Almeer",
   signatory2Name: "Ahmed Al Nasser",
   showPreviewBadge: true,
+  emirate: "DUBAI",
+  emirateLabel: "Dubai",
+  plateType: "private",
+  plateTypeLabel: "Private",
+  holderName: "Ahmed Al Nasser",
+  trafficFileNumber: "—",
 };
 
 type Props = {
@@ -83,30 +94,87 @@ type Props = {
   className?: string;
 };
 
+function GradientRule({
+  from,
+  to,
+  className = "",
+}: {
+  from: string;
+  to: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`h-[2px] w-full ${className}`}
+      style={{
+        background: `linear-gradient(90deg, ${from} 0%, ${to} 100%)`,
+      }}
+    />
+  );
+}
+
 export default function VerifiedCertificateCard({
   data = SAMPLE_CERTIFICATE,
   className = "",
 }: Props) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor, getGradient } = useTheme();
+  const { getColor, getGradient, branding } = useTheme();
+  const [contact, setContact] = useState({
+    phone: "—",
+    email: "—",
+    website: "—",
+  });
 
-  const sales =
-    data.comparableSales ||
-    [
-      {
-        label: t("certificates.sale_1") || "Dubai · similar pattern",
-        amount: 582_800,
-      },
-      {
-        label: t("certificates.sale_2") || "Dubai · same digit count",
-        amount: 657_200,
-      },
-      {
-        label: t("certificates.sale_3") || "Dubai · adjacent code",
-        amount: 607_600,
-      },
-    ];
+  const primary = getColor("primary");
+  const primaryText = getColor("primaryText");
+  const secondary = getColor("secondary");
+  const logoSrc = branding.logoUrl || branding.smallLogoUrl;
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/site-settings");
+        const json = await res.json();
+        const phone = json?.data?.contact?.phone?.trim() || "—";
+        const email = json?.data?.contact?.email?.trim() || "—";
+        const rawWebsite =
+          json?.data?.contact?.website?.trim() ||
+          json?.data?.contact_website?.trim() ||
+          "";
+        const isLocal =
+          /^localhost(:\d+)?$/i.test(rawWebsite) ||
+          /^https?:\/\/localhost(:\d+)?/i.test(rawWebsite);
+        const website = !rawWebsite || isLocal ? "—" : rawWebsite;
+        if (!cancelled) setContact({ phone, email, website });
+      } catch {
+        /* keep placeholders */
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const verifyUrl = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    return `${window.location.origin}/${locale}/verify?code=${encodeURIComponent(data.certificateNumber)}`;
+  }, [data.certificateNumber, locale]);
+
+  const qrSrc = verifyUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=${encodeURIComponent(verifyUrl)}`
+    : "";
+
+  const issueDate = formatIssueDate(data.issuedAt, locale);
+  const assessed = formatAssessedRange(data, locale);
+  const ownerName = dash(data.holderName);
+  const traffic = dash(data.trafficFileNumber);
+  const emirate = dash(data.emirateLabel || data.emirate);
+  const plateCode = dash(data.plateCode === "—" ? "" : data.plateCode);
+  const plateNumber = dash(data.plateDigits === "—" ? "" : data.plateDigits);
+  const plateCategory = dash(data.plateTypeLabel || data.plateType);
 
   return (
     <div
@@ -115,9 +183,7 @@ export default function VerifiedCertificateCard({
     >
       <div className="relative">
         {data.showPreviewBadge && (
-          <div
-            className="absolute z-20 pointer-events-none -top-[8px] -end-[12px] md:-top-[10px] md:-end-[16px] rtl:-rotate-[10deg] ltr:rotate-[10deg]"
-          >
+          <div className="absolute z-20 pointer-events-none -top-[8px] -end-[12px] md:-top-[10px] md:-end-[16px] rtl:-rotate-[10deg] ltr:rotate-[10deg]">
             <div
               className="px-2.5 py-0.5 md:px-3 md:py-1 rounded-[6px] text-[9px] md:text-[11px] font-semibold uppercase tracking-[0.08em] text-white"
               style={{
@@ -131,281 +197,219 @@ export default function VerifiedCertificateCard({
         )}
 
         <div
+          id="certificate-preview"
           className="relative w-full rounded-xl md:rounded-2xl overflow-hidden border-2 shadow-[0_12px_30px_-10px_rgba(1,15,81,0.35)] md:shadow-[0_30px_60px_-25px_rgba(1,15,81,0.35)]"
           style={{
             backgroundColor: "#FBFAF7",
             borderColor: "rgba(10,47,148,0.2)",
+            color: primaryText,
           }}
         >
-      {/* Header */}
-      <div
-        className={`flex items-center justify-between gap-3 px-4 py-3 md:px-10 md:py-6`}
-        style={{ background: getGradient("primary") }}
-      >
-        <div
-          className={`flex items-center gap-2 md:gap-3 min-w-0`}
-        >
           <div
-            className="shrink-0 size-[18px] md:size-11 rounded-[3px] md:rounded-md flex items-center justify-center font-serif font-bold text-[10px] md:text-2xl"
-            style={{
-              backgroundColor: getColor("accent") || "#E0AE57",
-              color: "#2B1500",
-            }}
+            className="flex items-center justify-between gap-3 px-4 py-3 md:px-10 md:py-6"
+            style={{ background: getGradient("primary") }}
           >
-            M
-          </div>
-          <div className={`min-w-0 text-start`}>
-            <div className="font-serif text-[10px] md:text-2xl text-[#FBFAF6] leading-tight tracking-tight truncate">
-              {t("certificates.platform_name") || "Mazal Platform"}
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <div
+                className="shrink-0 size-[18px] md:size-11 rounded-[3px] md:rounded-md flex items-center justify-center font-serif font-bold text-[10px] md:text-2xl"
+                style={{
+                  backgroundColor: getColor("accent") || "#E0AE57",
+                  color: "#2B1500",
+                }}
+              >
+                M
+              </div>
+              <div className="min-w-0 text-start">
+                <div className="font-serif text-[10px] md:text-2xl text-[#FBFAF6] leading-tight tracking-tight truncate">
+                  {t("certificates.platform_name") || "Mazal Platform"}
+                </div>
+                <div className="text-[5px] md:text-[11px] uppercase tracking-[0.18em] text-[#FBFAF6]/80 leading-tight">
+                  {t("certificates.licensed_escrow")}
+                </div>
+              </div>
             </div>
-            <div className="text-[5px] md:text-[11px] uppercase tracking-[0.18em] text-[#FBFAF6]/80 leading-tight">
-              {t("certificates.licensed_escrow")}
+            <div className="shrink-0 text-end">
+              <div className="text-[5px] md:text-[11px] uppercase tracking-[0.18em] text-[#FBFAF6]/80">
+                {t("certificates.certificate")}
+              </div>
+              <div className="font-mono text-[6px] md:text-sm text-[#FBFAF6]">
+                {data.certificateNumber}
+              </div>
             </div>
           </div>
-        </div>
-        <div
-          className={`shrink-0 text-end`}
-        >
-          <div className="text-[5px] md:text-[11px] uppercase tracking-[0.18em] text-[#FBFAF6]/80">
-            {t("certificates.certificate")}
-          </div>
-          <div className="font-mono text-[6px] md:text-sm text-[#FBFAF6]">
-            {data.certificateNumber}
-          </div>
-        </div>
-      </div>
 
-      {/* Body */}
-      <div className="px-4 py-5 md:p-10 flex flex-col gap-6 md:gap-8">
-        <div className="text-center">
-          <div
-            className="text-[5px] md:text-[11px] uppercase tracking-[0.3em] mb-0.5"
-            style={{ color: getColor("mutedText") || "#545E6F" }}
-          >
-            {t("certificates.official")}
-          </div>
-          <h3
-            className="font-serif text-[15px] md:text-4xl tracking-tight leading-tight"
-            style={{ color: getColor("primaryText") || "#081123" }}
-          >
-            {t("certificates.plate_certificate")}
-          </h3>
-          <p
-            className="text-[6px] md:text-sm mt-1"
-            style={{ color: getColor("mutedText") || "#545E6F" }}
-          >
-            {formatIssuedLabel(data, locale)}
-          </p>
-        </div>
+          <div className="px-5 py-6 md:px-10 md:py-8">
+            <h3
+              className="text-center text-base md:text-xl font-bold uppercase tracking-[0.28em] mb-5 md:mb-6"
+              style={{ color: primary }}
+            >
+              {t("certificates.valuation_certificate_title") ||
+                "Valuation Certificate"}
+            </h3>
 
-        {/* Plate — same PlateWithOverlay as certificates/request live preview */}
-        <div className="relative mx-auto w-full max-w-[340px] md:max-w-[440px]">
-          <NumberPlateDisplay
-            plate_code={
-              !data.plateCode || data.plateCode === "—" ? "" : data.plateCode
-            }
-            plate_digits={
-              !data.plateDigits || data.plateDigits === "—"
-                ? ""
-                : data.plateDigits
-            }
-            emirate={data.emirateLabel || data.emirate || "DUBAI"}
-            preview={data.platePreview}
-            plateType={data.plateType}
-            plateDesign={data.plateDesign}
-            crop="certificate"
-          />
-        </div>
+            <div className="flex justify-center mb-2">
+              <div
+                className="inline-block p-1.5"
+                style={{
+                  border: `2px solid ${primary}`,
+                  backgroundColor: getColor("background"),
+                }}
+              >
+                <div className="w-[240px] sm:w-[320px] md:w-[454px] max-w-full">
+                  <NumberPlateDisplay
+                    plate_code={
+                      !data.plateCode || data.plateCode === "—"
+                        ? ""
+                        : data.plateCode
+                    }
+                    plate_digits={
+                      !data.plateDigits || data.plateDigits === "—"
+                        ? ""
+                        : data.plateDigits
+                    }
+                    emirate={data.emirateLabel || data.emirate || "DUBAI"}
+                    preview={data.platePreview}
+                    plateType={data.plateType}
+                    plateDesign={data.plateDesign}
+                    crop="certificate"
+                  />
+                </div>
+              </div>
+            </div>
 
-        {/* Values */}
-        <div className="grid grid-cols-3 gap-1.5 md:gap-4">
-          <div
-            className="rounded-md md:rounded-xl border px-1.5 py-2 md:p-4 text-center"
-            style={{
-              backgroundColor: "rgba(234,239,247,0.4)",
-              borderColor: getColor("border") || "#D9DEE6",
-            }}
-          >
             <div
-              className="text-[5px] md:text-[10px] uppercase tracking-wide mb-0.5"
-              style={{ color: getColor("mutedText") || "#545E6F" }}
+              className="text-center text-[11px] md:text-[13px] font-bold uppercase tracking-[0.18em] mt-2.5 mb-3.5"
+              style={{ color: primary }}
             >
-              {t("certificates.market_low")}
+              {t("certificates.the_plate") || "The Plate"}
             </div>
-            <div
-              className="font-serif text-[8px] md:text-xl tracking-tight"
-              style={{ color: getColor("primaryText") || "#081123" }}
-            >
-              <DirhamAmount amount={data.marketLow} weight="bold" />
-            </div>
-          </div>
-          <div
-            className="rounded-md md:rounded-xl border px-1.5 py-2 md:p-4 text-center"
-            style={{
-              backgroundColor: "rgba(10,47,148,0.05)",
-              borderColor: "rgba(10,47,148,0.3)",
-            }}
-          >
-            <div
-              className="text-[5px] md:text-[10px] uppercase tracking-wide mb-0.5"
-              style={{ color: getColor("mutedText") || "#545E6F" }}
-            >
-              {t("certificates.assessed_value")}
-            </div>
-            <div
-              className="font-serif font-semibold text-[10px] md:text-2xl tracking-tight"
-              style={{ color: getColor("primary") || "#0A2F94" }}
-            >
-              <DirhamAmount amount={data.assessedValue} weight="bold" />
-            </div>
-          </div>
-          <div
-            className="rounded-md md:rounded-xl border px-1.5 py-2 md:p-4 text-center"
-            style={{
-              backgroundColor: "rgba(234,239,247,0.4)",
-              borderColor: getColor("border") || "#D9DEE6",
-            }}
-          >
-            <div
-              className="text-[5px] md:text-[10px] uppercase tracking-wide mb-0.5"
-              style={{ color: getColor("mutedText") || "#545E6F" }}
-            >
-              {t("certificates.market_high")}
-            </div>
-            <div
-              className="font-serif text-[8px] md:text-xl tracking-tight"
-              style={{ color: getColor("primaryText") || "#081123" }}
-            >
-              <DirhamAmount amount={data.marketHigh} weight="bold" />
-            </div>
-          </div>
-        </div>
 
-        {/* Methodology + Sales */}
-        <div
-          className={`grid grid-cols-2 gap-3 md:gap-8 text-start`}
-        >
-          <div>
+            <GradientRule from={primary} to={secondary} className="mb-3.5" />
+
             <div
-              className="text-[5px] md:text-[10px] uppercase tracking-wide mb-1 md:mb-2"
-              style={{ color: getColor("mutedText") || "#545E6F" }}
+              className="text-[11px] md:text-[13px] font-bold uppercase tracking-[0.08em] mb-2.5"
+              style={{ color: primary }}
             >
-              {t("certificates.methodology")}
+              {t("certificates.plate_details") || "Plate Details"}
             </div>
-            <p
-              className="text-[6px] md:text-xs leading-relaxed"
-              style={{ color: "rgba(8,17,35,0.8)" }}
-            >
-              {data.methodology ||
-                t("certificates.methodology_desc") ||
-                "Assessment triangulates 90-day comparable sales, active listings, and closed auction data from Mazal's escrow ledger."}
-            </p>
-          </div>
-          <div>
-            <div
-              className="text-[5px] md:text-[10px] uppercase tracking-wide mb-1 md:mb-2"
-              style={{ color: getColor("mutedText") || "#545E6F" }}
-            >
-              {t("certificates.comparable_sales")}
-            </div>
-            <div className="space-y-1">
-              {sales.map((sale) => (
-                <div
-                  key={sale.label}
-                  className={`flex justify-between gap-2 text-[6px] md:text-xs`}
-                  style={{ color: "rgba(8,17,35,0.8)" }}
-                >
-                  <span className="min-w-0 truncate">{sale.label}</span>
-                  <span className="shrink-0">
-                    <DirhamAmount amount={sale.amount} />
-                  </span>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              {[
+                {
+                  label: t("certificates.emirate") || "Emirate",
+                  value: emirate,
+                },
+                {
+                  label: t("certificates.plate_code_label") || "Plate Code",
+                  value: plateCode,
+                },
+                {
+                  label: t("certificates.number") || "Number",
+                  value: plateNumber,
+                },
+                {
+                  label: t("certificates.plate_category") || "Plate Category",
+                  value: plateCategory,
+                },
+              ].map((col) => (
+                <div key={col.label}>
+                  <div
+                    className="text-[9px] md:text-[10px] uppercase tracking-wide"
+                    style={{ color: primaryText }}
+                  >
+                    {col.label}
+                  </div>
+                  <div className="text-sm md:text-[14px] pt-1">
+                    {col.value}
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
 
-        {/* Signatures */}
-        <div
-          className={`grid grid-cols-2 gap-4 md:gap-10 text-start`}
-        >
-          <div>
-            <div
-              className="font-serif italic text-[10px] md:text-xl tracking-tight"
-              style={{ color: getColor("primary") || "#0A2F94" }}
-            >
-              {data.signatory1Name ||
-                t("certificates.signatory_1_name") ||
-                "Abdullah Almeer"}
-            </div>
-            <div
-              className="h-px w-full my-1"
-              style={{ backgroundColor: getColor("border") || "#D9DEE6" }}
-            />
-            <div
-              className="text-[5px] md:text-xs"
-              style={{ color: getColor("mutedText") || "#545E6F" }}
-            >
-              {data.signatory1Title ||
-                t("certificates.signatory_1") ||
-                "Head of Valuations · Mazal"}
-            </div>
-          </div>
-          <div>
-            <div
-              className="font-serif italic text-[10px] md:text-xl tracking-tight"
-              style={{ color: getColor("primary") || "#0A2F94" }}
-            >
-              {data.signatory2Name ||
-                t("certificates.signatory_2_name") ||
-                "Ahmed Al Nasser"}
-            </div>
-            <div
-              className="h-px w-full my-1"
-              style={{ backgroundColor: getColor("border") || "#D9DEE6" }}
-            />
-            <div
-              className="text-[5px] md:text-xs"
-              style={{ color: getColor("mutedText") || "#545E6F" }}
-            >
-              {data.signatory2Title ||
-                t("certificates.signatory_2") ||
-                "Senior Analyst · Mazal"}
-            </div>
-          </div>
-        </div>
-      </div>
+            {(
+              [
+                {
+                  label: t("certificates.issue_date") || "Issue date",
+                  value: issueDate,
+                },
+                {
+                  label:
+                    t("certificates.assessed_market_value") ||
+                    "Assessed market value (AED)",
+                  value: assessed,
+                },
+                {
+                  label: t("certificates.owner_name") || "Owner's name",
+                  value: ownerName,
+                },
+                {
+                  label:
+                    t("certificates.traffic_file_number") ||
+                    "Traffic file number",
+                  value: traffic,
+                },
+              ] as const
+            ).map((row) => (
+              <div key={row.label}>
+                <div className="flex items-center justify-between gap-4 py-2.5">
+                  <span className="text-[12px] md:text-[13px]">{row.label}</span>
+                  <span className="text-[12px] md:text-[13px] text-end">
+                    {row.value}
+                  </span>
+                </div>
+                <GradientRule from={primary} to={secondary} />
+              </div>
+            ))}
 
-      {/* Footer */}
-      <div
-        className={`flex items-center gap-3 px-4 py-3 md:px-10 md:py-4 border-t`}
-        style={{
-          backgroundColor: "rgba(234,239,247,0.4)",
-          borderColor: getColor("border") || "#D9DEE6",
-        }}
-      >
-        <div
-          className={`flex items-center gap-2 md:gap-3 min-w-0 text-start`}
-        >
-          <img
-            src="/mazal-certified.png"
-            alt={t("certificates.certified") || "Mazal Certified"}
-            className="size-7 md:size-12 object-contain shrink-0"
-          />
-          <p
-            className="text-[5px] md:text-xs leading-relaxed"
-            style={{ color: getColor("mutedText") || "#545E6F" }}
-          >
-            {t("certificates.verify_text") || "Verify authenticity at"}{" "}
-            <span style={{ color: getColor("primary") || "#0A2F94" }}>
-              mazal.cloud/verify
-            </span>{" "}
-            {t("certificates.using_certificate") ||
-              "using certificate number"}{" "}
-            <span className="font-medium">{data.certificateNumber}</span>.
-          </p>
-        </div>
-      </div>
+            <div className="flex items-center justify-between gap-4 py-2.5">
+              <div>
+                <div className="text-[12px] md:text-[13px]">
+                  {t("certificates.unique_certificate_number") ||
+                    "Unique certificate number"}
+                </div>
+                <div className="font-bold text-[12px] md:text-[13px] pt-1">
+                  {data.certificateNumber}
+                </div>
+              </div>
+              {qrSrc ? (
+                <img
+                  src={qrSrc}
+                  alt=""
+                  width={78}
+                  height={78}
+                  className="size-[64px] md:size-[78px] shrink-0 bg-white p-1"
+                />
+              ) : null}
+            </div>
+            <GradientRule from={primary} to={secondary} />
+
+            <div className="flex justify-center my-5 md:my-6">
+              {logoSrc ? (
+                <img
+                  src={logoSrc}
+                  alt="Mazal"
+                  className="h-9 md:h-[42px] w-auto max-w-[220px] object-contain"
+                />
+              ) : (
+                <div className="text-2xl md:text-[30px] font-bold tracking-[0.18em]">
+                  MAZAL
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-[10px] md:text-[12px] mb-3">
+              <span className="text-start break-all">{contact.phone}</span>
+              <span className="text-center break-all">{contact.email}</span>
+              <span className="text-end break-all">{contact.website}</span>
+            </div>
+
+            <GradientRule from={primary} to={secondary} className="my-3" />
+
+            <p className="text-[9px] md:text-[10px] leading-[1.45] m-0">
+              {t("certificates.pdf_disclaimer") ||
+                "This valuation reflects Mazal's market assessment as of the issue date, based on available data and prevailing market conditions. Mazal assumes no liability for any third-party decisions, transactions, or claims arising from this valuation."}
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -89,5 +89,18 @@
   "live_preview_title": "实时预览",
   "preview_badge": "预览",
   "signatory_1_name": "Abdullah Almeer",
-  "signatory_2_name": "Ahmed Al Nasser"
+  "signatory_2_name": "Ahmed Al Nasser",
+  "valuation_certificate_title": "估值证书",
+  "the_plate": "车牌",
+  "plate_details": "车牌详情",
+  "emirate": "酋长国",
+  "plate_code_label": "车牌代码",
+  "number": "号码",
+  "plate_category": "车牌类别",
+  "issue_date": "签发日期",
+  "assessed_market_value": "评估市场价值（AED）",
+  "owner_name": "车主姓名",
+  "traffic_file_number": "交通档案号",
+  "unique_certificate_number": "唯一证书编号",
+  "pdf_disclaimer": "本估值反映 Mazal 在签发日期根据现有数据和当时市场状况作出的市场评估。Mazal 对因本估值产生的任何第三方决定、交易或索赔不承担责任。"
 }

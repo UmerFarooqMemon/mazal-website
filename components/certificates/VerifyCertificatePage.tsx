@@ -174,6 +174,8 @@ function mapVerifyResponse(
       payload.plate_design ||
       fromPlate?.plate_design,
     holderName: payload.holder_name,
+    plateTypeLabel:
+      numberPlate?.plate_type_label || payload.plate_type_label,
     platePreview: preview,
   };
 }

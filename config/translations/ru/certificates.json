@@ -89,5 +89,18 @@
   "live_preview_title": "Живой предпросмотр",
   "preview_badge": "ПРЕДПРОСМОТР",
   "signatory_1_name": "Abdullah Almeer",
-  "signatory_2_name": "Ahmed Al Nasser"
+  "signatory_2_name": "Ahmed Al Nasser",
+  "valuation_certificate_title": "Сертификат оценки",
+  "the_plate": "Номер",
+  "plate_details": "Данные номера",
+  "emirate": "Эмират",
+  "plate_code_label": "Код номера",
+  "number": "Цифры",
+  "plate_category": "Категория номера",
+  "issue_date": "Дата выдачи",
+  "assessed_market_value": "Оценочная рыночная стоимость (AED)",
+  "owner_name": "Имя владельца",
+  "traffic_file_number": "Номер файла ГАИ",
+  "unique_certificate_number": "Уникальный номер сертификата",
+  "pdf_disclaimer": "Эта оценка отражает рыночную оценку Mazal на дату выдачи на основе доступных данных и текущих рыночных условий. Mazal не несёт ответственности за решения, сделки или претензии третьих лиц, связанные с этой оценкой."
 }

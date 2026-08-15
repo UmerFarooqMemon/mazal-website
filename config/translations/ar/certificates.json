@@ -89,5 +89,18 @@
   "live_preview_title": "معاينة حية",
   "preview_badge": "معاينة",
   "signatory_1_name": "عبدالله الأمير",
-  "signatory_2_name": "أحمد الناصر"
+  "signatory_2_name": "أحمد الناصر",
+  "valuation_certificate_title": "شهادة التقييم",
+  "the_plate": "اللوحة",
+  "plate_details": "تفاصيل اللوحة",
+  "emirate": "الإمارة",
+  "plate_code_label": "رمز اللوحة",
+  "number": "الرقم",
+  "plate_category": "فئة اللوحة",
+  "issue_date": "تاريخ الإصدار",
+  "assessed_market_value": "القيمة السوقية المقدرة (درهم)",
+  "owner_name": "اسم المالك",
+  "traffic_file_number": "رقم ملف المرور",
+  "unique_certificate_number": "رقم الشهادة الفريد",
+  "pdf_disclaimer": "يعكس هذا التقييم تقدير مازال للسوق كما في تاريخ الإصدار، استناداً إلى البيانات المتاحة وظروف السوق السائدة. لا تتحمل مازال أي مسؤولية عن قرارات أو معاملات أو مطالبات من أطراف ثالثة ناشئة عن هذا التقييم."
 }

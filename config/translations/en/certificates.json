@@ -89,5 +89,18 @@
   "live_preview_title": "Live Preview",
   "preview_badge": "PREVIEW",
   "signatory_1_name": "Abdullah Almeer",
-  "signatory_2_name": "Ahmed Al Nasser"
+  "signatory_2_name": "Ahmed Al Nasser",
+  "valuation_certificate_title": "Valuation Certificate",
+  "the_plate": "The Plate",
+  "plate_details": "Plate Details",
+  "emirate": "Emirate",
+  "plate_code_label": "Plate Code",
+  "number": "Number",
+  "plate_category": "Plate Category",
+  "issue_date": "Issue date",
+  "assessed_market_value": "Assessed market value (AED)",
+  "owner_name": "Owner's name",
+  "traffic_file_number": "Traffic file number",
+  "unique_certificate_number": "Unique certificate number",
+  "pdf_disclaimer": "This valuation reflects Mazal's market assessment as of the issue date, based on available data and prevailing market conditions. Mazal assumes no liability for any third-party decisions, transactions, or claims arising from this valuation."
 }
