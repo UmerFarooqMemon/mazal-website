@@ -46,6 +46,7 @@
   "see_all_bids": "Все ставки",
   "status_awaiting_offer": "Ожидает оффер",
   "status_awaiting_payment": "Ожидает оплату",
+  "pay_now": "Оплатить",
   "status_in_transit": "В процессе передачи",
   "status_completed": "Завершено",
   "status_pending_transfer": "Ожидает передачу",

@@ -26,6 +26,10 @@ import {
   type MarketplacePurchase,
 } from "@/services/marketplace";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
+import {
+  auctionCheckoutPath,
+  listingCheckoutPath,
+} from "@/lib/checkout-intent";
 import DashboardListingsPanel, {
   type DashboardListingRow,
   type MarketplaceStatus,
@@ -102,9 +106,23 @@ function mapListingToDashboardRow(
 
 function mapPurchaseStatus(status: string): MarketplaceStatus {
   const s = status.toLowerCase();
+  if (s === "completed") return "completed";
+  if (s === "custody_funded" || s === "transfer_in_progress") {
+    return "in_transit";
+  }
+  if (s === "payment_pending" || s === "payment_verification") {
+    return "awaiting_payment";
+  }
   if (/(complete|sold|closed|done)/.test(s)) return "completed";
-  if (/(transit|transfer|delivery)/.test(s)) return "in_transit";
-  if (/(payment|pending|funded|escrow|awaiting|paid)/.test(s)) {
+  if (/(transit|transfer|delivery)/.test(s) || s.includes("custody_funded")) {
+    return "in_transit";
+  }
+  if (s.includes("funded") && !s.includes("pending")) return "in_transit";
+  if (
+    s === "payment_pending" ||
+    s.includes("payment_verification") ||
+    s.includes("awaiting")
+  ) {
     return "awaiting_payment";
   }
   return "awaiting_offer";
@@ -178,10 +196,16 @@ function mapPurchaseToDashboardRow(
     offerLabel,
     offerAmount: toMarketplaceNumber(purchase.agreed_price),
     status: mapPurchaseStatus(purchase.status),
-    href: asAuction
-      ? `/${locale}/auctions/${listingId}`
-      : `/${locale}/listings/${listingId}/checkout`,
+    href: (() => {
+      const pending = mapPurchaseStatus(purchase.status) === "awaiting_payment";
+      if (asAuction) {
+        if (pending) return auctionCheckoutPath(locale, listingId);
+        return `/${locale}/auctions/${listingId}`;
+      }
+      return listingCheckoutPath(locale, listingId);
+    })(),
     purchaseId: purchase.id,
+    checkoutFlow: asAuction ? "auction" : "marketplace",
     canRateSeller: Boolean(purchase.can_rate_seller),
     isOwner: false,
     averageRating:

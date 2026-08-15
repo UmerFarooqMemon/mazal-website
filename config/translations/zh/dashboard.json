@@ -46,6 +46,7 @@
   "see_all_bids": "查看全部出价",
   "status_awaiting_offer": "等待报价",
   "status_awaiting_payment": "等待付款",
+  "pay_now": "立即支付",
   "status_in_transit": "过户中",
   "status_completed": "已完成",
   "status_pending_transfer": "等待过户",

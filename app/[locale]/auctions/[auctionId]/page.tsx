@@ -13,8 +13,13 @@ import {
 } from "@/components/auction/mappers";
 import type { AuctionListing } from "@/components/auction/types";
 import {
+  auctionCheckoutPath,
+  rememberCheckoutIntent,
+} from "@/lib/checkout-intent";
+import {
   getAuctionState,
   getListingDetail,
+  getMyPurchases,
   canTransactListing,
   isListingReserved,
   isListingSold,
@@ -38,6 +43,7 @@ export default function AuctionDetailPage({
   const [listingStatus, setListingStatus] =
     useState<MarketplaceListingStatus | string>("active");
   const [isOwner, setIsOwner] = useState(false);
+  const [winnerPurchaseId, setWinnerPurchaseId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,6 +91,46 @@ export default function AuctionDetailPage({
       active = false;
     };
   }, [auctionId, locale, user?.id]);
+
+  const isWinner =
+    user?.id != null &&
+    auctionState?.winning_bid?.bidder?.id != null &&
+    Number(user.id) === Number(auctionState.winning_bid.bidder.id);
+  const winnerNeedsPayment =
+    !isOwner &&
+    isWinner &&
+    String(auctionState?.outcome || "") === "sold_pending_payment";
+
+  useEffect(() => {
+    if (!winnerNeedsPayment) {
+      setWinnerPurchaseId(null);
+      return;
+    }
+
+    let active = true;
+    getMyPurchases(locale, "buyer")
+      .then((response) => {
+        if (!active) return;
+        const purchases = response.data.purchases || [];
+        const match = purchases.find((purchase) => {
+          const listingId = purchase.listing_id ?? purchase.listing?.id;
+          const status = String(purchase.status || "").toLowerCase();
+          return (
+            Number(listingId) === Number(auctionId) &&
+            status !== "cancelled" &&
+            status !== "canceled"
+          );
+        });
+        setWinnerPurchaseId(match?.id ?? null);
+      })
+      .catch(() => {
+        if (active) setWinnerPurchaseId(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [auctionId, locale, winnerNeedsPayment]);
 
   if (loading) {
     return (
@@ -178,7 +224,26 @@ export default function AuctionDetailPage({
         }}
       >
         <div className="max-w-5xl mx-auto space-y-8">
-          <AuctionDetailCard auction={auction} />
+          <AuctionDetailCard
+            auction={auction}
+            payHref={
+              winnerNeedsPayment && winnerPurchaseId
+                ? auctionCheckoutPath(locale, auctionId)
+                : null
+            }
+            onPayClick={
+              winnerNeedsPayment && winnerPurchaseId
+                ? () =>
+                    rememberCheckoutIntent("auction", auctionId, {
+                      role: "buyer",
+                      purchaseId: String(winnerPurchaseId),
+                      price:
+                        Number(auctionState?.winning_bid?.amount) ||
+                        auction.currentBid,
+                    })
+                : undefined
+            }
+          />
 
           {showBidRoom && auctionState && (
             <LiveBidRoom

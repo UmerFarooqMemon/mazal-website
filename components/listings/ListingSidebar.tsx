@@ -9,6 +9,10 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button, DirhamAmount } from "@/components/ui";
 import { getLoginHref } from "@/lib/auth-redirect";
+import {
+  listingCheckoutPath,
+  rememberCheckoutIntent,
+} from "@/lib/checkout-intent";
 import type { MarketplaceListingDetail } from "@/services/marketplace";
 import {
   addToWatchlist,
@@ -125,11 +129,12 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
         askingPrice,
       );
       const purchaseId = response.data.purchase?.id;
-      router.push(
-        `/${locale}/listings/${listing.id}/checkout?role=buyer&price=${askingPrice}${
-          purchaseId ? `&purchaseId=${purchaseId}` : ""
-        }`,
-      );
+      rememberCheckoutIntent("marketplace", listing.id, {
+        role: "buyer",
+        purchaseId: purchaseId ? String(purchaseId) : undefined,
+        price: askingPrice,
+      });
+      router.push(listingCheckoutPath(locale, listing.id));
     } catch (error) {
       if (error instanceof MarketplaceRequestError && error.status === 401) {
         router.push(
@@ -209,8 +214,14 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
               </Button>
             ) : (
               <Link
-                href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
+                href={listingCheckoutPath(locale, listing.id)}
                 className="block"
+                onClick={() =>
+                  rememberCheckoutIntent("marketplace", listing.id, {
+                    role: "buyer",
+                    price: Number(listing.asking_price) || undefined,
+                  })
+                }
               >
                 <Button
                   variant="primary"

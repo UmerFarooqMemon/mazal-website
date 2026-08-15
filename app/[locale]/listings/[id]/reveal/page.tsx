@@ -8,6 +8,10 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button, DirhamAmount } from "@/components/ui";
+import {
+  listingCheckoutPath,
+  rememberCheckoutIntent,
+} from "@/lib/checkout-intent";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import ListingSidebar from "@/components/listings/ListingSidebar";
 import RevealPaymentMethodStep from "@/components/listings/reveal/RevealPaymentMethodStep";
@@ -323,7 +327,8 @@ export default function RevealPage() {
         response.data.message ||
           "Reveal fee will be credited toward your final purchase price.",
       );
-      router.push(`/${locale}/listings/${params.id}/checkout?role=buyer`);
+      rememberCheckoutIntent("marketplace", params.id, { role: "buyer" });
+      router.push(listingCheckoutPath(locale, params.id));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to proceed.");
     } finally {

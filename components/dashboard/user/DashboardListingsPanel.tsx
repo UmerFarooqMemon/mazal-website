@@ -17,6 +17,7 @@ import {
   dashPanel,
   useDashTheme,
 } from "./theme";
+import { rememberCheckoutIntent } from "@/lib/checkout-intent";
 
 export type MarketplaceStatus =
   | "awaiting_offer"
@@ -47,6 +48,7 @@ export type DashboardListingRow = {
   listingPlan?: MarketplaceListingPlanSummary | null;
   boostTier?: string | null;
   purchaseId?: number;
+  checkoutFlow?: "marketplace" | "auction";
   canRateSeller?: boolean;
   isOwner?: boolean;
   averageRating?: number;
@@ -343,11 +345,38 @@ export default function DashboardListingsPanel({
                       </div>
                     </div>
                   ) : (
-                    <div
-                      className="inline-flex h-9 min-w-[147px] items-center justify-center rounded-xl px-4 text-xs font-medium"
-                      style={{ backgroundColor: DASH_PILL, color: DASH_TEXT }}
-                    >
-                      {marketplaceStatusLabel(row.status)}
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      {row.isOwner === false &&
+                        row.purchaseId &&
+                        row.status === "awaiting_payment" && (
+                          <Link
+                            href={row.href}
+                            onClick={() => {
+                              if (!row.purchaseId) return;
+                              rememberCheckoutIntent(
+                                row.checkoutFlow || "marketplace",
+                                row.listingId,
+                                {
+                                  role: "buyer",
+                                  purchaseId: String(row.purchaseId),
+                                  price: row.offerAmount,
+                                },
+                              );
+                            }}
+                            className="inline-flex h-9 min-w-[120px] items-center justify-center rounded-xl px-4 text-xs font-medium text-white"
+                            style={{ background: DASH_BTN }}
+                          >
+                            {t("dashboard.pay_now") ||
+                              t("private-deal.pay_now") ||
+                              "Pay Now"}
+                          </Link>
+                        )}
+                      <div
+                        className="inline-flex h-9 min-w-[147px] items-center justify-center rounded-xl px-4 text-xs font-medium"
+                        style={{ backgroundColor: DASH_PILL, color: DASH_TEXT }}
+                      >
+                        {marketplaceStatusLabel(row.status)}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -470,7 +470,11 @@ export interface MarketplacePurchase {
   status_label?: string;
   agreed_price: number | string;
   reveal_credit_amount?: number | string;
-  fee_snapshot?: Record<string, unknown>;
+  fee_snapshot?: Array<{
+    slug?: string;
+    label?: string;
+    amount?: string | number;
+  }>;
   total_fees?: number | string;
   total_due: number | string;
   seller_net?: number | string;
@@ -1695,24 +1699,6 @@ export function getPurchase(purchaseId: string | number, locale: string) {
   return marketplaceRequest<{ purchase: MarketplacePurchase }>(
     `/purchases/${purchaseId}`,
     { locale, auth: "required" },
-  );
-}
-
-// 26b. Save purchase buyer party details (confirm details step)
-export function savePurchaseParty(
-  purchaseId: string | number,
-  payload: Record<string, unknown>,
-  locale: string,
-) {
-  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
-    `/purchases/${purchaseId}/party`,
-    {
-      method: "PUT",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify(payload),
-    },
   );
 }
 

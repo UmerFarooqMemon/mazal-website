@@ -5,6 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { Handshake, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
 import { getLoginHref } from "@/lib/auth-redirect";
+import {
+  listingCheckoutPath,
+  rememberCheckoutIntent,
+} from "@/lib/checkout-intent";
 import DirhamText from "@/components/ui/DirhamText";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -285,16 +289,19 @@ export default function OfferNegotiation() {
       try {
         const purchase = await startPurchaseFromOffer(offer.id, locale);
         const purchaseId = purchase.data.purchase?.id;
-        router.push(
-          `/${locale}/listings/${params.id}/checkout?role=buyer&price=${offerAmount(offer)}${
-            purchaseId ? `&purchaseId=${purchaseId}` : ""
-          }`,
-        );
+        rememberCheckoutIntent("marketplace", params.id, {
+          role: "buyer",
+          purchaseId: purchaseId ? String(purchaseId) : undefined,
+          price: offerAmount(offer),
+        });
+        router.push(listingCheckoutPath(locale, params.id));
       } catch (purchaseError) {
         if (await handleListingConflict(purchaseError)) return;
-        router.push(
-          `/${locale}/listings/${params.id}/checkout?role=buyer&price=${offerAmount(offer)}`,
-        );
+        rememberCheckoutIntent("marketplace", params.id, {
+          role: "buyer",
+          price: offerAmount(offer),
+        });
+        router.push(listingCheckoutPath(locale, params.id));
       }
     } catch (error) {
       if (await handleListingConflict(error)) return;
@@ -459,11 +466,12 @@ export default function OfferNegotiation() {
       );
       const purchase = response.data.purchase;
       const purchaseId = purchase?.id;
-      router.push(
-        `/${locale}/listings/${params.id}/checkout?role=buyer&price=${askingPrice}${
-          purchaseId ? `&purchaseId=${purchaseId}` : ""
-        }`,
-      );
+      rememberCheckoutIntent("marketplace", params.id, {
+        role: "buyer",
+        purchaseId: purchaseId ? String(purchaseId) : undefined,
+        price: askingPrice,
+      });
+      router.push(listingCheckoutPath(locale, params.id));
     } catch (error) {
       if (error instanceof MarketplaceRequestError && error.status === 401) {
         router.push(

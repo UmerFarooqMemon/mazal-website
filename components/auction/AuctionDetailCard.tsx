@@ -14,9 +14,15 @@ import AuctionStatusBadges from "./AuctionStatusBadges";
 
 interface AuctionDetailCardProps {
   auction: AuctionListing;
+  payHref?: string | null;
+  onPayClick?: () => void;
 }
 
-export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
+export default function AuctionDetailCard({
+  auction,
+  payHref,
+  onPayClick,
+}: AuctionDetailCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const [timeLeft, setTimeLeft] = useState(() =>
@@ -142,15 +148,27 @@ export default function AuctionDetailCard({ auction }: AuctionDetailCardProps) {
           </div>
         </div>
 
-        <Link href={`/${locale}/auctions/${auction.id}/register`} className="shrink-0">
-          <Button
-            variant="primary"
-            size="sm"
-            className="h-9 px-4 text-xs rounded-full"
-          >
-            <span>{t("auctions.add_deposit_cta")}</span>
-          </Button>
-        </Link>
+        {payHref ? (
+          <Link href={payHref} className="shrink-0" onClick={onPayClick}>
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-9 px-4 text-xs rounded-full"
+            >
+              <span>{t("dashboard.pay_now") || t("private-deal.pay_now") || "Pay Now"}</span>
+            </Button>
+          </Link>
+        ) : auction.status !== "closed" ? (
+          <Link href={`/${locale}/auctions/${auction.id}/register`} className="shrink-0">
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-9 px-4 text-xs rounded-full"
+            >
+              <span>{t("auctions.add_deposit_cta")}</span>
+            </Button>
+          </Link>
+        ) : null}
       </div>
     </div>
   );
