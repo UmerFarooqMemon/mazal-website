@@ -547,69 +547,79 @@ export default function UserDashboard() {
                 key={card.key}
                 type="button"
                 onClick={() => selectView(card.key)}
-                className="flex min-h-[144px] flex-col rounded-2xl border p-5 text-start transition-shadow hover:shadow-sm"
+                className="flex min-h-[144px] min-w-0 flex-col overflow-hidden rounded-2xl border p-5 text-start transition-shadow hover:shadow-sm"
                 style={{
                   borderColor: active ? DASH_GREEN : DASH_BORDER,
                   backgroundColor: DASH_SURFACE,
                 }}
               >
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center justify-between gap-2">
                   <div
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[9px] border"
                     style={{ borderColor: DASH_ICON_BORDER }}
                   >
                     <Icon className="h-6 w-6 text-black" strokeWidth={1.6} />
                   </div>
-                  <p
-                    className="text-[30px] font-semibold leading-[38px] tabular-nums"
-                    style={{ color: DASH_GREEN_DARK }}
-                  >
-                    {card.key === "wallet" ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        {walletHidden ? (
-                          <span className="text-[22px] tracking-widest">••••</span>
-                        ) : (
-                          <span className="text-[18px] sm:text-[20px] leading-8">
+                  {card.key === "wallet" ? (
+                    <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
+                      {walletHidden ? (
+                        <span
+                          className="text-[22px] font-semibold tracking-widest"
+                          style={{ color: DASH_GREEN_DARK }}
+                        >
+                          ••••
+                        </span>
+                      ) : (
+                        <span
+                          className="min-w-0 overflow-hidden text-end text-[length:clamp(0.7rem,1.05vw,1.125rem)] font-semibold leading-tight tabular-nums"
+                          style={{ color: DASH_GREEN_DARK }}
+                        >
+                          <span className="block truncate">
                             <DirhamAmount
                               amount={Number(card.value)}
                               decimals={2}
                               weight="semibold"
                             />
                           </span>
-                        )}
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
-                          style={{ backgroundColor: DASH_GREEN, color: "#ffffff" }}
-                          aria-label={
-                            walletHidden
-                              ? t("wallet.show_balance")
-                              : t("wallet.hide_balance")
-                          }
-                          onClick={(e) => {
+                        </span>
+                      )}
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+                        style={{ backgroundColor: DASH_GREEN, color: "#ffffff" }}
+                        aria-label={
+                          walletHidden
+                            ? t("wallet.show_balance")
+                            : t("wallet.hide_balance")
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setWalletHidden((v) => !v);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
                             e.stopPropagation();
                             setWalletHidden((v) => !v);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setWalletHidden((v) => !v);
-                            }
-                          }}
-                        >
-                          {walletHidden ? (
-                            <EyeOff className="h-3.5 w-3.5" />
-                          ) : (
-                            <Eye className="h-3.5 w-3.5" />
-                          )}
-                        </span>
+                          }
+                        }}
+                      >
+                        {walletHidden ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
                       </span>
-                    ) : (
-                      card.value
-                    )}
-                  </p>
+                    </div>
+                  ) : (
+                    <p
+                      className="text-[30px] font-semibold leading-[38px] tabular-nums"
+                      style={{ color: DASH_GREEN_DARK }}
+                    >
+                      {card.value}
+                    </p>
+                  )}
                 </div>
                 <p
                   className="mt-auto pt-7 font-serif text-[17px] font-semibold leading-8"
