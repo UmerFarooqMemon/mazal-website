@@ -1638,6 +1638,58 @@ export function startPurchaseFromOffer(
   );
 }
 
+export function firstMarketplaceError(
+  error: unknown,
+  keys?: string[],
+): string | null {
+  if (!(error instanceof MarketplaceRequestError)) {
+    return error instanceof Error ? error.message : null;
+  }
+
+  const bag = error.errors;
+  if (bag) {
+    const searchKeys =
+      keys && keys.length > 0
+        ? keys
+        : [
+            "listing",
+            "amount",
+            "identity",
+            "confirm_asking_price",
+            ...Object.keys(bag),
+          ];
+    for (const key of searchKeys) {
+      const value = bag[key];
+      if (Array.isArray(value) && value[0] != null) return String(value[0]);
+      if (typeof value === "string" && value.trim()) return value;
+    }
+  }
+
+  return keys && keys.length > 0 ? null : error.message;
+}
+
+export function buyListingAtAskingPrice(
+  listingId: string | number,
+  locale: string,
+  amount?: number,
+) {
+  const body: Record<string, unknown> = { confirm_asking_price: true };
+  if (amount != null && Number.isFinite(amount) && amount >= 0.01) {
+    body.amount = amount;
+  }
+
+  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
+    `/listings/${listingId}/purchase`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
 // 26. Get Purchase
 export function getPurchase(purchaseId: string | number, locale: string) {
   return marketplaceRequest<{ purchase: MarketplacePurchase }>(

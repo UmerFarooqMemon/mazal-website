@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Handshake, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
+import { getLoginHref } from "@/lib/auth-redirect";
 import DirhamText from "@/components/ui/DirhamText";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -11,10 +12,12 @@ import { Button } from "@/components/ui";
 import OfferDealSummary from "./OfferDealSummary";
 import {
   acceptOffer,
+  buyListingAtAskingPrice,
   canTransactListing,
   counterOffer,
   endNegotiation,
   finalOffer,
+  firstMarketplaceError,
   getListingDetail,
   getListingOffers,
   getMyOffers,
@@ -67,6 +70,8 @@ export default function OfferNegotiation() {
   const [buyerFinal, setBuyerFinal] = useState(false);
 
   const isOwner = Boolean(listing?.is_owner);
+  const isDirectListing =
+    String(listing?.listing_type || "").toLowerCase() === "direct";
   const askingPrice = Number(listing?.asking_price) || 0;
   const canTransact = canTransactListing(listing?.status);
   const reserved = isListingReserved(listing?.status);
@@ -214,6 +219,8 @@ export default function OfferNegotiation() {
     !latestPending &&
     !acceptedOffer &&
     canNegotiate;
+
+  const canBuyAtAsking = canBuyerStartNegotiation && isDirectListing;
 
   const canBuyerCompose = canBuyerStartNegotiation;
 
@@ -441,10 +448,50 @@ export default function OfferNegotiation() {
     }
   };
 
-  const handleAcceptAsking = () => {
-    router.push(
-      `/${locale}/listings/${params.id}/checkout?role=buyer&price=${askingPrice}`,
-    );
+  const handleAcceptAsking = async () => {
+    if (!isDirectListing || !canTransact) return;
+    setActionLoading(true);
+    try {
+      const response = await buyListingAtAskingPrice(
+        params.id,
+        locale,
+        askingPrice,
+      );
+      const purchase = response.data.purchase;
+      const purchaseId = purchase?.id;
+      router.push(
+        `/${locale}/listings/${params.id}/checkout?role=buyer&price=${askingPrice}${
+          purchaseId ? `&purchaseId=${purchaseId}` : ""
+        }`,
+      );
+    } catch (error) {
+      if (error instanceof MarketplaceRequestError && error.status === 401) {
+        router.push(
+          getLoginHref(
+            locale,
+            `/${locale}/listings/${params.id}/offer`,
+          ),
+        );
+        return;
+      }
+      if (error instanceof MarketplaceRequestError && error.status === 422) {
+        const amountError = firstMarketplaceError(error, ["amount"]);
+        const listingError = firstMarketplaceError(error, ["listing"]);
+        toast.error(
+          amountError ||
+            listingError ||
+            firstMarketplaceError(error) ||
+            t("listings.listing_reserved_toast"),
+        );
+        await load();
+        return;
+      }
+      toast.error(
+        firstMarketplaceError(error) || "Failed to start purchase.",
+      );
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const openSellerForm = (mode: ComposeMode, offer: MarketplaceOffer) => {
@@ -556,14 +603,17 @@ export default function OfferNegotiation() {
               {!isOwner && canBuyerStartNegotiation && !composeOpen && (
                 <div className="space-y-3">
                   <div className="flex gap-3">
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="flex-1"
-                      onClick={handleAcceptAsking}
-                    >
-                      {t("offer.accept")}
-                    </Button>
+                    {canBuyAtAsking ? (
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="flex-1"
+                        disabled={actionLoading}
+                        onClick={handleAcceptAsking}
+                      >
+                        {t("offer.accept")}
+                      </Button>
+                    ) : null}
                     <Button
                       variant="outline"
                       size="lg"

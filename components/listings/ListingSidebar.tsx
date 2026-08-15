@@ -1,18 +1,23 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Heart, Share2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button, DirhamAmount } from "@/components/ui";
+import { getLoginHref } from "@/lib/auth-redirect";
 import type { MarketplaceListingDetail } from "@/services/marketplace";
 import {
   addToWatchlist,
+  buyListingAtAskingPrice,
   canTransactListing,
+  firstMarketplaceError,
   isListingReserved,
   isListingSold,
+  MarketplaceRequestError,
   removeFromWatchlist,
 } from "@/services/marketplace";
 
@@ -24,14 +29,19 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [watchlisted, setWatchlisted] = useState(
     listing.is_watchlisted ?? false,
   );
   const [watchlistLoading, setWatchlistLoading] = useState(false);
+  const [buying, setBuying] = useState(false);
 
   const canTransact = canTransactListing(listing.status);
   const reserved = isListingReserved(listing.status);
   const sold = isListingSold(listing.status);
+  const isDirectListing =
+    String(listing.listing_type || "").toLowerCase() === "direct";
+  const askingPrice = Number(listing.asking_price) || 0;
 
   const plateCode = listing.code_hidden
     ? listing.plate_code && /^\?+$/.test(String(listing.plate_code))
@@ -98,6 +108,43 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
     }
   };
 
+  const handleBuyAtAsking = async () => {
+    if (!isAuthenticated) {
+      router.push(
+        getLoginHref(locale, `/${locale}/listings/${listing.id}`),
+      );
+      return;
+    }
+    if (!isDirectListing || !canTransact) return;
+
+    setBuying(true);
+    try {
+      const response = await buyListingAtAskingPrice(
+        listing.id,
+        locale,
+        askingPrice,
+      );
+      const purchaseId = response.data.purchase?.id;
+      router.push(
+        `/${locale}/listings/${listing.id}/checkout?role=buyer&price=${askingPrice}${
+          purchaseId ? `&purchaseId=${purchaseId}` : ""
+        }`,
+      );
+    } catch (error) {
+      if (error instanceof MarketplaceRequestError && error.status === 401) {
+        router.push(
+          getLoginHref(locale, `/${locale}/listings/${listing.id}`),
+        );
+        return;
+      }
+      toast.error(
+        firstMarketplaceError(error) || "Failed to start purchase.",
+      );
+    } finally {
+      setBuying(false);
+    }
+  };
+
   const unavailableMessage = reserved
     ? t("listings.listing_reserved_message")
     : sold
@@ -149,19 +196,32 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
       <div className="flex flex-col gap-3 mb-4">
         {!listing.is_owner &&
           (canTransact ? (
-            <Link
-              href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
-              className="block"
-            >
+            isDirectListing ? (
               <Button
                 variant="primary"
                 size="lg"
                 fullWidth
                 className="shadow-md !h-11"
+                disabled={buying}
+                onClick={handleBuyAtAsking}
               >
                 {t("listings.buy_escrow")}
               </Button>
-            </Link>
+            ) : (
+              <Link
+                href={`/${locale}/listings/${listing.id}/checkout?role=buyer&price=${listing.asking_price}`}
+                className="block"
+              >
+                <Button
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  className="shadow-md !h-11"
+                >
+                  {t("listings.buy_escrow")}
+                </Button>
+              </Link>
+            )
           ) : (
             <Button
               variant="primary"
