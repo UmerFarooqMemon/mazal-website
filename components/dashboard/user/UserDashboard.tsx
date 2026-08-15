@@ -20,7 +20,6 @@ import {
   getWatchlist,
   removeFromWatchlist,
   resolveListingRating,
-  resolvePlateParts,
   toMarketplaceNumber,
   type MarketplaceListingCard,
   type MarketplaceListingDetail,
@@ -136,20 +135,39 @@ function extractPurchases(payload: unknown): MarketplacePurchase[] {
   return [];
 }
 
+/** Purchase nested listing: prefer plate_code / plate_digits; never title-digit fallback. */
+function purchasePlateOverlays(listing?: MarketplacePurchase["listing"]) {
+  const display = String(listing?.display_plate || "").trim();
+  const displayMatch = display.match(/^([A-Za-z?]{1,3})\s+(.+)$/);
+  const fromDisplayCode = displayMatch?.[1]?.toUpperCase() || "";
+  const fromDisplayDigits = (displayMatch?.[2] || "").replace(/\s+/g, "");
+
+  const code = String(listing?.plate_code || fromDisplayCode || "").trim();
+  const digits = String(
+    listing?.plate_digits || fromDisplayDigits || "",
+  ).trim();
+
+  return {
+    plate_code: code || undefined,
+    plate_digits: digits,
+  };
+}
+
 function mapPurchaseToDashboardRow(
   purchase: MarketplacePurchase,
   locale: string,
   offerLabel: string,
 ): DashboardListingRow {
   const listing = purchase.listing;
-  const { code, digits } = resolvePlateParts(listing);
+  const { plate_code, plate_digits } = purchasePlateOverlays(listing);
   const asAuction = isAuctionPurchase(purchase);
+  const listingId = listing?.id ?? purchase.listing_id;
 
   return {
     id: `purchase-${purchase.id}`,
-    listingId: purchase.listing_id,
-    plate_code: listing?.plate_code || code || undefined,
-    plate_digits: String(listing?.plate_digits || digits || ""),
+    listingId,
+    plate_code,
+    plate_digits,
     emirate: listing?.emirate,
     plateType: listing?.plate_type || undefined,
     plateDesign: listing?.plate_design || undefined,
@@ -161,13 +179,16 @@ function mapPurchaseToDashboardRow(
     offerAmount: toMarketplaceNumber(purchase.agreed_price),
     status: mapPurchaseStatus(purchase.status),
     href: asAuction
-      ? `/${locale}/auctions/${purchase.listing_id}`
-      : `/${locale}/listings/${purchase.listing_id}/checkout`,
+      ? `/${locale}/auctions/${listingId}`
+      : `/${locale}/listings/${listingId}/checkout`,
     purchaseId: purchase.id,
     canRateSeller: Boolean(purchase.can_rate_seller),
     isOwner: false,
     averageRating:
-      purchase.seller?.average_rating ?? purchase.seller?.rating ?? undefined,
+      listing?.average_rating ??
+      purchase.seller?.average_rating ??
+      purchase.seller?.rating ??
+      undefined,
   };
 }
 
