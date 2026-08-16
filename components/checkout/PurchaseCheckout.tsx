@@ -32,6 +32,10 @@ import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import WalletDialog from "@/components/wallet/WalletDialog";
 import { Button } from "@/components/ui";
 import { useGiftProducts } from "@/hooks/useGiftProducts";
+import {
+  useWalletPaymentChoice,
+  walletCoversAmount,
+} from "@/hooks/useWalletPaymentChoice";
 import { detailsFromGiftProduct, resolveGiftBoxSummary } from "@/lib/gift-box";
 import {
   canTransactListing,
@@ -460,6 +464,9 @@ export default function PurchaseCheckout({
 
   const { totalDue: payableTotal, totalFees: payableFees } =
     resolvePayableTotal(resolvedPrice, purchase);
+  const walletAmountDue =
+    Number(purchase?.total_due) || payableTotal;
+  const walletChoice = useWalletPaymentChoice(walletAmountDue);
 
   const feeBreakdown = (purchase?.fee_snapshot ?? [])
     .filter((row) => row?.label != null && row.amount != null)
@@ -787,7 +794,9 @@ export default function PurchaseCheckout({
     if (!requirePurchaseOrPrompt()) return;
 
     if (paymentMethod === "wallet") {
-      setWalletModalOpen(true);
+      walletChoice.selectWalletOrRedirect(() => {
+        setWalletModalOpen(true);
+      });
       return;
     }
 
@@ -1041,11 +1050,22 @@ export default function PurchaseCheckout({
           }}
           onBack={() => setStep(0)}
           onContinue={handleSinglePaymentContinue}
-          onOpenWallet={() => router.push(`/${locale}/wallet`)}
+          onWalletClick={() => {
+            walletChoice.selectWalletOrRedirect(() => {
+              setPaymentMethod("wallet");
+              setWalletModalOpen(true);
+            });
+          }}
           onProcessSplit={(paymentId) => {
             const row = splitPayments.find((payment) => payment.id === paymentId);
             setProcessingSplitId(paymentId);
             if (row?.method === "wallet") {
+              if (
+                !walletCoversAmount(walletChoice.availableBalance, row.amount)
+              ) {
+                walletChoice.goToWallet();
+                return;
+              }
               setWalletModalOpen(true);
               return;
             }

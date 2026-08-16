@@ -21,6 +21,10 @@ import { Button, DirhamAmount, Input } from "@/components/ui";
 import BankSelect from "@/components/ui/BankSelect";
 import WalletMethodOption from "@/components/wallet/WalletMethodOption";
 import { formatPriceInput } from "@/lib/card-input";
+import {
+  useWalletPaymentChoice,
+  walletCoversAmount,
+} from "@/hooks/useWalletPaymentChoice";
 
 export type PaymentMethod =
   | "bank"
@@ -73,6 +77,10 @@ interface PaymentMethodStepProps {
   onProcessSplit: (paymentId: string) => void;
   /** Opens the wallet module when Wallet is selected / continued. */
   onOpenWallet?: () => void;
+  /** When provided, Wallet click uses this instead of select + onOpenWallet. */
+  onWalletClick?: () => void;
+  /** Hide the wallet method tile (e.g. when available balance is 0). */
+  showWallet?: boolean;
   saving?: boolean;
   /** When false, hides single/split toggle and forces single-payment UI. */
   allowSplit?: boolean;
@@ -139,6 +147,8 @@ export default function PaymentMethodStep({
   onContinue,
   onProcessSplit,
   onOpenWallet,
+  onWalletClick,
+  showWallet = true,
   saving = false,
   allowSplit = true,
   allowWalletSplit = false,
@@ -149,6 +159,8 @@ export default function PaymentMethodStep({
 }: PaymentMethodStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const walletChoice = useWalletPaymentChoice(totalAmount);
+  const walletVisible = showWallet && walletChoice.showWallet;
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -172,7 +184,7 @@ export default function PaymentMethodStep({
     key: PaymentMethod;
     titleKey: string;
     icon: typeof Building2;
-  }> = allowWalletSplit
+  }> = allowWalletSplit && walletChoice.showWallet
     ? [{ key: "wallet", titleKey: "wallet_payment", icon: Wallet }, ...METHODS]
     : METHODS;
 
@@ -206,7 +218,30 @@ export default function PaymentMethodStep({
     });
   };
 
+  const handleWalletSelect = () => {
+    onMethodChange("wallet");
+    if (!walletChoice.coversAmount) {
+      if (onOpenWallet) {
+        onOpenWallet();
+        return;
+      }
+      walletChoice.goToWallet();
+      return;
+    }
+    onWalletClick?.();
+  };
+
   const addMethod = (key: PaymentMethod) => {
+    if (key === "wallet") {
+      const rem =
+        totalAmount -
+        drafts.reduce((s, d) => s + parseAmount(d.amount), 0);
+      const needed = rem > 0 ? rem : totalAmount;
+      if (!walletCoversAmount(walletChoice.availableBalance, needed)) {
+        walletChoice.goToWallet();
+        return;
+      }
+    }
     setDrafts((prev) => {
       if (prev.length >= maxSplitEntries) return prev;
       const rem =
@@ -361,13 +396,12 @@ export default function PaymentMethodStep({
       {!allowSplit || mode === "single" ? (
         <>
           <div className="space-y-3 mb-8">
-            <WalletMethodOption
-              selected={method === "wallet"}
-              onSelect={() => {
-                onMethodChange("wallet");
-                onOpenWallet?.();
-              }}
-            />
+            {walletVisible ? (
+              <WalletMethodOption
+                selected={method === "wallet"}
+                onSelect={handleWalletSelect}
+              />
+            ) : null}
             {METHODS.map((item) => {
               const Icon = item.icon;
               const selected = method === item.key;

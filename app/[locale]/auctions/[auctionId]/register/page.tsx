@@ -13,6 +13,7 @@ import AuctionSummaryCard from "@/components/auction/AuctionSummaryCard";
 import AuctionBenefitsCard from "@/components/auction/AuctionBenefitsCard";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
+import { useWalletPaymentChoice } from "@/hooks/useWalletPaymentChoice";
 import PaymentMethodStep, {
   type PaymentMethod,
   type SplitPaymentEntry,
@@ -97,10 +98,8 @@ export default function AuctionRegisterPage({
   const [offlineSubmitted, setOfflineSubmitted] = useState(false);
   const [walletPaid, setWalletPaid] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
-
-  const openWalletModule = () => {
-    router.push(`/${locale}/wallet`);
-  };
+  const depositAmount = summary?.minimumDeposit ?? 0;
+  const walletChoice = useWalletPaymentChoice(depositAmount);
 
   const refreshAuction = useCallback(async () => {
     const response = await getAuctionState(auctionId, locale);
@@ -287,9 +286,17 @@ export default function AuctionRegisterPage({
   const pendingVerification =
     offlineSubmitted || isPendingVerification(registration);
 
+  const handleWalletClick = () => {
+    if (submitting) return;
+    walletChoice.selectWalletOrRedirect(() => {
+      setMethod("wallet");
+      setWalletModalOpen(true);
+    });
+  };
+
   const handleMethodContinue = async () => {
     if (method === "wallet") {
-      setWalletModalOpen(true);
+      handleWalletClick();
       return;
     }
 
@@ -596,7 +603,7 @@ export default function AuctionRegisterPage({
                 onSplitPaymentsChange={setSplitPayments}
                 onBack={() => router.back()}
                 onContinue={handleMethodContinue}
-                onOpenWallet={openWalletModule}
+                onWalletClick={handleWalletClick}
                 onProcessSplit={() => undefined}
                 saving={submitting}
               />
@@ -652,7 +659,7 @@ export default function AuctionRegisterPage({
       <WalletPaymentModal
         isOpen={walletModalOpen}
         onClose={() => setWalletModalOpen(false)}
-        amountDue={summary?.minimumDeposit ?? 0}
+        amountDue={depositAmount}
         reference={t("auctions.summary_min_deposit")}
         onPaid={handleWalletPaid}
       />

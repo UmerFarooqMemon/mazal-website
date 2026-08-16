@@ -12,6 +12,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import WalletMethodOption from "@/components/wallet/WalletMethodOption";
+import { useWalletPaymentChoice } from "@/hooks/useWalletPaymentChoice";
 import type { DepositPaymentMethod } from "./types";
 
 interface DepositMethodStepProps {
@@ -19,8 +20,10 @@ interface DepositMethodStepProps {
   onMethodChange: (method: DepositPaymentMethod) => void;
   onBack: () => void;
   onContinue: () => void;
+  amountDue?: number;
   /** Opens the full wallet module when the Wallet option is chosen. */
   onOpenWallet?: () => void;
+  onWalletClick?: () => void;
   submitting?: boolean;
 }
 
@@ -40,11 +43,14 @@ export default function DepositMethodStep({
   onMethodChange,
   onBack,
   onContinue,
+  amountDue = 0,
   onOpenWallet,
+  onWalletClick,
   submitting = false,
 }: DepositMethodStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const walletChoice = useWalletPaymentChoice(amountDue);
   const isRTL = locale === "ar";
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -70,13 +76,17 @@ export default function DepositMethodStep({
       </div>
 
       <div className="space-y-3 mb-8">
-        <WalletMethodOption
-          selected={method === "wallet"}
-          onSelect={() => {
-            onMethodChange("wallet");
-            onOpenWallet?.();
-          }}
-        />
+        {walletChoice.showWallet ? (
+          <WalletMethodOption
+            selected={method === "wallet"}
+            onSelect={() => {
+              onMethodChange("wallet");
+              walletChoice.selectWalletOrRedirect(() => {
+                onWalletClick?.();
+              });
+            }}
+          />
+        ) : null}
 
         {METHODS.map((item) => {
           const selected = method === item.key;

@@ -7,6 +7,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import WalletMethodOption from "@/components/wallet/WalletMethodOption";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
+import { useWalletPaymentChoice } from "@/hooks/useWalletPaymentChoice";
 
 interface RevealPaymentMethodStepProps {
   selected: "card" | "wallet";
@@ -33,6 +34,12 @@ export default function RevealPaymentMethodStep({
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
   const [walletOpen, setWalletOpen] = useState(false);
+  const walletChoice = useWalletPaymentChoice(amountDue);
+
+  const handleWalletSelect = () => {
+    onSelect("wallet");
+    walletChoice.selectWalletOrRedirect(() => setWalletOpen(true));
+  };
 
   return (
     <div
@@ -55,13 +62,12 @@ export default function RevealPaymentMethodStep({
       </div>
 
       <div className="space-y-3 mb-8">
-        <WalletMethodOption
-          selected={selected === "wallet"}
-          onSelect={() => {
-            onSelect("wallet");
-            setWalletOpen(true);
-          }}
-        />
+        {walletChoice.showWallet ? (
+          <WalletMethodOption
+            selected={selected === "wallet"}
+            onSelect={handleWalletSelect}
+          />
+        ) : null}
 
         <button
           type="button"
@@ -133,7 +139,7 @@ export default function RevealPaymentMethodStep({
           variant="primary"
           onClick={() => {
             if (selected === "wallet") {
-              setWalletOpen(true);
+              walletChoice.selectWalletOrRedirect(() => setWalletOpen(true));
               return;
             }
             onContinue();

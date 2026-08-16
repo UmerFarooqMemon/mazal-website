@@ -28,6 +28,10 @@ import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProce
 import GiftNoPaymentBanner from "@/components/private-deal/GiftNoPaymentBanner";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
 import { useGiftProducts } from "@/hooks/useGiftProducts";
+import {
+  useWalletPaymentChoice,
+  walletCoversAmount,
+} from "@/hooks/useWalletPaymentChoice";
 import { detailsFromGiftProduct, resolveGiftBoxSummary } from "@/lib/gift-box";
 import {
   buildRemoveGiftProductPayload,
@@ -279,6 +283,7 @@ export default function PrivateDealPage() {
   };
   const payableTotal =
     Number(apiDeal?.total_due) > 0 ? Number(apiDeal?.total_due) : deal.price;
+  const walletChoice = useWalletPaymentChoice(payableTotal);
 
   const licenseSourceOptions = useMemo(
     () => resolveLicenseSourceOptions(options?.license_sources),
@@ -799,58 +804,68 @@ export default function PrivateDealPage() {
     });
   };
 
+  const startWalletConfirm = async () => {
+    if (!walletChoice.coversAmount) {
+      walletChoice.goToWallet();
+      return;
+    }
+    await withSubmit(async () => {
+      const activeDealId = resolveDealId();
+      if (!activeDealId) {
+        throw new Error("Deal not found.");
+      }
+      const response = await savePrivateDealPaymentPlan(
+        activeDealId,
+        {
+          intent: "complete",
+          plan: "single",
+          entries: [
+            {
+              amount: asMoney(payableTotal),
+              method: "wallet",
+            },
+          ],
+        },
+        locale,
+      );
+      const nextDeal = extractPrivateDeal(response);
+      hydrateFromApiDeal(nextDeal);
+      const backendPaymentId = nextDeal.payments?.[0]?.id;
+      if (!backendPaymentId) {
+        throw new Error("Wallet payment is not ready yet.");
+      }
+      setSplitPayments([
+        {
+          id: "single-payment",
+          method: "wallet",
+          amount: payableTotal,
+          notes: "",
+          status: "awaiting",
+          createdAt: new Date().toISOString(),
+          backendPaymentId,
+        },
+      ]);
+      setProcessingSplitId("single-payment");
+      setPaymentMethod("wallet");
+      setWalletModalOpen(true);
+    });
+  };
+
   const handleSinglePaymentContinue = async () => {
+    if (paymentMethod === "wallet") {
+      await startWalletConfirm();
+      return;
+    }
+
     await withSubmit(async () => {
       const singlePayment: SplitPaymentEntry = {
         id: "single-payment",
-        method: paymentMethod === "wallet" ? "wallet" : paymentMethod,
+        method: paymentMethod,
         amount: payableTotal,
         notes: "",
         status: "awaiting",
         createdAt: new Date().toISOString(),
-      } as SplitPaymentEntry;
-
-      if (paymentMethod === "wallet") {
-        // Persist a wallet plan entry, then fund instantly from the modal.
-        const activeDealId = resolveDealId();
-        if (!activeDealId) {
-          throw new Error("Deal not found.");
-        }
-        const response = await savePrivateDealPaymentPlan(
-          activeDealId,
-          {
-            intent: "complete",
-            plan: "single",
-            entries: [
-              {
-                amount: asMoney(payableTotal),
-                method: "wallet",
-              },
-            ],
-          },
-          locale,
-        );
-        const nextDeal = extractPrivateDeal(response);
-        hydrateFromApiDeal(nextDeal);
-        const backendPaymentId = nextDeal.payments?.[0]?.id;
-        if (!backendPaymentId) {
-          throw new Error("Wallet payment is not ready yet.");
-        }
-        setSplitPayments([
-          {
-            id: "single-payment",
-            method: "bank",
-            amount: payableTotal,
-            notes: "",
-            status: "awaiting",
-            createdAt: new Date().toISOString(),
-            backendPaymentId,
-          },
-        ]);
-        setProcessingSplitId("single-payment");
-        setWalletModalOpen(true);
-        return;
-      }
+      };
 
       await persistPaymentPlan([singlePayment]);
       setProcessingSplitId("single-payment");
@@ -1112,9 +1127,25 @@ export default function PrivateDealPage() {
             onAllocatedChange={setSplitAllocatedLive}
             onBack={() => setStep(2)}
             onContinue={() => void handleSinglePaymentContinue()}
-            onOpenWallet={() => router.push(`/${locale}/wallet`)}
+            onWalletClick={() => {
+              void startWalletConfirm();
+            }}
             onProcessSplit={(id) => {
+              const row = splitPayments.find((payment) => payment.id === id);
               setProcessingSplitId(id);
+              if (row?.method === "wallet") {
+                if (
+                  !walletCoversAmount(
+                    walletChoice.availableBalance,
+                    row.amount,
+                  )
+                ) {
+                  walletChoice.goToWallet();
+                  return;
+                }
+                setWalletModalOpen(true);
+                return;
+              }
               setStep(4);
             }}
             saving={submitting}
