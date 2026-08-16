@@ -226,6 +226,7 @@ export default function AuctionDetailPage({
         <div className="max-w-5xl mx-auto space-y-8">
           <AuctionDetailCard
             auction={auction}
+            showDepositCta={auctionState?.viewer_registration == null}
             payHref={
               winnerNeedsPayment && winnerPurchaseId
                 ? auctionCheckoutPath(locale, auctionId)
