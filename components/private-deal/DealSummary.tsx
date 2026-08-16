@@ -107,10 +107,12 @@ export default function DealSummary({
   const fallbackNet = price - fallbackFees;
   const fallbackFeeLine = Math.round(price * 0.01);
 
-  const totalFees = isGift
-    ? (apiFees ?? fallbackFees)
-    : (apiFees ?? fallbackFees);
-  const totalDue = isGift ? (apiDue ?? 0) : (apiDue ?? price + fallbackFees);
+  const totalFees = apiFees ?? fallbackFees;
+  const giftAmount =
+    pricing?.giftPackageAmount && pricing.giftPackageAmount > 0
+      ? pricing.giftPackageAmount
+      : 0;
+  const totalDue = isGift ? (apiDue ?? 0) : price + totalFees + giftAmount;
   const sellerNet = isGift ? (apiNet ?? 0) : (apiNet ?? fallbackNet);
 
   const allocated = Math.min(Math.max(0, allocatedAmount), price);
@@ -380,16 +382,7 @@ export default function DealSummary({
           </span>
           <span style={{ color: getColor("primary") }}>
             <DirhamAmount
-              amount={
-                data.role === "buyer"
-                  ? totalDue +
-                    (!pricing?.giftIncludedInTotals &&
-                    pricing?.giftPackageAmount &&
-                    pricing.giftPackageAmount > 0
-                      ? pricing.giftPackageAmount
-                      : 0)
-                  : sellerNet
-              }
+              amount={data.role === "buyer" ? totalDue : sellerNet}
               weight="bold"
             />
           </span>

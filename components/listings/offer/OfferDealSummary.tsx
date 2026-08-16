@@ -50,6 +50,7 @@ export default function OfferDealSummary({
   const service = Math.round(askingPrice * 0.03);
   const fees = escrow + platform + service;
   const net = askingPrice - fees;
+  const totalWithFees = askingPrice + fees;
 
   const rows = [
     { label: t("offer.asking_price_label"), amount: askingPrice },
@@ -148,7 +149,7 @@ export default function OfferDealSummary({
           className="text-2xl md:text-3xl font-serif font-bold"
           style={{ color: getColor("primaryText") }}
         >
-          <DirhamAmount amount={askingPrice} weight="bold" />
+          <DirhamAmount amount={totalWithFees} weight="bold" />
         </span>
       </div>
     </div>
