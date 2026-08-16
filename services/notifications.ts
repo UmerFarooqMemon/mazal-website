@@ -219,11 +219,19 @@ export function getNotificationHref(
     case "private_deal_completed":
       return `/${locale}/private-deal`;
 
+    case "purchase_created":
+    case "purchase_partially_funded":
     case "purchase_payment_verified":
+    case "purchase_payment_rejected":
     case "purchase_completed":
-    case "purchase_cancelled":
-      if (listingId) return `/${locale}/listings/${listingId}`;
+    case "purchase_cancelled": {
+      const purchaseListingId = listingId || auctionId;
+      if (auctionId) return `/${locale}/auctions/${auctionId}/checkout`;
+      if (purchaseListingId) {
+        return `/${locale}/listings/${purchaseListingId}/checkout`;
+      }
       return `/${locale}/buyer/transactions`;
+    }
 
     case "valuation_certificate_ready":
       if (certificateId) return `/${locale}/valuation/${certificateId}`;

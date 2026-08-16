@@ -7,6 +7,10 @@ import { useTheme } from "@/context/ThemeContext";
 import { DirhamAmount } from "@/components/ui";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import {
+  auctionCheckoutPath,
+  rememberCheckoutIntent,
+} from "@/lib/checkout-intent";
+import {
   getMyAuctionRegistrations,
   type MarketplaceAuctionRegistration,
 } from "@/services/marketplace";
@@ -57,6 +61,7 @@ function mapRegistrationRow(reg: MarketplaceAuctionRegistration) {
     plate_design: listing?.plate_design,
     statusLabel: reg.status_label || reg.status,
     depositStatusLabel: reg.deposit_status_label || reg.deposit_status,
+    auctionOutcome: listing?.auction_outcome ?? null,
   };
 }
 
@@ -204,6 +209,16 @@ export default function MyAuctionRegistrationsPage() {
                             {t("auctions.summary_deposit_status")}:{" "}
                             {row.depositStatusLabel}
                           </span>
+                          {row.auctionOutcome ? (
+                            <>
+                              <span>•</span>
+                              <span>
+                                {t(
+                                  `auctions.outcome_${row.auctionOutcome}`,
+                                ) || row.auctionOutcome}
+                              </span>
+                            </>
+                          ) : null}
                         </div>
                       </div>
 
@@ -234,6 +249,22 @@ export default function MyAuctionRegistrationsPage() {
                       >
                         {t("auctions.view_auction") || "View auction"}
                       </Link>
+                      {row.auctionOutcome === "sold_pending_payment" && (
+                        <Link
+                          href={auctionCheckoutPath(locale, row.listingId)}
+                          onClick={() =>
+                            rememberCheckoutIntent(
+                              "auction",
+                              row.listingId,
+                              { role: "buyer" },
+                            )
+                          }
+                          className="text-sm font-semibold"
+                          style={{ color: getColor("primary") }}
+                        >
+                          {t("auctions.complete_payment") || "Complete payment"}
+                        </Link>
+                      )}
                       {row.depositStatus?.toLowerCase() !== "held" && (
                         <Link
                           href={`/${locale}/auctions/${row.listingId}/register`}

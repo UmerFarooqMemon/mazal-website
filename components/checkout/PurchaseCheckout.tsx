@@ -44,11 +44,16 @@ import {
   isListingReserved,
   isListingSold,
   isOpenMarketplacePurchase,
+  isPurchaseCustodyFunded,
   payPurchaseWithWallet,
   resolvePlateParts,
+  savePurchasePaymentPlan,
+  asMarketplaceMoney,
   submitPurchasePaymentEvidence,
   updatePurchaseAddons,
+  downloadPurchaseInvoice,
   type MarketplaceListingDetail,
+  type MarketplacePaymentPlanMethod,
   type MarketplacePurchase,
 } from "@/services/marketplace";
 import {
@@ -144,6 +149,43 @@ function purchasesFromPayload(payload: unknown): MarketplacePurchase[] {
   return [];
 }
 
+function isFundedPaymentStatus(status?: string | null) {
+  return ["funded", "confirmed", "paid", "completed"].includes(
+    String(status || "").toLowerCase(),
+  );
+}
+
+function fromApiPaymentMethod(method?: string | null): PaymentMethod {
+  const value = String(method || "").toLowerCase();
+  if (value === "wallet") return "wallet";
+  if (value === "card") return "card";
+  if (value === "managers_check") return "managers_check";
+  if (value === "cash_collection" || value === "cash") return "cash";
+  return "bank";
+}
+
+function toApiPaymentMethod(method: PaymentMethod): MarketplacePaymentPlanMethod {
+  if (method === "wallet") return "wallet";
+  if (method === "card") return "card";
+  if (method === "managers_check") return "managers_check";
+  if (method === "cash") return "cash_collection";
+  return "bank_transfer";
+}
+
+function mapPurchasePaymentsToSplits(
+  purchase: MarketplacePurchase,
+): SplitPaymentEntry[] {
+  return (purchase.payments || []).map((payment) => ({
+    id: `pay-${payment.id}`,
+    method: fromApiPaymentMethod(payment.method),
+    amount: Number(payment.amount) || 0,
+    notes: "",
+    backendPaymentId: payment.id,
+    status: isFundedPaymentStatus(payment.status) ? "completed" : "awaiting",
+    createdAt: payment.submitted_at || purchase.created_at,
+  }));
+}
+
 function purchaseMatchesListing(
   purchase: MarketplacePurchase,
   listingId: string,
@@ -202,7 +244,7 @@ export default function PurchaseCheckout({
     giftRecipientNotes: "",
   });
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank");
-  const [paymentMode] = useState<PaymentMode>("single");
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>("single");
   const [splitPayments, setSplitPayments] = useState<SplitPaymentEntry[]>([]);
   const [processingSplitId, setProcessingSplitId] = useState<string | null>(
     null,
@@ -298,6 +340,17 @@ export default function PurchaseCheckout({
         ...detailsFromGiftProduct(next.gift_product),
       }));
     }
+    const mapped = mapPurchasePaymentsToSplits(next);
+    if (mapped.length > 0) {
+      setSplitPayments(mapped);
+    }
+    if (next.can_split_payment) {
+      setPaymentMode(
+        next.payment_plan === "split" || mapped.length > 1 ? "split" : "single",
+      );
+    } else {
+      setPaymentMode("single");
+    }
     return next;
   };
 
@@ -349,14 +402,20 @@ export default function PurchaseCheckout({
         const next = await refreshPurchase(purchaseId);
         if (cancelled) return;
         const funded = next.payments?.some((payment) =>
-          ["funded", "confirmed", "paid", "completed"].includes(
-            String(payment.status || "").toLowerCase(),
-          ),
+          isFundedPaymentStatus(payment.status),
         );
-        if (funded || String(next.status).toLowerCase().includes("fund")) {
+        if (isPurchaseCustodyFunded(next)) {
           setStep(3);
           toast.success(
             t("offer.payment_success") || "Payment completed successfully.",
+          );
+          return;
+        }
+        if (funded || String(next.status).toLowerCase() === "partially_funded") {
+          setStep(1);
+          toast.success(
+            t("offer.installment_paid") ||
+              "Installment funded. Remaining amount is still due.",
           );
           return;
         }
@@ -391,11 +450,13 @@ export default function PurchaseCheckout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [purchaseId, gatewayReturn, t]);
 
-  const plateType = listing?.plate_type || "private";
-  const plateDesign = listing?.plate_design || "new_colorful";
+  const plateSource = purchase?.listing || listing;
+  const plateType = plateSource?.plate_type || listing?.plate_type || "private";
+  const plateDesign =
+    plateSource?.plate_design || listing?.plate_design || "new_colorful";
   const plateVariant = `${plateType}_${plateDesign}`;
-  const hideCode = isHiddenPlateCode(listing);
-  const plate = resolvePlateParts(listing);
+  const hideCode = purchase ? false : isHiddenPlateCode(listing);
+  const plate = resolvePlateParts(plateSource || listing);
 
   const { totalDue: payableTotal, totalFees: payableFees } =
     resolvePayableTotal(resolvedPrice, purchase);
@@ -644,7 +705,41 @@ export default function PurchaseCheckout({
       ),
     ) || purchase?.payments?.[0];
 
-  const pendingPurchasePaymentId = pendingPurchasePayment?.id;
+  const pendingPurchasePaymentId =
+    processingPayment?.backendPaymentId ?? pendingPurchasePayment?.id;
+
+  const canReplacePlan =
+    Boolean(purchase?.can_split_payment) &&
+    !(purchase?.payments || []).some((payment) =>
+      isFundedPaymentStatus(payment.status),
+    );
+
+  const persistPaymentPlan = async (payments: SplitPaymentEntry[]) => {
+    if (!purchaseId) {
+      setSplitPayments(payments);
+      return;
+    }
+    const plan = payments.length > 1 ? "split" : "single";
+    const response = await savePurchasePaymentPlan(purchaseId, locale, {
+      intent: "complete",
+      plan,
+      entries: payments.map((payment) => ({
+        amount: asMarketplaceMoney(payment.amount),
+        method: toApiPaymentMethod(payment.method),
+        notes: payment.notes || undefined,
+      })),
+    });
+    applyPurchase(response.data.purchase);
+  };
+
+  const finishPaymentIfComplete = (next?: MarketplacePurchase | null) => {
+    if (next && isPurchaseCustodyFunded(next)) {
+      setStep(3);
+      return;
+    }
+    setProcessingSplitId(null);
+    setStep(1);
+  };
 
   const custodyFromPayment = asCustodyRecord(
     pendingPurchasePayment?.custody_instructions,
@@ -730,12 +825,12 @@ export default function PurchaseCheckout({
       handlePayTabsCheckoutResult(checkout.data, {
         onImmediateSuccess: () => {
           if (checkout.data.purchase) {
-            setPurchase(checkout.data.purchase);
+            applyPurchase(checkout.data.purchase);
           }
           toast.success(
             t("offer.payment_success") || "Payment completed successfully.",
           );
-          setStep(3);
+          finishPaymentIfComplete(checkout.data.purchase);
         },
         onRedirect: () => {
           toast.success(
@@ -780,12 +875,12 @@ export default function PurchaseCheckout({
         handlePayTabsCheckoutResult(checkout.data, {
           onImmediateSuccess: () => {
             if (checkout.data.purchase) {
-              setPurchase(checkout.data.purchase);
+              applyPurchase(checkout.data.purchase);
             }
             toast.success(
               t("offer.payment_success") || "Payment completed successfully.",
             );
-            setStep(3);
+            finishPaymentIfComplete(checkout.data.purchase);
           },
           onRedirect: () => {
             toast.success(
@@ -797,7 +892,13 @@ export default function PurchaseCheckout({
         return;
       }
 
+      if (processingPayment.method === "wallet") {
+        setWalletModalOpen(true);
+        return;
+      }
+
       const apiMethod = PAYMENT_METHOD_MAP[processingPayment.method];
+      let nextPurchase: MarketplacePurchase | undefined;
 
       if (processingPayment.method === "bank") {
         if (!payload.evidence) {
@@ -817,7 +918,7 @@ export default function PurchaseCheckout({
             collection_notes: payload.notes,
           },
         );
-        setPurchase(response.data.purchase);
+        nextPurchase = applyPurchase(response.data.purchase);
       } else if (processingPayment.method === "managers_check") {
         const response = await submitPurchasePaymentEvidence(
           activePurchaseId,
@@ -831,7 +932,7 @@ export default function PurchaseCheckout({
             collection_notes: payload.notes,
           },
         );
-        setPurchase(response.data.purchase);
+        nextPurchase = applyPurchase(response.data.purchase);
       } else {
         const response = await submitPurchasePaymentEvidence(
           activePurchaseId,
@@ -844,14 +945,14 @@ export default function PurchaseCheckout({
             collection_notes: payload.notes,
           },
         );
-        setPurchase(response.data.purchase);
+        nextPurchase = applyPurchase(response.data.purchase);
       }
 
       toast.success(
         t("offer.payment_submitted") ||
           "Payment submitted for Mazal verification.",
       );
-      setStep(3);
+      finishPaymentIfComplete(nextPurchase);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to submit payment.",
@@ -891,16 +992,65 @@ export default function PurchaseCheckout({
         <PaymentMethodStep
           method={paymentMethod}
           mode={paymentMode}
-          totalAmount={payableTotal}
+          totalAmount={Number(purchase?.total_due) || payableTotal}
           splitPayments={splitPayments}
-          allowSplit={false}
+          allowSplit={Boolean(purchase?.can_split_payment)}
+          allowWalletSplit={Boolean(purchase?.can_split_payment)}
+          requireExactSum
+          minSplitEntries={2}
+          maxSplitEntries={10}
+          allowEditSplits={canReplacePlan}
           onMethodChange={setPaymentMethod}
-          onModeChange={() => undefined}
-          onSplitPaymentsChange={setSplitPayments}
+          onModeChange={(mode) => {
+            setPaymentMode(mode);
+            if (
+              mode === "single" &&
+              purchaseId &&
+              purchase?.can_split_payment &&
+              canReplacePlan
+            ) {
+              void persistPaymentPlan([
+                {
+                  id: "single-payment",
+                  method: paymentMethod === "wallet" ? "card" : paymentMethod,
+                  amount: Number(purchase.total_due) || payableTotal,
+                  notes: "",
+                  status: "awaiting",
+                  createdAt: new Date().toISOString(),
+                },
+              ]).catch((err) => {
+                toast.error(
+                  err instanceof Error
+                    ? err.message
+                    : "Could not save payment plan.",
+                );
+              });
+            }
+          }}
+          onSplitPaymentsChange={async (payments) => {
+            try {
+              await persistPaymentPlan(payments);
+            } catch (err) {
+              toast.error(
+                err instanceof Error
+                  ? err.message
+                  : "Could not save payment plan.",
+              );
+              throw err;
+            }
+          }}
           onBack={() => setStep(0)}
           onContinue={handleSinglePaymentContinue}
           onOpenWallet={() => router.push(`/${locale}/wallet`)}
-          onProcessSplit={() => undefined}
+          onProcessSplit={(paymentId) => {
+            const row = splitPayments.find((payment) => payment.id === paymentId);
+            setProcessingSplitId(paymentId);
+            if (row?.method === "wallet") {
+              setWalletModalOpen(true);
+              return;
+            }
+            setStep(2);
+          }}
           saving={submitting}
         />
       );
@@ -909,7 +1059,7 @@ export default function PurchaseCheckout({
     if (step === 2 && processingPayment) {
       return (
         <SplitPaymentProcessStep
-          payment={{ ...processingPayment, amount: payableTotal }}
+          payment={processingPayment}
           custodyInstructions={custodyInstructions}
           submitting={submitting}
           onBack={() => {
@@ -923,15 +1073,52 @@ export default function PurchaseCheckout({
     }
 
     return (
-      <PaymentSuccessStep
-        onDone={() =>
-          router.push(
-            flow === "auction"
-              ? `/${locale}/dashboard`
-              : `/${locale}/marketplace`,
-          )
-        }
-      />
+      <>
+        <PaymentSuccessStep
+          onDone={() =>
+            router.push(
+              flow === "auction"
+                ? `/${locale}/dashboard`
+                : `/${locale}/marketplace`,
+            )
+          }
+        />
+        {purchaseId && isPurchaseCustodyFunded(purchase) ? (
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                downloadPurchaseInvoice(purchaseId, locale)
+                  .then((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `mazal-invoice-${purchaseId}.pdf`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                  })
+                  .catch((err) => {
+                    toast.error(
+                      err instanceof Error
+                        ? err.message
+                        : "Invoice is not available yet.",
+                    );
+                  });
+              }}
+            >
+              {t("offer.download_invoice") || "Download invoice"}
+            </Button>
+            {purchase?.can_gift ? (
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/${locale}/buyer/gifts`)}
+              >
+                {t("offer.send_gift") || "Send as gift"}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+      </>
     );
   };
 
@@ -1032,6 +1219,19 @@ export default function PurchaseCheckout({
                   plateCrop="deal-summary"
                 />
               </div>
+              {purchase?.paid_amount != null && purchase?.total_due != null ? (
+                <p
+                  className="text-sm"
+                  style={{ color: getColor("secondaryText") }}
+                >
+                  {t("offer.paid_progress") || "Paid"}{" "}
+                  {asMarketplaceMoney(purchase.paid_amount)} /{" "}
+                  {asMarketplaceMoney(purchase.total_due)}
+                  {purchase.remaining_amount != null
+                    ? ` · ${t("offer.remaining") || "Remaining"} ${asMarketplaceMoney(purchase.remaining_amount)}`
+                    : ""}
+                </p>
+              ) : null}
               {paymentMethod === "bank" && step >= 1 && (
                 <BeneficiaryInformation
                   beneficiaryName={
@@ -1086,7 +1286,7 @@ export default function PurchaseCheckout({
       <WalletPaymentModal
         isOpen={walletModalOpen}
         onClose={() => setWalletModalOpen(false)}
-        amountDue={payableTotal}
+        amountDue={processingPayment?.amount || payableTotal}
         reference={t("private-deal.payment_title")}
         onPaid={async () => {
           const ready = requirePurchaseOrPrompt();
@@ -1102,7 +1302,7 @@ export default function PurchaseCheckout({
             applyPurchase(response.data.purchase);
           }
           toast.success(t("wallet.paid_from_wallet"));
-          setStep(3);
+          finishPaymentIfComplete(response.data.purchase);
         }}
       />
     </div>

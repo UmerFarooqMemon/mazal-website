@@ -10,6 +10,7 @@ import {
   Banknote,
   Upload,
   Info,
+  Wallet,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
@@ -45,13 +46,14 @@ interface SplitPaymentProcessStepProps {
 }
 
 const METHOD_META: Record<
-  Exclude<PaymentMethod, "wallet">,
+  PaymentMethod,
   { titleKey: string; icon: typeof Building2 }
 > = {
   bank: { titleKey: "bank_transfer", icon: Building2 },
   card: { titleKey: "card_payment", icon: CreditCard },
   managers_check: { titleKey: "managers_check", icon: FileCheck },
   cash: { titleKey: "cash_collection", icon: Banknote },
+  wallet: { titleKey: "wallet_payment", icon: Wallet },
 };
 
 function ReadOnlyAmountField({
@@ -388,7 +390,9 @@ export default function SplitPaymentProcessStep({
               className="font-medium"
               style={{ color: getColor("primaryText") }}
             >
-              {t(`private-deal.${meta.titleKey}`)}
+              {payment.method === "wallet"
+                ? t("wallet.pay_from_wallet")
+                : t(`private-deal.${meta.titleKey}`)}
             </div>
             <div className="text-sm" style={{ color: getColor("mutedText") }}>
               {t("private-deal.secure_online")}

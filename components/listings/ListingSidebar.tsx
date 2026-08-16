@@ -2,12 +2,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Share2 } from "lucide-react";
+import { Heart, Share2, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button, DirhamAmount } from "@/components/ui";
+import WalletDialog from "@/components/wallet/WalletDialog";
 import { getLoginHref } from "@/lib/auth-redirect";
 import {
   listingCheckoutPath,
@@ -16,6 +17,7 @@ import {
 import type { MarketplaceListingDetail } from "@/services/marketplace";
 import {
   addToWatchlist,
+  buyListingAtAskingPrice,
   canTransactListing,
   firstMarketplaceError,
   getMyPurchases,
@@ -40,12 +42,15 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
   );
   const [watchlistLoading, setWatchlistLoading] = useState(false);
   const [buying, setBuying] = useState(false);
+  const [confirmBuyOpen, setConfirmBuyOpen] = useState(false);
 
   const canTransact = canTransactListing(listing.status);
   const reserved = isListingReserved(listing.status);
   const sold = isListingSold(listing.status);
-  const isDirectListing =
-    String(listing.listing_type || "").toLowerCase() === "direct";
+  const listingType = String(listing.listing_type || "").toLowerCase();
+  const isAuctionListing = listingType === "auction";
+  const isBuyNowListing =
+    listingType === "direct" || listingType === "spot" || listingType === "";
   const askingPrice = Number(listing.asking_price) || 0;
 
   const plateCode = listing.code_hidden
@@ -113,6 +118,15 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
     }
   };
 
+  const goToCheckout = (purchaseId?: string) => {
+    rememberCheckoutIntent("marketplace", listing.id, {
+      role: "buyer",
+      purchaseId,
+      price: askingPrice,
+    });
+    router.push(listingCheckoutPath(locale, listing.id));
+  };
+
   const handleBuyAtAsking = async () => {
     if (!isAuthenticated) {
       router.push(
@@ -120,13 +134,15 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
       );
       return;
     }
-    if (!isDirectListing || listing.is_owner) return;
+    if (!isBuyNowListing || listing.is_owner) return;
     if (!canTransact && !reserved) return;
+    setConfirmBuyOpen(true);
+  };
 
+  const confirmBuyAtAsking = async () => {
+    if (!isBuyNowListing || listing.is_owner) return;
     setBuying(true);
     try {
-      let purchaseId: string | undefined;
-
       if (reserved) {
         const response = await getMyPurchases(locale, "buyer");
         const match = (response.data.purchases || []).find(
@@ -142,15 +158,22 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           );
           return;
         }
-        purchaseId = String(match.id);
+        setConfirmBuyOpen(false);
+        goToCheckout(String(match.id));
+        return;
       }
 
-      rememberCheckoutIntent("marketplace", listing.id, {
-        role: "buyer",
-        purchaseId,
-        price: askingPrice,
-      });
-      router.push(listingCheckoutPath(locale, listing.id));
+      const created = await buyListingAtAskingPrice(
+        listing.id,
+        locale,
+        askingPrice,
+      );
+      const purchase = created.data.purchase;
+      if (!purchase?.id) {
+        throw new Error("Failed to start purchase.");
+      }
+      setConfirmBuyOpen(false);
+      goToCheckout(String(purchase.id));
     } catch (error) {
       if (error instanceof MarketplaceRequestError && error.status === 401) {
         router.push(
@@ -216,17 +239,18 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
 
       <div className="flex flex-col gap-3 mb-4">
         {!listing.is_owner &&
+          !isAuctionListing &&
           (canTransact || reserved ? (
-            isDirectListing ? (
+            isBuyNowListing ? (
               <Button
                 variant="primary"
                 size="lg"
                 fullWidth
                 className="shadow-md !h-11"
                 disabled={buying}
-                onClick={handleBuyAtAsking}
+                onClick={() => void handleBuyAtAsking()}
               >
-                {t("listings.buy_escrow")}
+                {t("listings.buy_at_asking") || t("listings.buy_escrow")}
               </Button>
             ) : (
               <Link
@@ -257,7 +281,7 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
               disabled
               className="shadow-md !h-11"
             >
-              {t("listings.buy_escrow")}
+              {t("listings.buy_at_asking") || t("listings.buy_escrow")}
             </Button>
           ))}
 
@@ -399,6 +423,47 @@ export default function ListingSidebar({ listing }: ListingSidebarProps) {
           </div>
         ))}
       </div>
+
+      <WalletDialog
+        isOpen={confirmBuyOpen}
+        onClose={() => !buying && setConfirmBuyOpen(false)}
+        title={t("listings.confirm_buy_title") || "Buy at asking price"}
+        icon={<ShoppingBag className="w-5 h-5" />}
+        maxWidth="max-w-[440px]"
+      >
+        <p
+          className="text-sm leading-relaxed mb-4"
+          style={{ color: getColor("secondaryText") }}
+        >
+          {t("listings.confirm_buy_body") ||
+            "Confirm purchase at the listing asking price. You cannot change this amount."}
+        </p>
+        <div className="mb-6 text-center">
+          <p
+            className="text-[10px] font-bold uppercase tracking-wider mb-1"
+            style={{ color: getColor("mutedText") }}
+          >
+            {t("listings.asking_price")}
+          </p>
+          <p
+            className="text-3xl font-serif font-bold"
+            style={{ color: getColor("primaryText") }}
+          >
+            <DirhamAmount amount={askingPrice} weight="bold" />
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          size="md"
+          fullWidth
+          disabled={buying}
+          onClick={() => void confirmBuyAtAsking()}
+        >
+          {buying
+            ? t("common.loading") || "…"
+            : t("listings.confirm_buy_cta") || "Confirm purchase"}
+        </Button>
+      </WalletDialog>
     </div>
   );
 }

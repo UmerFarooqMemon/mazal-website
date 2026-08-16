@@ -9,12 +9,14 @@ interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   onSearch: () => void;
+  placeholder?: string;
 }
 
 export default function SearchBar({
   value,
   onChange,
   onSearch,
+  placeholder,
 }: SearchBarProps) {
   const { t } = useLocale();
   const { getColor } = useTheme();
@@ -43,7 +45,7 @@ export default function SearchBar({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={t("marketplace.search_placeholder")}
+          placeholder={placeholder || t("marketplace.search_placeholder")}
           className="w-full bg-transparent outline-none text-sm placeholder:opacity-60"
           style={{ color: getColor("primaryText") }}
           dir="auto"

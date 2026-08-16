@@ -13,6 +13,7 @@ import {
   Trash2,
   CheckCircle2,
   Play,
+  Wallet,
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -34,7 +35,7 @@ export type SplitPaymentStatus = "awaiting" | "completed";
 
 export interface SplitPaymentEntry {
   id: string;
-  method: Exclude<PaymentMethod, "wallet">;
+  method: PaymentMethod;
   amount: number;
   notes: string;
   bank?: string;
@@ -48,7 +49,7 @@ export interface SplitPaymentEntry {
 
 interface DraftSplit {
   id: string;
-  method: Exclude<PaymentMethod, "wallet">;
+  method: PaymentMethod;
   amount: string;
   notes: string;
   bank: string;
@@ -75,6 +76,14 @@ interface PaymentMethodStepProps {
   saving?: boolean;
   /** When false, hides single/split toggle and forces single-payment UI. */
   allowSplit?: boolean;
+  /** Allow wallet as an installment method in split mode. */
+  allowWalletSplit?: boolean;
+  /** Split rows must match totalAmount to the fils (2 decimals). */
+  requireExactSum?: boolean;
+  minSplitEntries?: number;
+  maxSplitEntries?: number;
+  /** When false, hide edit/delete on saved installments. */
+  allowEditSplits?: boolean;
 }
 
 const METHODS: {
@@ -94,7 +103,7 @@ function parseAmount(value: string) {
 }
 
 function createDraft(
-  method: Exclude<PaymentMethod, "wallet">,
+  method: PaymentMethod,
   remaining: number,
 ): DraftSplit {
   return {
@@ -110,8 +119,11 @@ function createDraft(
   };
 }
 
-function methodMeta(method: Exclude<PaymentMethod, "wallet">) {
-  return METHODS.find((m) => m.key === method)!;
+function methodMeta(method: PaymentMethod) {
+  if (method === "wallet") {
+    return { key: "wallet" as const, titleKey: "wallet_payment", icon: Wallet };
+  }
+  return METHODS.find((item) => item.key === method)!;
 }
 
 export default function PaymentMethodStep({
@@ -129,6 +141,11 @@ export default function PaymentMethodStep({
   onOpenWallet,
   saving = false,
   allowSplit = true,
+  allowWalletSplit = false,
+  requireExactSum = false,
+  minSplitEntries = 1,
+  maxSplitEntries = 10,
+  allowEditSplits = true,
 }: PaymentMethodStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -151,16 +168,32 @@ export default function PaymentMethodStep({
   );
   const allocated = showSavedList ? savedAllocated : draftAllocated;
   const remaining = Math.max(0, totalAmount - allocated);
+  const splitMethodOptions: Array<{
+    key: PaymentMethod;
+    titleKey: string;
+    icon: typeof Building2;
+  }> = allowWalletSplit
+    ? [{ key: "wallet", titleKey: "wallet_payment", icon: Wallet }, ...METHODS]
+    : METHODS;
+
+  const methodTitle = (method: PaymentMethod, titleKey: string) =>
+    method === "wallet"
+      ? t("wallet.pay_from_wallet")
+      : t(`private-deal.${titleKey}`);
 
   useEffect(() => {
     if (mode === "split") {
       onAllocatedChange?.(allocated);
     }
   }, [mode, allocated, onAllocatedChange]);
+  const amountsMatch = requireExactSum
+    ? Math.round(draftAllocated * 100) === Math.round(totalAmount * 100)
+    : Math.abs(draftAllocated - totalAmount) < 0.5;
   const canSave =
-    drafts.length > 0 &&
+    drafts.length >= minSplitEntries &&
+    drafts.length <= maxSplitEntries &&
     drafts.every((d) => parseAmount(d.amount) > 0) &&
-    Math.abs(draftAllocated - totalAmount) < 0.5;
+    amountsMatch;
 
   const patchDraft = (id: string, patch: Partial<DraftSplit>) => {
     setDrafts((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
@@ -173,8 +206,9 @@ export default function PaymentMethodStep({
     });
   };
 
-  const addMethod = (key: Exclude<PaymentMethod, "wallet">) => {
+  const addMethod = (key: PaymentMethod) => {
     setDrafts((prev) => {
+      if (prev.length >= maxSplitEntries) return prev;
       const rem =
         totalAmount - prev.reduce((s, d) => s + parseAmount(d.amount), 0);
       return [
@@ -220,7 +254,16 @@ export default function PaymentMethodStep({
         setShowSavedList(true);
       } else {
         setShowSavedList(false);
-        setDrafts([createDraft("bank", totalAmount)]);
+        if (minSplitEntries >= 2) {
+          const first = Math.round((totalAmount / 2) * 100) / 100;
+          const second = Math.round((totalAmount - first) * 100) / 100;
+          setDrafts([
+            createDraft("card", first),
+            createDraft("bank", second),
+          ]);
+        } else {
+          setDrafts([createDraft("bank", totalAmount)]);
+        }
       }
     }
   };
@@ -444,7 +487,7 @@ export default function PaymentMethodStep({
                           className="font-medium"
                           style={{ color: getColor("primaryText") }}
                         >
-                          {t(`private-deal.${meta.titleKey}`)}
+                        {methodTitle(payment.method, meta.titleKey)}
                         </div>
                         <div
                           className="text-sm"
@@ -495,15 +538,17 @@ export default function PaymentMethodStep({
                           {t("private-deal.process")}
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => deleteSaved(payment.id)}
-                        className="p-2 rounded-lg hover:text-red-600 hover:bg-red-50"
-                        style={{ color: getColor("mutedText") }}
-                        aria-label={t("private-deal.delete")}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {allowEditSplits && payment.status !== "completed" && (
+                        <button
+                          type="button"
+                          onClick={() => deleteSaved(payment.id)}
+                          className="p-2 rounded-lg hover:text-red-600 hover:bg-red-50"
+                          style={{ color: getColor("mutedText") }}
+                          aria-label={t("private-deal.delete")}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -511,6 +556,7 @@ export default function PaymentMethodStep({
             })}
           </div>
 
+          {allowEditSplits ? (
           <button
             type="button"
             onClick={() => {
@@ -534,6 +580,7 @@ export default function PaymentMethodStep({
           >
             {t("private-deal.edit_split_payments")}
           </button>
+          ) : null}
 
           <div
             className={`flex items-center justify-between border-t pt-6`}
@@ -581,7 +628,7 @@ export default function PaymentMethodStep({
                         className="font-medium"
                         style={{ color: getColor("primaryText") }}
                       >
-                        {t(`private-deal.${meta.titleKey}`)}
+                        {methodTitle(draft.method, meta.titleKey)}
                       </div>
                       <div
                         className="text-sm"
@@ -748,14 +795,16 @@ export default function PaymentMethodStep({
               {t("private-deal.add_payment_method")}
             </div>
             <div className="flex flex-wrap gap-2">
-              {METHODS.map((item) => {
+              {splitMethodOptions.map((item) => {
                 const Icon = item.icon;
+                const atMax = drafts.length >= maxSplitEntries;
                 return (
                   <button
                     key={item.key}
                     type="button"
                     onClick={() => addMethod(item.key)}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors`}
+                    disabled={atMax}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors disabled:opacity-40`}
                     style={{
                       borderColor: getColor("border"),
                       backgroundColor: getColor("surface"),
@@ -767,7 +816,7 @@ export default function PaymentMethodStep({
                       style={{ backgroundColor: getColor("primary") }}
                     />
                     <Icon className="w-3.5 h-3.5" />
-                    {t(`private-deal.${item.titleKey}`)}
+                    {methodTitle(item.key, item.titleKey)}
                   </button>
                 );
               })}

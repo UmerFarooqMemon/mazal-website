@@ -293,6 +293,7 @@ export interface MarketplaceListingCard {
   asking_price: number | string;
   hide_code: boolean;
   code_hidden: boolean;
+  auction_outcome?: string | null;
   view_count: number;
   watcher_count: number;
   trending_score?: number;
@@ -479,6 +480,11 @@ export interface MarketplacePurchase {
   }>;
   total_fees?: number | string;
   total_due: number | string;
+  paid_amount?: number | string;
+  remaining_amount?: number | string;
+  payment_plan?: "single" | "split" | string | null;
+  payment_plan_draft?: Record<string, unknown> | null;
+  can_split_payment?: boolean;
   seller_net?: number | string;
   currency: string;
   can_gift?: boolean;
@@ -625,6 +631,14 @@ export interface MarketplaceWatchlistCategory {
   items: MarketplaceWatchlistItem[];
 }
 
+export interface MarketplaceAuctionBrowseFilters {
+  ending_soon_hours_default?: number;
+  ending_soon_hours_min?: number;
+  ending_soon_hours_max?: number;
+  sort_options?: { key: string; label: string }[];
+  params?: { key: string; label: string; type?: string }[];
+}
+
 export interface MarketplaceSearchFilters {
   emirates?: { key: string; label: string }[];
   listing_types?: { key: string; label: string }[];
@@ -635,6 +649,7 @@ export interface MarketplaceSearchFilters {
     max: number;
   }[];
   sort_options?: { key: string; label: string }[];
+  auction?: MarketplaceAuctionBrowseFilters;
 }
 
 export interface MarketplacePagination {
@@ -657,6 +672,13 @@ export interface MarketplaceSearchParams {
   sort?: string;
   per_page?: number;
   page?: number;
+  live_only?: string | number | boolean;
+  ending_soon?: string | number | boolean;
+  ending_soon_hours?: number;
+  upcoming_only?: string | number | boolean;
+  has_bids?: string | number | boolean;
+  min_bid?: number;
+  max_bid?: number;
   /** Intentionally omitted: do not send `status` — browse must include reserved/sold. */
 }
 
@@ -903,12 +925,8 @@ type PlateSource = HiddenCodeSource & {
 };
 
 /**
- * Resolves plate code + digits for display.
- * Title digits are only used when the code is currently hidden from the
- * viewer (code_hidden) — those listings null out plate_digits and mask
- * display_plate, but title still ends with the real number (e.g.
- * "dubai A 433"). Normal / revealed listings keep using plate_code /
- * plate_digits / display_plate only.
+ * Resolves plate code + digits from API fields only.
+ * When the code is hidden, never reconstruct digits from `title`.
  */
 export function resolvePlateParts(listing?: PlateSource | null) {
   if (!listing) return { code: "", digits: "" };
@@ -916,18 +934,9 @@ export function resolvePlateParts(listing?: PlateSource | null) {
   const fromDisplay = splitDisplayPlate(listing.display_plate);
   const code = listing.plate_code || fromDisplay.code;
 
-  if (!isHiddenPlateCode(listing)) {
-    return {
-      code,
-      digits: listing.plate_digits || fromDisplay.digits,
-    };
-  }
-
-  const titleDigits = String(listing.title || "").match(/(\d+)\s*$/)?.[1] || "";
-
   return {
     code,
-    digits: listing.plate_digits || titleDigits || fromDisplay.digits,
+    digits: listing.plate_digits || fromDisplay.digits,
   };
 }
 
@@ -1702,6 +1711,55 @@ export function buyListingAtAskingPrice(
       auth: "required",
       contentType: "application/json",
       body: JSON.stringify(body),
+    },
+  );
+}
+
+export type MarketplacePaymentPlanMethod =
+  | "card"
+  | "wallet"
+  | "bank_transfer"
+  | "managers_check"
+  | "cash_collection";
+
+export function asMarketplaceMoney(value: number | string): string {
+  const parsed = typeof value === "number" ? value : Number(value);
+  return (Number.isFinite(parsed) ? parsed : 0).toFixed(2);
+}
+
+export function isPurchaseCustodyFunded(
+  purchase?: Pick<MarketplacePurchase, "status"> | null,
+): boolean {
+  const status = String(purchase?.status || "").toLowerCase();
+  return (
+    status === "custody_funded" ||
+    status === "transfer_in_progress" ||
+    status === "completed"
+  );
+}
+
+/** Save or complete an auction-win split/single payment plan. */
+export function savePurchasePaymentPlan(
+  purchaseId: string | number,
+  locale: string,
+  payload: {
+    intent: "draft" | "complete";
+    plan: "single" | "split";
+    entries: Array<{
+      amount: string;
+      method: MarketplacePaymentPlanMethod;
+      notes?: string;
+    }>;
+  },
+) {
+  return marketplaceRequest<{ purchase: MarketplacePurchase }>(
+    `/purchases/${purchaseId}/payment-plan`,
+    {
+      method: "PUT",
+      locale,
+      auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(payload),
     },
   );
 }

@@ -46,6 +46,7 @@
   "see_all_bids": "See all bids",
   "status_awaiting_offer": "Awaiting Offer",
   "status_awaiting_payment": "Awaiting Payment",
+  "status_partially_funded": "Partially funded",
   "status_payment_verification": "Payment Verification",
   "pay_now": "Pay Now",
   "status_in_transit": "In Transit",

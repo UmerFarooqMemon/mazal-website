@@ -113,6 +113,9 @@ function mapPurchaseStatus(status: string): MarketplaceStatus {
   if (s === "payment_pending") {
     return "awaiting_payment";
   }
+  if (s === "partially_funded") {
+    return "partially_funded";
+  }
   if (s === "payment_verification" || s.includes("payment_verification")) {
     return "payment_verification";
   }
@@ -120,6 +123,7 @@ function mapPurchaseStatus(status: string): MarketplaceStatus {
   if (/(transit|transfer|delivery)/.test(s) || s.includes("custody_funded")) {
     return "in_transit";
   }
+  if (s.includes("partially_funded")) return "partially_funded";
   if (s.includes("funded") && !s.includes("pending")) return "in_transit";
   if (s === "payment_pending" || s.includes("awaiting")) {
     return "awaiting_payment";
@@ -196,7 +200,9 @@ function mapPurchaseToDashboardRow(
     offerAmount: toMarketplaceNumber(purchase.agreed_price),
     status: mapPurchaseStatus(purchase.status),
     href: (() => {
-      const pending = mapPurchaseStatus(purchase.status) === "awaiting_payment";
+      const mapped = mapPurchaseStatus(purchase.status);
+      const pending =
+        mapped === "awaiting_payment" || mapped === "partially_funded";
       if (asAuction) {
         if (pending) return auctionCheckoutPath(locale, listingId);
         return `/${locale}/auctions/${listingId}`;

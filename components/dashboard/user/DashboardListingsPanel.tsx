@@ -22,6 +22,7 @@ import { rememberCheckoutIntent } from "@/lib/checkout-intent";
 export type MarketplaceStatus =
   | "awaiting_offer"
   | "awaiting_payment"
+  | "partially_funded"
   | "payment_verification"
   | "in_transit"
   | "completed";
@@ -143,6 +144,8 @@ export default function DashboardListingsPanel({
     switch (status) {
       case "awaiting_payment":
         return t("dashboard.status_awaiting_payment");
+      case "partially_funded":
+        return t("dashboard.status_partially_funded");
       case "payment_verification":
         return t("dashboard.status_payment_verification");
       case "in_transit":
@@ -303,6 +306,7 @@ export default function DashboardListingsPanel({
                       >
                         {row.isOwner === false ||
                         row.status === "awaiting_payment" ||
+                        row.status === "partially_funded" ||
                         row.status === "payment_verification"
                           ? t("dashboard.accepted_offer")
                           : t("dashboard.highest_offer")}
@@ -353,7 +357,8 @@ export default function DashboardListingsPanel({
                     <div className="flex flex-wrap items-center gap-2.5">
                       {row.isOwner === false &&
                         row.purchaseId &&
-                        row.status === "awaiting_payment" && (
+                        (row.status === "awaiting_payment" ||
+                          row.status === "partially_funded") && (
                           <Link
                             href={row.href}
                             onClick={() => {

@@ -57,5 +57,10 @@
   "view_negotiation": "View negotiation",
   "load_error": "Failed to load offers.",
   "counter_limit_reached": "You have reached the maximum of {limit} counter offers for this listing.",
-  "counter_limit_remaining": "{remaining} counter offer(s) remaining."
+  "counter_limit_remaining": "{remaining} counter offer(s) remaining.",
+  "download_invoice": "Download invoice",
+  "send_gift": "Send as gift",
+  "paid_progress": "Paid",
+  "remaining": "Remaining",
+  "installment_paid": "Installment funded. Remaining amount is still due."
 }
