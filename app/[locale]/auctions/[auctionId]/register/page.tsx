@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useEffect, useMemo, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -12,6 +12,7 @@ import DepositStatusStep from "@/components/auction/DepositStatusStep";
 import AuctionSummaryCard from "@/components/auction/AuctionSummaryCard";
 import AuctionBenefitsCard from "@/components/auction/AuctionBenefitsCard";
 import WalletPaymentModal from "@/components/wallet/WalletPaymentModal";
+import { formatPriceInput } from "@/lib/card-input";
 import SplitPaymentProcessStep from "@/components/private-deal/SplitPaymentProcessStep";
 import { useWalletPaymentChoice } from "@/hooks/useWalletPaymentChoice";
 import PaymentMethodStep, {
@@ -37,6 +38,11 @@ import {
   type MarketplaceAuctionRegistration,
 } from "@/services/marketplace";
 import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
+
+function parseMoneyInput(value: string) {
+  const parsed = Number(String(value).replace(/\D/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
 function isDepositHeld(registration?: MarketplaceAuctionRegistration | null) {
   if (!registration) return false;
@@ -98,8 +104,23 @@ export default function AuctionRegisterPage({
   const [offlineSubmitted, setOfflineSubmitted] = useState(false);
   const [walletPaid, setWalletPaid] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const depositAmount = summary?.minimumDeposit ?? 0;
-  const walletChoice = useWalletPaymentChoice(depositAmount);
+  const [depositInput, setDepositInput] = useState("");
+  const minDeposit = summary?.minimumDeposit ?? 0;
+  const chosenAmount = Math.max(parseMoneyInput(depositInput), minDeposit);
+  const amountRef = useRef(chosenAmount);
+  amountRef.current = chosenAmount;
+  const walletChoice = useWalletPaymentChoice(chosenAmount);
+
+  useEffect(() => {
+    if (minDeposit <= 0) return;
+    setDepositInput((prev) => {
+      const current = parseMoneyInput(prev);
+      if (!prev || current < minDeposit) {
+        return formatPriceInput(String(minDeposit));
+      }
+      return prev;
+    });
+  }, [minDeposit]);
 
   const refreshAuction = useCallback(async () => {
     const response = await getAuctionState(auctionId, locale);
@@ -113,7 +134,9 @@ export default function AuctionRegisterPage({
   const ensureRegistration = useCallback(async () => {
     if (registration?.id) return registration;
 
-    const response = await registerForAuction(auctionId, locale);
+    const response = await registerForAuction(auctionId, locale, {
+      amount: amountRef.current,
+    });
     const nextRegistration = response.data.registration;
     setRegistration(nextRegistration);
     await refreshAuction();
@@ -324,6 +347,7 @@ export default function AuctionRegisterPage({
         auctionId,
         nextRegistration.id,
         locale,
+        { amount: amountRef.current },
       );
       setWalletPaid(true);
       setOfflineSubmitted(true);
@@ -348,7 +372,9 @@ export default function AuctionRegisterPage({
       auctionId,
       nextRegistration.id,
       locale,
-      paymentToken ? { payment_token: paymentToken } : {},
+      paymentToken
+        ? { payment_token: paymentToken, amount: amountRef.current }
+        : { amount: amountRef.current },
     );
 
     handlePayTabsCheckoutResult(response.data, {
@@ -473,7 +499,7 @@ export default function AuctionRegisterPage({
       : {
           id: "auction-deposit",
           method,
-          amount: summary?.minimumDeposit ?? 0,
+          amount: chosenAmount,
           notes: "",
           status: "awaiting",
           createdAt: new Date().toISOString(),
@@ -499,7 +525,14 @@ export default function AuctionRegisterPage({
     checkNumber?: string;
     collectionSlotId?: number;
     pickupAddress?: string;
+    amount?: number;
   }) => {
+    if (payload.amount != null && Number.isFinite(payload.amount)) {
+      const next = Math.max(payload.amount, minDeposit);
+      amountRef.current = next;
+      setDepositInput(formatPriceInput(String(next)));
+    }
+
     if (method === "wallet") return;
 
     if (method === "card") {
@@ -596,7 +629,7 @@ export default function AuctionRegisterPage({
                 method={method}
                 mode="single"
                 allowSplit={false}
-                totalAmount={summary?.minimumDeposit ?? 0}
+                totalAmount={minDeposit}
                 splitPayments={splitPayments}
                 onMethodChange={setMethod}
                 onModeChange={() => undefined}
@@ -614,6 +647,12 @@ export default function AuctionRegisterPage({
                 payment={depositProcessPayment}
                 custodyInstructions={depositCustodyInstructions}
                 submitting={submitting || instructionsLoading}
+                minAmount={minDeposit}
+                onAmountChange={(amount) => {
+                  const next = Math.max(amount, minDeposit);
+                  amountRef.current = next;
+                  setDepositInput(formatPriceInput(String(next)));
+                }}
                 onBack={() => setStep(0)}
                 onComplete={handleProcessComplete}
                 onCardPay={handleCardPay}
@@ -637,7 +676,11 @@ export default function AuctionRegisterPage({
           {showSidebar && summary && (
             <div className="space-y-4">
               <AuctionSummaryCard
-                data={summary}
+                data={{
+                  ...summary,
+                  currentBiddingLimit: chosenAmount * 5,
+                  targetBiddingLimit: chosenAmount * 5,
+                }}
                 showCheckAmount={method === "managers_check"}
               />
               {method === "bank" && (
@@ -659,7 +702,7 @@ export default function AuctionRegisterPage({
       <WalletPaymentModal
         isOpen={walletModalOpen}
         onClose={() => setWalletModalOpen(false)}
-        amountDue={depositAmount}
+        amountDue={chosenAmount}
         reference={t("auctions.summary_min_deposit")}
         onPaid={handleWalletPaid}
       />

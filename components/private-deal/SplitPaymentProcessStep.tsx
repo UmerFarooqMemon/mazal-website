@@ -18,6 +18,7 @@ import { useTheme, type ThemeColors } from "@/context/ThemeContext";
 import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
 import CollectionSlotPicker from "@/components/payments/CollectionSlotPicker";
 import { Button, DirhamAmount, Input } from "@/components/ui";
+import { formatPriceInput } from "@/lib/card-input";
 import { useCollectionSlots } from "@/hooks/useCollectionSlots";
 import { findCollectionSlot } from "@/services/collection-slots";
 import BankSelect from "@/components/ui/BankSelect";
@@ -39,10 +40,14 @@ interface SplitPaymentProcessStepProps {
     checkNumber?: string;
     collectionSlotId?: number;
     pickupAddress?: string;
+    amount?: number;
   }) => void;
   submitting?: boolean;
   custodyInstructions?: Record<string, unknown>;
   onCardPay?: (paymentToken: string) => void | Promise<void>;
+  /** When set, the amount field can be increased (not below this floor). */
+  minAmount?: number;
+  onAmountChange?: (amount: number) => void;
 }
 
 const METHOD_META: Record<
@@ -55,6 +60,11 @@ const METHOD_META: Record<
   cash: { titleKey: "cash_collection", icon: Banknote },
   wallet: { titleKey: "wallet_payment", icon: Wallet },
 };
+
+function parseMoneyInput(value: string) {
+  const parsed = Number(String(value).replace(/\D/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
 function ReadOnlyAmountField({
   label,
@@ -172,6 +182,8 @@ export default function SplitPaymentProcessStep({
   submitting = false,
   custodyInstructions,
   onCardPay,
+  minAmount,
+  onAmountChange,
 }: SplitPaymentProcessStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -213,6 +225,42 @@ export default function SplitPaymentProcessStep({
     pickupAddress: "",
     notes: payment.notes || "",
   });
+  const amountEditable = minAmount != null && minAmount > 0;
+  const amountFloor = amountEditable ? minAmount : payment.amount;
+  const [amountInput, setAmountInput] = useState(() =>
+    formatPriceInput(String(payment.amount || minAmount || 0)),
+  );
+
+  const resolveAmount = () =>
+    Math.max(parseMoneyInput(amountInput), amountFloor || 0);
+
+  const commitAmount = () => {
+    const next = resolveAmount();
+    setAmountInput(next > 0 ? formatPriceInput(String(next)) : amountInput);
+    onAmountChange?.(next);
+    return next;
+  };
+
+  const amountField = (label: string) =>
+    amountEditable ? (
+      <Input
+        label={label}
+        inputMode="numeric"
+        value={amountInput}
+        onChange={(e) => {
+          setAmountInput(formatPriceInput(e.target.value));
+          const next = parseMoneyInput(e.target.value);
+          if (next >= amountFloor) onAmountChange?.(next);
+        }}
+        onBlur={commitAmount}
+      />
+    ) : (
+      <ReadOnlyAmountField
+        label={label}
+        amount={payment.amount}
+        getColor={getColor}
+      />
+    );
 
   const custodyAddress = String(
     custodyInstructions?.collection_address || "",
@@ -303,6 +351,7 @@ export default function SplitPaymentProcessStep({
     }
 
     if (!validate()) return;
+    const amount = commitAmount();
 
     if (payment.method === "bank") {
       const senderBankName = resolveBankLabel(
@@ -318,12 +367,13 @@ export default function SplitPaymentProcessStep({
         senderAccountLast4: senderAccountLast4 || undefined,
         notes: bankTransfer.notes,
         evidence: proofFile,
+        amount,
       });
       return;
     }
 
     if (payment.method === "card") {
-      onComplete({});
+      onComplete({ amount });
       return;
     }
 
@@ -333,6 +383,7 @@ export default function SplitPaymentProcessStep({
         collectionSlotId: resolvedSlotId,
         pickupAddress: check.pickupAddress.trim(),
         notes: check.notes,
+        amount,
       });
       return;
     }
@@ -341,6 +392,7 @@ export default function SplitPaymentProcessStep({
       collectionSlotId: resolvedSlotId,
       pickupAddress: cash.pickupAddress.trim(),
       notes: cash.notes,
+      amount,
     });
   };
 
@@ -404,11 +456,7 @@ export default function SplitPaymentProcessStep({
           {payment.method === "bank" && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <ReadOnlyAmountField
-                  label={t("private-deal.amount")}
-                  amount={payment.amount}
-                  getColor={getColor}
-                />
+                {amountField(t("private-deal.amount"))}
                 <BankSelect
                   label={t("private-deal.select_bank")}
                   value={bankTransfer.bank}
@@ -552,6 +600,10 @@ export default function SplitPaymentProcessStep({
             </>
           )}
 
+          {payment.method === "card" && amountEditable
+            ? amountField(t("private-deal.amount"))
+            : null}
+
           {payment.method === "card" && showManagedCardForm && (
             <PayTabsManagedForm
               clientKey={paytabs.clientKey!}
@@ -559,7 +611,10 @@ export default function SplitPaymentProcessStep({
                 t("private-deal.pay_now") || t("listings.pay_with_paytabs")
               }
               loading={submitting}
-              onToken={(token) => onCardPay!(token)}
+              onToken={(token) => {
+                commitAmount();
+                void onCardPay!(token);
+              }}
             />
           )}
 
@@ -585,11 +640,7 @@ export default function SplitPaymentProcessStep({
 
           {payment.method === "managers_check" && (
             <>
-              <ReadOnlyAmountField
-                label={t("private-deal.check_amount")}
-                amount={payment.amount}
-                getColor={getColor}
-              />
+              {amountField(t("private-deal.check_amount"))}
               <InstructionsBox
                 title={t("private-deal.instructions")}
                 body={t("private-deal.managers_check_instructions")}
@@ -681,11 +732,7 @@ export default function SplitPaymentProcessStep({
 
           {payment.method === "cash" && (
             <>
-              <ReadOnlyAmountField
-                label={t("private-deal.amount")}
-                amount={payment.amount}
-                getColor={getColor}
-              />
+              {amountField(t("private-deal.amount"))}
               <InstructionsBox
                 title={t("private-deal.instructions")}
                 body={t("private-deal.cash_collection_instructions")}

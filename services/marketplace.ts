@@ -2087,13 +2087,23 @@ export function getAuctionBids(listingId: string | number, locale: string) {
 }
 
 // 44. Register For Auction
-export function registerForAuction(listingId: string | number, locale: string) {
+export function registerForAuction(
+  listingId: string | number,
+  locale: string,
+  payload: { amount?: number } = {},
+) {
   return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
     `/listings/${listingId}/auction/register`,
     {
       method: "POST",
       locale,
       auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(
+        payload.amount != null && Number.isFinite(payload.amount)
+          ? { amount: payload.amount, deposit_amount: payload.amount }
+          : {},
+      ),
     },
   );
 }
@@ -2124,12 +2134,16 @@ export function createAuctionDepositCheckout(
   listingId: string | number,
   registrationId: string | number,
   locale: string,
-  options: { payment_token?: string } = {},
+  options: { payment_token?: string; amount?: number } = {},
 ) {
-  const body =
-    options.payment_token != null
-      ? { payment_token: options.payment_token }
-      : {};
+  const body: Record<string, string | number> = {};
+  if (options.payment_token != null) {
+    body.payment_token = options.payment_token;
+  }
+  if (options.amount != null && Number.isFinite(options.amount)) {
+    body.amount = options.amount;
+    body.deposit_amount = options.amount;
+  }
 
   return marketplaceRequest<{
     redirect_url: string | null;
@@ -2152,6 +2166,7 @@ export function payAuctionDepositWithWallet(
   listingId: string | number,
   registrationId: string | number,
   locale: string,
+  payload: { amount?: number } = {},
 ) {
   return marketplaceRequest<{
     registration: MarketplaceAuctionRegistration;
@@ -2163,6 +2178,12 @@ export function payAuctionDepositWithWallet(
       method: "POST",
       locale,
       auth: "required",
+      contentType: "application/json",
+      body: JSON.stringify(
+        payload.amount != null && Number.isFinite(payload.amount)
+          ? { amount: payload.amount, deposit_amount: payload.amount }
+          : {},
+      ),
     },
   );
 }
