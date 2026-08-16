@@ -170,21 +170,24 @@ function mapApplicationToForm(kyc: KycApplication | null | undefined): Partial<K
         ? ensurePhoneDigitsWithDial(String(kyc.phone), phoneCountryCode)
         : "",
       email: kyc.email || "",
-      phoneCountryCode,
+      phoneCountryCode:
+        kyc.profile_type === "uae_resident" ? "+971" : phoneCountryCode,
       phoneCountryIso:
-        phoneCountryCode === "+971"
+        kyc.profile_type === "uae_resident"
           ? "ae"
-          : phoneCountryCode === "+966"
-            ? "sa"
-            : phoneCountryCode === "+92"
-              ? "pk"
-              : phoneCountryCode === "+91"
-                ? "in"
-                : phoneCountryCode === "+1"
-                  ? "us"
-                  : phoneCountryCode === "+44"
-                    ? "gb"
-                    : "ae",
+          : phoneCountryCode === "+971"
+            ? "ae"
+            : phoneCountryCode === "+966"
+              ? "sa"
+              : phoneCountryCode === "+92"
+                ? "pk"
+                : phoneCountryCode === "+91"
+                  ? "in"
+                  : phoneCountryCode === "+1"
+                    ? "us"
+                    : phoneCountryCode === "+44"
+                      ? "gb"
+                      : "ae",
     },
     uploadedDocuments: parseUploadedDocuments(kyc.documents),
     custodyAgreed: Boolean(kyc.custody_agreement_accepted),

@@ -1,3 +1,9 @@
+import {
+  getCountries,
+  getCountryCallingCode,
+  type CountryCode,
+} from "libphonenumber-js/max";
+
 export type KycProfileType = "uae_resident" | "international" | null;
 
 export interface KycIdentityData {
@@ -164,23 +170,76 @@ const PHONE_LENGTH_BY_CODE: Record<string, { min: number; max: number }> = {
 
 const DEFAULT_PHONE_LENGTH = { min: 7, max: 15 };
 
+/** Same preferred ISO order as CountryPhoneInput (react-phone-input-2). */
+const KYC_PREFERRED_ISO: CountryCode[] = [
+  "AE",
+  "SA",
+  "KW",
+  "BH",
+  "QA",
+  "OM",
+  "PK",
+  "IN",
+  "GB",
+  "US",
+  "UG",
+];
+
+function buildKycResidenceCountries() {
+  const display = new Intl.DisplayNames(["en"], { type: "region" });
+  const preferredIndex = new Map(
+    KYC_PREFERRED_ISO.map((iso, index) => [iso, index]),
+  );
+
+  const entries = getCountries()
+    .map((iso) => {
+      try {
+        return {
+          iso: iso.toLowerCase(),
+          isoUpper: iso,
+          name: display.of(iso) || iso,
+          dial: `+${getCountryCallingCode(iso)}`,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+    .sort((a, b) => {
+      const pa = preferredIndex.get(a.isoUpper) ?? 999;
+      const pb = preferredIndex.get(b.isoUpper) ?? 999;
+      if (pa !== pb) return pa - pb;
+      return a.name.localeCompare(b.name);
+    });
+
+  const dialCodes: Record<string, string> = {};
+  const isoByName: Record<string, string> = {};
+  const options = entries.map((entry) => {
+    dialCodes[entry.name] = entry.dial;
+    isoByName[entry.name] = entry.iso;
+    return { key: entry.name, label: entry.name };
+  });
+
+  return { options, dialCodes, isoByName };
+}
+
+const KYC_RESIDENCE = buildKycResidenceCountries();
+
+/** Full country list (phone-library countries), English names for the API */
+export const KYC_RESIDENCE_COUNTRIES = KYC_RESIDENCE.options;
+
 /** Country of residence label → E.164 dialing code */
-export const KYC_COUNTRY_DIAL_CODES: Record<string, string> = {
-  "United Arab Emirates": "+971",
-  "Saudi Arabia": "+966",
-  Kuwait: "+965",
-  Bahrain: "+973",
-  Qatar: "+974",
-  Oman: "+968",
-  India: "+91",
-  Pakistan: "+92",
-  "United Kingdom": "+44",
-  "United States": "+1",
-  Other: "+971",
-};
+export const KYC_COUNTRY_DIAL_CODES: Record<string, string> =
+  KYC_RESIDENCE.dialCodes;
+
+export const KYC_COUNTRY_ISO: Record<string, string> = KYC_RESIDENCE.isoByName;
 
 export function dialCodeForCountry(countryName: string): string {
   return KYC_COUNTRY_DIAL_CODES[countryName] || "+971";
+}
+
+export function isoForCountry(countryName: string): string {
+  return KYC_COUNTRY_ISO[countryName] || "ae";
 }
 
 export function getPhoneLengthRule(countryCode: string) {

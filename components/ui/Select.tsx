@@ -13,6 +13,8 @@ interface SelectProps {
   onChange?: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 export default function Select({
@@ -24,17 +26,21 @@ export default function Select({
   onChange,
   placeholder,
   disabled = false,
+  searchable = false,
+  searchPlaceholder = "Search...",
 }: SelectProps) {
   const { getColor } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
   // Close on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
+        if (ref.current && !ref.current.contains(e.target as Node)) {
+          setIsOpen(false);
+          setQuery("");
+        }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -42,6 +48,12 @@ export default function Select({
 
   const selectedOption = options.find((opt) => opt.key === value);
   const displayText = selectedOption?.label || placeholder || "Select...";
+  const filteredOptions =
+    searchable && query.trim()
+      ? options.filter((opt) =>
+          opt.label.toLowerCase().includes(query.trim().toLowerCase()),
+        )
+      : options;
 
   return (
     <div className="w-full">
@@ -63,7 +75,11 @@ export default function Select({
           disabled={disabled}
           onClick={() => {
             if (disabled) return;
-            setIsOpen(!isOpen);
+            setIsOpen((open) => {
+              const next = !open;
+              if (!next) setQuery("");
+              return next;
+            });
           }}
           className={`w-full rounded-xl border bg-white py-3 px-4 text-sm flex items-center justify-between transition-all duration-200 ${error ? "border-red-300" : ""} text-start ${disabled ? "cursor-not-allowed opacity-50 bg-gray-100" : "cursor-pointer"}`}
           style={{
@@ -97,14 +113,40 @@ export default function Select({
               borderWidth: "1px",
             }}
           >
+            {searchable && (
+              <div className="px-2 pt-2 pb-1">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  autoFocus
+                  className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
+                  style={{
+                    borderColor: getColor("border"),
+                    color: getColor("primaryText"),
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            )}
             <div className="max-h-60 overflow-y-auto py-1">
-              {options.map((option) => (
+              {filteredOptions.length === 0 ? (
+                <div
+                  className="px-4 py-2.5 text-sm"
+                  style={{ color: getColor("mutedText") }}
+                >
+                  {placeholder || "No results"}
+                </div>
+              ) : null}
+              {filteredOptions.map((option) => (
                 <button
                   key={option.key}
                   type="button"
                   onClick={() => {
                     onChange?.(option.key);
                     setIsOpen(false);
+                    setQuery("");
                   }}
                   className={`w-full px-4 py-2.5 text-sm transition-colors duration-100 ${option.key === value ? "font-medium" : ""} text-start`}
                   style={{
