@@ -110,19 +110,18 @@ function mapPurchaseStatus(status: string): MarketplaceStatus {
   if (s === "custody_funded" || s === "transfer_in_progress") {
     return "in_transit";
   }
-  if (s === "payment_pending" || s === "payment_verification") {
+  if (s === "payment_pending") {
     return "awaiting_payment";
+  }
+  if (s === "payment_verification" || s.includes("payment_verification")) {
+    return "payment_verification";
   }
   if (/(complete|sold|closed|done)/.test(s)) return "completed";
   if (/(transit|transfer|delivery)/.test(s) || s.includes("custody_funded")) {
     return "in_transit";
   }
   if (s.includes("funded") && !s.includes("pending")) return "in_transit";
-  if (
-    s === "payment_pending" ||
-    s.includes("payment_verification") ||
-    s.includes("awaiting")
-  ) {
+  if (s === "payment_pending" || s.includes("awaiting")) {
     return "awaiting_payment";
   }
   return "awaiting_offer";

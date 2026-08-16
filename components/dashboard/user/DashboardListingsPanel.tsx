@@ -22,6 +22,7 @@ import { rememberCheckoutIntent } from "@/lib/checkout-intent";
 export type MarketplaceStatus =
   | "awaiting_offer"
   | "awaiting_payment"
+  | "payment_verification"
   | "in_transit"
   | "completed";
 
@@ -142,6 +143,8 @@ export default function DashboardListingsPanel({
     switch (status) {
       case "awaiting_payment":
         return t("dashboard.status_awaiting_payment");
+      case "payment_verification":
+        return t("dashboard.status_payment_verification");
       case "in_transit":
         return t("dashboard.status_in_transit");
       case "completed":
@@ -298,7 +301,9 @@ export default function DashboardListingsPanel({
                         className="text-[8px] font-medium uppercase leading-[10px] tracking-wide"
                         style={{ color: DASH_TEXT }}
                       >
-                        {row.isOwner === false || row.status === "awaiting_payment"
+                        {row.isOwner === false ||
+                        row.status === "awaiting_payment" ||
+                        row.status === "payment_verification"
                           ? t("dashboard.accepted_offer")
                           : t("dashboard.highest_offer")}
                       </p>
