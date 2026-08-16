@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { DirhamAmount } from "@/components/ui";
 import type { MarketplaceAuctionBrowseFilters } from "@/services/marketplace";
 
 export type AuctionStatusChip = "all" | "live" | "ending_soon" | "upcoming";
@@ -14,20 +15,12 @@ export type AuctionBrowseFilterState = {
   endingSoonHours: number;
   emirate: string;
   digit_count: string;
-  price_range: string;
   sort: string;
+  minPrice: string;
+  maxPrice: string;
   minBid: string;
   maxBid: string;
 };
-
-const EMIRATE_OPTIONS: { value: string; label?: string; labelKey?: string }[] = [
-  { value: "All", labelKey: "marketplace.all" },
-  { value: "Dubai", label: "Dubai" },
-  { value: "Abu Dhabi", label: "Abu Dhabi" },
-  { value: "Sharjah", label: "Sharjah" },
-  { value: "Ajman", label: "Ajman" },
-  { value: "Ras Al Khaimah", label: "Ras Al Khaimah" },
-];
 
 const FALLBACK_SORT = [
   { key: "ending_soon", labelKey: "auctions.sort_ending_soon" },
@@ -42,6 +35,155 @@ const FALLBACK_SORT = [
 ];
 
 const HOUR_OPTIONS = [6, 12, 24, 48, 72, 168];
+const PRICE_SLIDER_MIN = 0;
+const PRICE_SLIDER_MAX = 5_000_000;
+const PRICE_SLIDER_STEP = 10_000;
+
+function parseSliderValue(value: string, fallback: number) {
+  const parsed = Number(String(value).replace(/[^\d.]/g, ""));
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function PriceRangeSlider({
+  minValue,
+  maxValue,
+  onChange,
+}: {
+  minValue: string;
+  maxValue: string;
+  onChange: (min: string, max: string) => void;
+}) {
+  const { getColor } = useTheme();
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<"min" | "max" | null>(null);
+  const min = Math.min(
+    PRICE_SLIDER_MAX,
+    Math.max(PRICE_SLIDER_MIN, parseSliderValue(minValue, PRICE_SLIDER_MIN)),
+  );
+  const max = Math.max(
+    min,
+    Math.min(PRICE_SLIDER_MAX, parseSliderValue(maxValue, PRICE_SLIDER_MAX)),
+  );
+  const span = PRICE_SLIDER_MAX - PRICE_SLIDER_MIN;
+  const minPct = ((min - PRICE_SLIDER_MIN) / span) * 100;
+  const maxPct = ((max - PRICE_SLIDER_MIN) / span) * 100;
+  const minRef = useRef(min);
+  const maxRef = useRef(max);
+  minRef.current = min;
+  maxRef.current = max;
+
+  const emit = (nextMin: number, nextMax: number) => {
+    const lo = Math.max(PRICE_SLIDER_MIN, Math.min(nextMin, nextMax));
+    const hi = Math.min(PRICE_SLIDER_MAX, Math.max(nextMin, nextMax));
+    onChange(
+      lo <= PRICE_SLIDER_MIN ? "" : String(lo),
+      hi >= PRICE_SLIDER_MAX ? "" : String(hi),
+    );
+  };
+
+  const valueFromClientX = (clientX: number) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0) return min;
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const raw = PRICE_SLIDER_MIN + ratio * span;
+    return Math.round(raw / PRICE_SLIDER_STEP) * PRICE_SLIDER_STEP;
+  };
+
+  const applyPointer = (clientX: number, handle: "min" | "max") => {
+    const next = valueFromClientX(clientX);
+    const currentMin = minRef.current;
+    const currentMax = maxRef.current;
+    if (handle === "min") {
+      emit(Math.min(next, currentMax - PRICE_SLIDER_STEP), currentMax);
+    } else {
+      emit(currentMin, Math.max(next, currentMin + PRICE_SLIDER_STEP));
+    }
+  };
+
+  const onPointerDown = (
+    event: React.PointerEvent<HTMLElement>,
+    handle?: "min" | "max",
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    trackRef.current?.setPointerCapture(event.pointerId);
+    const nextHandle =
+      handle ??
+      (Math.abs(valueFromClientX(event.clientX) - min) <=
+      Math.abs(valueFromClientX(event.clientX) - max)
+        ? "min"
+        : "max");
+    dragRef.current = nextHandle;
+    applyPointer(event.clientX, nextHandle);
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    applyPointer(event.clientX, dragRef.current);
+  };
+
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current = null;
+    if (trackRef.current?.hasPointerCapture(event.pointerId)) {
+      trackRef.current.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  return (
+    <div className="w-full" dir="ltr">
+      <div className="flex items-center justify-between mb-3 text-[12px] font-medium">
+        <span style={{ color: getColor("primaryText") }}>
+          <DirhamAmount amount={min} />
+        </span>
+        <span style={{ color: getColor("primaryText") }}>
+          <DirhamAmount amount={max} />
+          {max >= PRICE_SLIDER_MAX ? "+" : ""}
+        </span>
+      </div>
+      <div
+        ref={trackRef}
+        className="relative h-7 cursor-pointer touch-none select-none"
+        onPointerDown={(event) => onPointerDown(event)}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        <div
+          className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full"
+          style={{ backgroundColor: getColor("border") }}
+        />
+        <div
+          className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full"
+          style={{
+            left: `${minPct}%`,
+            width: `${Math.max(0, maxPct - minPct)}%`,
+            backgroundColor: getColor("primary"),
+          }}
+        />
+        <button
+          type="button"
+          aria-label="Minimum starting price"
+          className="absolute top-1/2 size-[18px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow cursor-grab"
+          style={{
+            left: `${minPct}%`,
+            backgroundColor: getColor("primary"),
+          }}
+          onPointerDown={(event) => onPointerDown(event, "min")}
+        />
+        <button
+          type="button"
+          aria-label="Maximum starting price"
+          className="absolute top-1/2 size-[18px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow cursor-grab"
+          style={{
+            left: `${maxPct}%`,
+            backgroundColor: getColor("primary"),
+          }}
+          onPointerDown={(event) => onPointerDown(event, "max")}
+        />
+      </div>
+    </div>
+  );
+}
 
 function Chip({
   active,
@@ -222,23 +364,9 @@ export default function AuctionBrowseFilters({
             {t("marketplace.emirate")}
           </h4>
           <div className="flex flex-wrap gap-2">
-            {EMIRATE_OPTIONS.map((option) => {
-              const label = option.labelKey ? t(option.labelKey) : option.label;
-              return (
-                <Chip
-                  key={option.value}
-                  active={selected.emirate === option.value}
-                  onClick={() =>
-                    onChange({
-                      emirate:
-                        selected.emirate === option.value ? "All" : option.value,
-                    })
-                  }
-                >
-                  {label}
-                </Chip>
-              );
-            })}
+            <Chip active onClick={() => onChange({ emirate: "Dubai" })}>
+              Dubai
+            </Chip>
           </div>
         </div>
 
@@ -278,26 +406,12 @@ export default function AuctionBrowseFilters({
           >
             {t("auctions.starting_price")}
           </h4>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: "under_100k", label: t("marketplace.under_100k") },
-              { value: "100k_1m", label: t("marketplace.range_100k_1m") },
-              { value: "1m_5m", label: t("marketplace.range_1m_5m") },
-              { value: "5m_plus", label: t("marketplace.range_5m_plus") },
-            ].map((option) => (
-              <Chip
-                key={option.value}
-                active={selected.price_range === option.value}
-                onClick={() =>
-                  onChange({
-                    price_range:
-                      selected.price_range === option.value ? "" : option.value,
-                  })
-                }
-              >
-                {option.label}
-              </Chip>
-            ))}
+          <div className="flex flex-col gap-2">
+            <PriceRangeSlider
+              minValue={selected.minPrice}
+              maxValue={selected.maxPrice}
+              onChange={(minPrice, maxPrice) => onChange({ minPrice, maxPrice })}
+            />
           </div>
         </div>
 
@@ -333,33 +447,10 @@ export default function AuctionBrowseFilters({
             {t("auctions.current_bid_range")}
           </h4>
           <div className="flex flex-col gap-2">
-            <input
-              type="number"
-              min={0}
-              inputMode="numeric"
-              value={selected.minBid}
-              onChange={(e) => onChange({ minBid: e.target.value })}
-              placeholder={t("auctions.min_bid")}
-              className="h-[38px] w-full rounded-full border px-4 text-sm outline-none"
-              style={{
-                borderColor: getColor("border"),
-                backgroundColor: getColor("surface"),
-                color: getColor("primaryText"),
-              }}
-            />
-            <input
-              type="number"
-              min={0}
-              inputMode="numeric"
-              value={selected.maxBid}
-              onChange={(e) => onChange({ maxBid: e.target.value })}
-              placeholder={t("auctions.max_bid")}
-              className="h-[38px] w-full rounded-full border px-4 text-sm outline-none"
-              style={{
-                borderColor: getColor("border"),
-                backgroundColor: getColor("surface"),
-                color: getColor("primaryText"),
-              }}
+            <PriceRangeSlider
+              minValue={selected.minBid}
+              maxValue={selected.maxBid}
+              onChange={(minBid, maxBid) => onChange({ minBid, maxBid })}
             />
           </div>
           <p className="text-xs mt-2" style={{ color: getColor("mutedText") }}>

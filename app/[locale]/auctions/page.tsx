@@ -24,10 +24,11 @@ const INITIAL_FILTERS: AuctionBrowseFilterState = {
   status: "live",
   hasBids: false,
   endingSoonHours: 24,
-  emirate: "All",
+  emirate: "Dubai",
   digit_count: "Any",
-  price_range: "",
   sort: "ending_soon",
+  minPrice: "",
+  maxPrice: "",
   minBid: "",
   maxBid: "",
 };
@@ -66,7 +67,8 @@ function buildAuctionSearchParams(
       filters.digit_count && filters.digit_count !== "Any"
         ? Number(filters.digit_count)
         : undefined,
-    price_range: filters.price_range || undefined,
+    price_min: parseBid(filters.minPrice),
+    price_max: parseBid(filters.maxPrice),
     sort: filters.sort || undefined,
     has_bids: toFlag(filters.hasBids),
     min_bid: parseBid(filters.minBid),
@@ -97,6 +99,8 @@ export default function AuctionsPage() {
     useState<AuctionBrowseFilterState>(INITIAL_FILTERS);
   const [debouncedMinBid, setDebouncedMinBid] = useState("");
   const [debouncedMaxBid, setDebouncedMaxBid] = useState("");
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState("");
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState("");
   const [catalog, setCatalog] =
     useState<MarketplaceAuctionBrowseFilters | null>(null);
   const [auctions, setAuctions] = useState<AuctionListing[]>([]);
@@ -111,9 +115,11 @@ export default function AuctionsPage() {
     const timer = window.setTimeout(() => {
       setDebouncedMinBid(filters.minBid);
       setDebouncedMaxBid(filters.maxBid);
+      setDebouncedMinPrice(filters.minPrice);
+      setDebouncedMaxPrice(filters.maxPrice);
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [filters.minBid, filters.maxBid]);
+  }, [filters.minBid, filters.maxBid, filters.minPrice, filters.maxPrice]);
 
   const fetchAuctions = useCallback(
     async (pageNum: number, append = false) => {
@@ -126,6 +132,8 @@ export default function AuctionsPage() {
               ...filters,
               minBid: debouncedMinBid,
               maxBid: debouncedMaxBid,
+              minPrice: debouncedMinPrice,
+              maxPrice: debouncedMaxPrice,
             },
             appliedQuery,
             pageNum,
@@ -161,12 +169,13 @@ export default function AuctionsPage() {
       appliedQuery,
       debouncedMaxBid,
       debouncedMinBid,
+      debouncedMaxPrice,
+      debouncedMinPrice,
       filters.status,
       filters.hasBids,
       filters.endingSoonHours,
       filters.emirate,
       filters.digit_count,
-      filters.price_range,
       filters.sort,
       locale,
     ],

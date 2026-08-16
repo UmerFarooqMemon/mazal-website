@@ -865,3 +865,43 @@ html:has([data-locale-root][dir="rtl"]) .font-serif {
   left: auto !important;
   right: 0 !important;
 }
+
+.auction-price-range {
+  margin: 0;
+  height: 28px;
+}
+
+.auction-price-range::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 6px;
+}
+
+.auction-price-range::-moz-range-track {
+  background: transparent;
+  height: 6px;
+  border: none;
+}
+
+.auction-price-range::-webkit-slider-thumb {
+  pointer-events: auto;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 999px;
+  background: currentColor;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+}
+
+.auction-price-range::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+}
