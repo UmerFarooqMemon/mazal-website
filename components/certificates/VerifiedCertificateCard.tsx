@@ -34,6 +34,8 @@ export type CertificateDisplayData = {
   holderName?: string;
   trafficFileNumber?: string;
   platePreview?: PlatePreviewConfig | null;
+  /** Sample preview: hide real assessed figures. */
+  maskAssessedValue?: boolean;
 };
 
 function dash(value?: string | null) {
@@ -87,6 +89,7 @@ export const SAMPLE_CERTIFICATE: CertificateDisplayData = {
   plateTypeLabel: "Private",
   holderName: "Ahmed Al Nasser",
   trafficFileNumber: "—",
+  maskAssessedValue: true,
 };
 
 type Props = {
@@ -119,16 +122,15 @@ export default function VerifiedCertificateCard({
 }: Props) {
   const { t, locale } = useLocale();
   const isRTL = locale === "ar";
-  const { getColor, getGradient, branding } = useTheme();
+  const { branding } = useTheme();
   const [contact, setContact] = useState({
     phone: "—",
     email: "—",
     website: "—",
   });
 
-  const primary = getColor("primary");
-  const primaryText = getColor("primaryText");
-  const secondary = getColor("secondary");
+  const primary = "#52bb78";
+  const secondary = "#162e2c";
   const logoSrc = branding.logoUrl || branding.smallLogoUrl;
 
   useEffect(() => {
@@ -168,76 +170,33 @@ export default function VerifiedCertificateCard({
     : "";
 
   const issueDate = formatIssueDate(data.issuedAt, locale);
-  const assessed = formatAssessedRange(data, locale);
+  const assessed = data.maskAssessedValue
+    ? "xxxxxx – xxxxxx"
+    : formatAssessedRange(data, locale);
   const ownerName = dash(data.holderName);
   const traffic = dash(data.trafficFileNumber);
   const emirate = dash(data.emirateLabel || data.emirate);
   const plateCode = dash(data.plateCode === "—" ? "" : data.plateCode);
-  const plateNumber = dash(data.plateDigits === "—" ? "" : data.plateDigits);
+  const plateDigitsMasked = data.maskAssessedValue
+    ? (data.plateDigits || "").replace(/[0-9]/g, "x")
+    : data.plateDigits;
+  const plateNumber = dash(
+    !plateDigitsMasked || plateDigitsMasked === "—" ? "" : plateDigitsMasked,
+  );
   const plateCategory = dash(data.plateTypeLabel || data.plateType);
 
   return (
-    <div
-      dir={isRTL ? "rtl" : "ltr"}
-      className={`relative w-full ${data.showPreviewBadge ? "pt-3 pe-4 md:pt-3.5 md:pe-5" : ""} ${className}`}
-    >
+    <div dir={isRTL ? "rtl" : "ltr"} className={`relative w-full ${className}`}>
       <div className="relative">
-        {data.showPreviewBadge && (
-          <div className="absolute z-20 pointer-events-none -top-[8px] -end-[12px] md:-top-[10px] md:-end-[16px] rtl:-rotate-[10deg] ltr:rotate-[10deg]">
-            <div
-              className="px-2.5 py-0.5 md:px-3 md:py-1 rounded-[6px] text-[9px] md:text-[11px] font-semibold uppercase tracking-[0.08em] text-white"
-              style={{
-                background: getGradient("primary"),
-                boxShadow: "0 2px 8px rgba(0,0,0,0.22)",
-              }}
-            >
-              {t("certificates.preview_badge") || "PREVIEW"}
-            </div>
-          </div>
-        )}
-
         <div
           id="certificate-preview"
-          className="relative w-full rounded-xl md:rounded-2xl overflow-hidden border-2 shadow-[0_12px_30px_-10px_rgba(1,15,81,0.35)] md:shadow-[0_30px_60px_-25px_rgba(1,15,81,0.35)]"
+          className="relative w-full rounded-xl md:rounded-2xl overflow-hidden border-2 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.45)] md:shadow-[0_30px_60px_-25px_rgba(0,0,0,0.5)]"
           style={{
-            backgroundColor: "#FBFAF7",
-            borderColor: "rgba(10,47,148,0.2)",
-            color: primaryText,
+            backgroundColor: "#000000",
+            borderColor: "rgba(82,187,120,0.35)",
+            color: "#ffffff",
           }}
         >
-          <div
-            className="flex items-center justify-between gap-3 px-4 py-3 md:px-10 md:py-6"
-            style={{ background: getGradient("primary") }}
-          >
-            <div className="flex items-center gap-2 md:gap-3 min-w-0">
-              <div
-                className="shrink-0 size-[18px] md:size-11 rounded-[3px] md:rounded-md flex items-center justify-center font-serif font-bold text-[10px] md:text-2xl"
-                style={{
-                  backgroundColor: getColor("accent") || "#E0AE57",
-                  color: "#2B1500",
-                }}
-              >
-                M
-              </div>
-              <div className="min-w-0 text-start">
-                <div className="font-serif text-[10px] md:text-2xl text-[#FBFAF6] leading-tight tracking-tight truncate">
-                  {t("certificates.platform_name") || "Mazal Platform"}
-                </div>
-                <div className="text-[5px] md:text-[11px] uppercase tracking-[0.18em] text-[#FBFAF6]/80 leading-tight">
-                  {t("certificates.licensed_escrow")}
-                </div>
-              </div>
-            </div>
-            <div className="shrink-0 text-end">
-              <div className="text-[5px] md:text-[11px] uppercase tracking-[0.18em] text-[#FBFAF6]/80">
-                {t("certificates.certificate")}
-              </div>
-              <div className="font-mono text-[6px] md:text-sm text-[#FBFAF6]">
-                {data.certificateNumber}
-              </div>
-            </div>
-          </div>
-
           <div className="px-5 py-6 md:px-10 md:py-8">
             <h3
               className="text-center text-base md:text-xl font-bold uppercase tracking-[0.28em] mb-5 md:mb-6"
@@ -252,7 +211,7 @@ export default function VerifiedCertificateCard({
                 className="inline-block p-1.5"
                 style={{
                   border: `2px solid ${primary}`,
-                  backgroundColor: getColor("background"),
+                  backgroundColor: "#0a0a0a",
                 }}
               >
                 <div className="w-[240px] sm:w-[320px] md:w-[454px] max-w-full">
@@ -263,9 +222,9 @@ export default function VerifiedCertificateCard({
                         : data.plateCode
                     }
                     plate_digits={
-                      !data.plateDigits || data.plateDigits === "—"
+                      !plateDigitsMasked || plateDigitsMasked === "—"
                         ? ""
-                        : data.plateDigits
+                        : plateDigitsMasked
                     }
                     emirate={data.emirateLabel || data.emirate || "DUBAI"}
                     preview={data.platePreview}
@@ -315,7 +274,7 @@ export default function VerifiedCertificateCard({
                 <div key={col.label}>
                   <div
                     className="text-[9px] md:text-[10px] uppercase tracking-wide"
-                    style={{ color: primaryText }}
+                    style={{ color: "#ffffff" }}
                   >
                     {col.label}
                   </div>

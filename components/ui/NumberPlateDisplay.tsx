@@ -77,7 +77,8 @@ export default function NumberPlateDisplay({
   const allowDefaultTemplate =
     crop === "form" ||
     crop === "live-preview" ||
-    crop === "auction-preview";
+    crop === "auction-preview" ||
+    crop === "certificate";
 
   const resolvedPreview =
     preview ||
