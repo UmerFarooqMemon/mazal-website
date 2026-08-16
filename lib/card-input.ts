@@ -1,5 +1,11 @@
-export function formatCardNumber(value: string, separator = " • ") {
-  const digits = value.replace(/\D/g, "").slice(0, 16);
+export const CARD_NUMBER_MAX_DIGITS = 16;
+export const CARD_NUMBER_SEPARATOR = " ";
+
+export function formatCardNumber(
+  value: string,
+  separator = CARD_NUMBER_SEPARATOR,
+) {
+  const digits = value.replace(/\D/g, "").slice(0, CARD_NUMBER_MAX_DIGITS);
   if (!digits) return "";
 
   const groups: string[] = [];
@@ -8,6 +14,15 @@ export function formatCardNumber(value: string, separator = " • ") {
   }
 
   return groups.join(separator);
+}
+
+export function cardNumberMaxLength(separator = CARD_NUMBER_SEPARATOR) {
+  const separators = Math.ceil(CARD_NUMBER_MAX_DIGITS / 4) - 1;
+  return CARD_NUMBER_MAX_DIGITS + separators * separator.length;
+}
+
+export function maskCardNumberInput(value: string) {
+  return formatCardNumber(value);
 }
 
 export function formatCardExpiry(value: string) {

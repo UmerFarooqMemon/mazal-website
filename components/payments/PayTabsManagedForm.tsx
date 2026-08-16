@@ -10,6 +10,11 @@ import {
   loadPayTabsScript,
   type PayTabsInlineFormResponse,
 } from "@/lib/paytabs";
+import {
+  CARD_NUMBER_MAX_DIGITS,
+  cardNumberMaxLength,
+  formatCardNumber,
+} from "@/lib/card-input";
 
 interface PayTabsManagedFormProps {
   clientKey: string;
@@ -55,6 +60,73 @@ export default function PayTabsManagedForm({
   const [tokenizing, setTokenizing] = useState(false);
   const [formError, setFormError] = useState("");
   const initRef = useRef(false);
+  const numberMaxLength = cardNumberMaxLength();
+
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+
+    const maskNumberField = (input: HTMLInputElement) => {
+      const formatted = formatCardNumber(input.value);
+      if (input.value !== formatted) {
+        input.value = formatted;
+      }
+    };
+
+    const onBeforeInput = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (target.getAttribute("data-paylib") !== "number") return;
+      const inputEvent = event as InputEvent;
+      if (inputEvent.inputType && !inputEvent.inputType.startsWith("insert")) {
+        return;
+      }
+      const inserted = inputEvent.data ?? "";
+      const digits = `${target.value}${inserted}`.replace(/\D/g, "");
+      if (digits.length > CARD_NUMBER_MAX_DIGITS) {
+        event.preventDefault();
+      }
+    };
+
+    const onInput = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (target.getAttribute("data-paylib") === "number") {
+        maskNumberField(target);
+        return;
+      }
+      if (target.getAttribute("data-paylib") === "cvv") {
+        target.value = target.value.replace(/\D/g, "").slice(0, 4);
+        return;
+      }
+      if (target.getAttribute("data-paylib") === "expmonth") {
+        target.value = target.value.replace(/\D/g, "").slice(0, 2);
+        return;
+      }
+      if (target.getAttribute("data-paylib") === "expyear") {
+        target.value = target.value.replace(/\D/g, "").slice(0, 4);
+      }
+    };
+
+    const onPaste = (event: Event) => {
+      const clipboardEvent = event as ClipboardEvent;
+      const target = clipboardEvent.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (target.getAttribute("data-paylib") !== "number") return;
+      clipboardEvent.preventDefault();
+      const text = clipboardEvent.clipboardData?.getData("text") ?? "";
+      target.value = formatCardNumber(text);
+    };
+
+    form.addEventListener("beforeinput", onBeforeInput, true);
+    form.addEventListener("input", onInput, true);
+    form.addEventListener("paste", onPaste, true);
+    return () => {
+      form.removeEventListener("beforeinput", onBeforeInput, true);
+      form.removeEventListener("input", onInput, true);
+      form.removeEventListener("paste", onPaste, true);
+    };
+  }, []);
 
   useEffect(() => {
     if (!scriptReady || !clientKey || !formRef.current || initRef.current) {
@@ -184,6 +256,7 @@ export default function PayTabsManagedForm({
             autoComplete="cc-number"
             inputMode="numeric"
             placeholder="0000 0000 0000 0000"
+            maxLength={numberMaxLength}
             disabled={busy || disabled}
             className={inputClassName}
             style={{

@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button, Input } from "@/components/ui";
+import { formatCardExpiry, formatCardNumber, cardNumberMaxLength } from "@/lib/card-input";
 import Select from "@/components/ui/Select";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
@@ -279,22 +280,41 @@ function SubscribeView({
         <div className="space-y-4">
           <Input
             label={t("dashboard.card_number")}
-            placeholder="2026 * 0000 * 0000 * 0000"
+            placeholder="0000 0000 0000 0000"
+            inputMode="numeric"
+            autoComplete="cc-number"
+            maxLength={cardNumberMaxLength()}
             value={card.number}
-            onChange={(e) => setCard((c) => ({ ...c, number: e.target.value }))}
+            onChange={(e) =>
+              setCard((c) => ({ ...c, number: formatCardNumber(e.target.value) }))
+            }
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               label={t("dashboard.expiration")}
               placeholder="MM / YY"
+              inputMode="numeric"
+              maxLength={7}
               value={card.expiry}
-              onChange={(e) => setCard((c) => ({ ...c, expiry: e.target.value }))}
+              onChange={(e) =>
+                setCard((c) => ({
+                  ...c,
+                  expiry: formatCardExpiry(e.target.value),
+                }))
+              }
             />
             <Input
               label={t("dashboard.security_code")}
               placeholder="CVC"
+              inputMode="numeric"
+              maxLength={4}
               value={card.cvc}
-              onChange={(e) => setCard((c) => ({ ...c, cvc: e.target.value }))}
+              onChange={(e) =>
+                setCard((c) => ({
+                  ...c,
+                  cvc: e.target.value.replace(/\D/g, "").slice(0, 4),
+                }))
+              }
             />
           </div>
           <Input

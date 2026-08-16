@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
+import { formatCardExpiry, formatCardNumber, cardNumberMaxLength } from "@/lib/card-input";
 import type { PaymentMethod } from "./PaymentMethodStep";
 
 interface PaymentDetailsStepProps {
@@ -94,20 +95,27 @@ export default function PaymentDetailsStep({
             <Input
               label="Card number"
               value={card.number}
+              inputMode="numeric"
+              autoComplete="cc-number"
+              maxLength={cardNumberMaxLength()}
               onChange={(e) =>
                 setCard({
                   ...card,
-                  number: e.target.value.replace(/[^\d\s]/g, "").slice(0, 19),
+                  number: formatCardNumber(e.target.value),
                 })
               }
-              placeholder="ACCT-000003"
+              placeholder="0000 0000 0000 0000"
             />
           </div>
           <Input
             label="Expiry"
             value={card.expiry}
-            onChange={(e) => setCard({ ...card, expiry: e.target.value })}
+            onChange={(e) =>
+              setCard({ ...card, expiry: formatCardExpiry(e.target.value) })
+            }
             placeholder="MM/YY"
+            inputMode="numeric"
+            maxLength={7}
           />
           <Input
             label="CVV"
