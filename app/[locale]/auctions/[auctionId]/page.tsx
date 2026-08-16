@@ -27,6 +27,18 @@ import {
   type MarketplaceListingStatus,
 } from "@/services/marketplace";
 
+function mergeAuctionState(
+  next: MarketplaceAuction,
+  prev: MarketplaceAuction | null,
+): MarketplaceAuction {
+  return {
+    ...prev,
+    ...next,
+    viewer_registration:
+      next.viewer_registration ?? prev?.viewer_registration ?? null,
+  };
+}
+
 export default function AuctionDetailPage({
   params,
 }: {
@@ -46,6 +58,7 @@ export default function AuctionDetailPage({
   const [winnerPurchaseId, setWinnerPurchaseId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDepositCta, setShowDepositCta] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -60,10 +73,15 @@ export default function AuctionDetailPage({
         if (!active) return;
 
         const listing = listingResponse.data.listing;
+        const listingAuction = listing.auction ?? null;
+        const stateAuction = auctionResponse?.data.auction ?? listingAuction;
         const apiAuction =
-          auctionResponse?.data.auction ?? listing.auction ?? null;
+          stateAuction && listingAuction
+            ? mergeAuctionState(stateAuction, listingAuction)
+            : stateAuction;
 
         setAuctionState(apiAuction);
+        setShowDepositCta(listing.auction?.viewer_registration == null);
         setListingStatus(listing.status);
         setIsOwner(
           Boolean(listing.is_owner) ||
@@ -80,6 +98,7 @@ export default function AuctionDetailPage({
         );
         setAuction(null);
         setAuctionState(null);
+        setShowDepositCta(false);
         setIsOwner(false);
         setListingStatus("active");
       })
@@ -164,7 +183,7 @@ export default function AuctionDetailPage({
       : undefined;
 
   const handleAuctionUpdated = (nextAuction: MarketplaceAuction) => {
-    setAuctionState(nextAuction);
+    setAuctionState((prev) => mergeAuctionState(nextAuction, prev));
     setAuction((prev) => {
       if (!prev) return prev;
       const highBid =
@@ -226,7 +245,7 @@ export default function AuctionDetailPage({
         <div className="max-w-5xl mx-auto space-y-8">
           <AuctionDetailCard
             auction={auction}
-            showDepositCta={auctionState?.viewer_registration == null}
+            showDepositCta={showDepositCta}
             payHref={
               winnerNeedsPayment && winnerPurchaseId
                 ? auctionCheckoutPath(locale, auctionId)

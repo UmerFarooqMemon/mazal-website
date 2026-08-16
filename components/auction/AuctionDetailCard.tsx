@@ -167,7 +167,11 @@ export default function AuctionDetailCard({
               size="sm"
               className="h-9 px-4 text-xs rounded-full"
             >
-              <span>{t("auctions.add_deposit_cta")}</span>
+              <span>
+                {locale === "en"
+                  ? "Deposit for Bidding"
+                  : t("auctions.add_deposit_cta")}
+              </span>
             </Button>
           </Link>
         ) : null}

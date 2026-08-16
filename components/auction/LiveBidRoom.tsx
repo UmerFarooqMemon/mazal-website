@@ -40,7 +40,12 @@ export default function LiveBidRoom({
 
   const applyAuction = useCallback(
     (nextAuction: MarketplaceAuction) => {
-      setAuction(nextAuction);
+      setAuction((prev) => ({
+        ...prev,
+        ...nextAuction,
+        viewer_registration:
+          nextAuction.viewer_registration ?? prev.viewer_registration ?? null,
+      }));
       onAuctionUpdated?.(nextAuction);
     },
     [onAuctionUpdated],
