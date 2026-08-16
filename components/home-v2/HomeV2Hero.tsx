@@ -23,15 +23,8 @@ export default function HomeV2Hero() {
   const [stats, setStats] = useState<HomepageStats | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [pauseAutoplay, setPauseAutoplay] = useState(false);
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia("(max-width: 1023px)").matches
-      : true,
-  );
   const swipeStartX = useRef<number | null>(null);
   const didSwipe = useRef(false);
-  const resumeTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -62,42 +55,10 @@ export default function HomeV2Hero() {
     };
   }, [locale]);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  useEffect(() => {
-    if (isMobile || listings.length < 2 || pauseAutoplay) return;
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % listings.length);
-    }, 6000);
-
-    return () => window.clearInterval(timer);
-  }, [isMobile, listings.length, pauseAutoplay]);
-
-  useEffect(() => {
-    return () => {
-      if (resumeTimer.current != null) window.clearTimeout(resumeTimer.current);
-    };
-  }, []);
-
   const goToSlide = (index: number) => {
     if (listings.length < 2) return;
     const next = (index + listings.length) % listings.length;
     setActiveIndex(next);
-  };
-
-  const pauseThenResumeAutoplay = () => {
-    setPauseAutoplay(true);
-    if (resumeTimer.current != null) window.clearTimeout(resumeTimer.current);
-    resumeTimer.current = window.setTimeout(() => {
-      setPauseAutoplay(false);
-      resumeTimer.current = null;
-    }, 8000);
   };
 
   const onSwipeStart = (clientX: number) => {
@@ -115,7 +76,6 @@ export default function HomeV2Hero() {
     if (Math.abs(deltaX) < threshold) return;
 
     didSwipe.current = true;
-    if (!isMobile) pauseThenResumeAutoplay();
     const swipedNext = isRTL ? deltaX > 0 : deltaX < 0;
     goToSlide(activeIndex + (swipedNext ? 1 : -1));
   };
@@ -207,11 +167,9 @@ export default function HomeV2Hero() {
               <div
                 className="touch-pan-y"
                 onPointerDown={(event) => {
-                  if (event.pointerType === "mouse") return;
                   onSwipeStart(event.clientX);
                 }}
                 onPointerUp={(event) => {
-                  if (event.pointerType === "mouse") return;
                   onSwipeEnd(event.clientX);
                 }}
                 onPointerCancel={() => {
@@ -226,15 +184,13 @@ export default function HomeV2Hero() {
               >
                 <div
                   className={
-                    listings.length > 1
-                      ? "flex items-center gap-2 lg:block"
-                      : undefined
+                    listings.length > 1 ? "flex items-center gap-2" : undefined
                   }
                 >
                   {listings.length > 1 ? (
                     <button
                       type="button"
-                      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_4px_12px_rgba(21,46,43,0.16)] lg:hidden"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_4px_12px_rgba(21,46,43,0.16)]"
                       onClick={() =>
                         goToSlide(activeIndex + (isRTL ? 1 : -1))
                       }
@@ -264,7 +220,7 @@ export default function HomeV2Hero() {
                   {listings.length > 1 ? (
                     <button
                       type="button"
-                      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_4px_12px_rgba(21,46,43,0.16)] lg:hidden"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_4px_12px_rgba(21,46,43,0.16)]"
                       onClick={() =>
                         goToSlide(activeIndex + (isRTL ? -1 : 1))
                       }

@@ -16,14 +16,12 @@ interface AuctionDetailCardProps {
   auction: AuctionListing;
   payHref?: string | null;
   onPayClick?: () => void;
-  showDepositCta?: boolean;
 }
 
 export default function AuctionDetailCard({
   auction,
   payHref,
   onPayClick,
-  showDepositCta = false,
 }: AuctionDetailCardProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -160,7 +158,7 @@ export default function AuctionDetailCard({
               <span>{t("dashboard.pay_now") || t("private-deal.pay_now") || "Pay Now"}</span>
             </Button>
           </Link>
-        ) : auction.status !== "closed" && showDepositCta ? (
+        ) : auction.status !== "closed" ? (
           <Link href={`/${locale}/auctions/${auction.id}/register`} className="shrink-0">
             <Button
               variant="primary"

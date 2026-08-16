@@ -58,7 +58,6 @@ export default function AuctionDetailPage({
   const [winnerPurchaseId, setWinnerPurchaseId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDepositCta, setShowDepositCta] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -81,7 +80,6 @@ export default function AuctionDetailPage({
             : stateAuction;
 
         setAuctionState(apiAuction);
-        setShowDepositCta(listing.auction?.viewer_registration == null);
         setListingStatus(listing.status);
         setIsOwner(
           Boolean(listing.is_owner) ||
@@ -98,7 +96,6 @@ export default function AuctionDetailPage({
         );
         setAuction(null);
         setAuctionState(null);
-        setShowDepositCta(false);
         setIsOwner(false);
         setListingStatus("active");
       })
@@ -245,7 +242,6 @@ export default function AuctionDetailPage({
         <div className="max-w-5xl mx-auto space-y-8">
           <AuctionDetailCard
             auction={auction}
-            showDepositCta={showDepositCta}
             payHref={
               winnerNeedsPayment && winnerPurchaseId
                 ? auctionCheckoutPath(locale, auctionId)
