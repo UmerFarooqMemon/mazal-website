@@ -108,5 +108,9 @@
   "rating_failed": "Could not submit rating.",
   "no_watchlist": "No plates in your watchlist yet.",
   "no_collection": "No plates in your collection yet.",
-  "no_certificates": "No valuation certificates yet."
+  "no_certificates": "No valuation certificates yet.",
+  "hidden_from_marketplace": "Hidden from marketplace",
+  "show_on_marketplace": "Show on marketplace",
+  "hide_from_marketplace": "Hide from marketplace",
+  "shown_on_marketplace": "Listing is visible on the marketplace."
 }

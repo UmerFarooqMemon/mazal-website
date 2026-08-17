@@ -21,6 +21,7 @@ import {
   removeFromWatchlist,
   resolveListingRating,
   toMarketplaceNumber,
+  updateListing,
   type MarketplaceListingCard,
   type MarketplaceListingDetail,
   type MarketplacePurchase,
@@ -101,6 +102,7 @@ function mapListingToDashboardRow(
       null,
     isOwner: listing.is_owner !== false,
     averageRating: resolveListingRating(listing),
+    showOnMarketplace: listing.show_on_marketplace !== false,
   };
 }
 
@@ -673,6 +675,34 @@ export default function UserDashboard() {
             }}
             onSeeOffers={(row) => setOffersListing(row)}
             onSeeBids={(row) => setBidsListing(row)}
+            onToggleShowOnMarketplace={async (row, next) => {
+              try {
+                await updateListing(
+                  row.listingId,
+                  { show_on_marketplace: next },
+                  locale,
+                );
+                const patch = (item: DashboardListingRow) =>
+                  item.id === row.id
+                    ? { ...item, showOnMarketplace: next }
+                    : item;
+                setMarketplaceRows((rows) => rows.map(patch));
+                setAuctionRows((rows) => rows.map(patch));
+                toast.success(
+                  next
+                    ? t("dashboard.shown_on_marketplace") ||
+                        "Listing is visible on the marketplace."
+                    : t("dashboard.hidden_from_marketplace") ||
+                        "Hidden from marketplace",
+                );
+              } catch (error) {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : t("common.error_submission") || "Something went wrong",
+                );
+              }
+            }}
           />
         )}
         {view === "certificates" && (

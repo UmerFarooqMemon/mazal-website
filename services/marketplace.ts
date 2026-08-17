@@ -293,6 +293,8 @@ export interface MarketplaceListingCard {
   asking_price: number | string;
   hide_code: boolean;
   code_hidden: boolean;
+  /** Owner/admin flag — hidden listings stay in my-listings only. */
+  show_on_marketplace?: boolean;
   auction_outcome?: string | null;
   view_count: number;
   watcher_count: number;
@@ -334,6 +336,8 @@ export interface MarketplaceListingPlan {
   is_free?: boolean;
   requires_payment?: boolean;
   sort_order?: number;
+  slots_available?: number | null;
+  slots_total?: number | null;
 }
 
 export type MarketplaceAuctionPlan = MarketplaceListingPlan;
@@ -707,6 +711,7 @@ export interface CreateListingPayload {
   listing_plan_id?: number | string | null;
   auction_plan_id?: number | string | null;
   ownership_document?: File | Blob | null;
+  show_on_marketplace?: boolean;
 }
 
 export interface UpdateListingPayload {
@@ -719,6 +724,7 @@ export interface UpdateListingPayload {
   auction_ends_at?: string | null;
   auction_reserve_price?: number | null;
   previously_sold?: boolean;
+  show_on_marketplace?: boolean;
 }
 
 const EMIRATE_UI_TO_API: Record<string, string> = {
@@ -1047,6 +1053,8 @@ export function getFeaturedAuctionListings(locale: string) {
   );
 }
 
+export const HOMEPAGE_WATCHING_SLOT_CAP = 6;
+
 export function getMarketWatchingListings(locale: string) {
   return marketplaceRequest<{ listings: MarketplaceListingCard[] }>(
     "/listings/market-watching",
@@ -1147,6 +1155,12 @@ export function createListing(payload: CreateListingPayload, locale: string) {
     }
     if (payload.previously_sold != null) {
       formData.append("previously_sold", payload.previously_sold ? "1" : "0");
+    }
+    if (payload.show_on_marketplace != null) {
+      formData.append(
+        "show_on_marketplace",
+        payload.show_on_marketplace ? "1" : "0",
+      );
     }
     formData.append("ownership_document", payload.ownership_document);
 

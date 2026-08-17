@@ -108,5 +108,9 @@
   "rating_failed": "无法提交评分。",
   "no_watchlist": "关注列表暂无车牌。",
   "no_collection": "收藏中暂无车牌。",
-  "no_certificates": "暂无估值证书。"
+  "no_certificates": "暂无估值证书。",
+  "hidden_from_marketplace": "已从市场隐藏",
+  "show_on_marketplace": "在市场上展示",
+  "hide_from_marketplace": "从市场隐藏",
+  "shown_on_marketplace": "挂牌已在市场上可见。"
 }

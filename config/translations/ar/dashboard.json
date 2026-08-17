@@ -108,5 +108,9 @@
   "rating_failed": "تعذّر إرسال التقييم.",
   "no_watchlist": "لا توجد لوحات في قائمة المتابعة بعد.",
   "no_collection": "لا توجد لوحات في مجموعتك بعد.",
-  "no_certificates": "لا توجد شهادات تقييم بعد."
+  "no_certificates": "لا توجد شهادات تقييم بعد.",
+  "hidden_from_marketplace": "مخفي من السوق",
+  "show_on_marketplace": "إظهار في السوق",
+  "hide_from_marketplace": "إخفاء من السوق",
+  "shown_on_marketplace": "القائمة ظاهرة في السوق."
 }

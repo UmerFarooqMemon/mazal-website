@@ -108,5 +108,9 @@
   "rating_failed": "Не удалось отправить оценку.",
   "no_watchlist": "В избранном пока нет номеров.",
   "no_collection": "В коллекции пока нет номеров.",
-  "no_certificates": "Сертификатов оценки пока нет."
+  "no_certificates": "Сертификатов оценки пока нет.",
+  "hidden_from_marketplace": "Скрыто с маркетплейса",
+  "show_on_marketplace": "Показать на маркетплейсе",
+  "hide_from_marketplace": "Скрыть с маркетплейса",
+  "shown_on_marketplace": "Объявление видно на маркетплейсе."
 }

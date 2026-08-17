@@ -54,6 +54,7 @@ export type DashboardListingRow = {
   canRateSeller?: boolean;
   isOwner?: boolean;
   averageRating?: number;
+  showOnMarketplace?: boolean;
 };
 
 export type PrivateDealRow = {
@@ -107,6 +108,7 @@ export default function DashboardListingsPanel({
   onRateSeller,
   onSeeOffers,
   onSeeBids,
+  onToggleShowOnMarketplace,
 }: {
   tab: ListingDealTab;
   onTabChange: (tab: ListingDealTab) => void;
@@ -116,6 +118,10 @@ export default function DashboardListingsPanel({
   onRateSeller: (row: DashboardListingRow) => void;
   onSeeOffers: (row: DashboardListingRow) => void;
   onSeeBids: (row: DashboardListingRow) => void;
+  onToggleShowOnMarketplace?: (
+    row: DashboardListingRow,
+    next: boolean,
+  ) => Promise<void> | void;
 }) {
   const { t, locale } = useLocale();
   const {
@@ -135,6 +141,7 @@ export default function DashboardListingsPanel({
   const [boostListingId, setBoostListingId] = useState<string | number | null>(
     null,
   );
+  const [togglingId, setTogglingId] = useState<string | number | null>(null);
 
   useEffect(() => {
     setBoostListingId(null);
@@ -236,6 +243,8 @@ export default function DashboardListingsPanel({
               row.isOwner !== false &&
               !isDiamondPlan(row.listingPlan, row.boostTier);
             const boostOpen = boostListingId === row.id;
+            const hiddenFromMarketplace =
+              row.isOwner !== false && row.showOnMarketplace === false;
             return (
               <div key={row.id}>
               <div
@@ -270,8 +279,8 @@ export default function DashboardListingsPanel({
                 </div>
 
                 <div className="flex flex-1 flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-end sm:gap-8">
-                  {(plan || showBoost) && (
-                    <div className="flex items-center gap-2.5">
+                  {(plan || showBoost || row.isOwner !== false) && (
+                    <div className="flex flex-wrap items-center gap-2.5">
                       {plan && (
                         <ListingPlanBadge
                           plan={plan}
@@ -292,6 +301,45 @@ export default function DashboardListingsPanel({
                           <Zap className="h-3.5 w-3.5 text-white" fill="currentColor" />
                         </button>
                       )}
+                      {row.isOwner !== false && onToggleShowOnMarketplace ? (
+                        <div className="flex items-center gap-2">
+                          {hiddenFromMarketplace ? (
+                            <span
+                              className="inline-flex h-8 items-center rounded-full px-3 text-[10px] font-medium uppercase tracking-wide"
+                              style={{
+                                backgroundColor: DASH_PILL,
+                                color: DASH_MUTED,
+                              }}
+                            >
+                              {t("dashboard.hidden_from_marketplace") ||
+                                "Hidden from marketplace"}
+                            </span>
+                          ) : null}
+                          <button
+                            type="button"
+                            disabled={togglingId === row.id}
+                            onClick={() => {
+                              const next = hiddenFromMarketplace;
+                              setTogglingId(row.id);
+                              Promise.resolve(
+                                onToggleShowOnMarketplace(row, next),
+                              ).finally(() => setTogglingId(null));
+                            }}
+                            className="inline-flex h-8 items-center rounded-full border px-3 text-[10px] font-medium disabled:opacity-50"
+                            style={{
+                              borderColor: DASH_BORDER,
+                              color: DASH_TEXT,
+                              backgroundColor: DASH_SURFACE,
+                            }}
+                          >
+                            {hiddenFromMarketplace
+                              ? t("dashboard.show_on_marketplace") ||
+                                "Show on marketplace"
+                              : t("dashboard.hide_from_marketplace") ||
+                                "Hide from marketplace"}
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   )}
 

@@ -35,6 +35,7 @@ export interface CreateListingData {
   listingPlanPrice: number;
   listingPlanRequiresPayment: boolean;
   listingPlanDurationDays: number | null;
+  showOnMarketplace: boolean;
 }
 
 const INITIAL: CreateListingData = {
@@ -55,6 +56,7 @@ const INITIAL: CreateListingData = {
   listingPlanPrice: 0,
   listingPlanRequiresPayment: false,
   listingPlanDurationDays: null,
+  showOnMarketplace: true,
 };
 
 type Step = 1 | 2 | 3 | 4;
@@ -171,6 +173,7 @@ export default function CreateListingWizard({
         hide_code: Boolean(data.code) && data.hideCode,
         listing_plan_id: data.listingPlanId,
         ownership_document: data.ownershipFile,
+        show_on_marketplace: data.showOnMarketplace,
       },
       locale,
     );
@@ -319,22 +322,21 @@ export default function CreateListingWizard({
       >
         <div className="max-w-[1280px] mx-auto px-6 lg:px-8 pt-10 pb-8">
           <p
-            className="text-xs font-bold uppercase tracking-[0.14em] mb-3"
-            style={{
-              color:
-                step === 2 ? getColor("mutedText") : getColor("primary"),
-            }}
+            className="text-sm font-medium uppercase tracking-[1px] mb-2"
+            style={{ color: getColor("primary") }}
           >
             {eyebrow}
           </p>
           <h1
-            className="text-3xl md:text-4xl font-serif font-bold leading-tight max-w-xl"
+            className={`text-3xl md:text-[36px] font-serif leading-10 max-w-xl ${
+              step === 2 ? "font-normal tracking-[-0.02em]" : "font-bold"
+            }`}
             style={{ color: getColor("primaryText") }}
           >
             {title}
           </h1>
           <p
-            className="text-base mt-3 max-w-2xl leading-relaxed"
+            className="text-base mt-2 max-w-[947px] leading-6"
             style={{ color: getColor("secondaryText") }}
           >
             {description}
@@ -356,6 +358,7 @@ export default function CreateListingWizard({
           <BoostStep
             data={data}
             onSelectPlan={selectPlan}
+            onChange={onChange}
             onBack={() =>
               initialStep >= 2 ? router.push(cancelHref) : setStep(1)
             }
