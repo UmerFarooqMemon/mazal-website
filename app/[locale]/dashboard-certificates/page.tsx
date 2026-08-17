@@ -10,6 +10,7 @@ import CertificateRequestCard from "@/components/dashboard/CertificateRequestCar
 import DashboardCertificatesSkeleton from "@/components/skeletons/dashboard/valuation-certificates/DashboardCertificatesSkeleton";
 import DashboardCertificateRequestCardSkeleton from "@/components/skeletons/dashboard/valuation-certificates/DashboardCertificateRequestCardSkeleton";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
+import { extractNumberPlatesList } from "@/lib/assessed-market-value";
 
 export default function DashboardCertificatesPage() {
   const { t, locale, loading: localeLoading } = useLocale();
@@ -52,19 +53,9 @@ export default function DashboardCertificatesPage() {
         }
       }
 
-      let list: any[] = [];
+      let list = [];
       if (platesRes.status === "fulfilled" && platesRes.value) {
-        const result = platesRes.value;
-        if (
-          result.data?.number_plates &&
-          Array.isArray(result.data.number_plates)
-        ) {
-          list = result.data.number_plates;
-        } else if (Array.isArray(result.data)) {
-          list = result.data;
-        } else if (Array.isArray(result)) {
-          list = result;
-        }
+        list = extractNumberPlatesList(platesRes.value);
       }
 
       setRequests(list);

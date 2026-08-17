@@ -48,5 +48,7 @@
   "add_plate_footer_notice": "Номер появится в коллекции после проверки права собственности.",
   "add_plate_upload_document": "Подтверждение права (Mulkiya)",
   "add_plate_upload_placeholder": "Загрузите Mulkiya",
-  "add_plate_success": "Номер добавлен в портфель"
+  "add_plate_success": "Номер добавлен в портфель",
+  "assessed_market_value": "Оценочная рыночная стоимость",
+  "valuated_on": "ОЦЕНЕНО"
 }

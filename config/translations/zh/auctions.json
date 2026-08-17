@@ -52,6 +52,8 @@
   "add_deposit_cta": "出价保证金",
   "place_bid": "出价",
   "bid_too_low": "您的出价过低。最低出价为 {amount}。",
+  "highest_bidder_wait": "您已是当前最高出价者。请等待其他出价者超过您后再出价。",
+  "cannot_place_bid": "请先登录、报名并完成保证金后再出价。",
   "plate_details_title": "车牌详情与规格",
   "plate_details_1": "高端迪拜车牌，附已验证所有权文件。",
   "plate_details_2": "保证金验证通过后即可参与直播出价。",

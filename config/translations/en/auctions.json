@@ -52,6 +52,8 @@
   "add_deposit_cta": "Deposit for Bidding",
   "place_bid": "Bid",
   "bid_too_low": "Your bid is too low. The minimum bid is {amount}.",
+  "highest_bidder_wait": "You already hold the highest bid. Wait until another bidder outbids you.",
+  "cannot_place_bid": "Log in, register, and complete your deposit to place a bid.",
   "plate_details_title": "Plate details & Specification",
   "plate_details_1": "Premium Dubai plate with verified ownership documentation.",
   "plate_details_2": "Eligible for live bidding once your security deposit is verified.",

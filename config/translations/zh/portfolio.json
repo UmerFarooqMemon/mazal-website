@@ -48,5 +48,7 @@
   "add_plate_footer_notice": "所有权验证通过后，车牌将出现在您的收藏中。",
   "add_plate_upload_document": "所有权证明（Mulkiya）",
   "add_plate_upload_placeholder": "上传您的 Mulkiya",
-  "add_plate_success": "车牌已加入您的投资组合"
+  "add_plate_success": "车牌已加入您的投资组合",
+  "assessed_market_value": "评估市场价值",
+  "valuated_on": "估值日期"
 }

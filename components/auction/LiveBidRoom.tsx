@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import AuctionTimer from "./AuctionTimer";
@@ -37,19 +37,21 @@ export default function LiveBidRoom({
   const [auction, setAuction] = useState(initialAuction);
   const [bids, setBids] = useState<MarketplaceAuctionBid[]>([]);
   const [loadingBids, setLoadingBids] = useState(true);
+  const onAuctionUpdatedRef = useRef(onAuctionUpdated);
+  onAuctionUpdatedRef.current = onAuctionUpdated;
 
-  const applyAuction = useCallback(
-    (nextAuction: MarketplaceAuction) => {
-      setAuction((prev) => ({
-        ...prev,
-        ...nextAuction,
-        viewer_registration:
-          nextAuction.viewer_registration ?? prev.viewer_registration ?? null,
-      }));
-      onAuctionUpdated?.(nextAuction);
-    },
-    [onAuctionUpdated],
-  );
+  const applyAuction = useCallback((nextAuction: MarketplaceAuction) => {
+    setAuction((prev) => ({
+      ...prev,
+      ...nextAuction,
+      viewer_registration:
+        nextAuction.viewer_registration ?? prev.viewer_registration ?? null,
+      viewer_is_highest_bidder:
+        nextAuction.viewer_is_highest_bidder ?? prev.viewer_is_highest_bidder,
+      can_place_bid: nextAuction.can_place_bid ?? prev.can_place_bid,
+    }));
+    onAuctionUpdatedRef.current?.(nextAuction);
+  }, []);
 
   const refreshBids = useCallback(async () => {
     try {
@@ -79,14 +81,16 @@ export default function LiveBidRoom({
   }, [initialAuction]);
 
   useEffect(() => {
-    refreshBids();
-    const interval = setInterval(refreshBids, 15000);
+    void refreshAuctionState();
+    const interval = setInterval(() => {
+      void refreshAuctionState();
+    }, 15000);
     return () => clearInterval(interval);
-  }, [refreshBids]);
+  }, [refreshAuctionState]);
 
   const handleBidPlaced = (nextAuction: MarketplaceAuction) => {
     applyAuction(nextAuction);
-    refreshBids();
+    void refreshBids();
   };
 
   return (
@@ -133,7 +137,7 @@ export default function LiveBidRoom({
           }
           onAwarded={(nextAuction) => {
             applyAuction(nextAuction);
-            refreshBids();
+            void refreshBids();
           }}
         />
       </div>

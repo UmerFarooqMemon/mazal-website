@@ -174,6 +174,10 @@ export interface MarketplaceAuction {
   no_show_penalty?: number | string;
   viewer_registration?: MarketplaceAuctionRegistration | null;
   winning_bid?: MarketplaceAuctionBidSummary | null;
+  /** Authenticated GET listing / auction: viewer currently holds the high bid. */
+  viewer_is_highest_bidder?: boolean;
+  /** False when guest, unregistered, no deposit, or viewer already holds the high bid. */
+  can_place_bid?: boolean;
 }
 
 export interface MarketplaceReveal {
@@ -1693,6 +1697,7 @@ export function firstMarketplaceError(
         : [
             "listing",
             "amount",
+            "bid",
             "identity",
             "confirm_asking_price",
             ...Object.keys(bag),

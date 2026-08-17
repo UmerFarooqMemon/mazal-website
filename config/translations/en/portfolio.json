@@ -48,5 +48,7 @@
   "add_plate_footer_notice": "Your plate will appear in your collection once ownership is verified.",
   "add_plate_upload_document": "Proof of ownership (Mulkiya)",
   "add_plate_upload_placeholder": "Upload your Mulkiya",
-  "add_plate_success": "Plate added to your portfolio"
+  "add_plate_success": "Plate added to your portfolio",
+  "assessed_market_value": "Assessed Market Value",
+  "valuated_on": "VALUATED On"
 }

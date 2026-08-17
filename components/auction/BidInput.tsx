@@ -7,7 +7,11 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui";
 import { formatPriceInput } from "@/lib/card-input";
 import type { MarketplaceAuction } from "@/services/marketplace";
-import { placeAuctionBid } from "@/services/marketplace";
+import {
+  firstMarketplaceError,
+  MarketplaceRequestError,
+  placeAuctionBid,
+} from "@/services/marketplace";
 
 interface BidInputProps {
   listingId: string | number;
@@ -52,13 +56,35 @@ export default function BidInput({
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [consecutiveBidBlocked, setConsecutiveBidBlocked] = useState(false);
+
+  const isHighestBidder =
+    consecutiveBidBlocked || auction.viewer_is_highest_bidder === true;
+  const apiBlocksBid = auction.can_place_bid === false || consecutiveBidBlocked;
+  const allowBid = canBid && !apiBlocksBid;
+  const blockReason = !canBid
+    ? disabledReason
+    : isHighestBidder
+      ? t("auctions.highest_bidder_wait")
+      : apiBlocksBid
+        ? t("auctions.cannot_place_bid")
+        : disabledReason;
 
   useEffect(() => {
     setAmountInput(formatPriceInput(String(minBid)));
   }, [minBid]);
 
+  useEffect(() => {
+    if (auction.can_place_bid === true) {
+      setConsecutiveBidBlocked(false);
+      setError(null);
+    } else if (auction.viewer_is_highest_bidder === true) {
+      setConsecutiveBidBlocked(true);
+    }
+  }, [auction.can_place_bid, auction.viewer_is_highest_bidder]);
+
   const bumpAmount = (direction: 1 | -1) => {
-    if (!canBid) return;
+    if (!allowBid) return;
     const current = parseBidAmount(amountInput) || minBid;
     const next = current + direction;
     const clamped = Math.max(minBid, Math.round(next));
@@ -68,7 +94,7 @@ export default function BidInput({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canBid) return;
+    if (!allowBid) return;
     setSubmitting(true);
     setError(null);
 
@@ -86,11 +112,28 @@ export default function BidInput({
 
     try {
       const response = await placeAuctionBid(listingId, amount, locale);
-      onBidPlaced?.(response.data.auction);
+      setConsecutiveBidBlocked(true);
+      onBidPlaced?.({
+        ...response.data.auction,
+        viewer_is_highest_bidder:
+          response.data.auction.viewer_is_highest_bidder ?? true,
+        can_place_bid: response.data.auction.can_place_bid ?? false,
+      });
       const nextMinBid = toNumber(response.data.auction.min_next_bid) || amount;
       setAmountInput(formatPriceInput(String(nextMinBid)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to place bid.");
+      const bidError = firstMarketplaceError(err, ["bid"]);
+      setError(
+        bidError ||
+          (err instanceof Error ? err.message : "Failed to place bid."),
+      );
+      if (
+        err instanceof MarketplaceRequestError &&
+        err.status === 422 &&
+        bidError
+      ) {
+        setConsecutiveBidBlocked(true);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -117,7 +160,7 @@ export default function BidInput({
               }
             }}
             onChange={(e) => setAmountInput(formatPriceInput(e.target.value))}
-            disabled={!canBid}
+            disabled={!allowBid}
             className="w-full rounded-xl border py-2.5 pe-10 ps-4 text-sm outline-none disabled:opacity-60"
             style={{
               borderColor: getColor("border"),
@@ -130,7 +173,7 @@ export default function BidInput({
           >
             <button
               type="button"
-              disabled={!canBid}
+              disabled={!allowBid}
               onClick={() => bumpAmount(1)}
               className="flex h-1/2 w-7 items-center justify-center disabled:opacity-40"
               style={{ color: getColor("primaryText") }}
@@ -140,7 +183,7 @@ export default function BidInput({
             </button>
             <button
               type="button"
-              disabled={!canBid || parseBidAmount(amountInput) <= minBid}
+              disabled={!allowBid || parseBidAmount(amountInput) <= minBid}
               onClick={() => bumpAmount(-1)}
               className="flex h-1/2 w-7 items-center justify-center border-t disabled:opacity-40"
               style={{
@@ -157,7 +200,7 @@ export default function BidInput({
           type="submit"
           variant="primary"
           size="md"
-          disabled={submitting || !auction.is_bidding_open || !canBid}
+          disabled={submitting || !auction.is_bidding_open || !allowBid}
           className="rounded-xl shrink-0"
         >
           {submitting ? (
@@ -174,9 +217,9 @@ export default function BidInput({
           )}
         </Button>
       </div>
-      {disabledReason && !canBid && (
+      {blockReason && !allowBid && !error && (
         <p className="text-xs" style={{ color: getColor("mutedText") }}>
-          {disabledReason}
+          {blockReason}
         </p>
       )}
       {error && (

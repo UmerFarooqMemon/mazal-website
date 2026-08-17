@@ -36,6 +36,9 @@ function mergeAuctionState(
     ...next,
     viewer_registration:
       next.viewer_registration ?? prev?.viewer_registration ?? null,
+    viewer_is_highest_bidder:
+      next.viewer_is_highest_bidder ?? prev?.viewer_is_highest_bidder,
+    can_place_bid: next.can_place_bid ?? prev?.can_place_bid,
   };
 }
 

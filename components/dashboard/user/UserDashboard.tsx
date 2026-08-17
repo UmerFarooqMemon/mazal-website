@@ -28,6 +28,10 @@ import {
 } from "@/services/marketplace";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
 import {
+  extractNumberPlatesList,
+  parseAssessedMarketValue,
+} from "@/lib/assessed-market-value";
+import {
   auctionCheckoutPath,
   listingCheckoutPath,
 } from "@/lib/checkout-intent";
@@ -260,6 +264,7 @@ export default function UserDashboard() {
   const [watchlist, setWatchlist] = useState<MarketplaceListingCard[]>([]);
   const [certificates, setCertificates] = useState<CertificateRow[]>([]);
   const [collection, setCollection] = useState<CollectionRow[]>([]);
+  const [platesRefresh, setPlatesRefresh] = useState(0);
   const [certFilter, setCertFilter] = useState<"All" | "Pending" | "Issued">(
     "All",
   );
@@ -356,14 +361,7 @@ export default function UserDashboard() {
       }
 
       if (platesRes.status === "fulfilled") {
-        const result = platesRes.value;
-        const list: Array<Record<string, unknown>> = Array.isArray(
-          result?.data?.number_plates,
-        )
-          ? result.data.number_plates
-          : Array.isArray(result?.data)
-            ? result.data
-            : [];
+        const list = extractNumberPlatesList(platesRes.value);
         nextStats.certificates = list.length;
         nextStats.collection = list.length;
         setCertificates(
@@ -372,33 +370,41 @@ export default function UserDashboard() {
             const issued = ["completed", "approved", "issued"].includes(
               status,
             );
+            const assessed = parseAssessedMarketValue(req);
+            const listedPrice = Number(req.price);
             return {
-              id: (req.id as string | number) || String(Math.random()),
+              id: req.id || String(Math.random()),
               emirate: String(
                 req.emirate_label || req.emirate || "dubai",
               ),
               plate_code: String(req.plate_code || ""),
               plate_digits: String(req.plate_digits || ""),
               status: issued ? "Issued" : "Pending",
-              askingPrice: Number(req.price || req.asking_price || 450000),
+              askingPrice:
+                assessed.valuedAmount ??
+                (Number.isFinite(listedPrice) && listedPrice > 0
+                  ? listedPrice
+                  : undefined),
               preview: req.preview,
             };
           }),
         );
         setCollection(
-          list.map((req) => ({
-            id: (req.id as string | number) || String(Math.random()),
-            plate_code: String(req.plate_code || ""),
-            plate_digits: String(req.plate_digits || ""),
-            emirate: String(req.emirate_label || req.emirate || "dubai"),
-            plateType: req.plate_type as string | undefined,
-            plateDesign: req.plate_design as string | undefined,
-            preview: req.preview,
-            addedAt: String(req.created_at || ""),
-            valuatedAt: String(
-              req.valuated_at || req.updated_at || req.created_at || "",
-            ),
-          })),
+          list.map((req) => {
+            const assessed = parseAssessedMarketValue(req);
+            return {
+              id: req.id || String(Math.random()),
+              plate_code: String(req.plate_code || ""),
+              plate_digits: String(req.plate_digits || ""),
+              emirate: String(req.emirate_label || req.emirate || "dubai"),
+              plateType: req.plate_type,
+              plateDesign: req.plate_design,
+              preview: req.preview,
+              addedAt: String(req.created_at || ""),
+              valuatedAt: assessed.valuatedAt,
+              assessedMarketValue: assessed.formatted,
+            };
+          }),
         );
       }
 
@@ -409,7 +415,7 @@ export default function UserDashboard() {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, t, token]);
+  }, [locale, t, token, platesRefresh]);
 
   const query = submittedQuery;
 
@@ -723,6 +729,7 @@ export default function UserDashboard() {
             mode={collectionMode}
             onModeChange={setCollectionMode}
             rows={filteredCollection}
+            onPlateAdded={() => setPlatesRefresh((n) => n + 1)}
           />
         )}
         {view === "wallet" && (

@@ -23,13 +23,12 @@ export type CollectionRow = {
   plateDesign?: string;
   preview?: unknown;
   addedAt?: string;
-  valuatedAt?: string;
-  valueMin?: number;
-  valueMax?: number;
+  valuatedAt?: string | null;
+  assessedMarketValue?: string | null;
 };
 
-function formatStamp(value?: string) {
-  if (!value) return "02 June, 2026 10:00 PM";
+function formatStamp(value?: string | null) {
+  if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("en-GB", {
@@ -46,10 +45,12 @@ export default function DashboardCollectionPanel({
   mode,
   onModeChange,
   rows,
+  onPlateAdded,
 }: {
   mode: CollectionMode;
   onModeChange: (mode: CollectionMode) => void;
   rows: CollectionRow[];
+  onPlateAdded?: () => void;
 }) {
   const { t, locale } = useLocale();
   const {
@@ -77,7 +78,10 @@ export default function DashboardCollectionPanel({
     return (
       <AddPlateView
         onBack={() => onModeChange("list")}
-        onSuccess={() => onModeChange("list")}
+        onSuccess={() => {
+          onPlateAdded?.();
+          onModeChange("list");
+        }}
         BackIcon={BackIcon}
         token={token}
         isAuthenticated={isAuthenticated}
@@ -154,24 +158,27 @@ export default function DashboardCollectionPanel({
                 </p>
               </div>
 
-              <div className="flex min-w-[172px] flex-col text-start">
-                <p className="text-xs font-semibold uppercase tracking-wide text-black">
-                  {t("dashboard.assessed_market_value")}
-                </p>
-                <p className="mt-1 text-base text-black">
-                  {(row.valueMin ?? 4_000_000).toLocaleString("en-AE")} -{" "}
-                  {(row.valueMax ?? 4_250_000).toLocaleString("en-AE")}
-                </p>
-              </div>
+              {row.assessedMarketValue ? (
+                <div className="flex min-w-[172px] flex-col text-start">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-black">
+                    {t("portfolio.assessed_market_value")}
+                  </p>
+                  <p className="mt-1 text-base text-black">
+                    {row.assessedMarketValue}
+                  </p>
+                </div>
+              ) : null}
 
-              <div className="flex min-w-[185px] flex-col text-start">
-                <p className="text-xs font-semibold uppercase tracking-wide text-black">
-                  {t("dashboard.valuated_on")}
-                </p>
-                <p className="mt-1 text-base text-black">
-                  {formatStamp(row.valuatedAt)}
-                </p>
-              </div>
+              {row.valuatedAt ? (
+                <div className="flex min-w-[185px] flex-col text-start">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-black">
+                    {t("portfolio.valuated_on")}
+                  </p>
+                  <p className="mt-1 text-base text-black">
+                    {formatStamp(row.valuatedAt)}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="flex items-center gap-1.5">
                 <Link

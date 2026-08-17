@@ -30,20 +30,15 @@ export interface PlateOptionsResponse {
 
 export interface NumberPlateSubmitResponse {
   data: {
-    number_plate: {
-      id: string;
-      title: string;
-      emirate: string;
-      plate_type: string;
-      plate_code: string;
-      plate_digits: string;
-      plate_design: string;
-      price: number;
-      description: string;
-      status: string;
-      created_at: string;
-    };
+    number_plate: NumberPlate;
   };
+}
+
+export interface AssessedMarketValue {
+  min?: string | number | null;
+  max?: string | number | null;
+  currency?: string | null;
+  formatted?: string | null;
 }
 
 export interface NumberPlate {
@@ -51,24 +46,36 @@ export interface NumberPlate {
   title: string;
   contact_number: string;
   emirate: string;
+  emirate_label?: string;
   plate_type: string;
   plate_code: string;
   plate_digits: string;
   plate_design: string;
+  plate_variant?: string;
   price: number;
   description: string;
   status: string;
   valuation_certificate_url?: string;
   certificate_number?: string;
+  fair_market_low?: string | number | null;
+  fair_market_high?: string | number | null;
+  valued_amount?: string | number | null;
+  valuated_at?: string | null;
+  assessed_market_value?: AssessedMarketValue | null;
+  preview?: unknown;
   created_at: string;
   updated_at: string;
 }
 
 export interface NumberPlatesListResponse {
-  data: NumberPlate[];
+  status?: boolean | string;
+  message?: string;
+  data: NumberPlate[] | { number_plates: NumberPlate[] };
 }
 
 export interface NumberPlateDetailResponse {
+  status?: boolean | string;
+  message?: string;
   data: NumberPlate;
 }
 

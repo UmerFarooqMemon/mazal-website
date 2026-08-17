@@ -48,5 +48,7 @@
   "add_plate_footer_notice": "ستظهر لوحتك في مجموعتك بعد التحقق من الملكية.",
   "add_plate_upload_document": "إثبات الملكية (ملكية)",
   "add_plate_upload_placeholder": "ارفع ملكيتك",
-  "add_plate_success": "تمت إضافة اللوحة إلى محفظتك"
+  "add_plate_success": "تمت إضافة اللوحة إلى محفظتك",
+  "assessed_market_value": "القيمة السوقية المقدّرة",
+  "valuated_on": "تاريخ التقييم"
 }
