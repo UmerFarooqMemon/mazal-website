@@ -53,10 +53,9 @@ export default function DashboardCertificatesPage() {
         }
       }
 
-      let list = [];
-      if (platesRes.status === "fulfilled" && platesRes.value) {
-        list = extractNumberPlatesList(platesRes.value);
-      }
+      const list = extractNumberPlatesList(
+        platesRes.status === "fulfilled" ? platesRes.value : null,
+      );
 
       setRequests(list);
       setPreviewMap(previewMap);
