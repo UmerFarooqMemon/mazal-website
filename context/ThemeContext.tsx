@@ -8,6 +8,11 @@ import {
 } from "react";
 import { useLocale } from "@/context/LocaleContext";
 import { normalizeAcceptLanguage } from "@/lib/api-config";
+import {
+  DEFAULT_AUCTION_PLATFORM_SETTINGS,
+  resolveAuctionPlatformSettings,
+  type AuctionPlatformSettings,
+} from "@/lib/auction-platform-settings";
 
 export interface ThemeColors {
   primary: {
@@ -139,6 +144,7 @@ interface ThemeContextType {
   counterOfferLimit: number;
   recentOffersLimit: number;
   auctionBidExtensionMinutes: number;
+  auctionPlatformSettings: AuctionPlatformSettings;
   loading: boolean;
   getColor: (key: keyof ThemeColors) => string;
   getGradient: (key: keyof ThemeColors) => string;
@@ -230,6 +236,7 @@ const ThemeContext = createContext<ThemeContextType>({
   counterOfferLimit: DEFAULT_COUNTER_OFFER_LIMIT,
   recentOffersLimit: DEFAULT_RECENT_OFFERS_LIMIT,
   auctionBidExtensionMinutes: DEFAULT_AUCTION_BID_EXTENSION_MINUTES,
+  auctionPlatformSettings: DEFAULT_AUCTION_PLATFORM_SETTINGS,
   loading: true,
   getColor: () => "transparent",
   getGradient: () => "transparent",
@@ -252,6 +259,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
   const [auctionBidExtensionMinutes, setAuctionBidExtensionMinutes] = useState(
     DEFAULT_AUCTION_BID_EXTENSION_MINUTES,
+  );
+  const [auctionPlatformSettings, setAuctionPlatformSettings] = useState(
+    DEFAULT_AUCTION_PLATFORM_SETTINGS,
   );
   const [loading, setLoading] = useState(true);
 
@@ -329,6 +339,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             DEFAULT_AUCTION_BID_EXTENSION_MINUTES,
           ),
         );
+        setAuctionPlatformSettings(resolveAuctionPlatformSettings(payload));
 
         // Footer copy from site-settings (ignore empty / placeholder values)
         if (data?.data?.footer) {
@@ -455,6 +466,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         counterOfferLimit,
         recentOffersLimit,
         auctionBidExtensionMinutes,
+        auctionPlatformSettings,
         loading,
         getColor,
         getGradient,

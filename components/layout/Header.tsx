@@ -9,6 +9,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Button, UserAvatar } from "@/components/ui";
 import SiteLogo from "@/components/layout/SiteLogo";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import AuctionCapacityBadge from "@/components/auction/AuctionCapacityBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { featureFlags } from "@/config/featureFlags";
 import { getCurrentKyc } from "@/services/kyc";
@@ -250,6 +251,9 @@ export default function Header() {
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-2 shrink-0">
               <LanguageSwitcher />
+              {mounted && isAuthenticated && featureFlags.auctions && (
+                <AuctionCapacityBadge />
+              )}
               {mounted && isAuthenticated && <NotificationBell />}
               {featureFlags.kyc && (
                 isAuthenticated ? (
@@ -347,6 +351,9 @@ export default function Header() {
             {/* Mobile Actions */}
             <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0 lg:hidden">
               <LanguageSwitcher />
+              {mounted && isAuthenticated && featureFlags.auctions && (
+                <AuctionCapacityBadge />
+              )}
               {mounted && isAuthenticated && <NotificationBell />}
               {featureFlags.kyc && (
                 isAuthenticated ? (

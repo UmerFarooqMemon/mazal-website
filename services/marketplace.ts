@@ -178,6 +178,73 @@ export interface MarketplaceAuction {
   viewer_is_highest_bidder?: boolean;
   /** False when guest, unregistered, no deposit, or viewer already holds the high bid. */
   can_place_bid?: boolean;
+  /** Buyer-level bidding capacity snapshot on authenticated listing/auction reads. */
+  viewer_auction_capacity?: AuctionCapacity | null;
+}
+
+export interface AuctionCapacityReservedPosition {
+  listing_id: number;
+  place: number;
+  amount: number | string;
+  plate?: string | null;
+}
+
+export interface AuctionCapacity {
+  currency: string;
+  min_deposit: number | string;
+  multiplier: number;
+  default_max_bidding_limit: number | string;
+  example_hold_amount: number | string;
+  example_max_bidding_limit: number | string;
+  held_deposit: number | string;
+  pending_release_amount: number | string;
+  applied_amount: number | string;
+  max_bidding_limit: number | string;
+  reserved_amount: number | string;
+  remaining_bidding_limit: number | string;
+  can_request_release: boolean;
+  release_blocked_reason?: string | null;
+  reserved_positions?: AuctionCapacityReservedPosition[];
+}
+
+export interface BuyerAuctionDepositPayment {
+  id: number;
+  amount?: number | string;
+  status?: string;
+  status_label?: string;
+  method?: string | null;
+  created_at?: string | null;
+}
+
+export interface BuyerAuctionDepositReleaseRequest {
+  id: number;
+  amount: number | string;
+  status: string;
+  status_label?: string;
+  admin_note?: string | null;
+  note?: string | null;
+  created_at?: string | null;
+  processed_at?: string | null;
+}
+
+export interface AuctionRunnerUpOffer {
+  id: number;
+  listing_id: number;
+  auction_bid_id: number;
+  status: "pending" | "accepted" | "declined" | "cancelled" | string;
+  bid_amount: number | string;
+  plate?: string | null;
+  listing?: MarketplaceListingCard | null;
+  purchase_id?: number | null;
+  created_at?: string | null;
+}
+
+export function toAuctionCapacityNumber(
+  value: number | string | null | undefined,
+): number {
+  if (value == null || value === "") return 0;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 export interface MarketplaceReveal {
@@ -480,6 +547,7 @@ export interface MarketplacePurchase {
   status: string;
   status_label?: string;
   agreed_price: number | string;
+  auction_deposit_credit_amount?: number | string;
   reveal_credit_amount?: number | string;
   fee_snapshot?: Array<{
     slug?: string;
@@ -2105,238 +2173,7 @@ export function getAuctionBids(listingId: string | number, locale: string) {
   );
 }
 
-// 44. Register For Auction
-export function registerForAuction(
-  listingId: string | number,
-  locale: string,
-  payload: { amount?: number } = {},
-) {
-  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
-    `/listings/${listingId}/auction/register`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify(
-        payload.amount != null && Number.isFinite(payload.amount)
-          ? { amount: payload.amount, deposit_amount: payload.amount }
-          : {},
-      ),
-    },
-  );
-}
-
-// 45. Confirm Auction Deposit (Fake Local — requires MARKETPLACE_FAKE_AUCTION_DEPOSITS)
-export function confirmAuctionDeposit(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-  paymentReference?: string,
-) {
-  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/confirm-deposit`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify({
-        payment_reference: paymentReference,
-      }),
-    },
-  );
-}
-
-// 45b. PayTabs Auction Deposit Checkout (production)
-export function createAuctionDepositCheckout(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-  options: { payment_token?: string; amount?: number } = {},
-) {
-  const body: Record<string, string | number> = {};
-  if (options.payment_token != null) {
-    body.payment_token = options.payment_token;
-  }
-  if (options.amount != null && Number.isFinite(options.amount)) {
-    body.amount = options.amount;
-    body.deposit_amount = options.amount;
-  }
-
-  return marketplaceRequest<{
-    redirect_url: string | null;
-    transaction?: MarketplaceAuctionProviderTransaction;
-    registration?: MarketplaceAuctionRegistration;
-  }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/paytabs/checkout`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify(body),
-    },
-  );
-}
-
-// 45b2. Pay auction deposit from Mazal wallet
-export function payAuctionDepositWithWallet(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-  payload: { amount?: number } = {},
-) {
-  return marketplaceRequest<{
-    registration: MarketplaceAuctionRegistration;
-    wallet?: Record<string, unknown>;
-    wallet_transaction?: Record<string, unknown>;
-  }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/wallet`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify(
-        payload.amount != null && Number.isFinite(payload.amount)
-          ? { amount: payload.amount, deposit_amount: payload.amount }
-          : {},
-      ),
-    },
-  );
-}
-
-// 45b3. Release held auction deposit (full/partial) back to wallet
-export function releaseAuctionDepositToWallet(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-  payload: { amount: number | string; idempotency_key?: string },
-) {
-  return marketplaceRequest<{
-    registration: MarketplaceAuctionRegistration;
-    wallet?: Record<string, unknown>;
-    wallet_transaction?: Record<string, unknown>;
-    released_amount?: number | string;
-  }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/release-to-wallet`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify(payload),
-    },
-  );
-}
-
-// 45c. Auction deposit methods catalog (card + offline)
-export function getAuctionDepositMethods(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-) {
-  return marketplaceRequest<{
-    methods: MarketplaceAuctionDepositMethod[];
-    bank_instructions: MarketplaceAuctionBankInstructions;
-    deposit_amount?: number | string;
-    reference?: string;
-  }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/methods`,
-    { locale, auth: "required" },
-  );
-}
-
-// 45d. Bank transfer instructions (MAZAL_CUSTODY_*)
-export function getAuctionBankInstructions(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-) {
-  return marketplaceRequest<{
-    bank_instructions: MarketplaceAuctionBankInstructions;
-  }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/bank-instructions`,
-    { locale, auth: "required" },
-  );
-}
-
-// 45e. Submit bank transfer proof (multipart)
-export function submitAuctionBankProof(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-  payload: {
-    payment_reference: string;
-    notes?: string;
-    evidence: File;
-  },
-) {
-  const formData = new FormData();
-  formData.append("payment_reference", payload.payment_reference);
-  if (payload.notes) formData.append("notes", payload.notes);
-  formData.append("evidence", payload.evidence);
-
-  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/proof`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      body: formData,
-    },
-  );
-}
-
-// 45f. Submit manager's check deposit
-export function submitAuctionManagersCheck(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-  payload: {
-    check_number: string;
-    collection_slot_id: number | string;
-    pickup_address: string;
-    notes?: string;
-  },
-) {
-  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/managers-check`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify(payload),
-    },
-  );
-}
-
-// 45g. Submit cash collection deposit
-export function submitAuctionCashCollection(
-  listingId: string | number,
-  registrationId: string | number,
-  locale: string,
-  payload: {
-    collection_slot_id: number | string;
-    pickup_address: string;
-    notes?: string;
-  },
-) {
-  return marketplaceRequest<{ registration: MarketplaceAuctionRegistration }>(
-    `/listings/${listingId}/auction/registrations/${registrationId}/deposit/cash-collection`,
-    {
-      method: "POST",
-      locale,
-      auth: "required",
-      contentType: "application/json",
-      body: JSON.stringify(payload),
-    },
-  );
-}
-
-// 46. Place Auction Bid
+// 44. Place Auction Bid
 export function placeAuctionBid(
   listingId: string | number,
   amount: number,
@@ -2345,6 +2182,7 @@ export function placeAuctionBid(
   return marketplaceRequest<{
     bid: MarketplaceAuctionBid;
     auction: MarketplaceAuction;
+    auction_capacity?: AuctionCapacity;
   }>(`/listings/${listingId}/auction/bids`, {
     method: "POST",
     locale,
@@ -2375,4 +2213,252 @@ export function getMyAuctionRegistrations(locale: string) {
   return marketplaceRequest<{
     registrations: MarketplaceAuctionRegistration[];
   }>("/my-auction-registrations", { locale, auth: "required" });
+}
+
+// 48. Buyer-level auction capacity
+export function getAuctionCapacity(locale: string) {
+  return marketplaceRequest<{ auction_capacity: AuctionCapacity }>(
+    "/auction-capacity",
+    { locale, auth: "required" },
+  );
+}
+
+// 49. Buyer-level auction deposits
+export function getBuyerAuctionDeposits(locale: string) {
+  return marketplaceRequest<{
+    payments?: BuyerAuctionDepositPayment[];
+    release_requests?: BuyerAuctionDepositReleaseRequest[];
+    auction_capacity?: AuctionCapacity;
+  }>("/auction-deposits", { locale, auth: "required" });
+}
+
+export function createBuyerAuctionDeposit(locale: string, amount: number) {
+  return marketplaceRequest<{
+    payment: BuyerAuctionDepositPayment;
+    catalog?: {
+      methods: MarketplaceAuctionDepositMethod[];
+      bank_instructions?: MarketplaceAuctionBankInstructions;
+    };
+    auction_capacity?: AuctionCapacity;
+  }>("/auction-deposits", {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify({ amount }),
+  });
+}
+
+export function confirmBuyerAuctionDeposit(
+  paymentId: string | number,
+  locale: string,
+  paymentReference?: string,
+) {
+  return marketplaceRequest<{
+    payment?: BuyerAuctionDepositPayment;
+    auction_capacity?: AuctionCapacity;
+  }>(`/auction-deposits/${paymentId}/confirm`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify({
+      payment_reference: paymentReference,
+    }),
+  });
+}
+
+export function createBuyerAuctionDepositCheckout(
+  paymentId: string | number,
+  locale: string,
+  options: { payment_token?: string; amount?: number } = {},
+) {
+  const body: Record<string, string | number> = {};
+  if (options.payment_token != null) {
+    body.payment_token = options.payment_token;
+  }
+  if (options.amount != null && Number.isFinite(options.amount)) {
+    body.amount = options.amount;
+  }
+
+  return marketplaceRequest<{
+    redirect_url: string | null;
+    transaction?: MarketplaceAuctionProviderTransaction;
+    payment?: BuyerAuctionDepositPayment;
+    auction_capacity?: AuctionCapacity;
+  }>(`/auction-deposits/${paymentId}/paytabs/checkout`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(body),
+  });
+}
+
+export function payBuyerAuctionDepositWithWallet(
+  paymentId: string | number,
+  locale: string,
+  payload: { amount?: number } = {},
+) {
+  return marketplaceRequest<{
+    payment?: BuyerAuctionDepositPayment;
+    wallet?: Record<string, unknown>;
+    wallet_transaction?: Record<string, unknown>;
+    auction_capacity?: AuctionCapacity;
+  }>(`/auction-deposits/${paymentId}/wallet`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(
+      payload.amount != null && Number.isFinite(payload.amount)
+        ? { amount: payload.amount }
+        : {},
+    ),
+  });
+}
+
+export function getBuyerAuctionDepositMethods(
+  paymentId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    methods: MarketplaceAuctionDepositMethod[];
+    bank_instructions: MarketplaceAuctionBankInstructions;
+    amount?: number | string;
+    reference?: string;
+  }>(`/auction-deposits/${paymentId}/methods`, {
+    locale,
+    auth: "required",
+  });
+}
+
+export function submitBuyerAuctionBankProof(
+  paymentId: string | number,
+  locale: string,
+  payload: {
+    payment_reference: string;
+    notes?: string;
+    evidence: File;
+  },
+) {
+  const formData = new FormData();
+  formData.append("payment_reference", payload.payment_reference);
+  if (payload.notes) formData.append("notes", payload.notes);
+  formData.append("evidence", payload.evidence);
+
+  return marketplaceRequest<{
+    payment?: BuyerAuctionDepositPayment;
+    auction_capacity?: AuctionCapacity;
+  }>(`/auction-deposits/${paymentId}/proof`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    body: formData,
+  });
+}
+
+export function submitBuyerAuctionManagersCheck(
+  paymentId: string | number,
+  locale: string,
+  payload: {
+    check_number: string;
+    collection_slot_id: number | string;
+    pickup_address: string;
+    notes?: string;
+  },
+) {
+  return marketplaceRequest<{
+    payment?: BuyerAuctionDepositPayment;
+    auction_capacity?: AuctionCapacity;
+  }>(`/auction-deposits/${paymentId}/managers-check`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function submitBuyerAuctionCashCollection(
+  paymentId: string | number,
+  locale: string,
+  payload: {
+    collection_slot_id: number | string;
+    pickup_address: string;
+    notes?: string;
+  },
+) {
+  return marketplaceRequest<{
+    payment?: BuyerAuctionDepositPayment;
+    auction_capacity?: AuctionCapacity;
+  }>(`/auction-deposits/${paymentId}/cash-collection`, {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
+}
+
+// 50. Buyer-level deposit release requests (admin approval)
+export function createBuyerAuctionDepositReleaseRequest(
+  locale: string,
+  payload: { amount: number | string; note?: string },
+) {
+  return marketplaceRequest<{
+    release_request: BuyerAuctionDepositReleaseRequest;
+    auction_capacity?: AuctionCapacity;
+  }>("/auction-deposit-release-requests", {
+    method: "POST",
+    locale,
+    auth: "required",
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getBuyerAuctionDepositReleaseRequests(locale: string) {
+  return marketplaceRequest<{
+    release_requests: BuyerAuctionDepositReleaseRequest[];
+  }>("/auction-deposit-release-requests", {
+    locale,
+    auth: "required",
+  });
+}
+
+// 51. Runner-up offers
+export function getAuctionRunnerUpOffers(locale: string) {
+  return marketplaceRequest<{ offers: AuctionRunnerUpOffer[] }>(
+    "/auction-runner-up-offers",
+    { locale, auth: "required" },
+  );
+}
+
+export function acceptAuctionRunnerUpOffer(
+  offerId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{
+    purchase_id?: number;
+    auction_capacity?: AuctionCapacity;
+  }>(`/auction-runner-up-offers/${offerId}/accept`, {
+    method: "POST",
+    locale,
+    auth: "required",
+  });
+}
+
+export function declineAuctionRunnerUpOffer(
+  offerId: string | number,
+  locale: string,
+) {
+  return marketplaceRequest<{ auction_capacity?: AuctionCapacity }>(
+    `/auction-runner-up-offers/${offerId}/decline`,
+    {
+      method: "POST",
+      locale,
+      auth: "required",
+    },
+  );
 }

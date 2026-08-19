@@ -25,18 +25,20 @@ import type {
   DepositPaymentSubmitPayload,
 } from "@/components/auction/types";
 import {
-  createAuctionDepositCheckout,
-  getAuctionBankInstructions,
-  getAuctionDepositMethods,
+  createBuyerAuctionDeposit,
+  createBuyerAuctionDepositCheckout,
+  getAuctionCapacity,
   getAuctionState,
-  payAuctionDepositWithWallet,
-  registerForAuction,
-  submitAuctionBankProof,
-  submitAuctionCashCollection,
-  submitAuctionManagersCheck,
+  getBuyerAuctionDepositMethods,
+  payBuyerAuctionDepositWithWallet,
+  submitBuyerAuctionBankProof,
+  submitBuyerAuctionCashCollection,
+  submitBuyerAuctionManagersCheck,
+  toAuctionCapacityNumber,
   type MarketplaceAuctionBankInstructions,
-  type MarketplaceAuctionRegistration,
+  type BuyerAuctionDepositPayment,
 } from "@/services/marketplace";
+import { useAuctionCapacity } from "@/context/AuctionCapacityContext";
 import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
 
 function parseMoneyInput(value: string) {
@@ -44,24 +46,20 @@ function parseMoneyInput(value: string) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function isDepositHeld(registration?: MarketplaceAuctionRegistration | null) {
-  if (!registration) return false;
-  const deposit = registration.deposit_status?.toLowerCase() || "";
-  const status = registration.status?.toLowerCase() || "";
-  return (
-    deposit.includes("held") ||
-    deposit.includes("confirm") ||
-    deposit.includes("verified") ||
-    status === "registered"
-  );
+function hasActiveBuyerDeposit(
+  heldDeposit: number,
+  minDeposit: number,
+): boolean {
+  return heldDeposit >= minDeposit && minDeposit > 0;
 }
 
-function isPendingVerification(
-  registration?: MarketplaceAuctionRegistration | null,
-) {
-  if (!registration) return false;
+function isPaymentPending(payment?: BuyerAuctionDepositPayment | null) {
+  if (!payment) return false;
+  const status = payment.status?.toLowerCase() || "";
   return (
-    registration.deposit_status?.toLowerCase() === "pending_verification"
+    status.includes("pending") ||
+    status.includes("await") ||
+    status.includes("verification")
   );
 }
 
@@ -85,13 +83,16 @@ export default function AuctionRegisterPage({
   const { getColor } = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { capacity, refresh: refreshCapacity, applyCapacity } =
+    useAuctionCapacity();
 
   const [step, setStep] = useState(0);
   const [method, setMethod] = useState<PaymentMethod>("bank");
   const [splitPayments, setSplitPayments] = useState<SplitPaymentEntry[]>([]);
   const [summary, setSummary] = useState<AuctionSummaryData | null>(null);
-  const [registration, setRegistration] =
-    useState<MarketplaceAuctionRegistration | null>(null);
+  const [depositPayment, setDepositPayment] =
+    useState<BuyerAuctionDepositPayment | null>(null);
+  const [paymentId, setPaymentId] = useState<number | null>(null);
   const [bankInstructions, setBankInstructions] =
     useState<MarketplaceAuctionBankInstructions | null>(null);
   const [custodyInstructions, setCustodyInstructions] =
@@ -123,36 +124,53 @@ export default function AuctionRegisterPage({
   }, [minDeposit]);
 
   const refreshAuction = useCallback(async () => {
-    const response = await getAuctionState(auctionId, locale);
-    const auction = response.data.auction;
+    const [auctionResponse, capacityResponse] = await Promise.all([
+      getAuctionState(auctionId, locale),
+      getAuctionCapacity(locale).catch(() => null),
+    ]);
+    const auction = auctionResponse.data.auction;
+    const nextCapacity =
+      capacityResponse?.data.auction_capacity ??
+      auction.viewer_auction_capacity ??
+      capacity;
+    if (nextCapacity) {
+      applyCapacity(nextCapacity);
+    }
     const viewerRegistration = auction.viewer_registration ?? null;
-    setRegistration(viewerRegistration);
-    setSummary(mapToAuctionSummary(auction, viewerRegistration));
-    return viewerRegistration;
-  }, [auctionId, locale]);
+    setSummary(
+      mapToAuctionSummary(auction, viewerRegistration, nextCapacity ?? capacity),
+    );
+    return nextCapacity;
+  }, [applyCapacity, auctionId, capacity, locale]);
 
-  const ensureRegistration = useCallback(async () => {
-    if (registration?.id) return registration;
+  const ensureDepositPayment = useCallback(async () => {
+    if (paymentId) {
+      return { id: paymentId, ...depositPayment };
+    }
 
-    const response = await registerForAuction(auctionId, locale, {
-      amount: amountRef.current,
-    });
-    const nextRegistration = response.data.registration;
-    setRegistration(nextRegistration);
+    const response = await createBuyerAuctionDeposit(locale, amountRef.current);
+    const payment = response.data.payment;
+    if (response.data.auction_capacity) {
+      applyCapacity(response.data.auction_capacity);
+    }
+    setDepositPayment(payment);
+    setPaymentId(payment.id);
     await refreshAuction();
-    return nextRegistration;
-  }, [auctionId, locale, refreshAuction, registration]);
+    return payment;
+  }, [
+    applyCapacity,
+    depositPayment,
+    locale,
+    paymentId,
+    refreshAuction,
+  ]);
 
   const loadDepositInstructions = useCallback(
-    async (
-      nextRegistration: MarketplaceAuctionRegistration,
-      selectedMethod: PaymentMethod,
-    ) => {
+    async (nextPaymentId: number, selectedMethod: PaymentMethod) => {
       setInstructionsLoading(true);
       try {
-        const catalog = await getAuctionDepositMethods(
-          auctionId,
-          nextRegistration.id,
+        const catalog = await getBuyerAuctionDepositMethods(
+          nextPaymentId,
           locale,
         );
         setBankInstructions(catalog.data.bank_instructions ?? null);
@@ -169,19 +187,6 @@ export default function AuctionRegisterPage({
         const selectedInstructions = (selected?.instructions ||
           null) as MarketplaceAuctionBankInstructions | null;
         setCustodyInstructions(selectedInstructions);
-
-        if (selectedMethod === "bank") {
-          try {
-            const bank = await getAuctionBankInstructions(
-              auctionId,
-              nextRegistration.id,
-              locale,
-            );
-            setBankInstructions(bank.data.bank_instructions);
-          } catch {
-            // Catalog already includes bank_instructions fallback.
-          }
-        }
       } catch (err) {
         setError(
           err instanceof Error
@@ -192,7 +197,7 @@ export default function AuctionRegisterPage({
         setInstructionsLoading(false);
       }
     },
-    [auctionId, locale],
+    [locale],
   );
 
   useEffect(() => {
@@ -201,16 +206,18 @@ export default function AuctionRegisterPage({
     setError(null);
 
     refreshAuction()
-      .then((viewerRegistration) => {
+      .then((nextCapacity) => {
         if (!active) return;
-        if (isDepositHeld(viewerRegistration)) {
+        const held = toAuctionCapacityNumber(nextCapacity?.held_deposit);
+        const min = toAuctionCapacityNumber(
+          nextCapacity?.min_deposit ?? minDeposit,
+        );
+        if (hasActiveBuyerDeposit(held, min)) {
           setStep(2);
           return;
         }
-        if (isPendingVerification(viewerRegistration)) {
-          const uiMethod = mapApiMethodToUi(
-            viewerRegistration?.deposit_method,
-          );
+        if (isPaymentPending(depositPayment)) {
+          const uiMethod = mapApiMethodToUi(depositPayment?.method);
           if (uiMethod) setMethod(uiMethod);
           setOfflineSubmitted(true);
           setStep(2);
@@ -255,9 +262,13 @@ export default function AuctionRegisterPage({
 
     const poll = async () => {
       try {
-        const viewerRegistration = await refreshAuction();
+        const nextCapacity = await refreshAuction();
         if (cancelled) return;
-        if (isDepositHeld(viewerRegistration)) {
+        const held = toAuctionCapacityNumber(nextCapacity?.held_deposit);
+        const min = toAuctionCapacityNumber(
+          nextCapacity?.min_deposit ?? minDeposit,
+        );
+        if (hasActiveBuyerDeposit(held, min)) {
           setPollingReturn(false);
           setStep(2);
           return;
@@ -305,9 +316,11 @@ export default function AuctionRegisterPage({
   }, [step, t]);
 
   const showSidebar = step < 2;
-  const depositHeld = walletPaid || isDepositHeld(registration);
+  const heldDeposit = toAuctionCapacityNumber(capacity?.held_deposit);
+  const depositHeld =
+    walletPaid || hasActiveBuyerDeposit(heldDeposit, minDeposit);
   const pendingVerification =
-    offlineSubmitted || isPendingVerification(registration);
+    offlineSubmitted || isPaymentPending(depositPayment);
 
   const handleWalletClick = () => {
     if (submitting) return;
@@ -326,12 +339,12 @@ export default function AuctionRegisterPage({
     setSubmitting(true);
     setError(null);
     try {
-      const nextRegistration = await ensureRegistration();
-      await loadDepositInstructions(nextRegistration, method);
+      const payment = await ensureDepositPayment();
+      await loadDepositInstructions(payment.id, method);
       setStep(1);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to register for auction.",
+        err instanceof Error ? err.message : "Failed to start auction deposit.",
       );
     } finally {
       setSubmitting(false);
@@ -342,18 +355,24 @@ export default function AuctionRegisterPage({
     setSubmitting(true);
     setError(null);
     try {
-      const nextRegistration = await ensureRegistration();
-      await payAuctionDepositWithWallet(
-        auctionId,
-        nextRegistration.id,
+      const payment = await ensureDepositPayment();
+      const response = await payBuyerAuctionDepositWithWallet(
+        payment.id,
         locale,
         { amount: amountRef.current },
       );
+      if (response.data.auction_capacity) {
+        applyCapacity(response.data.auction_capacity);
+      }
+      if (response.data.payment) {
+        setDepositPayment(response.data.payment);
+      }
       setWalletPaid(true);
       setOfflineSubmitted(true);
       setStep(2);
       toast.success(t("wallet.paid_from_wallet"));
       await refreshAuction();
+      await refreshCapacity();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t("wallet.pay_failed"),
@@ -365,12 +384,11 @@ export default function AuctionRegisterPage({
   };
 
   const handlePaytabsCheckout = async (
-    nextRegistration: MarketplaceAuctionRegistration,
+    nextPaymentId: number,
     paymentToken?: string,
   ) => {
-    const response = await createAuctionDepositCheckout(
-      auctionId,
-      nextRegistration.id,
+    const response = await createBuyerAuctionDepositCheckout(
+      nextPaymentId,
       locale,
       paymentToken
         ? { payment_token: paymentToken, amount: amountRef.current }
@@ -379,14 +397,15 @@ export default function AuctionRegisterPage({
 
     handlePayTabsCheckoutResult(response.data, {
       onImmediateSuccess: async () => {
-        if (response.data.registration) {
-          setRegistration(response.data.registration);
+        if (response.data.payment) {
+          setDepositPayment(response.data.payment);
+        }
+        if (response.data.auction_capacity) {
+          applyCapacity(response.data.auction_capacity);
         }
         await refreshAuction();
-        if (
-          isDepositHeld(response.data.registration) ||
-          response.data.registration?.deposit_status
-        ) {
+        await refreshCapacity();
+        if (response.data.payment?.status) {
           setStep(2);
           toast.success(
             t("auctions.deposit_success") ||
@@ -407,11 +426,11 @@ export default function AuctionRegisterPage({
     setSubmitting(true);
     setError(null);
     try {
-      const nextRegistration = await ensureRegistration();
-      if (!nextRegistration?.id) {
-        throw new Error("Registration is required before paying the deposit.");
+      const payment = await ensureDepositPayment();
+      if (!payment?.id) {
+        throw new Error("Deposit payment is required before checkout.");
       }
-      await handlePaytabsCheckout(nextRegistration, paymentToken);
+      await handlePaytabsCheckout(payment.id, paymentToken);
     } catch (err) {
       setError(
         err instanceof Error
@@ -430,20 +449,19 @@ export default function AuctionRegisterPage({
     setSubmitting(true);
     setError(null);
     try {
-      const nextRegistration = await ensureRegistration();
-      if (!nextRegistration?.id) {
-        throw new Error("Registration is required before paying the deposit.");
+      const payment = await ensureDepositPayment();
+      if (!payment?.id) {
+        throw new Error("Deposit payment is required before paying.");
       }
 
       if (payload.method === "card") {
-        await handlePaytabsCheckout(nextRegistration);
+        await handlePaytabsCheckout(payment.id);
         return;
       }
 
       if (payload.method === "bank") {
-        const response = await submitAuctionBankProof(
-          auctionId,
-          nextRegistration.id,
+        const response = await submitBuyerAuctionBankProof(
+          payment.id,
           locale,
           {
             payment_reference: payload.payment_reference,
@@ -451,11 +469,13 @@ export default function AuctionRegisterPage({
             evidence: payload.evidence,
           },
         );
-        setRegistration(response.data.registration);
+        if (response.data.payment) setDepositPayment(response.data.payment);
+        if (response.data.auction_capacity) {
+          applyCapacity(response.data.auction_capacity);
+        }
       } else if (payload.method === "managers_check") {
-        const response = await submitAuctionManagersCheck(
-          auctionId,
-          nextRegistration.id,
+        const response = await submitBuyerAuctionManagersCheck(
+          payment.id,
           locale,
           {
             check_number: payload.check_number,
@@ -464,11 +484,13 @@ export default function AuctionRegisterPage({
             notes: payload.notes,
           },
         );
-        setRegistration(response.data.registration);
+        if (response.data.payment) setDepositPayment(response.data.payment);
+        if (response.data.auction_capacity) {
+          applyCapacity(response.data.auction_capacity);
+        }
       } else {
-        const response = await submitAuctionCashCollection(
-          auctionId,
-          nextRegistration.id,
+        const response = await submitBuyerAuctionCashCollection(
+          payment.id,
           locale,
           {
             collection_slot_id: payload.collection_slot_id,
@@ -476,10 +498,14 @@ export default function AuctionRegisterPage({
             notes: payload.notes,
           },
         );
-        setRegistration(response.data.registration);
+        if (response.data.payment) setDepositPayment(response.data.payment);
+        if (response.data.auction_capacity) {
+          applyCapacity(response.data.auction_capacity);
+        }
       }
 
       await refreshAuction();
+      await refreshCapacity();
       setOfflineSubmitted(true);
       setStep(2);
     } catch (err) {
@@ -678,8 +704,10 @@ export default function AuctionRegisterPage({
               <AuctionSummaryCard
                 data={{
                   ...summary,
-                  currentBiddingLimit: chosenAmount * 5,
-                  targetBiddingLimit: chosenAmount * 5,
+                  targetBiddingLimit:
+                    toAuctionCapacityNumber(capacity?.max_bidding_limit) ||
+                    chosenAmount *
+                      (capacity?.multiplier ?? 5),
                 }}
                 showCheckAmount={method === "managers_check"}
               />

@@ -1,0 +1,21 @@
+{
+  "open_chat": "Open support chat",
+  "inbox_title": "Mazal Support",
+  "inbox_empty": "No conversations yet.",
+  "new_conversation": "New conversation",
+  "close_inbox": "Close inbox",
+  "subject_placeholder": "Subject",
+  "message_placeholder": "How can we help?",
+  "start_chat": "Start chat",
+  "compose_required": "Subject and message are required.",
+  "compose_failed": "Could not start the conversation.",
+  "chat_empty": "Send a message to start the conversation.",
+  "chat_placeholder": "Write a message…",
+  "chat_send": "Send message",
+  "chat_minimize": "Minimize",
+  "chat_close": "Close chat",
+  "chat_load_failed": "Failed to load messages.",
+  "chat_send_failed": "Failed to send message.",
+  "contact_support": "Contact support",
+  "release_context_subject": "Deposit release question"
+}

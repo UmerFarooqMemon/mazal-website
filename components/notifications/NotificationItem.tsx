@@ -17,6 +17,8 @@ import {
   type AppNotification,
   type NotificationIcon,
 } from "@/services/notifications";
+import { handleAuctionNotificationSideEffects } from "@/lib/auction-notification-actions";
+import toast from "react-hot-toast";
 
 const iconMap: Record<string, typeof Bell> = {
   gavel: Gavel,
@@ -141,7 +143,17 @@ export default function NotificationItem({
 
   if (href) {
     return (
-      <Link href={href} onClick={onOpen} className="block">
+      <Link
+        href={href}
+        onClick={() => {
+          const result = handleAuctionNotificationSideEffects(notification);
+          if (result.toastMessage) {
+            toast.error(result.toastMessage);
+          }
+          onOpen?.();
+        }}
+        className="block"
+      >
         {content}
       </Link>
     );

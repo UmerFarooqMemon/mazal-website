@@ -11,7 +11,12 @@ import type {
   MarketplaceAuction,
   MarketplaceAuctionBid,
 } from "@/services/marketplace";
-import { getAuctionBids, getAuctionState } from "@/services/marketplace";
+import {
+  getAuctionBids,
+  getAuctionState,
+  toAuctionCapacityNumber,
+} from "@/services/marketplace";
+import { useOptionalAuctionCapacity } from "@/context/AuctionCapacityContext";
 
 interface LiveBidRoomProps {
   listingId: string | number;
@@ -34,6 +39,7 @@ export default function LiveBidRoom({
 }: LiveBidRoomProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const capacityState = useOptionalAuctionCapacity();
   const [auction, setAuction] = useState(initialAuction);
   const [bids, setBids] = useState<MarketplaceAuctionBid[]>([]);
   const [loadingBids, setLoadingBids] = useState(true);
@@ -69,12 +75,17 @@ export default function LiveBidRoom({
       const response = await getAuctionState(listingId, locale);
       if (response.data.auction) {
         applyAuction(response.data.auction);
+        if (response.data.auction.viewer_auction_capacity) {
+          capacityState?.applyCapacity(
+            response.data.auction.viewer_auction_capacity,
+          );
+        }
       }
     } catch {
       // Keep the last known auction snapshot.
     }
     await refreshBids();
-  }, [applyAuction, listingId, locale, refreshBids]);
+  }, [applyAuction, capacityState, listingId, locale, refreshBids]);
 
   useEffect(() => {
     setAuction(initialAuction);
@@ -92,6 +103,19 @@ export default function LiveBidRoom({
     applyAuction(nextAuction);
     void refreshBids();
   };
+
+  const remainingLimit = toAuctionCapacityNumber(
+    capacityState?.capacity?.remaining_bidding_limit ??
+      auction.viewer_auction_capacity?.remaining_bidding_limit,
+  );
+  const maxLimit = toAuctionCapacityNumber(
+    capacityState?.capacity?.max_bidding_limit ??
+      auction.viewer_auction_capacity?.max_bidding_limit,
+  );
+  const reservedAmount = toAuctionCapacityNumber(
+    capacityState?.capacity?.reserved_amount ??
+      auction.viewer_auction_capacity?.reserved_amount,
+  );
 
   return (
     <div
@@ -145,6 +169,25 @@ export default function LiveBidRoom({
       <p className="text-xs" style={{ color: getColor("mutedText") }}>
         {t("auctions.summary_min_deposit")}:{" "}
         {summary.minimumDeposit.toLocaleString()}
+        {maxLimit > 0 && (
+          <>
+            {" · "}
+            {t("wallet.max_bidding_limit")}: {maxLimit.toLocaleString()} AED
+          </>
+        )}
+        {remainingLimit > 0 && (
+          <>
+            {" · "}
+            {t("auctions.remaining_bidding_limit")}:{" "}
+            {remainingLimit.toLocaleString()} AED
+          </>
+        )}
+        {reservedAmount > 0 && (
+          <>
+            {" · "}
+            {t("wallet.reserved_amount")}: {reservedAmount.toLocaleString()} AED
+          </>
+        )}
       </p>
     </div>
   );

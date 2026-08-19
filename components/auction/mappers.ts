@@ -6,6 +6,8 @@ import {
   toMarketplaceNumber,
   type MarketplaceAuction,
   type MarketplaceAuctionRegistration,
+  type AuctionCapacity,
+  toAuctionCapacityNumber,
   type MarketplaceListingCard,
   type MarketplaceListingDetail,
 } from "@/services/marketplace";
@@ -210,22 +212,39 @@ function mapDepositStatus(
 export function mapToAuctionSummary(
   auction: MarketplaceAuction,
   registration?: MarketplaceAuctionRegistration | null,
+  capacity?: AuctionCapacity | null,
 ): AuctionSummaryData {
-  const depositAmount = toNumber(
-    registration?.deposit_amount ?? auction.registration_deposit,
+  const minDeposit = toAuctionCapacityNumber(
+    capacity?.min_deposit ?? auction.registration_deposit,
+  );
+  const depositAmount = toAuctionCapacityNumber(
+    registration?.deposit_amount ?? minDeposit,
+  );
+  const multiplier = capacity?.multiplier ?? 5;
+  const heldDeposit = toAuctionCapacityNumber(capacity?.held_deposit);
+  const maxLimit = toAuctionCapacityNumber(
+    capacity?.max_bidding_limit ?? heldDeposit * multiplier,
+  );
+  const remainingLimit = toAuctionCapacityNumber(
+    capacity?.remaining_bidding_limit ?? maxLimit,
   );
   const currentPrice =
     toNumber(auction.current_high_bid) ||
     toNumber(auction.starting_price) ||
     toNumber(auction.reserve_price);
 
+  const depositStatus: AuctionSummaryData["depositStatus"] =
+    heldDeposit >= minDeposit && minDeposit > 0
+      ? "verified"
+      : mapDepositStatus(registration);
+
   return {
-    currentBiddingLimit: depositAmount * 5,
-    minimumDeposit: depositAmount,
-    targetBiddingLimit: depositAmount * 5,
-    depositStatus: mapDepositStatus(registration),
+    currentBiddingLimit: remainingLimit > 0 ? remainingLimit : maxLimit,
+    minimumDeposit: minDeposit || depositAmount,
+    targetBiddingLimit: maxLimit || depositAmount * multiplier,
+    depositStatus,
     currentPrice,
-    checkAmount: depositAmount > 0 ? depositAmount * 3 : undefined,
+    checkAmount: depositAmount > 0 ? depositAmount : undefined,
   };
 }
 

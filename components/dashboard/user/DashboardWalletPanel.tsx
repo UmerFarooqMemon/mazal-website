@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useLocale } from "@/context/LocaleContext";
 import { useWallet } from "@/hooks/useWallet";
+import { useAuctionCapacity } from "@/context/AuctionCapacityContext";
 import WalletBalanceCard from "@/components/wallet/WalletBalanceCard";
 import WalletActivityCard from "@/components/wallet/WalletActivityCard";
 import WalletBenefitsCard from "@/components/wallet/WalletBenefitsCard";
@@ -12,7 +13,10 @@ import FundsOnHoldCard from "@/components/wallet/FundsOnHoldCard";
 import CashOutModal from "@/components/wallet/CashOutModal";
 import ReleaseFundsModal from "@/components/wallet/ReleaseFundsModal";
 import { createWalletCashOut } from "@/services/wallet";
-import { releaseAuctionDepositToWallet } from "@/services/marketplace";
+import {
+  createBuyerAuctionDepositReleaseRequest,
+  toAuctionCapacityNumber,
+} from "@/services/marketplace";
 
 export default function DashboardWalletPanel({
   balanceHidden,
@@ -24,8 +28,21 @@ export default function DashboardWalletPanel({
   const { t, locale } = useLocale();
   const router = useRouter();
   const wallet = useWallet();
+  const { capacity, refresh: refreshCapacity, applyCapacity } =
+    useAuctionCapacity();
   const [cashOutOpen, setCashOutOpen] = useState(false);
   const [releaseOpen, setReleaseOpen] = useState(false);
+
+  const heldAmount = toAuctionCapacityNumber(capacity?.held_deposit);
+  const maxBiddingLimit = toAuctionCapacityNumber(capacity?.max_bidding_limit);
+  const remainingBiddingLimit = toAuctionCapacityNumber(
+    capacity?.remaining_bidding_limit,
+  );
+  const reservedAmount = toAuctionCapacityNumber(capacity?.reserved_amount);
+  const pendingRelease = toAuctionCapacityNumber(
+    capacity?.pending_release_amount,
+  );
+  const releasableAmount = Math.max(0, heldAmount - pendingRelease - reservedAmount);
 
   return (
     <>
@@ -55,7 +72,13 @@ export default function DashboardWalletPanel({
           />
           <FundsOnHoldCard
             holds={wallet.holds}
-            heldAmount={wallet.heldAmount}
+            heldAmount={heldAmount || wallet.heldAmount}
+            maxBiddingLimit={maxBiddingLimit}
+            remainingBiddingLimit={remainingBiddingLimit}
+            reservedAmount={reservedAmount}
+            reservedPositions={capacity?.reserved_positions || []}
+            canRequestRelease={capacity?.can_request_release === true}
+            releaseBlockedReason={capacity?.release_blocked_reason}
             onRequestRelease={() => setReleaseOpen(true)}
           />
         </div>
@@ -76,20 +99,21 @@ export default function DashboardWalletPanel({
       <ReleaseFundsModal
         isOpen={releaseOpen}
         onClose={() => setReleaseOpen(false)}
-        holds={wallet.holds}
-        heldAmount={wallet.heldAmount}
-        onConfirm={async (hold, amount) => {
-          await releaseAuctionDepositToWallet(
-            hold.listingId,
-            hold.sourceId,
+        heldAmount={heldAmount || wallet.heldAmount}
+        releasableAmount={releasableAmount}
+        onConfirm={async (amount, note) => {
+          const response = await createBuyerAuctionDepositReleaseRequest(
             locale,
             {
               amount: amount.toFixed(2),
-              idempotency_key: `release-${hold.sourceId}-${Date.now()}`,
+              note,
             },
           );
-          await wallet.refresh();
-          toast.success(t("wallet.release_success"));
+          if (response.data.auction_capacity) {
+            applyCapacity(response.data.auction_capacity);
+          }
+          await Promise.all([wallet.refresh(), refreshCapacity()]);
+          toast.success(t("wallet.release_request_submitted"));
         }}
       />
     </>

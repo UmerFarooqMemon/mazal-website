@@ -77,6 +77,7 @@ import {
   stripUrlSearch,
   type CheckoutIntent,
 } from "@/lib/checkout-intent";
+import AuctionPurchaseCreditNote from "@/components/auction/AuctionPurchaseCreditNote";
 
 const PAYMENT_METHOD_MAP: Record<
   Exclude<PaymentMethod, "wallet">,
@@ -1239,6 +1240,13 @@ export default function PurchaseCheckout({
                   plateCrop="deal-summary"
                 />
               </div>
+              {flow === "auction" && purchase && (
+                <AuctionPurchaseCreditNote
+                  agreedPrice={purchase.agreed_price}
+                  depositCredit={purchase.auction_deposit_credit_amount}
+                  totalDue={purchase.total_due}
+                />
+              )}
               {purchase?.paid_amount != null && purchase?.total_due != null ? (
                 <p
                   className="text-sm"

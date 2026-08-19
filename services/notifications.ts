@@ -206,6 +206,22 @@ export function getNotificationHref(
       if (auctionId) return `/${locale}/auctions/${auctionId}`;
       return `/${locale}/auctions`;
 
+    case "auction_deposit_release_requested":
+    case "auction_deposit_release_approved":
+    case "auction_deposit_release_rejected":
+      return `/${locale}/wallet`;
+
+    case "auction_runner_up_offered":
+      if (auctionId) return `/${locale}/auctions/${auctionId}`;
+      if (listingId) return `/${locale}/auctions/${listingId}`;
+      return `/${locale}/auctions`;
+
+    case "support_message_received": {
+      const conversationId = dataId(data, ["conversation_id"]);
+      if (conversationId) return `/${locale}/wallet?support=${conversationId}`;
+      return `/${locale}/wallet`;
+    }
+
     case "kyc_approved":
     case "kyc_rejected":
     case "emirates_id_verified":

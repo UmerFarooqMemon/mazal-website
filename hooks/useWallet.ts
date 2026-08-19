@@ -5,6 +5,7 @@ import { useLocale } from "@/context/LocaleContext";
 import {
   getWallet,
   getWalletTransactions,
+  getWalletHolds,
   toWalletNumber,
   type WalletBenefits,
   type WalletHold as ApiWalletHold,
@@ -14,6 +15,7 @@ import {
   type WalletProfitSettings,
   type WalletSummary,
 } from "@/services/wallet";
+import { WALLET_REFRESH_EVENT } from "@/lib/auction-notification-actions";
 import type { WalletHold, WalletTransaction } from "@/components/wallet/types";
 
 function mapHold(hold: ApiWalletHold): WalletHold {
@@ -53,14 +55,17 @@ export function useWallet() {
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const [summaryRes, txRes] = await Promise.all([
+      const [summaryRes, txRes, holdsRes] = await Promise.all([
         getWallet(locale),
         getWalletTransactions(locale, 20, 1),
+        getWalletHolds(locale).catch(() => null),
       ]);
-      setSummary(summaryRes.data);
-      setTransactions(
-        (txRes.data.transactions || []).map(mapTransaction),
-      );
+      const holds = holdsRes?.data?.holds;
+      setSummary({
+        ...summaryRes.data,
+        holds: holds?.length ? holds : summaryRes.data.holds,
+      });
+      setTransactions((txRes.data.transactions || []).map(mapTransaction));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load wallet.");
     } finally {
@@ -70,6 +75,14 @@ export function useWallet() {
 
   useEffect(() => {
     void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    const onRefresh = () => {
+      void refresh();
+    };
+    window.addEventListener(WALLET_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(WALLET_REFRESH_EVENT, onRefresh);
   }, [refresh]);
 
   const holds = useMemo(

@@ -19,6 +19,7 @@ import enPartners from "@/config/translations/en/partners.json";
 import enWallet from "@/config/translations/en/wallet.json";
 import enNotifications from "@/config/translations/en/notifications.json";
 import enProfile from "@/config/translations/en/profile.json";
+import enSupport from "@/config/translations/en/support.json";
 
 import arCommon from "@/config/translations/ar/common.json";
 import arAuth from "@/config/translations/ar/auth.json";
@@ -96,6 +97,7 @@ const enTranslations = {
   wallet: enWallet,
   notifications: enNotifications,
   profile: enProfile,
+  support: enSupport,
 };
 
 const translationsMap: Record<Locale, Record<string, unknown>> = {
@@ -119,6 +121,7 @@ const translationsMap: Record<Locale, Record<string, unknown>> = {
     wallet: arWallet,
     notifications: arNotifications,
     profile: arProfile,
+    support: enSupport,
   },
   zh: {
     common: zhCommon,
@@ -139,6 +142,7 @@ const translationsMap: Record<Locale, Record<string, unknown>> = {
     wallet: zhWallet,
     notifications: zhNotifications,
     profile: zhProfile,
+    support: enSupport,
   },
   ru: {
     common: ruCommon,
@@ -159,6 +163,7 @@ const translationsMap: Record<Locale, Record<string, unknown>> = {
     wallet: ruWallet,
     notifications: ruNotifications,
     profile: ruProfile,
+    support: enSupport,
   },
 };
 

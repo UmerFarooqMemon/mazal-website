@@ -11,7 +11,9 @@ import {
   firstMarketplaceError,
   MarketplaceRequestError,
   placeAuctionBid,
+  toAuctionCapacityNumber,
 } from "@/services/marketplace";
+import { useOptionalAuctionCapacity } from "@/context/AuctionCapacityContext";
 
 interface BidInputProps {
   listingId: string | number;
@@ -42,6 +44,10 @@ export default function BidInput({
 }: BidInputProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
+  const capacityState = useOptionalAuctionCapacity();
+  const remainingLimit = toAuctionCapacityNumber(
+    capacityState?.capacity?.remaining_bidding_limit,
+  );
   const minNextBid = toNumber(auction.min_next_bid);
   const minIncrement = toNumber(auction.min_bid_increment);
   const hasHighBid =
@@ -110,8 +116,23 @@ export default function BidInput({
       return;
     }
 
+    if (remainingLimit > 0 && amount > remainingLimit) {
+      setError(
+        t("auctions.bid_exceeds_capacity").replace(
+          "{amount}",
+          remainingLimit.toLocaleString(),
+        ),
+      );
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const response = await placeAuctionBid(listingId, amount, locale);
+      if (response.data.auction_capacity) {
+        capacityState?.applyCapacity(response.data.auction_capacity);
+      }
+      void capacityState?.refresh();
       setConsecutiveBidBlocked(true);
       onBidPlaced?.({
         ...response.data.auction,
@@ -122,7 +143,9 @@ export default function BidInput({
       const nextMinBid = toNumber(response.data.auction.min_next_bid) || amount;
       setAmountInput(formatPriceInput(String(nextMinBid)));
     } catch (err) {
-      const bidError = firstMarketplaceError(err, ["bid"]);
+      const bidError =
+        firstMarketplaceError(err, ["amount", "deposit", "bid"]) ||
+        firstMarketplaceError(err);
       setError(
         bidError ||
           (err instanceof Error ? err.message : "Failed to place bid."),
@@ -217,6 +240,12 @@ export default function BidInput({
           )}
         </Button>
       </div>
+      {remainingLimit > 0 && allowBid && !error && (
+        <p className="text-xs" style={{ color: getColor("mutedText") }}>
+          {t("auctions.remaining_bidding_limit")}:{" "}
+          {remainingLimit.toLocaleString()} AED
+        </p>
+      )}
       {blockReason && !allowBid && !error && (
         <p className="text-xs" style={{ color: getColor("mutedText") }}>
           {blockReason}

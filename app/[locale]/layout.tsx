@@ -1,5 +1,6 @@
 import { LocaleProvider } from "@/context/LocaleContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import LayoutProviders from "@/components/providers/LayoutProviders";
 import {
   ConditionalHeader,
   ConditionalFooter,
@@ -26,6 +27,7 @@ export default async function LocaleLayout({
     >
       <LocaleProvider initialLocale={validLocale}>
         <ThemeProvider>
+          <LayoutProviders>
           <Toaster
             position="bottom-center"
             reverseOrder={false}
@@ -43,6 +45,7 @@ export default async function LocaleLayout({
             <main className="grow">{children}</main>
             <ConditionalFooter />
           </div>
+          </LayoutProviders>
         </ThemeProvider>
       </LocaleProvider>
     </div>

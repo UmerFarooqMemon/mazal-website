@@ -5,25 +5,40 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import { DirhamAmount } from "@/components/ui";
 import type { WalletHold } from "./types";
+import type { AuctionCapacityReservedPosition } from "@/services/marketplace";
 
 interface FundsOnHoldCardProps {
   holds: WalletHold[];
   heldAmount: number;
+  maxBiddingLimit?: number;
+  remainingBiddingLimit?: number;
+  reservedAmount?: number;
+  reservedPositions?: AuctionCapacityReservedPosition[];
+  canRequestRelease?: boolean;
+  releaseBlockedReason?: string | null;
   onRequestRelease: () => void;
 }
-
-/** Deposits cover 20% of the bidding limit they unlock. */
-const HOLD_RATIO = 0.2;
 
 export default function FundsOnHoldCard({
   holds,
   heldAmount,
+  maxBiddingLimit = 0,
+  remainingBiddingLimit = 0,
+  reservedAmount = 0,
+  reservedPositions = [],
+  canRequestRelease = false,
+  releaseBlockedReason,
   onRequestRelease,
 }: FundsOnHoldCardProps) {
   const { t } = useLocale();
   const { getColor, getGradient } = useTheme();
 
-  const biddingLimit = heldAmount / HOLD_RATIO;
+  const maxLimit = maxBiddingLimit > 0 ? maxBiddingLimit : heldAmount * 5;
+  const remaining = remainingBiddingLimit > 0 ? remainingBiddingLimit : maxLimit;
+  const usagePercent =
+    maxLimit > 0
+      ? Math.min(100, Math.round(((maxLimit - remaining) / maxLimit) * 100))
+      : 0;
 
   return (
     <div
@@ -51,7 +66,8 @@ export default function FundsOnHoldCard({
         <button
           type="button"
           onClick={onRequestRelease}
-          disabled={heldAmount <= 0}
+          disabled={!canRequestRelease || heldAmount <= 0}
+          title={!canRequestRelease ? releaseBlockedReason || undefined : undefined}
           className="rounded-full px-3.5 py-1.5 text-[11px] font-medium text-white shrink-0 transition-opacity disabled:opacity-40"
           style={{ background: getGradient("primaryButton") }}
         >
@@ -65,16 +81,27 @@ export default function FundsOnHoldCard({
       >
         <DirhamAmount amount={heldAmount} decimals={2} weight="semibold" />
       </p>
+      <p className="text-xs mb-1" style={{ color: getColor("mutedText") }}>
+        {t("wallet.max_bidding_limit")}:{" "}
+        <DirhamAmount amount={maxLimit} decimals={2} />
+      </p>
       <p className="text-xs mb-3.5" style={{ color: getColor("mutedText") }}>
-        {t("wallet.hold_of")} <DirhamAmount amount={biddingLimit} decimals={2} />{" "}
-        {t("wallet.hold_total_suffix")}
+        {t("wallet.remaining_bidding_limit")}:{" "}
+        <DirhamAmount amount={remaining} decimals={2} />
+        {reservedAmount > 0 && (
+          <>
+            {" · "}
+            {t("wallet.reserved_amount")}:{" "}
+            <DirhamAmount amount={reservedAmount} decimals={2} />
+          </>
+        )}
       </p>
 
       <div className="h-2 rounded-full overflow-hidden bg-[var(--color-primary-light)]">
         <div
           className="h-full rounded-full"
           style={{
-            width: heldAmount > 0 ? "100%" : "0%",
+            width: `${usagePercent}%`,
             background: getGradient("primaryButton"),
           }}
         />
@@ -84,11 +111,52 @@ export default function FundsOnHoldCard({
           {t("wallet.bidding_limit_note")}
         </span>
         <span className="text-[11px]" style={{ color: getColor("mutedText") }}>
-          100%
+          {usagePercent}%
         </span>
       </div>
 
-      {holds.length === 0 ? (
+      {!canRequestRelease && releaseBlockedReason && (
+        <p className="text-xs mb-3" style={{ color: getColor("mutedText") }}>
+          {releaseBlockedReason}
+        </p>
+      )}
+
+      {reservedPositions.length > 0 && (
+        <div className="mb-4 space-y-2">
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.1em]"
+            style={{ color: getColor("mutedText") }}
+          >
+            {t("wallet.reserved_positions_title")}
+          </p>
+          {reservedPositions.map((position) => (
+            <div
+              key={`${position.listing_id}-${position.place}`}
+              className="rounded-xl border px-3 py-2.5 flex items-center justify-between gap-3"
+              style={{ borderColor: getColor("border") }}
+            >
+              <div className="min-w-0">
+                <p
+                  className="text-xs font-medium truncate"
+                  style={{ color: getColor("primaryText") }}
+                >
+                  {position.plate || `#${position.listing_id}`}
+                </p>
+                <p className="text-[10px]" style={{ color: getColor("mutedText") }}>
+                  {t("wallet.reserved_place").replace("{place}", String(position.place))}
+                </p>
+              </div>
+              <DirhamAmount
+                amount={Number(position.amount) || 0}
+                decimals={2}
+                weight="semibold"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {holds.length === 0 && reservedPositions.length === 0 ? (
         <p className="text-xs" style={{ color: getColor("mutedText") }}>
           {t("wallet.no_funds_on_hold")}
         </p>

@@ -3,6 +3,7 @@
 import { Check, Shield } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { formatAuctionPlatformExample } from "@/lib/auction-platform-settings";
 import type { StepItem } from "@/components/private-deal/Stepper";
 
 interface DepositFlowHeaderProps {
@@ -11,7 +12,13 @@ interface DepositFlowHeaderProps {
 
 export default function DepositFlowHeader({ steps }: DepositFlowHeaderProps) {
   const { t } = useLocale();
-  const { getColor } = useTheme();
+  const { getColor, auctionPlatformSettings } = useTheme();
+  const example = formatAuctionPlatformExample(auctionPlatformSettings);
+  const dynamicSubtitle = t("auctions.deposit_subtitle_dynamic")
+    .replace("{hold}", example.holdAmount.toLocaleString())
+    .replace("{limit}", example.maxLimit.toLocaleString())
+    .replace("{multiplier}", String(example.multiplier))
+    .replace("{min}", auctionPlatformSettings.minDeposit.toLocaleString());
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -37,7 +44,7 @@ export default function DepositFlowHeader({ steps }: DepositFlowHeaderProps) {
         className="text-[14px] sm:text-[15px] leading-relaxed max-w-2xl mb-6"
         style={{ color: getColor("secondaryText") }}
       >
-        {t("auctions.deposit_subtitle")}
+        {dynamicSubtitle || t("auctions.deposit_subtitle")}
       </p>
 
       <div className="flex flex-wrap gap-3 w-full">
