@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Play, Plus, Star, Zap } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Play, Plus, Star, Zap } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { Button, DirhamAmount } from "@/components/ui";
 import NumberPlateDisplay from "@/components/ui/NumberPlateDisplay";
@@ -245,6 +245,9 @@ export default function DashboardListingsPanel({
             const boostOpen = boostListingId === row.id;
             const hiddenFromMarketplace =
               row.isOwner !== false && row.showOnMarketplace === false;
+            const visibilityLabel = hiddenFromMarketplace
+              ? t("dashboard.show_on_marketplace") || "Show on marketplace"
+              : t("dashboard.hide_from_marketplace") || "Hide from marketplace";
             return (
               <div key={row.id}>
               <div
@@ -299,43 +302,31 @@ export default function DashboardListingsPanel({
                         </button>
                       )}
                       {row.isOwner !== false && onToggleShowOnMarketplace ? (
-                        <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={togglingId === row.id}
+                          title={visibilityLabel}
+                          aria-label={visibilityLabel}
+                          onClick={() => {
+                            const next = hiddenFromMarketplace;
+                            setTogglingId(row.id);
+                            Promise.resolve(
+                              onToggleShowOnMarketplace(row, next),
+                            ).finally(() => setTogglingId(null));
+                          }}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border disabled:opacity-50"
+                          style={{
+                            borderColor: DASH_BORDER,
+                            color: DASH_TEXT,
+                            backgroundColor: DASH_SURFACE,
+                          }}
+                        >
                           {hiddenFromMarketplace ? (
-                            <span
-                              className="inline-flex h-8 items-center rounded-full px-3 text-[10px] font-medium uppercase tracking-wide"
-                              style={{
-                                backgroundColor: DASH_PILL,
-                                color: DASH_MUTED,
-                              }}
-                            >
-                              {t("dashboard.hidden_from_marketplace") ||
-                                "Hidden from marketplace"}
-                            </span>
-                          ) : null}
-                          <button
-                            type="button"
-                            disabled={togglingId === row.id}
-                            onClick={() => {
-                              const next = hiddenFromMarketplace;
-                              setTogglingId(row.id);
-                              Promise.resolve(
-                                onToggleShowOnMarketplace(row, next),
-                              ).finally(() => setTogglingId(null));
-                            }}
-                            className="inline-flex h-8 items-center rounded-full border px-3 text-[10px] font-medium disabled:opacity-50"
-                            style={{
-                              borderColor: DASH_BORDER,
-                              color: DASH_TEXT,
-                              backgroundColor: DASH_SURFACE,
-                            }}
-                          >
-                            {hiddenFromMarketplace
-                              ? t("dashboard.show_on_marketplace") ||
-                                "Show on marketplace"
-                              : t("dashboard.hide_from_marketplace") ||
-                                "Hide from marketplace"}
-                          </button>
-                        </div>
+                            <EyeOff className="h-3.5 w-3.5" />
+                          ) : (
+                            <Eye className="h-3.5 w-3.5" />
+                          )}
+                        </button>
                       ) : null}
                     </div>
                   )}
