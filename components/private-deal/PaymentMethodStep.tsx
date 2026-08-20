@@ -20,7 +20,12 @@ import { useTheme } from "@/context/ThemeContext";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import BankSelect from "@/components/ui/BankSelect";
 import WalletMethodOption from "@/components/wallet/WalletMethodOption";
+import CollectionFeeLabel from "@/components/payments/CollectionFeeLabel";
 import { formatPriceInput } from "@/lib/card-input";
+import {
+  resolveMethodCollectionFeeAmount,
+  type CollectionFeeMethodOption,
+} from "@/lib/collection-fee";
 import {
   useWalletPaymentChoice,
   walletCoversAmount,
@@ -92,6 +97,10 @@ interface PaymentMethodStepProps {
   maxSplitEntries?: number;
   /** When false, hide edit/delete on saved installments. */
   allowEditSplits?: boolean;
+  /** Top-level cash/cheque collection fee from the flow API. */
+  collectionFeeAmount?: string | null;
+  /** Per-method fee entries when provided by the API. */
+  paymentMethodFees?: CollectionFeeMethodOption[];
 }
 
 const METHODS: {
@@ -156,6 +165,8 @@ export default function PaymentMethodStep({
   minSplitEntries = 1,
   maxSplitEntries = 10,
   allowEditSplits = true,
+  collectionFeeAmount,
+  paymentMethodFees,
 }: PaymentMethodStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -192,6 +203,25 @@ export default function PaymentMethodStep({
     method === "wallet"
       ? t("wallet.pay_from_wallet")
       : t(`private-deal.${titleKey}`);
+
+  const renderMethodSubtitle = (methodKey: PaymentMethod | string) => {
+    if (
+      resolveMethodCollectionFeeAmount(
+        methodKey,
+        paymentMethodFees,
+        collectionFeeAmount,
+      )
+    ) {
+      return (
+        <CollectionFeeLabel
+          methodKey={methodKey}
+          collectionFeeAmount={collectionFeeAmount}
+          paymentMethodFees={paymentMethodFees}
+        />
+      );
+    }
+    return t("private-deal.secure_online");
+  };
 
   useEffect(() => {
     if (mode === "split") {
@@ -440,7 +470,7 @@ export default function PaymentMethodStep({
                       className="text-sm"
                       style={{ color: getColor("mutedText") }}
                     >
-                      {t("private-deal.secure_online")}
+                      {renderMethodSubtitle(item.key)}
                     </div>
                   </div>
                   <div
@@ -668,7 +698,7 @@ export default function PaymentMethodStep({
                         className="text-sm"
                         style={{ color: getColor("mutedText") }}
                       >
-                        {t("private-deal.secure_online")}
+                        {renderMethodSubtitle(draft.method)}
                       </div>
                     </div>
                     <button

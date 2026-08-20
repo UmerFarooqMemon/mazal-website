@@ -23,6 +23,7 @@ export interface PrivateDealOptions {
   other_item?: PrivateDealOtherItemOptions;
   payment_plans: Record<string, string>;
   payment_methods: Record<string, string>;
+  cash_cheque_collection_fee_amount?: string;
   party_types: Record<string, string>;
   license_sources: Record<string, string>;
   terms_version: string;

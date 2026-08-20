@@ -1118,6 +1118,7 @@ export default function PrivateDealPage() {
             mode={paymentMode}
             totalAmount={payableTotal}
             splitPayments={splitPayments}
+            collectionFeeAmount={options?.cash_cheque_collection_fee_amount}
             onMethodChange={setPaymentMethod}
             onModeChange={(mode) => {
               setPaymentMode(mode);
@@ -1157,6 +1158,7 @@ export default function PrivateDealPage() {
           return (
             <SplitPaymentProcessStep
               payment={processingPayment}
+              collectionFeeAmount={options?.cash_cheque_collection_fee_amount}
               onBack={() => {
                 setProcessingSplitId(null);
                 setStep(3);

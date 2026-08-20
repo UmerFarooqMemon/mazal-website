@@ -97,7 +97,16 @@ export interface MarketplaceAuctionDepositMethod {
   offline?: boolean;
   sufficient?: boolean;
   available_balance?: number | string;
+  collection_fee_amount?: string;
+  collection_fee_currency?: string;
   instructions?: MarketplaceAuctionBankInstructions | Record<string, unknown>;
+}
+
+export interface MarketplacePaymentMethodCatalogItem {
+  key: string;
+  label?: string;
+  collection_fee_amount?: string;
+  collection_fee_currency?: string;
 }
 
 export interface MarketplaceAuctionRegistrationListing {
@@ -597,6 +606,8 @@ export interface MarketplacePurchase {
     rating_count?: number;
   };
   payments?: MarketplacePurchasePayment[];
+  cash_cheque_collection_fee_amount?: string;
+  payment_methods?: MarketplacePaymentMethodCatalogItem[];
   invoice?: MarketplacePurchaseInvoice | null;
   funded_at?: string | null;
   transfer_started_at?: string | null;
@@ -2238,7 +2249,9 @@ export function createBuyerAuctionDeposit(locale: string, amount: number) {
     catalog?: {
       methods: MarketplaceAuctionDepositMethod[];
       bank_instructions?: MarketplaceAuctionBankInstructions;
+      cash_cheque_collection_fee_amount?: string;
     };
+    cash_cheque_collection_fee_amount?: string;
     auction_capacity?: AuctionCapacity;
   }>("/auction-deposits", {
     method: "POST",
@@ -2325,6 +2338,7 @@ export function getBuyerAuctionDepositMethods(
   return marketplaceRequest<{
     methods: MarketplaceAuctionDepositMethod[];
     bank_instructions: MarketplaceAuctionBankInstructions;
+    cash_cheque_collection_fee_amount?: string;
     amount?: number | string;
     reference?: string;
   }>(`/auction-deposits/${paymentId}/methods`, {

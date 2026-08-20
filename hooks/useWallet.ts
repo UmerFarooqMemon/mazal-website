@@ -127,6 +127,8 @@ export function useWallet() {
     limits: (summary?.limits ?? null) as WalletLimits | null,
     paymentMethods: (summary?.payment_methods ??
       []) as WalletPaymentMethodOption[],
+    cashChequeCollectionFeeAmount:
+      summary?.cash_cheque_collection_fee_amount ?? null,
     profit: (summary?.profit ?? null) as WalletProfitSettings | null,
   };
 }

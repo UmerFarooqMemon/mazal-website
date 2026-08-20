@@ -20,6 +20,8 @@ import BeneficiaryInformation from "@/components/ui/BeneficiaryInformation";
 import type { StepItem } from "@/components/private-deal/Stepper";
 import WalletFlowHeader from "@/components/wallet/WalletFlowHeader";
 import CollectionSlotPicker from "@/components/payments/CollectionSlotPicker";
+import CollectionFeeLabel from "@/components/payments/CollectionFeeLabel";
+import CollectionFeeNotice from "@/components/payments/CollectionFeeNotice";
 import { useCollectionSlots } from "@/hooks/useCollectionSlots";
 import { findCollectionSlot } from "@/services/collection-slots";
 import { useWallet } from "@/hooks/useWallet";
@@ -37,6 +39,7 @@ import {
 import { usePayTabsConfig } from "@/hooks/usePayTabsConfig";
 import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
 import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
+import { resolveMethodCollectionFeeAmount } from "@/lib/collection-fee";
 
 type TopUpStep = 0 | 1 | 2;
 
@@ -95,9 +98,12 @@ export default function WalletTopUpPage() {
     activePayment?.method === "cash_collection";
   const {
     slots,
+    collectionFeeAmount: slotsCollectionFee,
     error: slotsError,
     refresh: refreshSlots,
   } = useCollectionSlots({ enabled: needsSlots });
+  const collectionFeeAmount =
+    wallet.cashChequeCollectionFeeAmount ?? slotsCollectionFee;
 
   const minDeposit = wallet.limits?.min_deposit ?? 100;
   const maxDeposit = wallet.limits?.max_deposit ?? 5_000_000;
@@ -461,6 +467,25 @@ export default function WalletTopUpPage() {
     paytabs.managedFormEnabled &&
     Boolean(paytabs.clientKey);
 
+  const renderMethodSubtitle = (key: string) => {
+    if (
+      resolveMethodCollectionFeeAmount(
+        key,
+        wallet.paymentMethods,
+        collectionFeeAmount,
+      )
+    ) {
+      return (
+        <CollectionFeeLabel
+          methodKey={key}
+          collectionFeeAmount={collectionFeeAmount}
+          paymentMethodFees={wallet.paymentMethods}
+        />
+      );
+    }
+    return t("wallet.secure_online");
+  };
+
   const methodTile = (
     key: string,
     title: string,
@@ -499,7 +524,7 @@ export default function WalletTopUpPage() {
             {title}
           </div>
           <div className="text-sm" style={{ color: getColor("mutedText") }}>
-            {t("wallet.secure_online")}
+            {renderMethodSubtitle(key)}
           </div>
         </div>
         <div
@@ -782,6 +807,9 @@ export default function WalletTopUpPage() {
                           {(activePayment.method === "managers_check" ||
                             activePayment.method === "cash_collection") && (
                             <>
+                              <CollectionFeeNotice
+                                collectionFeeAmount={collectionFeeAmount}
+                              />
                               <Input
                                 label={t("wallet.pickup_address")}
                                 value={pickupAddress}

@@ -168,5 +168,6 @@
   "account_number": "Account Number",
   "copied": "Copied",
   "copy_failed": "Copy failed",
-  "select": "Select"
+  "select": "Select",
+  "collection_fee": "Collection fee:"
 }

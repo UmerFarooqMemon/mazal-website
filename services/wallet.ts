@@ -35,6 +35,8 @@ export interface WalletBalance {
 export interface WalletPaymentMethodOption {
   key: WalletDepositMethod | string;
   label: string;
+  collection_fee_amount?: string;
+  collection_fee_currency?: string;
 }
 
 export interface WalletLimits {
@@ -161,6 +163,7 @@ export interface WalletCashOut {
 export interface WalletSummary {
   wallet: WalletBalance;
   payment_methods: WalletPaymentMethodOption[];
+  cash_cheque_collection_fee_amount?: string;
   limits: WalletLimits;
   profit: WalletProfitSettings;
   benefits: WalletBenefits;

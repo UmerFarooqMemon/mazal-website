@@ -37,6 +37,7 @@ import {
   toAuctionCapacityNumber,
   type MarketplaceAuctionBankInstructions,
   type BuyerAuctionDepositPayment,
+  type MarketplaceAuctionDepositMethod,
 } from "@/services/marketplace";
 import { useAuctionCapacity } from "@/context/AuctionCapacityContext";
 import { handlePayTabsCheckoutResult } from "@/lib/paytabs";
@@ -80,7 +81,7 @@ export default function AuctionRegisterPage({
 }) {
   const { auctionId } = use(params);
   const { t, locale } = useLocale();
-  const { getColor } = useTheme();
+  const { getColor, cashChequeCollectionFeeAmount } = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { capacity, refresh: refreshCapacity, applyCapacity } =
@@ -106,6 +107,12 @@ export default function AuctionRegisterPage({
   const [walletPaid, setWalletPaid] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [depositInput, setDepositInput] = useState("");
+  const [depositCollectionFee, setDepositCollectionFee] = useState<
+    string | null
+  >(null);
+  const [depositMethodFees, setDepositMethodFees] = useState<
+    MarketplaceAuctionDepositMethod[]
+  >([]);
   const minDeposit = summary?.minimumDeposit ?? 0;
   const chosenAmount = Math.max(parseMoneyInput(depositInput), minDeposit);
   const amountRef = useRef(chosenAmount);
@@ -150,6 +157,13 @@ export default function AuctionRegisterPage({
 
     const response = await createBuyerAuctionDeposit(locale, amountRef.current);
     const payment = response.data.payment;
+    const catalogFee =
+      response.data.cash_cheque_collection_fee_amount ??
+      response.data.catalog?.cash_cheque_collection_fee_amount;
+    if (catalogFee) setDepositCollectionFee(catalogFee);
+    if (response.data.catalog?.methods?.length) {
+      setDepositMethodFees(response.data.catalog.methods);
+    }
     if (response.data.auction_capacity) {
       applyCapacity(response.data.auction_capacity);
     }
@@ -173,6 +187,12 @@ export default function AuctionRegisterPage({
           nextPaymentId,
           locale,
         );
+        if (catalog.data.cash_cheque_collection_fee_amount) {
+          setDepositCollectionFee(catalog.data.cash_cheque_collection_fee_amount);
+        }
+        if (catalog.data.methods?.length) {
+          setDepositMethodFees(catalog.data.methods);
+        }
         setBankInstructions(catalog.data.bank_instructions ?? null);
 
         const selectedApiKey =
@@ -657,6 +677,10 @@ export default function AuctionRegisterPage({
                 allowSplit={false}
                 totalAmount={minDeposit}
                 splitPayments={splitPayments}
+                collectionFeeAmount={
+                  depositCollectionFee ?? cashChequeCollectionFeeAmount
+                }
+                paymentMethodFees={depositMethodFees}
                 onMethodChange={setMethod}
                 onModeChange={() => undefined}
                 onSplitPaymentsChange={setSplitPayments}
@@ -671,6 +695,9 @@ export default function AuctionRegisterPage({
             {step === 1 && method !== "wallet" && depositProcessPayment && (
               <SplitPaymentProcessStep
                 payment={depositProcessPayment}
+                collectionFeeAmount={
+                  depositCollectionFee ?? cashChequeCollectionFeeAmount
+                }
                 custodyInstructions={depositCustodyInstructions}
                 submitting={submitting || instructionsLoading}
                 minAmount={minDeposit}

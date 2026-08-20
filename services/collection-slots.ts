@@ -16,6 +16,7 @@ interface CollectionSlotsApiResponse {
   errors?: Record<string, string[]>;
   data?: {
     collection_slots?: CollectionSlot[];
+    cash_cheque_collection_fee_amount?: string;
   };
 }
 
@@ -43,10 +44,15 @@ function buildQuery(params: Record<string, string | number | undefined>) {
   return query ? `?${query}` : "";
 }
 
+export interface AvailableCollectionSlotsResult {
+  slots: CollectionSlot[];
+  cashChequeCollectionFeeAmount?: string;
+}
+
 export async function getAvailableCollectionSlots(
   locale?: string,
   options?: { from?: string; to?: string; limit?: number },
-): Promise<CollectionSlot[]> {
+): Promise<AvailableCollectionSlotsResult> {
   const token = getToken();
   if (!token) {
     throw new Error("Please login to continue.");
@@ -80,9 +86,13 @@ export async function getAvailableCollectionSlots(
     throw new Error(formatError(payload));
   }
 
-  return (payload.data?.collection_slots || []).filter(
-    (slot) => slot.is_available !== false,
-  );
+  return {
+    slots: (payload.data?.collection_slots || []).filter(
+      (slot) => slot.is_available !== false,
+    ),
+    cashChequeCollectionFeeAmount:
+      payload.data?.cash_cheque_collection_fee_amount,
+  };
 }
 
 export function normalizeSlotTime(value: string): string {

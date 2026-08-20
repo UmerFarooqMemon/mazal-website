@@ -145,6 +145,7 @@ interface ThemeContextType {
   recentOffersLimit: number;
   auctionBidExtensionMinutes: number;
   auctionPlatformSettings: AuctionPlatformSettings;
+  cashChequeCollectionFeeAmount: string | null;
   loading: boolean;
   getColor: (key: keyof ThemeColors) => string;
   getGradient: (key: keyof ThemeColors) => string;
@@ -237,6 +238,7 @@ const ThemeContext = createContext<ThemeContextType>({
   recentOffersLimit: DEFAULT_RECENT_OFFERS_LIMIT,
   auctionBidExtensionMinutes: DEFAULT_AUCTION_BID_EXTENSION_MINUTES,
   auctionPlatformSettings: DEFAULT_AUCTION_PLATFORM_SETTINGS,
+  cashChequeCollectionFeeAmount: null,
   loading: true,
   getColor: () => "transparent",
   getGradient: () => "transparent",
@@ -263,6 +265,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [auctionPlatformSettings, setAuctionPlatformSettings] = useState(
     DEFAULT_AUCTION_PLATFORM_SETTINGS,
   );
+  const [cashChequeCollectionFeeAmount, setCashChequeCollectionFeeAmount] =
+    useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Get the primary (start) color from a gradient object
@@ -340,6 +344,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           ),
         );
         setAuctionPlatformSettings(resolveAuctionPlatformSettings(payload));
+        const feeAmount = payload?.cash_cheque_collection_fee_amount;
+        setCashChequeCollectionFeeAmount(
+          typeof feeAmount === "string" && feeAmount.trim()
+            ? feeAmount
+            : null,
+        );
 
         // Footer copy from site-settings (ignore empty / placeholder values)
         if (data?.data?.footer) {
@@ -467,6 +477,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         recentOffersLimit,
         auctionBidExtensionMinutes,
         auctionPlatformSettings,
+        cashChequeCollectionFeeAmount,
         loading,
         getColor,
         getGradient,

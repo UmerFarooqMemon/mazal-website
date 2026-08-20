@@ -1004,6 +1004,8 @@ export default function PurchaseCheckout({
           mode={paymentMode}
           totalAmount={Number(purchase?.total_due) || payableTotal}
           splitPayments={splitPayments}
+          collectionFeeAmount={purchase?.cash_cheque_collection_fee_amount}
+          paymentMethodFees={purchase?.payment_methods}
           allowSplit={Boolean(purchase?.can_split_payment)}
           allowWalletSplit={Boolean(purchase?.can_split_payment)}
           requireExactSum
@@ -1081,6 +1083,7 @@ export default function PurchaseCheckout({
       return (
         <SplitPaymentProcessStep
           payment={processingPayment}
+          collectionFeeAmount={purchase?.cash_cheque_collection_fee_amount}
           custodyInstructions={custodyInstructions}
           submitting={submitting}
           onBack={() => {

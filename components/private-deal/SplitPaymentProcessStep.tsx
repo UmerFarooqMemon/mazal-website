@@ -17,6 +17,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { useTheme, type ThemeColors } from "@/context/ThemeContext";
 import PayTabsManagedForm from "@/components/payments/PayTabsManagedForm";
 import CollectionSlotPicker from "@/components/payments/CollectionSlotPicker";
+import CollectionFeeNotice from "@/components/payments/CollectionFeeNotice";
 import { Button, DirhamAmount, Input } from "@/components/ui";
 import { formatPriceInput } from "@/lib/card-input";
 import { useCollectionSlots } from "@/hooks/useCollectionSlots";
@@ -48,6 +49,8 @@ interface SplitPaymentProcessStepProps {
   /** When set, the amount field can be increased (not below this floor). */
   minAmount?: number;
   onAmountChange?: (amount: number) => void;
+  /** Flow-level collection fee; slot API fee is used as fallback. */
+  collectionFeeAmount?: string | null;
 }
 
 const METHOD_META: Record<
@@ -184,6 +187,7 @@ export default function SplitPaymentProcessStep({
   onCardPay,
   minAmount,
   onAmountChange,
+  collectionFeeAmount,
 }: SplitPaymentProcessStepProps) {
   const { t, locale } = useLocale();
   const { getColor } = useTheme();
@@ -210,9 +214,11 @@ export default function SplitPaymentProcessStep({
     payment.method === "managers_check" || payment.method === "cash";
   const {
     slots,
+    collectionFeeAmount: slotsCollectionFee,
     error: slotsError,
     refresh: refreshSlots,
   } = useCollectionSlots({ enabled: needsSlots });
+  const displayCollectionFee = collectionFeeAmount ?? slotsCollectionFee;
   const [collectionDate, setCollectionDate] = useState("");
   const [collectionTime, setCollectionTime] = useState("");
 
@@ -687,6 +693,7 @@ export default function SplitPaymentProcessStep({
                   </p>
                 )}
               </div>
+              <CollectionFeeNotice collectionFeeAmount={displayCollectionFee} />
               <CollectionSlotPicker
                 slots={slots}
                 date={collectionDate}
@@ -772,6 +779,7 @@ export default function SplitPaymentProcessStep({
                   </p>
                 )}
               </div>
+              <CollectionFeeNotice collectionFeeAmount={displayCollectionFee} />
               <CollectionSlotPicker
                 slots={slots}
                 date={collectionDate}
