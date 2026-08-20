@@ -282,10 +282,7 @@ export default function DashboardListingsPanel({
                   {(plan || showBoost || row.isOwner !== false) && (
                     <div className="flex flex-wrap items-center gap-2.5">
                       {plan && (
-                        <ListingPlanBadge
-                          plan={plan}
-                          className="!px-3 !py-1 !text-[16px] !leading-[26px]"
-                        />
+                        <ListingPlanBadge plan={plan} height={34} />
                       )}
                       {showBoost && (
                         <button

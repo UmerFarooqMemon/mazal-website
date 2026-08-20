@@ -207,6 +207,7 @@ export default function DashboardBoostOverlay({
                       slug: selected.slug,
                       price: selected.price,
                       is_free: selected.is_free,
+                      badge_image_url: selected.badge_image_url,
                     }
                   : listing.listingPlan
               }

@@ -1,9 +1,13 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import HomeV2Icon from "@/components/home-v2/HomeV2Icon";
 import type { MarketplaceListingPlanSummary } from "@/services/marketplace";
 
 export type ListingPlanBadgeTier = "diamond" | "gold" | "silver";
+
+/** Default height matches the previous pill badge (text-[10px] leading-4 + py-0.5). */
+const DEFAULT_IMAGE_HEIGHT = 20;
 
 const TIER_STYLES: Record<
   ListingPlanBadgeTier,
@@ -49,16 +53,35 @@ export function resolveListingPlanBadgeTier(
 interface ListingPlanBadgeProps {
   plan?: MarketplaceListingPlanSummary | null;
   className?: string;
+  /** Override image height in px. Default matches the old pill badge size. */
+  height?: number;
 }
 
 /**
- * Renders Silver / Gold / Diamond pill badges from API `listing_plan`.
- * Free listings and unknown plans show nothing.
+ * Renders the listing-plan badge image from API `listing_plan.badge_image_url`.
+ * Falls back to Silver / Gold / Diamond pill badges when no image is provided.
+ * Free listings show nothing.
  */
 export default function ListingPlanBadge({
   plan,
   className = "",
+  height = DEFAULT_IMAGE_HEIGHT,
 }: ListingPlanBadgeProps) {
+  const badgeImageUrl = plan?.badge_image_url?.trim() || null;
+
+  if (badgeImageUrl) {
+    const style: CSSProperties = { height, width: "auto" };
+    return (
+      <img
+        src={badgeImageUrl}
+        alt={plan?.name || "Listing plan"}
+        height={height}
+        className={`block max-w-none shrink-0 object-contain ${className}`}
+        style={style}
+      />
+    );
+  }
+
   const tier = resolveListingPlanBadgeTier(plan);
   if (!tier || !plan?.name) return null;
 

@@ -435,6 +435,7 @@ export interface MarketplaceListingPlan {
   is_featured?: boolean;
   is_free?: boolean;
   requires_payment?: boolean;
+  badge_image_url?: string | null;
   sort_order?: number;
   slots_available?: number | null;
   slots_total?: number | null;
