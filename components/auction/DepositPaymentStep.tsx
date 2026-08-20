@@ -179,7 +179,7 @@ export default function DepositPaymentStep({
     setFormError(null);
 
     if (method === "card") {
-      onContinue({ method: "card" });
+      onContinue({ method: "card", amount: depositAmount });
       return;
     }
 
@@ -200,6 +200,7 @@ export default function DepositPaymentStep({
       }
       onContinue({
         method: "bank",
+        amount: depositAmount,
         payment_reference: bankForm.paymentReference.trim(),
         notes: bankForm.notes.trim() || undefined,
         evidence: bankForm.evidence,
@@ -232,6 +233,7 @@ export default function DepositPaymentStep({
       }
       onContinue({
         method: "managers_check",
+        amount: depositAmount,
         check_number: checkForm.checkNumber.trim(),
         collection_slot_id: slot.id,
         pickup_address: checkForm.pickupAddress.trim(),
@@ -257,6 +259,7 @@ export default function DepositPaymentStep({
     }
     onContinue({
       method: "cash",
+      amount: depositAmount,
       collection_slot_id: slot.id,
       pickup_address: cashForm.pickupAddress.trim(),
       notes: cashForm.notes.trim() || undefined,

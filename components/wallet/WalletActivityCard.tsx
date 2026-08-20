@@ -56,9 +56,17 @@ export default function WalletActivityCard({
   };
 
   const titleOf = (item: WalletTransaction) => {
-    const key = `wallet.activity_type_${item.kind}`;
+    if (item.typeLabel?.trim()) return item.typeLabel.trim();
+    const kind = String(item.kind || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, "_");
+    const key = `wallet.activity_type_${kind}`;
     const translated = t(key);
     if (translated && translated !== key) return translated;
+    const legacyKey = `wallet.activity_${kind}`;
+    const legacy = t(legacyKey);
+    if (legacy && legacy !== legacyKey) return legacy;
     return item.reference || String(item.kind);
   };
 

@@ -95,11 +95,19 @@ export interface MarketplaceAuctionDepositMethod {
   key: AuctionDepositApiMethod | string;
   label: string;
   offline?: boolean;
+  instant?: boolean;
   sufficient?: boolean;
   available_balance?: number | string;
   collection_fee_amount?: string;
   collection_fee_currency?: string;
   instructions?: MarketplaceAuctionBankInstructions | Record<string, unknown>;
+}
+
+export interface MarketplaceAuctionDepositCatalog {
+  deposit_amount?: number | string;
+  cash_cheque_collection_fee_amount?: string;
+  methods: MarketplaceAuctionDepositMethod[];
+  bank_instructions?: MarketplaceAuctionBankInstructions;
 }
 
 export interface MarketplacePaymentMethodCatalogItem {
@@ -185,7 +193,11 @@ export interface MarketplaceAuction {
   winning_bid?: MarketplaceAuctionBidSummary | null;
   /** Authenticated GET listing / auction: viewer currently holds the high bid. */
   viewer_is_highest_bidder?: boolean;
-  /** False when guest, unregistered, no deposit, or viewer already holds the high bid. */
+  /**
+   * False when guest, unregistered, no deposit, or viewer already holds the high bid.
+   * Frontend may still allow bidding when remaining global capacity exists, except
+   * when the viewer is the highest bidder (own-bid lock).
+   */
   can_place_bid?: boolean;
   /** Buyer-level bidding capacity snapshot on authenticated listing/auction reads. */
   viewer_auction_capacity?: AuctionCapacity | null;
@@ -222,6 +234,14 @@ export interface BuyerAuctionDepositPayment {
   status?: string;
   status_label?: string;
   method?: string | null;
+  method_label?: string | null;
+  reference?: string | null;
+  submitted_at?: string | null;
+  held_at?: string | null;
+  rejected_at?: string | null;
+  rejection_reason?: string | null;
+  redirect_url?: string | null;
+  has_evidence?: boolean;
   created_at?: string | null;
 }
 
@@ -493,6 +513,12 @@ export interface MarketplaceCounterOfferQuota {
   can_counter: boolean;
   can_negotiate: boolean;
   has_pending_final: boolean;
+  /** Buyer-side counters used (after the initial offer). */
+  buyer_used?: number;
+  buyer_remaining?: number;
+  can_buyer_counter?: boolean;
+  /** True when seller (or party) ended negotiation for this listing + buyer. */
+  negotiation_ended?: boolean;
 }
 
 export interface MarketplaceListingPlanTransaction {
@@ -2246,11 +2272,7 @@ export function getBuyerAuctionDeposits(locale: string) {
 export function createBuyerAuctionDeposit(locale: string, amount: number) {
   return marketplaceRequest<{
     payment: BuyerAuctionDepositPayment;
-    catalog?: {
-      methods: MarketplaceAuctionDepositMethod[];
-      bank_instructions?: MarketplaceAuctionBankInstructions;
-      cash_cheque_collection_fee_amount?: string;
-    };
+    catalog?: MarketplaceAuctionDepositCatalog;
     cash_cheque_collection_fee_amount?: string;
     auction_capacity?: AuctionCapacity;
   }>("/auction-deposits", {
@@ -2265,7 +2287,7 @@ export function createBuyerAuctionDeposit(locale: string, amount: number) {
 export function confirmBuyerAuctionDeposit(
   paymentId: string | number,
   locale: string,
-  paymentReference?: string,
+  payload: { amount: number; payment_reference?: string },
 ) {
   return marketplaceRequest<{
     payment?: BuyerAuctionDepositPayment;
@@ -2276,7 +2298,10 @@ export function confirmBuyerAuctionDeposit(
     auth: "required",
     contentType: "application/json",
     body: JSON.stringify({
-      payment_reference: paymentReference,
+      amount: payload.amount,
+      ...(payload.payment_reference
+        ? { payment_reference: payload.payment_reference }
+        : {}),
     }),
   });
 }
@@ -2284,14 +2309,13 @@ export function confirmBuyerAuctionDeposit(
 export function createBuyerAuctionDepositCheckout(
   paymentId: string | number,
   locale: string,
-  options: { payment_token?: string; amount?: number } = {},
+  options: { amount: number; payment_token?: string },
 ) {
-  const body: Record<string, string | number> = {};
+  const body: Record<string, string | number> = {
+    amount: options.amount,
+  };
   if (options.payment_token != null) {
     body.payment_token = options.payment_token;
-  }
-  if (options.amount != null && Number.isFinite(options.amount)) {
-    body.amount = options.amount;
   }
 
   return marketplaceRequest<{
@@ -2311,7 +2335,7 @@ export function createBuyerAuctionDepositCheckout(
 export function payBuyerAuctionDepositWithWallet(
   paymentId: string | number,
   locale: string,
-  payload: { amount?: number } = {},
+  payload: { amount: number },
 ) {
   return marketplaceRequest<{
     payment?: BuyerAuctionDepositPayment;
@@ -2323,11 +2347,7 @@ export function payBuyerAuctionDepositWithWallet(
     locale,
     auth: "required",
     contentType: "application/json",
-    body: JSON.stringify(
-      payload.amount != null && Number.isFinite(payload.amount)
-        ? { amount: payload.amount }
-        : {},
-    ),
+    body: JSON.stringify({ amount: payload.amount }),
   });
 }
 
@@ -2335,13 +2355,15 @@ export function getBuyerAuctionDepositMethods(
   paymentId: string | number,
   locale: string,
 ) {
-  return marketplaceRequest<{
-    methods: MarketplaceAuctionDepositMethod[];
-    bank_instructions: MarketplaceAuctionBankInstructions;
-    cash_cheque_collection_fee_amount?: string;
-    amount?: number | string;
-    reference?: string;
-  }>(`/auction-deposits/${paymentId}/methods`, {
+  return marketplaceRequest<
+    MarketplaceAuctionDepositCatalog & {
+      /** Some responses nest the same shape under `catalog`. */
+      catalog?: MarketplaceAuctionDepositCatalog;
+      amount?: number | string;
+      deposit_amount?: number | string;
+      reference?: string;
+    }
+  >(`/auction-deposits/${paymentId}/methods`, {
     locale,
     auth: "required",
   });
@@ -2351,12 +2373,14 @@ export function submitBuyerAuctionBankProof(
   paymentId: string | number,
   locale: string,
   payload: {
+    amount: number;
     payment_reference: string;
     notes?: string;
     evidence: File;
   },
 ) {
   const formData = new FormData();
+  formData.append("amount", String(payload.amount));
   formData.append("payment_reference", payload.payment_reference);
   if (payload.notes) formData.append("notes", payload.notes);
   formData.append("evidence", payload.evidence);
@@ -2376,6 +2400,7 @@ export function submitBuyerAuctionManagersCheck(
   paymentId: string | number,
   locale: string,
   payload: {
+    amount: number;
     check_number: string;
     collection_slot_id: number | string;
     pickup_address: string;
@@ -2390,7 +2415,13 @@ export function submitBuyerAuctionManagersCheck(
     locale,
     auth: "required",
     contentType: "application/json",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      amount: payload.amount,
+      check_number: payload.check_number,
+      collection_slot_id: payload.collection_slot_id,
+      pickup_address: payload.pickup_address,
+      ...(payload.notes ? { notes: payload.notes } : {}),
+    }),
   });
 }
 
@@ -2398,6 +2429,7 @@ export function submitBuyerAuctionCashCollection(
   paymentId: string | number,
   locale: string,
   payload: {
+    amount: number;
     collection_slot_id: number | string;
     pickup_address: string;
     notes?: string;
@@ -2411,7 +2443,12 @@ export function submitBuyerAuctionCashCollection(
     locale,
     auth: "required",
     contentType: "application/json",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      amount: payload.amount,
+      collection_slot_id: payload.collection_slot_id,
+      pickup_address: payload.pickup_address,
+      ...(payload.notes ? { notes: payload.notes } : {}),
+    }),
   });
 }
 

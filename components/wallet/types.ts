@@ -19,6 +19,7 @@ export type WalletTransactionKind =
 export interface WalletTransaction {
   id: string | number;
   kind: WalletTransactionKind | string;
+  typeLabel?: string;
   reference: string;
   source?: WalletFundingSource | string;
   amount: number;

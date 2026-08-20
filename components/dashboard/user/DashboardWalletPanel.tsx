@@ -11,12 +11,14 @@ import WalletActivityCard from "@/components/wallet/WalletActivityCard";
 import WalletBenefitsCard from "@/components/wallet/WalletBenefitsCard";
 import FundsOnHoldCard from "@/components/wallet/FundsOnHoldCard";
 import CashOutModal from "@/components/wallet/CashOutModal";
+import CashOutRequestsCard from "@/components/wallet/CashOutRequestsCard";
 import ReleaseFundsModal from "@/components/wallet/ReleaseFundsModal";
 import { createWalletCashOut } from "@/services/wallet";
 import {
   createBuyerAuctionDepositReleaseRequest,
   toAuctionCapacityNumber,
 } from "@/services/marketplace";
+import { WALLET_REFRESH_EVENT } from "@/lib/auction-notification-actions";
 
 export default function DashboardWalletPanel({
   balanceHidden,
@@ -62,6 +64,7 @@ export default function DashboardWalletPanel({
             transactions={wallet.transactions}
             loading={wallet.loading}
           />
+          <CashOutRequestsCard onChanged={() => void wallet.refresh()} />
         </div>
         <div className="space-y-6">
           <WalletBenefitsCard
@@ -93,6 +96,7 @@ export default function DashboardWalletPanel({
         onConfirm={async (payload) => {
           await createWalletCashOut(locale, payload);
           await wallet.refresh();
+          window.dispatchEvent(new Event(WALLET_REFRESH_EVENT));
           toast.success(t("wallet.cash_out_success"));
         }}
       />

@@ -61,6 +61,12 @@ export function handleAuctionNotificationSideEffects(
       break;
     }
 
+    case "wallet_cash_out_completed":
+    case "wallet_cash_out_rejected":
+    case "wallet_cash_out_cancelled":
+      window.dispatchEvent(new Event(WALLET_REFRESH_EVENT));
+      break;
+
     case "auction_won":
       window.dispatchEvent(new Event(AUCTION_CAPACITY_REFRESH_EVENT));
       break;

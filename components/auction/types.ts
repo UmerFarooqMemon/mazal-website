@@ -50,15 +50,17 @@ export type DepositPaymentMethod =
 export type DepositPaymentMode = "single" | "split";
 
 export type DepositPaymentSubmitPayload =
-  | { method: "card" }
+  | { method: "card"; amount: number }
   | {
       method: "bank";
+      amount: number;
       payment_reference: string;
       notes?: string;
       evidence: File;
     }
   | {
       method: "managers_check";
+      amount: number;
       check_number: string;
       collection_slot_id: number;
       pickup_address: string;
@@ -66,6 +68,7 @@ export type DepositPaymentSubmitPayload =
     }
   | {
       method: "cash";
+      amount: number;
       collection_slot_id: number;
       pickup_address: string;
       notes?: string;

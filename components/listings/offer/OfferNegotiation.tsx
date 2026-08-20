@@ -52,6 +52,28 @@ function offerAmount(offer: MarketplaceOffer) {
   return Number(offer.amount) || 0;
 }
 
+/** Product rule: each side may send up to 5 counters (never below 5 on FE). */
+const COUNTER_OFFER_CAP = 5;
+
+function resolveCounterLimit(apiLimit?: number | null, themeLimit?: number) {
+  const fromApi = typeof apiLimit === "number" && apiLimit > 0 ? apiLimit : 0;
+  const fromTheme =
+    typeof themeLimit === "number" && themeLimit > 0 ? themeLimit : 0;
+  return Math.max(COUNTER_OFFER_CAP, fromApi, fromTheme);
+}
+
+function isSellerSideOffer(offer: MarketplaceOffer) {
+  return offer.initiated_by === "seller" || Boolean(offer.is_seller_counter);
+}
+
+function isNegotiationEndedOffer(offer: MarketplaceOffer) {
+  const status = String(offer.status || "").toLowerCase();
+  if (status === "negotiation_ended") return true;
+  if (status !== "rejected") return false;
+  const note = String(offer.decision_note || "").toLowerCase();
+  return note.includes("negotiation ended");
+}
+
 type ComposeMode = "counter" | "final";
 
 export default function OfferNegotiation() {
@@ -91,30 +113,40 @@ export default function OfferNegotiation() {
         .reverse()
         .find((offer) => offer.status === "pending");
       const buyerId = pending?.buyer?.id;
-      const used = nextOffers.filter(
-        (offer) =>
-          offer.initiated_by === "seller" || offer.is_seller_counter,
-      ).length;
-      // Prefer seller counters for the active buyer thread when known.
-      const usedForBuyer =
+
+      const thread = (list: MarketplaceOffer[]) =>
         buyerId != null
-          ? nextOffers.filter(
-              (offer) =>
-                (offer.initiated_by === "seller" || offer.is_seller_counter) &&
-                offer.buyer?.id === buyerId,
-            ).length
-          : used;
-      const remaining = Math.max(0, limit - usedForBuyer);
-      const hasPendingFinal = nextOffers.some(
+          ? list.filter((offer) => offer.buyer?.id === buyerId)
+          : list;
+
+      const scoped = thread(nextOffers);
+      const negotiationEnded = scoped.some(isNegotiationEndedOffer);
+
+      const sellerOffers = scoped.filter(isSellerSideOffer);
+      const buyerOffers = scoped.filter((offer) => !isSellerSideOffer(offer));
+      const sellerUsed = sellerOffers.length;
+      // First buyer offer starts the thread; later buyer offers are counters.
+      const buyerCounterUsed =
+        buyerOffers.length <= 1 ? 0 : buyerOffers.length - 1;
+
+      const sellerRemaining = Math.max(0, limit - sellerUsed);
+      const buyerRemaining = Math.max(0, limit - buyerCounterUsed);
+      const hasPendingFinal = scoped.some(
         (offer) => offer.status === "pending" && offer.is_final,
       );
+      const canNegotiate = !hasPendingFinal && !negotiationEnded;
+
       return {
         limit,
-        used: usedForBuyer,
-        remaining,
-        can_counter: remaining > 0 && !hasPendingFinal,
-        can_negotiate: !hasPendingFinal,
+        used: sellerUsed,
+        remaining: sellerRemaining,
+        can_counter: sellerRemaining > 0 && canNegotiate,
+        can_negotiate: canNegotiate,
         has_pending_final: hasPendingFinal,
+        buyer_used: buyerCounterUsed,
+        buyer_remaining: buyerRemaining,
+        can_buyer_counter: buyerRemaining > 0 && canNegotiate,
+        negotiation_ended: negotiationEnded,
       } satisfies MarketplaceCounterOfferQuota;
     },
     [],
@@ -131,7 +163,7 @@ export default function OfferNegotiation() {
       setCounterAmount(Math.max(1, Math.round(price * 0.98)));
 
       let nextOffers: MarketplaceOffer[] = [];
-      let apiLimit = counterOfferLimit;
+      let apiLimit: number | null = null;
 
       if (nextListing.is_owner) {
         const offersResponse = await getListingOffers(params.id, locale);
@@ -146,8 +178,9 @@ export default function OfferNegotiation() {
         );
       }
 
+      const limit = resolveCounterLimit(apiLimit, counterOfferLimit);
       setOffers(nextOffers);
-      setQuota(deriveQuota(nextOffers, apiLimit));
+      setQuota(deriveQuota(nextOffers, limit));
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to load offers.",
@@ -193,24 +226,37 @@ export default function OfferNegotiation() {
   );
 
   const effectiveQuota = quota || {
-    limit: counterOfferLimit,
+    limit: resolveCounterLimit(null, counterOfferLimit),
     used: 0,
-    remaining: counterOfferLimit,
+    remaining: resolveCounterLimit(null, counterOfferLimit),
     can_counter: true,
     can_negotiate: true,
     has_pending_final: false,
+    buyer_used: 0,
+    buyer_remaining: resolveCounterLimit(null, counterOfferLimit),
+    can_buyer_counter: true,
+    negotiation_ended: false,
   };
 
   const hasPendingFinal =
     Boolean(latestPending?.is_final) || effectiveQuota.has_pending_final;
-  const canNegotiate = effectiveQuota.can_negotiate && !hasPendingFinal;
-  const canCounter = effectiveQuota.can_counter && canNegotiate;
-  const hasReachedCounterLimit = effectiveQuota.remaining <= 0;
+  const negotiationEnded = Boolean(effectiveQuota.negotiation_ended);
+  const canNegotiate =
+    effectiveQuota.can_negotiate && !hasPendingFinal && !negotiationEnded;
+  const canSellerCounter = effectiveQuota.can_counter && canNegotiate;
+  const canBuyerCounter =
+    Boolean(effectiveQuota.can_buyer_counter) && canNegotiate;
+  const hasReachedSellerCounterLimit = effectiveQuota.remaining <= 0;
+  const hasReachedBuyerCounterLimit =
+    (effectiveQuota.buyer_remaining ?? 0) <= 0;
 
   const counterLimitMessage = t("offer.counter_limit_reached").replace(
     "{limit}",
     String(effectiveQuota.limit),
   );
+  const negotiationEndedMessage =
+    t("offer.negotiation_ended_locked") ||
+    "Negotiation was ended on this plate. No further offers are allowed.";
   const finalLockedMessage =
     t("offer.final_locked") ||
     "A final offer is pending. Further negotiation is closed — accept or end the negotiation.";
@@ -221,29 +267,31 @@ export default function OfferNegotiation() {
     listing?.can_make_offer !== false &&
     !latestPending &&
     !acceptedOffer &&
-    canNegotiate;
+    canNegotiate &&
+    !negotiationEnded;
 
   const canBuyAtAsking = canBuyerStartNegotiation && isDirectListing;
-
-  const canBuyerCompose = canBuyerStartNegotiation;
 
   const canSellerActOn =
     isOwner &&
     latestPending &&
     latestPending.initiated_by !== "seller" &&
-    !latestPending.is_seller_counter;
+    !latestPending.is_seller_counter &&
+    !negotiationEnded;
 
   const canBuyerActOn =
     !isOwner &&
     latestPending &&
     (latestPending.initiated_by === "seller" ||
-      latestPending.is_seller_counter);
+      latestPending.is_seller_counter) &&
+    !negotiationEnded;
 
   const canBuyerWithdrawOwn =
     !isOwner &&
     latestPending &&
     latestPending.initiated_by !== "seller" &&
-    !latestPending.is_seller_counter;
+    !latestPending.is_seller_counter &&
+    !negotiationEnded;
 
   const offerTitle = (offer: MarketplaceOffer, index: number) => {
     if (offer.is_final) {
@@ -313,30 +361,45 @@ export default function OfferNegotiation() {
   };
 
   const handleSendBuyerOffer = async () => {
+    if (negotiationEnded) {
+      toast.error(negotiationEndedMessage);
+      return;
+    }
     if (!canNegotiate) {
       toast.error(finalLockedMessage);
+      return;
+    }
+    const isCountering =
+      Boolean(latestPending) ||
+      offers.some((offer) => !isSellerSideOffer(offer));
+    if (isCountering && !canBuyerCounter) {
+      toast.error(counterLimitMessage);
       return;
     }
     if (draftAmount < 1) {
       toast.error(t("offer.invalid_amount") || "Enter a valid offer amount.");
       return;
     }
+    const buyerUsed = effectiveQuota.buyer_used ?? 0;
+    const markFinal =
+      buyerFinal ||
+      (isCountering && buyerUsed + 1 >= effectiveQuota.limit);
     setActionLoading(true);
     try {
       const response = await submitOffer(
         params.id,
         {
           amount: draftAmount,
-          message: buyerFinal
+          message: markFinal
             ? t("offer.final_offer") || "Final offer"
             : t("offer.counter_offer"),
-          is_final: buyerFinal,
+          is_final: markFinal,
         },
         locale,
       );
       applyQuotaFromResponse(response.data.counter_offer_quota);
       toast.success(
-        buyerFinal
+        markFinal
           ? t("offer.final_sent") || "Final offer submitted successfully."
           : t("offer.sent_success") || "Offer submitted successfully.",
       );
@@ -355,7 +418,11 @@ export default function OfferNegotiation() {
 
   const handleSellerCounter = async () => {
     if (!latestPending) return;
-    if (composeMode === "counter" && !canCounter) {
+    if (negotiationEnded) {
+      toast.error(negotiationEndedMessage);
+      return;
+    }
+    if (composeMode === "counter" && !canSellerCounter) {
       toast.error(
         hasPendingFinal ? finalLockedMessage : counterLimitMessage,
       );
@@ -469,7 +536,11 @@ export default function OfferNegotiation() {
   };
 
   const openSellerForm = (mode: ComposeMode, offer: MarketplaceOffer) => {
-    if (mode === "counter" && !canCounter) {
+    if (negotiationEnded) {
+      toast.error(negotiationEndedMessage);
+      return;
+    }
+    if (mode === "counter" && !canSellerCounter) {
       toast.error(
         hasPendingFinal ? finalLockedMessage : counterLimitMessage,
       );
@@ -482,6 +553,22 @@ export default function OfferNegotiation() {
     setComposeMode(mode);
     setCounterAmount(Math.max(1, Math.round(offerAmount(offer) * 1.02)));
     setShowCounterForm(true);
+  };
+
+  const openBuyerCounterForm = (offer: MarketplaceOffer) => {
+    if (negotiationEnded) {
+      toast.error(negotiationEndedMessage);
+      return;
+    }
+    if (!canBuyerCounter) {
+      toast.error(
+        hasPendingFinal ? finalLockedMessage : counterLimitMessage,
+      );
+      return;
+    }
+    setBuyerFinal(false);
+    setDraftAmount(Math.max(1, Math.round(offerAmount(offer) * 0.98)));
+    setComposeOpen(true);
   };
 
   if (loading) {
@@ -539,6 +626,19 @@ export default function OfferNegotiation() {
             }}
           >
             {unavailableMessage}
+          </p>
+        )}
+
+        {negotiationEnded && !isOwner && (
+          <p
+            className="mb-8 rounded-xl border px-4 py-3 text-sm leading-relaxed text-center"
+            style={{
+              borderColor: getColor("border"),
+              backgroundColor: getColor("surface"),
+              color: getColor("error"),
+            }}
+          >
+            {negotiationEndedMessage}
           </p>
         )}
 
@@ -610,7 +710,7 @@ export default function OfferNegotiation() {
                       {t("offer.negotiate")}
                     </Button>
                   </div>
-                  {hasReachedCounterLimit && (
+                  {hasReachedBuyerCounterLimit && (
                     <p
                       className="text-xs text-start"
                       style={{ color: getColor("error") }}
@@ -618,20 +718,29 @@ export default function OfferNegotiation() {
                       {counterLimitMessage}
                     </p>
                   )}
-                  {!hasReachedCounterLimit && effectiveQuota.used > 0 && (
+                  {!hasReachedBuyerCounterLimit &&
+                    (effectiveQuota.buyer_used ?? 0) > 0 && (
                     <p
                       className="text-xs text-start"
                       style={{ color: getColor("mutedText") }}
                     >
                       {t("offer.counter_limit_remaining").replace(
                         "{remaining}",
-                        String(effectiveQuota.remaining),
+                        String(effectiveQuota.buyer_remaining ?? 0),
                       )}
                     </p>
                   )}
                 </div>
               )}
-              {!isOwner && hasPendingFinal && !canBuyerStartNegotiation && (
+              {!isOwner && negotiationEnded && !canBuyerStartNegotiation && (
+                <p
+                  className="text-xs text-start"
+                  style={{ color: getColor("error") }}
+                >
+                  {negotiationEndedMessage}
+                </p>
+              )}
+              {!isOwner && hasPendingFinal && !canBuyerStartNegotiation && !negotiationEnded && (
                 <p
                   className="text-xs text-start"
                   style={{ color: getColor("error") }}
@@ -760,7 +869,7 @@ export default function OfferNegotiation() {
                             leftIcon={
                               <RefreshCw className="w-4 h-4" strokeWidth={2} />
                             }
-                            disabled={actionLoading || !canCounter}
+                            disabled={actionLoading || !canSellerCounter}
                             onClick={() => openSellerForm("counter", offer)}
                           >
                             {t("offer.negotiate")}
@@ -779,18 +888,40 @@ export default function OfferNegotiation() {
                             size="lg"
                             className="flex-1"
                             disabled={actionLoading}
+                            onClick={() => handleEndNegotiation(offer)}
+                          >
+                            {t("offer.end_negotiation")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className="flex-1"
+                            disabled={actionLoading}
                             onClick={() => handleReject(offer)}
                           >
                             {t("offer.reject") || "Reject"}
                           </Button>
                         </div>
                       )}
-                      {hasReachedCounterLimit && !isFinalPending && (
+                      {hasReachedSellerCounterLimit && !isFinalPending && (
                         <p
                           className="text-xs text-start"
                           style={{ color: getColor("error") }}
                         >
                           {counterLimitMessage}
+                        </p>
+                      )}
+                      {!hasReachedSellerCounterLimit &&
+                        effectiveQuota.used > 0 &&
+                        !isFinalPending && (
+                        <p
+                          className="text-xs text-start"
+                          style={{ color: getColor("mutedText") }}
+                        >
+                          {t("offer.counter_limit_remaining").replace(
+                            "{remaining}",
+                            String(effectiveQuota.remaining),
+                          )}
                         </p>
                       )}
                       {isFinalPending && (
@@ -804,7 +935,7 @@ export default function OfferNegotiation() {
                     </div>
                   )}
 
-                  {isLatestPending && canBuyerActOn && (
+                  {isLatestPending && canBuyerActOn && !composeOpen && (
                     <div className="space-y-3">
                       <div className="flex flex-col sm:flex-row gap-3">
                         <Button
@@ -832,6 +963,22 @@ export default function OfferNegotiation() {
                               variant="outline"
                               size="lg"
                               className="flex-1"
+                              style={{
+                                borderColor: getColor("primary"),
+                                color: getColor("primary"),
+                              }}
+                              leftIcon={
+                                <RefreshCw className="w-4 h-4" strokeWidth={2} />
+                              }
+                              disabled={actionLoading || !canBuyerCounter}
+                              onClick={() => openBuyerCounterForm(offer)}
+                            >
+                              {t("offer.counter_offer")}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              className="flex-1"
                               disabled={actionLoading}
                               onClick={() => handleReject(offer)}
                             >
@@ -842,13 +989,34 @@ export default function OfferNegotiation() {
                               size="lg"
                               className="flex-1"
                               disabled={actionLoading}
-                              onClick={() => handleWithdraw(offer)}
+                              onClick={() => handleEndNegotiation(offer)}
                             >
                               {t("offer.end_negotiation")}
                             </Button>
                           </>
                         )}
                       </div>
+                      {hasReachedBuyerCounterLimit && !isFinalPending && (
+                        <p
+                          className="text-xs text-start"
+                          style={{ color: getColor("error") }}
+                        >
+                          {counterLimitMessage}
+                        </p>
+                      )}
+                      {!hasReachedBuyerCounterLimit &&
+                        (effectiveQuota.buyer_used ?? 0) > 0 &&
+                        !isFinalPending && (
+                        <p
+                          className="text-xs text-start"
+                          style={{ color: getColor("mutedText") }}
+                        >
+                          {t("offer.counter_limit_remaining").replace(
+                            "{remaining}",
+                            String(effectiveQuota.buyer_remaining ?? 0),
+                          )}
+                        </p>
+                      )}
                       {isFinalPending && (
                         <p
                           className="text-xs text-start"
@@ -891,7 +1059,7 @@ export default function OfferNegotiation() {
               );
             })}
 
-            {!isOwner && composeOpen && canBuyerCompose && (
+            {!isOwner && composeOpen && !negotiationEnded && (
               <div
                 className="rounded-2xl border p-5 md:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
                 style={{

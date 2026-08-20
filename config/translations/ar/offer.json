@@ -57,5 +57,6 @@
   "view_negotiation": "عرض التفاوض",
   "load_error": "فشل تحميل العروض.",
   "counter_limit_reached": "لقد وصلت إلى الحد الأقصى البالغ {limit} عروض مضادة لهذه القائمة.",
-  "counter_limit_remaining": "متبقٍ {remaining} عرض/عروض مضادة."
+  "counter_limit_remaining": "متبقٍ {remaining} عرض/عروض مضادة.",
+  "negotiation_ended_locked": "تم إنهاء التفاوض على هذه اللوحة. لا يُسمح بمزيد من العروض أو التفاوض."
 }

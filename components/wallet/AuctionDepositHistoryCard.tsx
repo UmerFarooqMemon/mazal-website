@@ -12,6 +12,10 @@ import {
   toAuctionCapacityNumber,
   type BuyerAuctionDepositPayment,
 } from "@/services/marketplace";
+import {
+  formatWalletMethodLabel,
+  formatWalletStatusLabel,
+} from "@/lib/wallet-display";
 
 export default function AuctionDepositHistoryCard() {
   const { t, locale } = useLocale();
@@ -101,8 +105,18 @@ export default function AuctionDepositHistoryCard() {
                   />
                 </p>
                 <p className="text-xs" style={{ color: getColor("mutedText") }}>
-                  {payment.status_label || payment.status || "—"}
-                  {payment.method ? ` · ${payment.method}` : ""}
+                  {formatWalletStatusLabel(
+                    payment.status,
+                    payment.status_label,
+                    t,
+                  )}
+                  {payment.method || payment.method_label
+                    ? ` · ${formatWalletMethodLabel(
+                        payment.method,
+                        payment.method_label,
+                        t,
+                      )}`
+                    : ""}
                 </p>
               </div>
               {payment.created_at && (

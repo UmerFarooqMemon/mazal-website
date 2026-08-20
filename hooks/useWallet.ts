@@ -36,6 +36,7 @@ function mapTransaction(tx: WalletLedgerTransaction): WalletTransaction {
   return {
     id: tx.id,
     kind: tx.type,
+    typeLabel: tx.type_label || undefined,
     reference: tx.description_short || tx.description || tx.type_label || tx.type,
     amount: Math.abs(toWalletNumber(tx.amount)),
     signedAmount: toWalletNumber(tx.signed_amount),

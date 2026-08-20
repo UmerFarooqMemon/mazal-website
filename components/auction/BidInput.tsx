@@ -46,7 +46,8 @@ export default function BidInput({
   const { getColor } = useTheme();
   const capacityState = useOptionalAuctionCapacity();
   const remainingLimit = toAuctionCapacityNumber(
-    capacityState?.capacity?.remaining_bidding_limit,
+    capacityState?.capacity?.remaining_bidding_limit ??
+      auction.viewer_auction_capacity?.remaining_bidding_limit,
   );
   const minNextBid = toNumber(auction.min_next_bid);
   const minIncrement = toNumber(auction.min_bid_increment);
@@ -64,15 +65,20 @@ export default function BidInput({
   const [error, setError] = useState<string | null>(null);
   const [consecutiveBidBlocked, setConsecutiveBidBlocked] = useState(false);
 
+  // Own-bid lock: never allow bidding while this viewer holds the high bid.
   const isHighestBidder =
     consecutiveBidBlocked || auction.viewer_is_highest_bidder === true;
-  const apiBlocksBid = auction.can_place_bid === false || consecutiveBidBlocked;
-  const allowBid = canBid && !apiBlocksBid;
+  // Global capacity unlocks bidding even when per-auction deposit/registration
+  // left can_place_bid false — but never overrides the own-bid lock above.
+  const hasGlobalBiddingLimit = remainingLimit > 0;
+  const registrationBlocksBid =
+    auction.can_place_bid === false && !hasGlobalBiddingLimit;
+  const allowBid = canBid && !isHighestBidder && !registrationBlocksBid;
   const blockReason = !canBid
     ? disabledReason
     : isHighestBidder
       ? t("auctions.highest_bidder_wait")
-      : apiBlocksBid
+      : registrationBlocksBid
         ? t("auctions.cannot_place_bid")
         : disabledReason;
 

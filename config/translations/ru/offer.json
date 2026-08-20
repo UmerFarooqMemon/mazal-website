@@ -57,5 +57,6 @@
   "view_negotiation": "Смотреть переговоры",
   "load_error": "Не удалось загрузить офферы.",
   "counter_limit_reached": "Достигнут лимит в {limit} контрпредложений по этому лоту.",
-  "counter_limit_remaining": "Осталось контрпредложений: {remaining}."
+  "counter_limit_remaining": "Осталось контрпредложений: {remaining}.",
+  "negotiation_ended_locked": "Переговоры по этому номеру завершены. Дальнейшие предложения и переговоры запрещены."
 }

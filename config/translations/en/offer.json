@@ -58,6 +58,7 @@
   "load_error": "Failed to load offers.",
   "counter_limit_reached": "You have reached the maximum of {limit} counter offers for this listing.",
   "counter_limit_remaining": "{remaining} counter offer(s) remaining.",
+  "negotiation_ended_locked": "Negotiation was ended on this plate. No further offers or negotiation are allowed.",
   "download_invoice": "Download invoice",
   "send_gift": "Send as gift",
   "paid_progress": "Paid",

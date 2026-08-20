@@ -57,5 +57,6 @@
   "view_negotiation": "查看议价",
   "load_error": "报价加载失败。",
   "counter_limit_reached": "您已达到此挂牌最多 {limit} 次还价的上限。",
-  "counter_limit_remaining": "剩余 {remaining} 次还价。"
+  "counter_limit_remaining": "剩余 {remaining} 次还价。",
+  "negotiation_ended_locked": "此车牌的议价已结束。不允许再出价或继续议价。"
 }

@@ -17,5 +17,6 @@
   "chat_load_failed": "Failed to load messages.",
   "chat_send_failed": "Failed to send message.",
   "contact_support": "Contact support",
-  "release_context_subject": "Deposit release question"
+  "release_context_subject": "Deposit release question",
+  "cash_out_context_subject": "Cashout question"
 }

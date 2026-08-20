@@ -3,6 +3,7 @@ export { default as WalletActivityCard } from "./WalletActivityCard";
 export { default as WalletBenefitsCard } from "./WalletBenefitsCard";
 export { default as FundsOnHoldCard } from "./FundsOnHoldCard";
 export { default as CashOutModal } from "./CashOutModal";
+export { default as CashOutRequestsCard } from "./CashOutRequestsCard";
 export { default as ReleaseFundsModal } from "./ReleaseFundsModal";
 export { default as WalletDialog } from "./WalletDialog";
 export { default as WalletMethodOption } from "./WalletMethodOption";

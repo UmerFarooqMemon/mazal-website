@@ -13,6 +13,7 @@ import WalletActivityCard from "@/components/wallet/WalletActivityCard";
 import WalletBenefitsCard from "@/components/wallet/WalletBenefitsCard";
 import FundsOnHoldCard from "@/components/wallet/FundsOnHoldCard";
 import CashOutModal from "@/components/wallet/CashOutModal";
+import CashOutRequestsCard from "@/components/wallet/CashOutRequestsCard";
 import ReleaseFundsModal from "@/components/wallet/ReleaseFundsModal";
 import AuctionDepositHistoryCard from "@/components/wallet/AuctionDepositHistoryCard";
 import { DirhamAmount } from "@/components/ui";
@@ -23,6 +24,8 @@ import {
   toAuctionCapacityNumber,
   type BuyerAuctionDepositReleaseRequest,
 } from "@/services/marketplace";
+import { formatWalletStatusLabel } from "@/lib/wallet-display";
+import { WALLET_REFRESH_EVENT } from "@/lib/auction-notification-actions";
 
 export default function WalletPage() {
   const { t, locale } = useLocale();
@@ -98,6 +101,7 @@ export default function WalletPage() {
                 transactions={wallet.transactions}
                 loading={wallet.loading}
               />
+              <CashOutRequestsCard onChanged={() => void wallet.refresh()} />
               <AuctionDepositHistoryCard />
               {releaseRequests.length > 0 && (
                 <div
@@ -134,7 +138,12 @@ export default function WalletPage() {
                             className="text-xs"
                             style={{ color: getColor("mutedText") }}
                           >
-                            {request.status_label || request.status}
+                            {formatWalletStatusLabel(
+                              request.status,
+                              request.status_label,
+                              t,
+                              "release_status",
+                            )}
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-2 shrink-0">
@@ -203,6 +212,7 @@ export default function WalletPage() {
         onConfirm={async (payload) => {
           await createWalletCashOut(locale, payload);
           await wallet.refresh();
+          window.dispatchEvent(new Event(WALLET_REFRESH_EVENT));
           toast.success(t("wallet.cash_out_success"));
         }}
       />

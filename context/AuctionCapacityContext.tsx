@@ -38,7 +38,25 @@ export function AuctionCapacityProvider({ children }: { children: ReactNode }) {
 
   const applyCapacity = useCallback(
     (next: AuctionCapacity | null | undefined) => {
-      if (next) setCapacity(next);
+      if (!next) return;
+      setCapacity((prev) => {
+        if (
+          prev &&
+          String(prev.held_deposit) === String(next.held_deposit) &&
+          String(prev.max_bidding_limit) === String(next.max_bidding_limit) &&
+          String(prev.min_deposit) === String(next.min_deposit) &&
+          String(prev.remaining_bidding_limit) ===
+            String(next.remaining_bidding_limit) &&
+          String(prev.reserved_amount) === String(next.reserved_amount) &&
+          String(prev.pending_release_amount) ===
+            String(next.pending_release_amount) &&
+          prev.multiplier === next.multiplier &&
+          prev.can_request_release === next.can_request_release
+        ) {
+          return prev;
+        }
+        return next;
+      });
     },
     [],
   );
