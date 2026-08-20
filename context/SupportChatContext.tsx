@@ -6,11 +6,9 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/context/LocaleContext";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -67,14 +65,12 @@ const MAX_OPEN_WINDOWS = 3;
 export function SupportChatProvider({ children }: { children: ReactNode }) {
   const { locale } = useLocale();
   const { isAuthenticated } = useAuth();
-  const searchParams = useSearchParams();
   const [conversations, setConversations] = useState<SupportConversation[]>(
     [],
   );
   const [openWindows, setOpenWindows] = useState<OpenChatWindow[]>([]);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [loadingInbox, setLoadingInbox] = useState(false);
-  const handledSupportParam = useRef<string | null>(null);
 
   const refreshInbox = useCallback(async () => {
     if (!isAuthenticated) {
@@ -181,19 +177,6 @@ export function SupportChatProvider({ children }: { children: ReactNode }) {
     },
     [locale, openConversation, refreshInbox],
   );
-
-  useEffect(() => {
-    const supportId = searchParams.get("support");
-    if (!supportId || !isAuthenticated) return;
-    if (handledSupportParam.current === supportId) return;
-
-    handledSupportParam.current = supportId;
-    const conversationId = Number(supportId);
-    if (!Number.isFinite(conversationId)) return;
-
-    const match = conversations.find((item) => item.id === conversationId);
-    openConversation(conversationId, match?.subject || "Support");
-  }, [conversations, isAuthenticated, openConversation, searchParams]);
 
   useEffect(() => {
     const handler = (event: Event) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MessageCircle, Plus, X } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -26,13 +26,19 @@ export default function SupportChatDock() {
     startConversation,
   } = useSupportChat();
 
+  const [mounted, setMounted] = useState(false);
   const [newSubject, setNewSubject] = useState("");
   const [newBody, setNewBody] = useState("");
   const [creating, setCreating] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!featureFlags.auctions || !isAuthenticated) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Auth is client-only (localStorage); wait for mount to avoid hydration mismatch.
+  if (!mounted || !featureFlags.auctions || !isAuthenticated) {
     return null;
   }
 
