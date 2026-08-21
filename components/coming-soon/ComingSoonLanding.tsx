@@ -102,11 +102,11 @@ function formatLaunchDate(iso: string) {
   };
 }
 
-const UNIT_KEYS: (keyof TimeLeft)[] = [
-  "days",
-  "hours",
-  "minutes",
-  "seconds",
+const UNITS: { key: keyof TimeLeft; label: string }[] = [
+  { key: "days", label: "DAYS" },
+  { key: "hours", label: "HOURS" },
+  { key: "minutes", label: "MINUTES" },
+  { key: "seconds", label: "SECONDS" },
 ];
 
 const INTRO_ROLL_MS = 1400;
@@ -306,7 +306,7 @@ export default function ComingSoonLanding() {
           </div>
         ) : (
           <div className="mt-12 grid w-full max-w-[1280px] grid-cols-4 gap-2 sm:mt-16 sm:gap-4 md:mt-20 md:gap-6">
-            {UNIT_KEYS.map((key, unitIndex) => (
+            {UNITS.map(({ key, label }, unitIndex) => (
               <div key={key} className="flex flex-col items-center text-center">
                 <span
                   className={`text-[clamp(2.75rem,11vw,11.875rem)] font-medium leading-none tracking-[0.06em] tabular-nums ${
@@ -326,6 +326,9 @@ export default function ComingSoonLanding() {
                   ) : (
                     pad2(timeLeft[key])
                   )}
+                </span>
+                <span className="mt-3 text-[clamp(0.65rem,1.6vw,1.5rem)] font-semibold uppercase tracking-[0.08em] text-[#f1f9ef] sm:mt-5">
+                  {label}
                 </span>
               </div>
             ))}
