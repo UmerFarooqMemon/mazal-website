@@ -20,4 +20,10 @@ export const featureFlags = {
   ),
   kyc: envEnabled(process.env.NEXT_PUBLIC_SHOW_KYC),
   footer: envEnabled(process.env.NEXT_PUBLIC_SHOW_FOOTER),
+  /** When true, home route shows the coming-soon landing instead of Home V2. */
+  comingSoon: envEnabled(process.env.NEXT_PUBLIC_SHOW_COMING_SOON, false),
 } as const;
+
+/** ISO date/time the coming-soon countdown targets (from .env). */
+export const comingSoonEndAt =
+  process.env.NEXT_PUBLIC_COMING_SOON_END_AT?.trim() || "";

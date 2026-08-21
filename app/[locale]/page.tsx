@@ -7,8 +7,14 @@ import {
 import HomeV2Escrow from "@/components/home-v2/HomeV2Escrow";
 import HomeV2Partners from "@/components/home-v2/HomeV2Partners";
 import HomeV2CTA from "@/components/home-v2/HomeV2CTA";
+import ComingSoonLanding from "@/components/coming-soon/ComingSoonLanding";
+import { featureFlags } from "@/config/featureFlags";
 
 export default function HomePage() {
+  if (featureFlags.comingSoon) {
+    return <ComingSoonLanding />;
+  }
+
   return (
     <div className="bg-[var(--color-background)]">
       <HomeV2Hero />
