@@ -7,9 +7,17 @@ import Footer from "@/components/layout/Footer";
 import LayoutSkeleton from "@/components/skeletons/layout/LayoutSkeleton";
 import { featureFlags } from "@/config/featureFlags";
 
-function useIsComingSoonHome() {
+function useIsComingSoonPage() {
   const pathname = usePathname();
   const { locale } = useLocale();
+  const comingSoonPath = `/${locale}/comingsoon`;
+  if (
+    pathname === comingSoonPath ||
+    pathname === `${comingSoonPath}/`
+  ) {
+    return true;
+  }
+  // Home also shows coming-soon when the feature flag is on.
   if (!featureFlags.comingSoon) return false;
   return pathname === `/${locale}` || pathname === `/${locale}/`;
 }
@@ -17,7 +25,7 @@ function useIsComingSoonHome() {
 export function ConditionalHeader() {
   const { loading: themeLoading } = useTheme();
   const { loading: localeLoading } = useLocale();
-  const hideChrome = useIsComingSoonHome();
+  const hideChrome = useIsComingSoonPage();
 
   if (hideChrome) {
     return null;
@@ -33,7 +41,7 @@ export function ConditionalHeader() {
 export function ConditionalFooter() {
   const { loading: themeLoading } = useTheme();
   const { loading: localeLoading } = useLocale();
-  const hideChrome = useIsComingSoonHome();
+  const hideChrome = useIsComingSoonPage();
 
   if (hideChrome || !featureFlags.footer) {
     return null;
