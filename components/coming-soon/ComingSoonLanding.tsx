@@ -6,6 +6,7 @@ import * as yup from "yup";
 import { comingSoonEndAt } from "@/config/featureFlags";
 import { isValidCountryPhoneNumber } from "@/lib/phone-validation";
 import ComingSoonSuccessModal from "./ComingSoonSuccessModal";
+import { RollingNumber } from "./RollingNumber";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -67,12 +68,52 @@ function pad2(n: number) {
   return n.toString().padStart(2, "0");
 }
 
-const UNITS: { key: keyof TimeLeft; label: string }[] = [
-  { key: "days", label: "DAYS" },
-  { key: "hours", label: "HOURS" },
-  { key: "minutes", label: "MINUTES" },
-  { key: "seconds", label: "SECONDS" },
+function isExpired(targetMs: number) {
+  return Date.now() >= targetMs;
+}
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/** e.g. 2026-09-01 → { line1: "1, September", line2: "2026" } */
+function formatLaunchDate(iso: string) {
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) {
+    return { line1: "1, September", line2: "2026" };
+  }
+  const year = match[1];
+  const monthIndex = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  return {
+    line1: `${day}, ${MONTHS[monthIndex] ?? "September"}`,
+    line2: year,
+  };
+}
+
+const UNIT_KEYS: (keyof TimeLeft)[] = [
+  "days",
+  "hours",
+  "minutes",
+  "seconds",
 ];
+
+const INTRO_ROLL_MS = 1400;
+
+const numberStyle = {
+  backgroundImage: "linear-gradient(180deg, #05dc7f 0%, #027646 100%)",
+} as const;
 
 const FIELD_DEFS = [
   {
@@ -108,6 +149,10 @@ export default function ComingSoonLanding() {
     minutes: 0,
     seconds: 0,
   });
+  /** One-shot slot roll on load only — then plain countdown. */
+  const [introRolling, setIntroRolling] = useState(false);
+  /** After countdown hits zero → show launch date. */
+  const [showLaunchDate, setShowLaunchDate] = useState(false);
   const [values, setValues] = useState<WaitlistFields>({
     fullName: "",
     email: "",
@@ -117,13 +162,64 @@ export default function ComingSoonLanding() {
   const [submitting, setSubmitting] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
 
+  const launchDate = formatLaunchDate(comingSoonEndAt);
+
   useEffect(() => {
     if (!hasValidTarget) return;
 
-    const tick = () => setTimeLeft(getTimeLeft(targetMs));
-    tick();
-    const id = window.setInterval(tick, 1000);
-    return () => window.clearInterval(id);
+    let liveId = 0;
+    let introDoneId = 0;
+    let liveStartId = 0;
+
+    if (isExpired(targetMs)) {
+      setShowLaunchDate(true);
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      return;
+    }
+
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    const startTicking = () => {
+      const tick = () => {
+        if (isExpired(targetMs)) {
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+          setShowLaunchDate(true);
+          if (liveId) window.clearInterval(liveId);
+          return;
+        }
+        setTimeLeft(getTimeLeft(targetMs));
+      };
+      tick();
+      liveId = window.setInterval(tick, 1000);
+    };
+
+    // Snap to real remaining time, then roll into it once on load.
+    setTimeLeft(getTimeLeft(targetMs));
+
+    if (reduced) {
+      startTicking();
+      return () => {
+        if (liveId) window.clearInterval(liveId);
+      };
+    }
+
+    setIntroRolling(true);
+    introDoneId = window.setTimeout(() => {
+      setIntroRolling(false);
+    }, INTRO_ROLL_MS);
+
+    // Start the live ticker after the intro roll finishes.
+    liveStartId = window.setTimeout(() => {
+      startTicking();
+    }, INTRO_ROLL_MS);
+
+    return () => {
+      window.clearTimeout(introDoneId);
+      window.clearTimeout(liveStartId);
+      if (liveId) window.clearInterval(liveId);
+    };
   }, [hasValidTarget, targetMs]);
 
   const setField = (id: keyof WaitlistFields, value: string) => {
@@ -193,24 +289,48 @@ export default function ComingSoonLanding() {
           Some numbers are worth waiting for.
         </h1>
 
-        <div className="mt-12 grid w-full max-w-[1280px] grid-cols-4 gap-2 sm:mt-16 sm:gap-4 md:mt-20 md:gap-6">
-          {UNITS.map(({ key, label }) => (
-            <div key={key} className="flex flex-col items-center text-center">
-              <span
-                className="bg-clip-text text-[clamp(2.75rem,11vw,11.875rem)] font-medium leading-none tracking-[0.06em] text-transparent"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(180deg, #05dc7f 0%, #027646 100%)",
-                }}
-              >
-                {pad2(timeLeft[key])}
-              </span>
-              <span className="mt-3 text-[clamp(0.65rem,1.6vw,1.5rem)] font-semibold uppercase tracking-[0.08em] text-[#f1f9ef] sm:mt-5">
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
+        {showLaunchDate ? (
+          <div className="mt-12 flex w-full max-w-[1280px] flex-col items-center text-center sm:mt-16 md:mt-20">
+            <span
+              className="bg-clip-text text-[clamp(2.75rem,10vw,9rem)] font-medium leading-none tracking-[0.04em] text-transparent"
+              style={numberStyle}
+            >
+              {launchDate.line1}
+            </span>
+            <span
+              className="mt-4 bg-clip-text text-[clamp(2.75rem,10vw,9rem)] font-medium leading-none tracking-[0.06em] text-transparent sm:mt-6"
+              style={numberStyle}
+            >
+              {launchDate.line2}
+            </span>
+          </div>
+        ) : (
+          <div className="mt-12 grid w-full max-w-[1280px] grid-cols-4 gap-2 sm:mt-16 sm:gap-4 md:mt-20 md:gap-6">
+            {UNIT_KEYS.map((key, unitIndex) => (
+              <div key={key} className="flex flex-col items-center text-center">
+                <span
+                  className={`text-[clamp(2.75rem,11vw,11.875rem)] font-medium leading-none tracking-[0.06em] tabular-nums ${
+                    introRolling
+                      ? "text-[#05dc7f]"
+                      : "bg-clip-text text-transparent"
+                  }`}
+                  style={introRolling ? undefined : numberStyle}
+                >
+                  {introRolling ? (
+                    <RollingNumber
+                      value={pad2(timeLeft[key])}
+                      spins={3 + unitIndex}
+                      durationMs={INTRO_ROLL_MS - unitIndex * 80}
+                      staggerMs={60}
+                    />
+                  ) : (
+                    pad2(timeLeft[key])
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <p className="mt-14 max-w-[1018px] text-center text-[clamp(1.125rem,2.4vw,2.25rem)] font-normal uppercase leading-[1.9] tracking-[0.35em] sm:mt-20 sm:tracking-[0.5em] md:mt-24 md:tracking-[0.6em]">
           Soon, there&apos;ll be a new way to own them.
