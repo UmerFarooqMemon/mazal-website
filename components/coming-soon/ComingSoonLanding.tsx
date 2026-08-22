@@ -4,7 +4,10 @@ import { FormEvent, useEffect, useState } from "react";
 import { Montserrat } from "next/font/google";
 import * as yup from "yup";
 import { comingSoonEndAt } from "@/config/featureFlags";
-import { isValidCountryPhoneNumber } from "@/lib/phone-validation";
+import {
+  type WaitlistFields,
+  waitlistSchema,
+} from "@/lib/waitlist";
 import ComingSoonSuccessModal from "./ComingSoonSuccessModal";
 import { RollingNumber } from "./RollingNumber";
 
@@ -21,38 +24,7 @@ type TimeLeft = {
   seconds: number;
 };
 
-type WaitlistFields = {
-  fullName: string;
-  email: string;
-  phone: string;
-};
-
 type FieldErrors = Partial<Record<keyof WaitlistFields, string>>;
-
-const waitlistSchema: yup.ObjectSchema<WaitlistFields> = yup.object({
-  fullName: yup
-    .string()
-    .trim()
-    .required("Full name is required")
-    .min(2, "Full name must be at least 2 characters")
-    .max(80, "Full name must be at most 80 characters")
-    .matches(
-      /^[a-zA-Z][a-zA-Z\s'.-]*$/,
-      "Full name can only contain letters, spaces, and - ' .",
-    ),
-  email: yup
-    .string()
-    .trim()
-    .required("Email address is required")
-    .email("Enter a valid email address"),
-  phone: yup
-    .string()
-    .trim()
-    .required("Phone number is required")
-    .test("phone", "Enter a valid phone number", (value) =>
-      isValidCountryPhoneNumber(value || ""),
-    ),
-});
 
 function getTimeLeft(targetMs: number): TimeLeft {
   const diff = Math.max(0, targetMs - Date.now());
@@ -160,6 +132,7 @@ export default function ComingSoonLanding() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [successOpen, setSuccessOpen] = useState(false);
 
   const launchDate = formatLaunchDate(comingSoonEndAt);
@@ -236,15 +209,30 @@ export default function ComingSoonLanding() {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({});
+    setSubmitError("");
 
     try {
       await waitlistSchema.validate(values, { abortEarly: false });
       setSubmitting(true);
-      window.setTimeout(() => {
-        setSubmitting(false);
-        setValues({ fullName: "", email: "", phone: "" });
-        setSuccessOpen(true);
-      }, 400);
+
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { message?: string }
+          | null;
+        throw new Error(
+          payload?.message ||
+            "Something went wrong. Please try again in a moment.",
+        );
+      }
+
+      setValues({ fullName: "", email: "", phone: "" });
+      setSuccessOpen(true);
     } catch (err) {
       if (err instanceof yup.ValidationError) {
         const next: FieldErrors = {};
@@ -253,7 +241,13 @@ export default function ComingSoonLanding() {
           if (path && !next[path]) next[path] = issue.message;
         }
         setErrors(next);
+      } else if (err instanceof Error) {
+        setSubmitError(err.message);
+      } else {
+        setSubmitError("Something went wrong. Please try again in a moment.");
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -380,6 +374,12 @@ export default function ComingSoonLanding() {
               </label>
             );
           })}
+
+          {submitError ? (
+            <p role="alert" className="text-center text-sm text-red-400">
+              {submitError}
+            </p>
+          ) : null}
 
           <div className="flex justify-center pt-6 md:pt-10">
             <button
